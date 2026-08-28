@@ -11,6 +11,9 @@ Baseline date: **2026-08-28**.
 - DGI e-Factura portal: https://www.efactura.dgi.gub.uy/
 - `Formato de los CFE v25.2`, dated 2026-04-28 and enabled in Production from 2026-06-30.
 - Current DGI functional definitions for CFE, including numbering, CAE, daily report, correction and contingency.
+- `CFE_Preguntas_Frecuentes_v27`, including export-of-services documentation alternatives.
+- DGI guidance for `IVA Servicios Personales` and services rendered to persons/entities abroad.
+- Article 34 of Decreto 220/998 and amendments for export-of-services applicability.
 - Resolution 798/2012 as updated by subsequent resolutions, including August 2025 updates.
 - DGI CAE format/instructions and CFE FAQs/instructions.
 
@@ -121,6 +124,54 @@ The reference demo's string checks for tags/namespaces are demonstration logic, 
 
 DGI requires electronic CFE to be stored and retained for the applicable documentation-retention period. Some publication/reprint rules specify minimum online availability periods for certain printed representations. Retention must be configurable from a documented legal/fiscal policy rather than hard-coded from the demo.
 
+### REG-013 — Receiver identity is typed and country-aware
+
+`Formato_CFE_v25-2` defines receiver/party identity types including NIE, RUC (Uruguay), C.I. (Uruguay), Otros, Pasaporte, DNI for Argentina/Brazil/Chile/Paraguay and NIFE. The country field follows the specification's country rules and ISO 3166-1 alpha-2 where applicable.
+
+Target consequence:
+- do not model fiscal receiver identity as only `documentNumber` or `isForeign`;
+- persist identity type, number and issuing country as separate facts;
+- validate allowed type/country combinations against the active fiscal specification;
+- preserve the exact receiver identity snapshot on issued fiscal documents.
+
+### REG-014 — Ordinary e-Factura requires the domestic RUC identity path
+
+The current CFE format does not allow the foreign/other receiver-document field for the ordinary e-Factura/NC/ND family (111/112/113), and the corresponding receiver identity path is based on RUC. Equivalent restrictions exist for the ordinary e-Factura Venta por Cuenta Ajena family.
+
+Target consequence:
+- a client cannot force ordinary e-Factura simply because the receiver is a company;
+- receiver fiscal identity eligibility is validated before selecting the CFE family;
+- foreign residence and possession of a Uruguayan RUC are independent facts.
+
+### REG-015 — Foreign receiver does not automatically make the transaction an export
+
+A foreign person/entity can participate in a domestic transaction. Current CFE format supports admitted foreign identity types in CFE families where the receiver-document rules allow them, including consumption-final paths.
+
+Target consequence:
+- nationality/country alone never selects export treatment;
+- transaction location, goods/services nature, delivery/economic-use context and applicable tax rule are evaluated separately;
+- a local retail purchase by a foreign person remains a domestic/consumption-final transaction when the facts/rules say so.
+
+### REG-016 — Export of services is a tax qualification, not a customer-country shortcut
+
+DGI guidance states that services supplied to the exterior are exports of services for VAT purposes only when they meet the applicable cases/conditions of Article 34 of Decreto 220/998 and amendments. For several professional/technical/software categories this includes requirements such as supply to persons/entities abroad and exclusive use abroad.
+
+Target consequence:
+- `customer.country != UY` is insufficient to assign VAT-free export treatment;
+- a versioned `TaxTreatmentResolver` must evaluate the applicable service rule/profile;
+- the decision must retain rule/source/version evidence;
+- services to foreign customers that do not qualify as exports receive the applicable non-export tax treatment.
+
+### REG-017 — Export of services may use export CFE or permitted ordinary CFE
+
+Current DGI FAQ states that using the e-Factura de Exportación family for **exports of services is optional**. The issuer may instead document with ordinary CFE: e-Factura when the acquirer is identified with RUC, or e-Ticket otherwise.
+
+Target consequence:
+- determine export-of-services tax qualification first;
+- then select a permitted CFE documentation strategy;
+- the strategy must be explicit/configured and auditable;
+- export of goods remains a distinct workflow and must not inherit this optionality blindly.
+
 ## Reference implementation findings
 
 | Reference behavior | Classification | Target treatment |
@@ -133,12 +184,17 @@ DGI requires electronic CFE to be stored and retained for the applicable documen
 | Offline queue later “re-emits definitive CFE” | PARTIAL/CONFLICTING | Model CFC contingency separately and preserve fiscal identity. |
 | Simplified daily report always `ACEPTADO` | SIMULATED | Scheduled signed report + actual transport/ack lifecycle. |
 | Demo CFE type enum | PARTIAL | Versioned complete catalog. |
+| Foreign/customer country treated as sufficient decision input | INSUFFICIENT | Separate receiver identity, jurisdiction/tax treatment and CFE selection. |
 
 ## Regulatory decisions still requiring deeper validation before code
 
 The following are intentionally `OPEN` until the corresponding implementation slice:
 
 - exact document-selection matrix for each taxpayer/customer scenario;
+- current receiver-identification thresholds/conditional fields by CFE type/version;
+- exact Release-1 Article 34 export-of-services rule catalog by supported service category;
+- evidence/supporting-document policy for foreign use/enjoyment when applicable;
+- whether Release 1 exposes both DGI-permitted export-of-services documentation strategies or one configurable default;
 - current thresholds/conditional fields by CFE type/version;
 - e-Resguardo applicability and retention/perception rules;
 - export/remito/boleta-entry flows when enabled;
