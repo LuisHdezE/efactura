@@ -40,6 +40,10 @@ Draft target requirements derived after Reference Capability Ingestion and DGI v
 - **FR-013** Stock tracking shall be optional by item; service-only companies must not require inventory configuration.
 - **FR-014** A sale may mix stock-tracked products and non-stock services.
 - **FR-015** Catalog tax assignment shall reference versioned tax/fiscal configuration rather than magic percentages embedded in controllers.
+- **FR-016** Party fiscal identity shall preserve identity type, number and issuing country independently from residence/tax-residence country.
+- **FR-017** System shall support multiple fiscal identities for a party where valid, including a foreign-resident party that also holds a Uruguayan RUC.
+- **FR-018** Identity type/country combinations shall be validated from versioned fiscal metadata/specification rules rather than a generic `isForeign` flag.
+- **FR-019** Issued fiscal documents shall preserve the exact receiver fiscal-identity snapshot used at issuance even when customer master data changes later.
 
 ### Sales / POS / payments
 
@@ -57,7 +61,7 @@ Draft target requirements derived after Reference Capability Ingestion and DGI v
 - **FR-030** System shall determine eligible/required fiscal-document family through a versioned fiscal selection policy based on issuer, receiver and transaction context.
 - **FR-031** System shall maintain the official DGI document catalog and effective specification versions with source provenance.
 - **FR-032** Normal CFE number reservation shall be atomic, unique and server-authoritative across concurrent terminals.
-- **FR-033** CAE shall be managed at company/fiscal-type scope according to current DGI rules, with validity/range/consumption alerts.
+- **FR-033** CAE shall be managed at company/fiscal-type scope according to current DGI rules, with validity/range/consumption alerts; configured branch/cash-register allocation may exist without violating company-wide uniqueness.
 - **FR-034** Fiscal documents shall preserve issuer/receiver/item/tax/rule snapshots used at issuance time.
 - **FR-035** Fiscal XML shall be generated and validated against the applicable official DGI schema/business rules.
 - **FR-036** Fiscal XML shall be signed using the approved certificate/key-custody strategy; private key material shall never be exposed to clients.
@@ -68,6 +72,12 @@ Draft target requirements derived after Reference Capability Ingestion and DGI v
 - **FR-041** System shall support enabled specialized families such as export, remito, resguardo, account-on-behalf and boleta-entry only after their applicability configuration is accepted.
 - **FR-042** System shall generate/submit/store daily fiscal reports independently from management sales reports.
 - **FR-043** System shall retain fiscal artifacts and response evidence according to an approved retention policy.
+- **FR-044** Fiscal decision processing shall separate receiver identity resolution, transaction jurisdiction, tax treatment and CFE-family selection; client country alone shall not determine export status.
+- **FR-045** Ordinary domestic e-Factura eligibility shall validate the required Uruguayan RUC identity path; a foreign company without the required RUC identity shall not be allowed to force e-Factura 111/112/113 by client input.
+- **FR-046** Foreign consumption-final customers shall be representable with DGI-admitted foreign identity types and issuing-country rules where the selected CFE family allows them.
+- **FR-047** Export-of-services tax treatment shall be assigned only when the operation satisfies the applicable versioned Article-34-derived rule profile; foreign customer status alone is insufficient.
+- **FR-048** For a qualifying export of services, the system shall support the DGI-permitted documentation strategy: export CFE family or ordinary CFE strategy where allowed, with explicit/auditable selection according to issuer configuration and receiver RUC identity.
+- **FR-049** Export of goods shall remain a distinct fiscal/logistics workflow and shall not inherit export-of-services optional documentation rules.
 
 ### Contingency / offline
 
@@ -126,12 +136,13 @@ Draft target requirements derived after Reference Capability Ingestion and DGI v
 - **NFR-013 Performance:** POS read/command paths must have explicit later SLOs; slow external fiscal calls must not produce duplicate effects on timeout/retry.
 - **NFR-014 Retention/backup:** fiscal/audit/financial artifacts follow documented retention and recoverability policy.
 - **NFR-015 Privacy:** API returns minimum required personal/fiscal data by permission and redacts secrets/sensitive configuration.
+- **NFR-016 Explainability:** regulated identity/tax/CFE selection decisions shall expose stable internal rule IDs/version/provenance sufficient for audit/support without leaking secrets.
 
 ## Core business rules
 
 - **BR-001** Reference demo behavior never overrides current official DGI rule.
 - **BR-002** Fiscal rule used by an operation is identifiable by version/source/effective date.
-- **BR-003** Normal CFE numbering is server-authoritative and company-wide by CFE type under current DGI baseline.
+- **BR-003** Normal CFE numbering is server-authoritative and company-wide by CFE type under current DGI baseline; branch/cash-register allocation of authorized ranges does not create independent numbering universes.
 - **BR-004** CFC identity and normal CFE identity are separate numbering/process concepts.
 - **BR-005** One idempotency/business operation identity cannot create duplicate money/fiscal/stock effect.
 - **BR-006** Accepted historical fiscal document snapshots are immutable.
@@ -141,6 +152,9 @@ Draft target requirements derived after Reference Capability Ingestion and DGI v
 - **BR-010** Technical log entries are not a substitute for durable business/security audit.
 - **BR-011** External integration acknowledgement state is not collapsed into business/fiscal acceptance state.
 - **BR-012** Provider-specific DB/API logic cannot leak into Domain/Application contracts.
+- **BR-013** Receiver nationality/residence, tax residence, fiscal identity and issuing country are separate domain facts.
+- **BR-014** A foreign receiver does not by itself classify an operation as export or VAT-free export of services.
+- **BR-015** Tax treatment is resolved before the final CFE-family selection and the frontend cannot bypass the decision with an arbitrary document-type code.
 
 ## Requirements intentionally OPEN
 
@@ -157,4 +171,9 @@ These require further business/regulatory decision before their final acceptance
 - WhatsApp/provider selection;
 - detailed e-Resguardo tax-rule catalog;
 - detailed remito correction workflow;
+- exact receiver-identification thresholds/conditional fields by enabled CFE/version;
+- Release-1 Article 34 export-of-services rule catalog by service category;
+- proof/evidence policy for foreign use/enjoyment where legally applicable;
+- whether Release 1 supports both DGI-permitted documentation strategies for export of services or one configurable default;
+- detailed export-goods/customs fields;
 - final SLOs/retention/backup RPO/RTO.
