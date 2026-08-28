@@ -20,7 +20,8 @@ All entries are `PROPOSED` until human architecture acceptance. Implementation m
 | ADR-014 | Preserve existing numeric DB keys during migration; add UUID/GUID identities for offline/device/idempotency concerns rather than global re-key | PROPOSED |
 | ADR-015 | Application-managed concurrency version is the portable baseline; provider-native locking may be an internal adapter optimization | PROPOSED |
 | ADR-016 | Fiscal artifact bytes are stored through `IFiscalArtifactStore`; relational DB stores immutable metadata/hash/state | PROPOSED |
-| ADR-017 | Threat modeling is applicable before security architecture can be marked ready | PROPOSED |
+| ADR-017 | Threat modeling is applicable and its trust-boundary/abuse-case baseline is part of security architecture | PROPOSED |
+| ADR-018 | Use Oracle `MySql.EntityFrameworkCore` EF Core 8 provider as the MySQL baseline; keep provider code isolated and pin a tested compatible EF8 package set | PROPOSED |
 
 ## Decisions intentionally OPEN
 
@@ -28,11 +29,10 @@ These require later explicit ADRs/owner choices:
 
 - `ADR-OPEN-01`: direct DGI vs authorized provider strategy/default;
 - `ADR-OPEN-02`: production certificate/private-key custody;
-- `ADR-OPEN-03`: final EF Core MySQL provider/package/version;
-- `ADR-OPEN-04`: negative-stock/backorder policy;
-- `ADR-OPEN-05`: credit-limit/overpayment/advance policy;
-- `ADR-OPEN-06`: initial PPP/FIFO enablement scope;
-- `ADR-OPEN-07`: exact export-of-services documentation strategy/default;
-- `ADR-OPEN-08`: retention/RPO/RTO/SLO operational values.
+- `ADR-OPEN-03`: negative-stock/backorder policy;
+- `ADR-OPEN-04`: credit-limit/overpayment/advance policy;
+- `ADR-OPEN-05`: initial PPP/FIFO enablement scope;
+- `ADR-OPEN-06`: exact export-of-services documentation strategy/default;
+- `ADR-OPEN-07`: retention/RPO/RTO/SLO operational values.
 
 An OPEN product policy does not invalidate module boundaries, but any implementation slice dependent on that policy remains blocked until resolved.

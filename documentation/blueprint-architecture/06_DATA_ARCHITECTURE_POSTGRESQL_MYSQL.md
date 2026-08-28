@@ -14,7 +14,25 @@ Provider differences belong to Infrastructure. Domain/Application code cannot br
 - provider-specific EF migrations where SQL/provider behavior differs;
 - persistence contract tests execute against both engines.
 
-The existing `MySql.Data` package alone does not constitute the final EF Core MySQL provider decision. Implementation must select and pin an EF Core 8-compatible provider before migrations are generated.
+## MySQL EF Core provider decision
+
+Architecture baseline selects **Oracle `MySql.EntityFrameworkCore` on the EF Core 8 line** for the MySQL implementation.
+
+Rationale:
+
+- the Brownfield solution already carries `MySql.Data`, so this choice minimizes provider-family churn;
+- Microsoft lists `MySql.EntityFrameworkCore` as an EF Core provider supporting EF Core 8;
+- Oracle/MySQL publishes maintained 8.0.x provider packages for .NET 8;
+- provider-specific behavior remains isolated, so this choice does not leak into Domain/Application.
+
+Evidence reviewed on 2026-08-28:
+
+- Microsoft EF Core provider catalog: https://learn.microsoft.com/en-us/ef/core/providers/
+- NuGet `MySql.EntityFrameworkCore` 8.0.x line: https://www.nuget.org/packages/MySql.EntityFrameworkCore
+
+Exact package patches are an implementation lock-file/compatibility concern. All Microsoft EF Core 8 packages, Npgsql EF Core 8 provider and MySQL EF Core 8 provider must be pinned to a mutually compatible tested set. The current Brownfield `8.0.10` packages are not treated as an eternal version requirement.
+
+Pomelo was also evaluated as a valid alternative, but is not the baseline because the current solution already uses Oracle `MySql.Data` and the architectural goal is minimum Brownfield provider churn. Switching later requires an ADR and persistence-equivalence evidence, not a domain rewrite.
 
 ## Provider isolation
 
