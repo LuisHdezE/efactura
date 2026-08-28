@@ -33,6 +33,13 @@ Provide measurable examples that prevent the target requirements from becoming a
 | AC-023 | FR-030/031 | Document selector returns rule/version/source evidence for chosen/eligible CFE family and rejects incompatible client-requested code. |
 | AC-024 | FR-041 | Specialized CFE family cannot be issued unless issuer/profile and required regulatory configuration are enabled. |
 | AC-025 | NFR-010 | Money/tax regression cases prove deterministic decimal/rounding behavior and no binary floating-point persistence. |
+| AC-026 | FR-016..019 | A foreign-resident customer can hold a Uruguayan RUC while residence/tax-residence remain foreign; issued CFE preserves the exact identity snapshot used. |
+| AC-027 | FR-018/046 | Identity validation accepts an admitted DNI only with an allowed issuing country under the active specification and rejects an invalid type/country combination. |
+| AC-028 | FR-044/046, BR-014 | A foreign tourist making a local retail purchase is not classified as export solely because the receiver country is foreign. |
+| AC-029 | FR-045 | A foreign company without the required Uruguayan RUC identity cannot force ordinary e-Factura 111/112/113 through API input. |
+| AC-030 | FR-047, BR-014 | A service to a foreign customer that fails the configured export-of-services rule receives the applicable non-export tax treatment; `country != UY` cannot zero VAT by itself. |
+| AC-031 | FR-047/048, NFR-016 | A qualifying export of services records the tax-rule result/version/source and can select only a DGI-permitted documentation strategy. |
+| AC-032 | FR-049 | Export-of-goods flow selects the applicable export CFE/logistics path and does not inherit export-of-services documentation optionality. |
 
 ## Use-case traceability
 
@@ -61,10 +68,16 @@ Provide measurable examples that prevent the target requirements from becoming a
 | UC-AUD-001 | FR-004, NFR-007/015 |
 | UC-MON-001 | FR-033/043/084/085, NFR-006 |
 | UC-REM-001 | FR-041, FR-060..063 |
-| UC-EXP-001/002 | FR-030/031/041 |
+| UC-EXP-001/002 | FR-030/031/041, FR-044..049 |
 | UC-RSG-001 | FR-030/031/041 |
 | UC-BE-001 | FR-030/031/041, FR-067/071/081 |
 | UC-CTA-001 | FR-030/031/041 |
+| UC-XBR-001 | FR-010/011/016..019, NFR-011/016 |
+| UC-XBR-002 | FR-044/046, BR-013..015 |
+| UC-XBR-003 | FR-016/017/019/044/045 |
+| UC-XBR-004 | FR-044/047/048, NFR-011/016 |
+| UC-XBR-005 | FR-044/047, BR-014/015 |
+| UC-XBR-006 | FR-044/049, FR-041 |
 
 ## Evidence traceability classes
 
@@ -85,5 +98,6 @@ Final requirement evidence must retain source provenance:
 5. Approve customer credit/overpayment policy.
 6. Approve initial costing scope (PPP/FIFO).
 7. Approve certificate custody model when deployment environment is known.
+8. Approve Release-1 cross-border/export-of-services rule scope and whether both DGI-permitted documentation strategies are exposed or one is the configured default.
 
 Until then, this document remains `DRAFT`; no Blueprint requirements gate is marked PASS.
