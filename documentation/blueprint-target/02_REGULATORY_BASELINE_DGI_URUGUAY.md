@@ -1,0 +1,207 @@
+# Regulatory Baseline — DGI Uruguay CFE
+
+## Scope and status
+
+This is the initial regulatory baseline for requirements design. It is not tax/legal advice and it does not replace final homologation, provider documentation or current DGI technical specifications. Every fiscal rule implemented later must be traceable to an official source/version.
+
+Baseline date: **2026-08-28**.
+
+## Authoritative sources reviewed
+
+- DGI e-Factura portal: https://www.efactura.dgi.gub.uy/
+- `Formato de los CFE v25.2`, dated 2026-04-28 and enabled in Production from 2026-06-30.
+- Current DGI functional definitions for CFE, including numbering, CAE, daily report, correction and contingency.
+- `CFE_Preguntas_Frecuentes_v27`, including export-of-services documentation alternatives.
+- DGI guidance for `IVA Servicios Personales` and services rendered to persons/entities abroad.
+- Article 34 of Decreto 220/998 and amendments for export-of-services applicability.
+- Resolution 798/2012 as updated by subsequent resolutions, including August 2025 updates.
+- DGI CAE format/instructions and CFE FAQs/instructions.
+
+Reference code and documents from `FacturacionElectronicaBases` are **non-authoritative**.
+
+## Validated design constraints
+
+### REG-001 — Versioned fiscal specification
+
+DGI changes CFE format/XSD/message specifications over time. Production is currently on Format CFE **25.2**. Fiscal rules, schemas and response interpretation therefore cannot be hard-coded as an eternal enum/serializer.
+
+Target requirement:
+- persist/use `specification_version`, `effective_from`, `effective_to`, source reference and schema artifact identity;
+- preserve the fiscal representation that was valid when a document was emitted;
+- support parallel historical validation of older documents.
+
+### REG-002 — CFE type catalog is broader than the demo
+
+The reference enum contains 101/102/103, 111/112/113, 121/122/123, 181 and 182. Official DGI formats also cover additional families/variants such as account-on-behalf and other document types. The target must use a versioned fiscal document catalog and enable only the types applicable to a customer profile.
+
+### REG-003 — CFE numbering is unique company-wide by CFE type; operational allocation may use CAEs/subranges
+
+Official DGI functional definitions state that CFE numbering is unique **by CFE type for the entire company** and that the CAE request is made for the main fiscal domicile. This global uniqueness does **not** prohibit operational allocation: DGI documentation explicitly allows, at the taxpayer's option, assigning different CAE constancias for the same CFE type to different branches/cash registers or assigning subranges from one constancia to branches/cash registers.
+
+Consequences:
+- the domain invariant is global uniqueness by company + CFE type + series/number;
+- do not model each branch as an independent fiscal numbering universe;
+- branch/cash-register allocation of a CAE or subrange is allowed as an operational policy when configured and must still preserve the company-wide uniqueness invariant;
+- fiscal number reservation must be concurrency-safe across all terminals/branches that can consume the same logical numbering space;
+- the originating branch/terminal and assigned range/subrange are recorded for business, reconciliation and audit context.
+
+### REG-004 — CAE lifetime and exhaustion
+
+Official material establishes a two-year validity for authorized CFE numbering ranges. Unused numbers at expiry must be annulled/reported and cannot be reused. The downloaded CAE is signed by DGI and contains authorization/range/type/expiry data.
+
+Target controls:
+- import/validate CAE metadata and signature where technically applicable;
+- active/expired/exhausted state;
+- low-range and expiry alerts;
+- atomic next-number reservation;
+- audit all CAE changes/consumption;
+- reconcile unused/annulled numbering with daily reporting.
+
+### REG-005 — Correction after a non-rejected CFE
+
+DGI functional definitions state that once a CFE was issued, sent to DGI and not rejected, correction is through a correction note (credit or debit note), not destructive editing/deletion.
+
+Target rule:
+- accepted/non-rejected fiscal documents are immutable business evidence;
+- corrections create referenced fiscal documents;
+- the original remains queryable.
+
+### REG-006 — Rejected CFE handling is not a simple delete/retry
+
+DGI defines explicit treatment for rejected documents and exceptions such as specific rejection codes. Numbers already sent to DGI generally cannot simply be recycled.
+
+Target requirement:
+- maintain rejection code/message and response artifact;
+- use a versioned rejection-resolution policy;
+- separate `REJECTED`, `ANNULMENT_REQUIRED`, `REGULARIZATION_REQUIRED`, `CORRECTION_REQUIRED` and resolved states as needed;
+- never implement “delete CFE and reuse number”.
+
+### REG-007 — Envelope and asynchronous acknowledgement
+
+Official documentation describes envelopes containing 1 to 250 CFE/CFC and synchronous receipt of the envelope followed by asynchronous individual validation/acknowledgement in the web-service flow.
+
+Target consequence:
+- transport lifecycle and fiscal-document lifecycle are separate;
+- store envelope/transaction/token/status and each document acknowledgement;
+- retries are idempotent and auditable;
+- a transport ACK is not equivalent to final CFE acceptance.
+
+### REG-008 — Daily report is a first-class fiscal process
+
+DGI requires a consolidated daily report of CFE/CFC usage and documentation consumption. Official functional definitions describe automatic generation and submission from the emitter's effective date, including days with no operations, and submission in the defined time window.
+
+Target consequence:
+- daily report is a scheduled aggregate process, not an on-demand dashboard query;
+- report state, generation, signature, submission, acknowledgement and corrections/reliquidations are persisted;
+- amounts/FX conversion follow the report specification, not the POS display calculation.
+
+### REG-009 — CFC contingency is distinct from normal offline queuing
+
+Official DGI material requires software to contain a `Contingencia` module. CFC numbering is the numbering of the authorized/preprinted contingency document, and the system must **not** assign normal CFE authorized numbering to the CFC. After recovery, CFC information is sent following the rules of the CFE type it substitutes. The CFC remains the fiscally valid document for that operation.
+
+This invalidates the simplistic idea “store offline sale and later replace it with a new normal CFE”.
+
+Target consequence:
+- separate `OfflineClientOperation` from `FiscalContingencyDocument`;
+- local web/mobile clients do not reserve normal CAE/CFE numbers by default;
+- if a sale must be completed while the electronic issuance system is unavailable, the fiscal workflow uses the applicable CFC contingency procedure;
+- on synchronization, server records/linkage preserve the CFC identity and transmit its information as required.
+
+### REG-010 — Client offline and DGI/provider outage are different failures
+
+Three operational modes must exist:
+1. normal online: client -> API -> fiscal engine -> transport;
+2. API available but DGI/provider transport unavailable: fiscal operation can enter a controlled transport/outbox state according to current document rules;
+3. client/API issuance system unavailable: offline business queue plus formal CFC contingency when the fiscal operation must be completed.
+
+A generic `offline=true` flag is insufficient.
+
+### REG-011 — Fiscal XML validation must use official schemas/rules
+
+The reference demo's string checks for tags/namespaces are demonstration logic, not XSD validation. Target validation must support the official schema version, business validations, digital signature verification, CAE/range validation and arithmetic rules applicable to the document type/version.
+
+### REG-012 — Preservation and retrieval
+
+DGI requires electronic CFE to be stored and retained for the applicable documentation-retention period. Some publication/reprint rules specify minimum online availability periods for certain printed representations. Retention must be configurable from a documented legal/fiscal policy rather than hard-coded from the demo.
+
+### REG-013 — Receiver identity is typed and country-aware
+
+`Formato_CFE_v25-2` defines receiver/party identity types including NIE, RUC (Uruguay), C.I. (Uruguay), Otros, Pasaporte, DNI for Argentina/Brazil/Chile/Paraguay and NIFE. The country field follows the specification's country rules and ISO 3166-1 alpha-2 where applicable.
+
+Target consequence:
+- do not model fiscal receiver identity as only `documentNumber` or `isForeign`;
+- persist identity type, number and issuing country as separate facts;
+- validate allowed type/country combinations against the active fiscal specification;
+- preserve the exact receiver identity snapshot on issued fiscal documents.
+
+### REG-014 — Ordinary e-Factura requires the domestic RUC identity path
+
+The current CFE format does not allow the foreign/other receiver-document field for the ordinary e-Factura/NC/ND family (111/112/113), and the corresponding receiver identity path is based on RUC. Equivalent restrictions exist for the ordinary e-Factura Venta por Cuenta Ajena family.
+
+Target consequence:
+- a client cannot force ordinary e-Factura simply because the receiver is a company;
+- receiver fiscal identity eligibility is validated before selecting the CFE family;
+- foreign residence and possession of a Uruguayan RUC are independent facts.
+
+### REG-015 — Foreign receiver does not automatically make the transaction an export
+
+A foreign person/entity can participate in a domestic transaction. Current CFE format supports admitted foreign identity types in CFE families where the receiver-document rules allow them, including consumption-final paths.
+
+Target consequence:
+- nationality/country alone never selects export treatment;
+- transaction location, goods/services nature, delivery/economic-use context and applicable tax rule are evaluated separately;
+- a local retail purchase by a foreign person remains a domestic/consumption-final transaction when the facts/rules say so.
+
+### REG-016 — Export of services is a tax qualification, not a customer-country shortcut
+
+DGI guidance states that services supplied to the exterior are exports of services for VAT purposes only when they meet the applicable cases/conditions of Article 34 of Decreto 220/998 and amendments. For several professional/technical/software categories this includes requirements such as supply to persons/entities abroad and exclusive use abroad.
+
+Target consequence:
+- `customer.country != UY` is insufficient to assign VAT-free export treatment;
+- a versioned `TaxTreatmentResolver` must evaluate the applicable service rule/profile;
+- the decision must retain rule/source/version evidence;
+- services to foreign customers that do not qualify as exports receive the applicable non-export tax treatment.
+
+### REG-017 — Export of services may use export CFE or permitted ordinary CFE
+
+Current DGI FAQ states that using the e-Factura de Exportación family for **exports of services is optional**. The issuer may instead document with ordinary CFE: e-Factura when the acquirer is identified with RUC, or e-Ticket otherwise.
+
+Target consequence:
+- determine export-of-services tax qualification first;
+- then select a permitted CFE documentation strategy;
+- the strategy must be explicit/configured and auditable;
+- export of goods remains a distinct workflow and must not inherit this optionality blindly.
+
+## Reference implementation findings
+
+| Reference behavior | Classification | Target treatment |
+|---|---|---|
+| `estadoDgi = Aceptado` immediately when demo CFE is created | SIMULATED/INVALID_AS_AUTHORITY | Separate generated/submitted/envelope-accepted/document-accepted states. |
+| `/enviar-dgi` always changes status to accepted | SIMULATED | Replace with real gateway + response interpreter. |
+| `validar-xml` uses `string.includes(...)` | SIMULATED | Real XSD + XMLDSig + fiscal-rule validation. |
+| CAE number increment in mutable memory | DEMO_ONLY | Transactional durable number reservation. |
+| Reference material suggests branch-scoped CAE handling without making the company-wide uniqueness invariant explicit | PARTIAL/RISKY | Permit configured branch/cash-register CAE or subrange allocation while enforcing unique numbering by CFE type across the company. |
+| Offline queue later “re-emits definitive CFE” | PARTIAL/CONFLICTING | Model CFC contingency separately and preserve fiscal identity. |
+| Simplified daily report always `ACEPTADO` | SIMULATED | Scheduled signed report + actual transport/ack lifecycle. |
+| Demo CFE type enum | PARTIAL | Versioned complete catalog. |
+| Foreign/customer country treated as sufficient decision input | INSUFFICIENT | Separate receiver identity, jurisdiction/tax treatment and CFE selection. |
+
+## Regulatory decisions still requiring deeper validation before code
+
+The following are intentionally `OPEN` until the corresponding implementation slice:
+
+- exact document-selection matrix for each taxpayer/customer scenario;
+- current receiver-identification thresholds/conditional fields by CFE type/version;
+- exact Release-1 Article 34 export-of-services rule catalog by supported service category;
+- evidence/supporting-document policy for foreign use/enjoyment when applicable;
+- whether Release 1 exposes both DGI-permitted export-of-services documentation strategies or one configurable default;
+- current thresholds/conditional fields by CFE type/version;
+- e-Resguardo applicability and retention/perception rules;
+- export/remito/boleta-entry flows when enabled;
+- exact provider-vs-direct-DGI transport contract;
+- certificate/key custody model for deployment;
+- current response-code and regularization matrix;
+- final daily-report/reliquidation rules and FX source implementation;
+- final printed representation/QR requirements for every enabled CFE type.
+
+No fiscal-sensitive endpoint may be marked production-ready while its applicable rule remains `OPEN`.
