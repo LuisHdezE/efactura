@@ -1,0 +1,14 @@
+﻿Readme:
+Reemplazar las rutas absolutas de ContextDir por el directorio local donde se encuentra la carpeta src\Infrastructure\DataBase\Context y OutputDir por el directorio local donde se encuentra el directorio src\ApplicationCore\Entites
+
+Comando Postgres:
+Scaffold-DbContext "Host=168.138.248.187; Port=15432; Database=api_accounting_db; Username=postgres; Password=postgres" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir "C:\Users\rpias\Documents\ProjectWorked\FacturacionElectronica\ApiAccountingBackend\src\ApplicationCore\Entities" -Force -UseDatabaseNames -NoPluralize -Namespace "ApplicationCore.Entites" -ContextDir "C:\Users\rpias\Documents\ProjectWorked\FacturacionElectronica\ApiAccountingBackend\src\Infrastructure\DataBase\Context\" -Context DBContext -ContextNamespace "Infrastructure.DataBase.Context" -Project Infrastructure -NoOnConfiguring
+
+Comando MSSQL with windows authentication:
+Scaffold-DbContext "Server=DESKTOP-PUO32Q8\SQLEXPRESS; Initial Catalog=ApiAccountingDataBase; Persist Security Info=False; MultipleActiveResultSets=False; Connection Timeout=30; TrustServerCertificate=True; Integrated Security=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir "C:\Users\rpias\Documents\ProjectWorked\FacturacionElectronica\ApiAccountingBackend\src\ApplicationCore\Entities" -Force -UseDatabaseNames -NoPluralize -Namespace "ApplicationCore.Entites" -ContextDir "C:\Users\rpias\Documents\ProjectWorked\FacturacionElectronica\ApiAccountingBackend\src\Infrastructure\DataBase\Context" -Context DBContext -ContextNamespace "Infrastructure.DataBase.Context" -Project Infrastructure -NoOnConfiguring
+
+Comando MSSQL with user MSSQL authentication:
+Scaffold-DbContext "Server=DESKTOP-PUO32Q8\SQLEXPRESS; Initial Catalog=ApiUsuariosDataBase; Persist Security Info=False; MultipleActiveResultSets=False; User ID=sa; Password=Desa*2024; Connection Timeout=30;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir "C:\Users\richa\Documents\Projects_Working\FacturacionElectronica\TemplateBackend\src\ApplicationCore\Entities" -Force -UseDatabaseNames -NoPluralize -Namespace "ApplicationCore.Entites" -ContextDir "C:\Users\richa\Documents\Projects_Working\FacturacionElectronica\TemplateBackend\src\Infrastructure\DataBase\Context" -Context DBContext -ContextNamespace "Infrastructure.DataBase.Context" -Project Infrastructure -NoOnConfiguring
+
+sql conection string a local db
+Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ApiUsersDataBase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False

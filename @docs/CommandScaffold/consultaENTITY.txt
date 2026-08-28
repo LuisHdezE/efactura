@@ -1,0 +1,5 @@
+Scaffold-DbContext "Host=192.168.171.38; Database=llamados; Username=user_llamados; Password=User_#114M4d4S" Npgsql.EntityFrameworkCore.PostgreSQL -OutputDir "C:\Users\44595906\Documents\PORTAL_MI_2024\admin-portal-backend\src\ApplicationCore\Entities" -Force -UseDatabaseNames -NoPluralize -Namespace "ApplicationCore.Entites" -ContextDir "C:\Users\44595906\Documents\PORTAL_MI_2024\admin-portal-backend\src\Infrastructure\DataBase\Context\" -Context DBContext -ContextNamespace "Infrastructure.DataBase.Context" -Project Infrastructure -NoOnConfiguring
+
+I
+
+Scaffold-DbContext "Server=(localdb)\MSSQLLocalDB; Initial Catalog=AppMiDataBase ;Persist Security Info=False; MultipleActiveResultSets=False; Connection Timeout=30;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir "C:\Users\richa\Documents\Projects_Working\template-react18-.net6\backend\src\ApplicationCore\Entities" -Force -UseDatabaseNames -NoPluralize -Namespace "ApplicationCore.Entites" -ContextDir "C:\Users\richa\Documents\Projects_Working\template-react18-.net6\backend\src\Infrastructur
