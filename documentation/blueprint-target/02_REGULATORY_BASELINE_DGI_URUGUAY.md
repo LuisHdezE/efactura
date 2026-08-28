@@ -31,14 +31,16 @@ Target requirement:
 
 The reference enum contains 101/102/103, 111/112/113, 121/122/123, 181 and 182. Official DGI formats also cover additional families/variants such as account-on-behalf and other document types. The target must use a versioned fiscal document catalog and enable only the types applicable to a customer profile.
 
-### REG-003 — CAE numbering is company-wide by CFE type
+### REG-003 — CFE numbering is unique company-wide by CFE type; operational allocation may use CAEs/subranges
 
-Official DGI functional definitions state that CFE numbering is unique **by CFE type for the entire company**. CAE is issued for the main fiscal domicile; a separate numbering sequence is not created merely because there are multiple branches.
+Official DGI functional definitions state that CFE numbering is unique **by CFE type for the entire company** and that the CAE request is made for the main fiscal domicile. This global uniqueness does **not** prohibit operational allocation: DGI documentation explicitly allows, at the taxpayer's option, assigning different CAE constancias for the same CFE type to different branches/cash registers or assigning subranges from one constancia to branches/cash registers.
 
 Consequences:
-- do not model independent CAE numbering per branch as the default;
-- fiscal number reservation must be globally concurrency-safe for company + CFE type + authorized range/series;
-- the branch/terminal that originates the operation is still recorded as business/audit context.
+- the domain invariant is global uniqueness by company + CFE type + series/number;
+- do not model each branch as an independent fiscal numbering universe;
+- branch/cash-register allocation of a CAE or subrange is allowed as an operational policy when configured and must still preserve the company-wide uniqueness invariant;
+- fiscal number reservation must be concurrency-safe across all terminals/branches that can consume the same logical numbering space;
+- the originating branch/terminal and assigned range/subrange are recorded for business, reconciliation and audit context.
 
 ### REG-004 — CAE lifetime and exhaustion
 
@@ -127,7 +129,7 @@ DGI requires electronic CFE to be stored and retained for the applicable documen
 | `/enviar-dgi` always changes status to accepted | SIMULATED | Replace with real gateway + response interpreter. |
 | `validar-xml` uses `string.includes(...)` | SIMULATED | Real XSD + XMLDSig + fiscal-rule validation. |
 | CAE number increment in mutable memory | DEMO_ONLY | Transactional durable number reservation. |
-| Branch-independent CAE suggested in one reference architecture section | CONFLICT_WITH_DGI | Company-wide CFE-type numbering baseline. |
+| Reference material suggests branch-scoped CAE handling without making the company-wide uniqueness invariant explicit | PARTIAL/RISKY | Permit configured branch/cash-register CAE or subrange allocation while enforcing unique numbering by CFE type across the company. |
 | Offline queue later “re-emits definitive CFE” | PARTIAL/CONFLICTING | Model CFC contingency separately and preserve fiscal identity. |
 | Simplified daily report always `ACEPTADO` | SIMULATED | Scheduled signed report + actual transport/ack lifecycle. |
 | Demo CFE type enum | PARTIAL | Versioned complete catalog. |
