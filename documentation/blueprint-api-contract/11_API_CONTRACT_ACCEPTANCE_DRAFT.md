@@ -28,6 +28,9 @@ Supporting contracts:
 - `06_PROBLEM_DETAILS_ERROR_CONTRACT.md`
 - `07_REQUEST_RESPONSE_CONTRACTS.md`
 - `08_BROWNFIELD_COMPATIBILITY_MATRIX.md`
+- `12_TECHNICAL_LOGGING_AND_OBSERVABILITY_CONTRACT.md`
+
+The logging/observability contract is included because Blueprint `dev-event-logging-audit` requires a technical logging strategy distinct from durable business/security audit. It preserves the Brownfield Serilog/Application Insights capabilities while requiring end-to-end correlation, structured logging, recursive redaction, worker/integration observability and later QA evidence.
 
 ## Quantitative/structural review
 
@@ -53,7 +56,8 @@ Before PASS, confirm:
 6. JWT Bearer API boundary without invented username/password login matches the intended deployment strategy;
 7. Brownfield coexistence/deprecation policy is acceptable;
 8. Problem Details, correlation, idempotency and concurrency conventions are acceptable;
-9. future web/Android needs are adequately represented without allowing clients to invent business authority.
+9. future web/Android needs are adequately represented without allowing clients to invent business authority;
+10. the technical logging strategy is acceptable: Serilog/Application Insights preserved, structured event context, correlation through HTTP/jobs/integrations, no raw sensitive payload logging, independent Class-D retention, and explicit redaction/QA obligations.
 
 ## Stop condition
 
