@@ -68,6 +68,17 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<ICfeSelectionConfigurationProvider, Release1CfeSelectionConfigurationProvider>();
         services.AddScoped<SelectCfeUseCase>();
 
+        services.AddScoped<ICaeRepository, EfCaeRepository>();
+        services.AddSingleton<ICaeArtifactVerifier, Release1CaeMetadataVerifier>();
+        services.AddScoped<IFiscalNumberAllocator, FiscalNumberAllocator>();
+        services.AddScoped<ListCaeAuthorizationsUseCase>();
+        services.AddScoped<GetCaeAuthorizationUseCase>();
+        services.AddScoped<ImportCaeAuthorizationUseCase>();
+        services.AddScoped<ActivateCaeAuthorizationUseCase>();
+        services.AddScoped<ListCaeAllocationsUseCase>();
+        services.AddScoped<CreateCaeAllocationUseCase>();
+        services.AddScoped<CloseCaeAllocationUseCase>();
+
         services.AddScoped<IInventoryRepository, EfInventoryRepository>();
         services.AddScoped<IInventoryAvailabilityChecker, InventoryAvailabilityChecker>();
         services.AddScoped<ListInventoryPositionsUseCase>();
