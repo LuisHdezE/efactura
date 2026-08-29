@@ -5,6 +5,7 @@ using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Fiscal;
 using EFactura.Application.Parties;
+using EFactura.Application.Sales;
 using EFactura.Application.Taxation;
 using EFactura.Domain.Fiscal;
 using EFactura.Domain.Taxation;
@@ -61,6 +62,20 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<CfeEligibilityPolicy>();
         services.AddSingleton<ICfeEligibilityRulePackProvider, UruguayCfe25_2EligibilityRulePackProvider>();
         services.AddScoped<PrepareCfeEligibilityUseCase>();
+
+        services.AddSingleton<CfeSelectionPolicy>();
+        services.AddSingleton<ICfeSelectionConfigurationProvider, Release1CfeSelectionConfigurationProvider>();
+        services.AddScoped<SelectCfeUseCase>();
+
+        services.AddScoped<ISaleRepository, EfSaleRepository>();
+        services.AddScoped<SaleDraftBuilder>();
+        services.AddScoped<CreateSaleUseCase>();
+        services.AddScoped<UpdateSaleDraftUseCase>();
+        services.AddScoped<GetSaleUseCase>();
+        services.AddScoped<ListSalesUseCase>();
+        services.AddScoped<IUiAmountConverter, Release1UiAmountConverter>();
+        services.AddScoped<GetSaleFiscalPreviewUseCase>();
+        services.AddScoped<ValidateSaleUseCase>();
 
         return services;
     }
