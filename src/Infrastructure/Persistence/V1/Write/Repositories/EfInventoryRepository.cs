@@ -205,6 +205,7 @@ public sealed class EfInventoryRepository : IInventoryRepository
             QuantityBefore = movement.QuantityBefore,
             QuantityDelta = movement.QuantityDelta,
             QuantityAfter = movement.QuantityAfter,
+            PositionVersionAfter = movement.PositionVersionAfter,
             ReasonCode = movement.ReasonCode,
             Explanation = movement.Explanation,
             OccurredAtUtc = movement.OccurredAtUtc
@@ -230,6 +231,7 @@ public sealed class EfInventoryRepository : IInventoryRepository
         record.QuantityBefore,
         record.QuantityDelta,
         record.QuantityAfter,
+        record.PositionVersionAfter,
         record.ReasonCode,
         record.Explanation,
         record.OccurredAtUtc);
