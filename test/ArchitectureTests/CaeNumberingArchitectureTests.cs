@@ -93,7 +93,7 @@ public sealed class CaeNumberingArchitectureTests
         var migration = Read("src/Infrastructure/Persistence/V1/Migrations/20260829160000_V1CaeNumbering.cs");
 
         Assert.Contains("new { x.OrganizationId, x.CfeType, x.Series, x.Number }).IsUnique()", context, StringComparison.Ordinal);
-        Assert.Contains("IX_v1_fiscal_number_reservations_OrganizationId_CfeType_Series_Number", migration, StringComparison.Ordinal);
+        Assert.Contains("UX_v1_fiscal_res_identity", migration, StringComparison.Ordinal);
         Assert.Contains("unique: true", migration, StringComparison.Ordinal);
     }
 
