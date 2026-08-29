@@ -19,6 +19,8 @@ using Infrastructure.Repositories.Cache.Redis;
 using Infrastructure.Repositories.CustomerType;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -71,6 +73,11 @@ using Infrastructure.Repositories.Supplier;
 using ApplicationCore.Interfaces.Repositories.Supplier;
 using ApplicationCore.Interfaces.Services.Supplier;
 using ApplicationCore.Services.Supplier;
+using EFactura.Application.Common.Context;
+using WebApi.CrossCutting.Authorization;
+using WebApi.CrossCutting.Context;
+using WebApi.CrossCutting.Correlation;
+using WebApi.CrossCutting.Errors;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,6 +94,18 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 builder.Services.AddEndpointsApiExplorer();
 
 #endregion Controllers
+
+#region API v1 Cross-cutting Context and Authorization
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IActorContextAccessor, HttpActorContextAccessor>();
+builder.Services.AddScoped<ICorrelationContextAccessor, HttpCorrelationContextAccessor>();
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, V1AuthorizationMiddlewareResultHandler>();
+
+#endregion API v1 Cross-cutting Context and Authorization
 
 #region JWT
 
@@ -269,6 +288,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", builder.Configuration["App:Name"]));
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<V1ProblemDetailsMiddleware>();
+
 app.UseHttpsRedirection();
 
 app.UseCors(c => c
@@ -278,7 +300,7 @@ app.UseCors(c => c
               .AllowAnyHeader());
 
 app.UseAuthentication();
-
+app.UseMiddleware<ActorLogContextMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

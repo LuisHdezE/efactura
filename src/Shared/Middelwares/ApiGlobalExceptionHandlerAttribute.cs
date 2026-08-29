@@ -23,11 +23,18 @@ namespace Shared.Middelwares
         }
 
         /// <summary>
-        ///
+        /// Legacy exception contract. API v1 deliberately bypasses this filter and is handled
+        /// by the RFC 9457 middleware in WebApi.
         /// </summary>
         /// <param name="context"></param>
         public override void OnException(ExceptionContext context)
         {
+            if (context.HttpContext.Request.Path.StartsWithSegments("/api/v1"))
+            {
+                base.OnException(context);
+                return;
+            }
+
             HandleException(context);
 
             base.OnException(context);
