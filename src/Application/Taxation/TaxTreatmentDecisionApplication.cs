@@ -67,7 +67,7 @@ public sealed class ResolveTaxTreatmentUseCase
             cancellationToken);
 
         var exportEvaluation = request.OperationKind == TaxOperationKind.Services
-            && request.ServicePerformanceScope != ServicePerformanceScope.EntirelyOutsideUruguay
+            && request.ServicePerformanceScope == ServicePerformanceScope.EntirelyInUruguay
             ? await _exportServices.EvaluateAsync(facts, cancellationToken)
             : ExportServiceEligibilityEvaluation.NotEvaluated();
 
