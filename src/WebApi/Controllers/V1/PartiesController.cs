@@ -53,7 +53,7 @@ public sealed class PartiesController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var organizationId = _organization.Resolve(Request);
-        var parsedRole = string.IsNullOrWhiteSpace(role) ? null : ParseRole(role);
+        PartyRole? parsedRole = string.IsNullOrWhiteSpace(role) ? null : ParseRole(role);
         var result = await _list.ExecuteAsync(
             new PartySearchRequest(organizationId, search, parsedRole, active, page, pageSize),
             cancellationToken);
