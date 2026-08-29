@@ -1,0 +1,89 @@
+using Infrastructure.Persistence.V1.Write;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+namespace Infrastructure.Persistence.V1.Migrations;
+
+[DbContext(typeof(V1PersistenceDbContext))]
+[Migration("20260829052500_V1TaxationFoundation")]
+public sealed class V1TaxationFoundation : Migration
+{
+    private static readonly Guid BasicRateId = Guid.Parse("9a8f1c7e-1f7b-4a3b-b022-000000000022");
+    private static readonly Guid MinimumRateId = Guid.Parse("9a8f1c7e-1f7b-4a3b-b010-000000000010");
+
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.CreateTable(
+            name: "v1_tax_profiles",
+            columns: table => new
+            {
+                Id = table.Column<Guid>(nullable: false),
+                OrganizationId = table.Column<string>(maxLength: 200, nullable: true),
+                Code = table.Column<string>(maxLength: 80, nullable: false),
+                Name = table.Column<string>(maxLength: 200, nullable: false),
+                Treatment = table.Column<int>(nullable: false),
+                RatePercent = table.Column<decimal>(nullable: true),
+                CfeBillingIndicator = table.Column<int>(nullable: false),
+                EffectiveFromUtc = table.Column<DateTime>(nullable: false),
+                EffectiveToUtc = table.Column<DateTime>(nullable: true),
+                RuleVersion = table.Column<string>(maxLength: 80, nullable: false),
+                SourceAuthority = table.Column<string>(maxLength: 120, nullable: false),
+                SourceReference = table.Column<string>(maxLength: 500, nullable: false),
+                SourceUri = table.Column<string>(maxLength: 1000, nullable: false),
+                CfeSpecificationVersion = table.Column<string>(maxLength: 40, nullable: false),
+                VerifiedAtUtc = table.Column<DateTime>(nullable: false),
+                Active = table.Column<bool>(nullable: false),
+                Version = table.Column<long>(nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_v1_tax_profiles", x => x.Id);
+            });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_v1_tax_profiles_OrganizationId_Code_RuleVersion",
+            table: "v1_tax_profiles",
+            columns: new[] { "OrganizationId", "Code", "RuleVersion" },
+            unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_v1_tax_profiles_Active_EffectiveFromUtc_EffectiveToUtc",
+            table: "v1_tax_profiles",
+            columns: new[] { "Active", "EffectiveFromUtc", "EffectiveToUtc" });
+
+        var verifiedAt = new DateTime(2026, 8, 29, 0, 0, 0, DateTimeKind.Utc);
+        var effectiveFrom = new DateTime(2007, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        const string authority = "Uruguay - IMPO / Dirección General Impositiva";
+        const string sourceReference = "Ley 18.083 art. 25; Título 10 TO 2023 art. 34; Decreto 220/998 art. 99; Formato CFE v25.2 B-C4";
+        const string sourceUri = "https://www.impo.com.uy/bases/todgi-2023/10-2024/10";
+        const string ruleVersion = "UY-IVA-RATES-2007-07-01";
+        const string cfeSpec = "25.2";
+
+        migrationBuilder.InsertData(
+            table: "v1_tax_profiles",
+            columns: new[]
+            {
+                "Id", "OrganizationId", "Code", "Name", "Treatment", "RatePercent", "CfeBillingIndicator",
+                "EffectiveFromUtc", "EffectiveToUtc", "RuleVersion", "SourceAuthority", "SourceReference", "SourceUri",
+                "CfeSpecificationVersion", "VerifiedAtUtc", "Active", "Version"
+            },
+            values: new object?[,]
+            {
+                {
+                    BasicRateId, null, "UY-IVA-BASIC-22", "IVA tasa básica 22%", 3, 22m, 3,
+                    effectiveFrom, null, ruleVersion, authority, sourceReference, sourceUri,
+                    cfeSpec, verifiedAt, true, 1L
+                },
+                {
+                    MinimumRateId, null, "UY-IVA-MINIMUM-10", "IVA tasa mínima 10%", 2, 10m, 2,
+                    effectiveFrom, null, ruleVersion, authority, sourceReference, sourceUri,
+                    cfeSpec, verifiedAt, true, 1L
+                }
+            });
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropTable(name: "v1_tax_profiles");
+    }
+}
