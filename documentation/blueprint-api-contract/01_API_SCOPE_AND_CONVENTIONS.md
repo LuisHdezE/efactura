@@ -46,6 +46,18 @@ Ordinary collections use `page`, `pageSize`, allow-listed sort and explicit reso
 
 Client may send `X-Correlation-Id`. If absent/invalid, the server generates one. Every response returns the effective correlation ID and Problem Details includes it.
 
+## Organization context
+
+Protected operations that act inside one company require an effective organization context in addition to permission authorization.
+
+- if the authenticated actor has exactly one allowed company scope, the server may infer it;
+- if the actor has more than one allowed company scope, the client sends `X-Organization-Id`;
+- `X-Organization-Id` is selection context only and never grants access;
+- a requested organization outside the authenticated actor's allowed scopes is rejected;
+- server-side Application authorization rechecks the organization scope even when Presentation already validated the header.
+
+This convention avoids embedding organization IDs redundantly into every company-scoped route while preserving explicit multi-company selection.
+
 ## Idempotency
 
 Retry-sensitive commands require `Idempotency-Key` according to the operation matrix. Same identity + same material request returns the prior canonical result. Same identity + different material request is `409 Conflict` plus durable audit. Offline additionally uses `deviceId + clientOperationId + material payload hash`.

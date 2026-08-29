@@ -20,6 +20,7 @@ public static class V1PersistenceServiceCollectionExtensions
         string connectionString)
     {
         ArgumentNullException.ThrowIfNull(services);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
         services.AddDbContext<V1PersistenceDbContext>(options =>
             V1PersistenceDatabaseConfigurator.Configure(options, provider, connectionString));
@@ -31,8 +32,15 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IOutboxWriter, EfOutboxWriter>();
         services.AddScoped<IInboxStore, EfInboxStore>();
 
-        services.AddScoped<IPartyRepository, EfPartyRepository>();
-        services.AddScoped<ICommercialItemRepository, EfCommercialItemRepository>();
+        services.AddScoped<EfPartyRepository>();
+        services.AddScoped<IPartyRepository>(sp => sp.GetRequiredService<EfPartyRepository>());
+        services.AddScoped<IPartyMaintenanceRepository>(sp => sp.GetRequiredService<EfPartyRepository>());
+
+        services.AddScoped<EfCommercialItemRepository>();
+        services.AddScoped<ICommercialItemRepository>(sp => sp.GetRequiredService<EfCommercialItemRepository>());
+        services.AddScoped<ICommercialItemMaintenanceRepository>(sp => sp.GetRequiredService<EfCommercialItemRepository>());
+
+        services.AddScoped<IItemCategoryRepository, EfItemCategoryRepository>();
 
         return services;
     }

@@ -45,6 +45,7 @@ public sealed record CommercialItemCreatedIntegrationEvent(
 public sealed class CreateCommercialItemUseCase
 {
     private readonly ICommercialItemRepository _items;
+    private readonly IItemCategoryRepository? _categories;
     private readonly ITransactionManager _transactions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdempotencyStore _idempotency;
@@ -61,9 +62,11 @@ public sealed class CreateCommercialItemUseCase
         IAuditWriter audit,
         IOutboxWriter outbox,
         IActorContextAccessor actorContext,
-        ICorrelationContextAccessor correlationContext)
+        ICorrelationContextAccessor correlationContext,
+        IItemCategoryRepository? categories = null)
     {
         _items = items;
+        _categories = categories;
         _transactions = transactions;
         _unitOfWork = unitOfWork;
         _idempotency = idempotency;
@@ -80,6 +83,14 @@ public sealed class CreateCommercialItemUseCase
         EnsureAuthorized(command.OrganizationId);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.RequestHash);
+
+        if (command.TaxProfileId.HasValue)
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Validation,
+                "catalog.tax_profile_assignment_pending",
+                "Tax profile assignment is not enabled until the Taxation rule slice provides authoritative validation.");
+        }
 
         return _transactions.ExecuteAsync(async ct =>
         {
@@ -147,6 +158,31 @@ public sealed class CreateCommercialItemUseCase
                     conflictType: "duplicate_code");
             }
 
+            if (command.CategoryId.HasValue)
+            {
+                if (_categories is null)
+                {
+                    throw new ApplicationProblemException(
+                        ApplicationProblemKind.Validation,
+                        "catalog.category_validation_unavailable",
+                        "Category assignment is unavailable in this application composition.");
+                }
+
+                var category = await _categories.GetAsync(command.OrganizationId, command.CategoryId.Value, ct)
+                    ?? throw new ApplicationProblemException(
+                        ApplicationProblemKind.Validation,
+                        "catalog.category_not_found",
+                        "The selected category does not exist in this organization.");
+
+                if (!category.Active)
+                {
+                    throw new ApplicationProblemException(
+                        ApplicationProblemKind.Validation,
+                        "catalog.category_inactive",
+                        "The selected category is inactive.");
+                }
+            }
+
             CommercialItem item;
             try
             {
@@ -159,7 +195,7 @@ public sealed class CreateCommercialItemUseCase
                     command.Kind,
                     command.Unit,
                     command.TrackInventory,
-                    command.TaxProfileId,
+                    null,
                     command.CategoryId);
             }
             catch (DomainRuleException ex)

@@ -172,16 +172,11 @@ public sealed class ItemCategory
     private ItemCategory(Guid id, string organizationId, string code, string name, bool active, long version)
     {
         Id = id;
-        OrganizationId = organizationId.Trim();
-        Code = code.Trim().ToUpperInvariant();
-        Name = name.Trim();
+        OrganizationId = NormalizeRequired(organizationId, 200, "catalog.category.organization_required");
+        Code = NormalizeRequired(code, 80, "catalog.category.code_required").ToUpperInvariant();
+        Name = NormalizeRequired(name, 250, "catalog.category.name_required");
         Active = active;
         Version = version;
-
-        if (string.IsNullOrWhiteSpace(OrganizationId) || string.IsNullOrWhiteSpace(Code) || string.IsNullOrWhiteSpace(Name))
-        {
-            throw new DomainRuleException("catalog.category.required", "Category organization, code and name are required.");
-        }
     }
 
     public Guid Id { get; }
@@ -196,4 +191,35 @@ public sealed class ItemCategory
 
     public static ItemCategory Rehydrate(Guid id, string organizationId, string code, string name, bool active, long version) =>
         new(id, organizationId, code, name, active, version);
+
+    public void Update(string code, string name, bool active, long expectedVersion)
+    {
+        if (Version != expectedVersion)
+        {
+            throw new DomainRuleException(
+                "concurrency.stale_version",
+                "The category changed before this operation was applied.");
+        }
+
+        Code = NormalizeRequired(code, 80, "catalog.category.code_required").ToUpperInvariant();
+        Name = NormalizeRequired(name, 250, "catalog.category.name_required");
+        Active = active;
+        Version++;
+    }
+
+    private static string NormalizeRequired(string value, int maxLength, string code)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DomainRuleException(code, "Required category value is missing.");
+        }
+
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+        {
+            throw new DomainRuleException(code, $"Category value cannot exceed {maxLength} characters.");
+        }
+
+        return normalized;
+    }
 }
