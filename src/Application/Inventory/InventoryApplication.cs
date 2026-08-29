@@ -204,11 +204,11 @@ public sealed class InventoryAvailabilityChecker : IInventoryAvailabilityChecker
                 finding));
         }
 
-        if (results.Any(x => x.TracksInventory && !x.Sufficient))
+        if (results.Any(x => !x.Sufficient))
             findings.Add("inventory_availability_check");
 
         return new InventoryAvailabilityResult(
-            results.All(x => !x.TracksInventory || x.Sufficient),
+            results.All(x => x.Sufficient),
             results,
             findings.ToArray());
     }
@@ -400,15 +400,11 @@ public sealed class CreateStockAdjustmentUseCase
                     ?? throw new ApplicationProblemException(
                         ApplicationProblemKind.Conflict, "idempotency.missing_completed_resource",
                         "The prior stock adjustment no longer exists in the authoritative store.");
-                var replayedPosition = await _inventory.GetPositionAsync(command.OrganizationId, replayedMovement.PositionId, ct)
-                    ?? throw new ApplicationProblemException(
-                        ApplicationProblemKind.Conflict, "idempotency.missing_completed_resource",
-                        "The prior inventory position no longer exists in the authoritative store.");
                 return new StockAdjustmentResult(
-                    replayedPosition.Id,
+                    replayedMovement.PositionId,
                     replayedMovement.Id,
-                    replayedPosition.Version,
-                    replayedPosition.Quantity,
+                    replayedMovement.PositionVersionAfter,
+                    replayedMovement.QuantityAfter,
                     true);
             }
 
