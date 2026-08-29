@@ -55,12 +55,29 @@ public sealed class CfeSelectionPolicy
 
         if (treatment.Status == TaxDecisionStatus.RequiresReview)
         {
-            return Review(eligibility, "fiscal.selection.tax_treatment_requires_review", treatment.MissingFacts);
+            return Review(
+                eligibility,
+                "fiscal.selection.tax_treatment_requires_review",
+                treatment.MissingFacts);
+        }
+
+        // Selection is never allowed to overrule an unresolved eligibility decision.
+        // Even an administrator-configured strategy must wait until the underlying
+        // fiscal rule pack says the candidate set itself is current and usable.
+        if (eligibility.Status == CfeEligibilityStatus.RequiresReview)
+        {
+            return Review(
+                eligibility,
+                "fiscal.selection.eligibility_requires_review",
+                eligibility.MissingFacts);
         }
 
         if (eligibility.Candidates.Count == 0)
         {
-            return Review(eligibility, "fiscal.selection.no_eligible_candidate", eligibility.MissingFacts);
+            return Review(
+                eligibility,
+                "fiscal.selection.no_eligible_candidate",
+                eligibility.MissingFacts);
         }
 
         if (treatment.Classification == TaxTreatmentClassification.ExportServices)
@@ -88,12 +105,10 @@ public sealed class CfeSelectionPolicy
                     new[] { "compatible_export_service_documentation_strategy" });
             }
 
-            return Selected(eligibility, configured, "fiscal.selection.export_service_strategy_selected");
-        }
-
-        if (eligibility.Status == CfeEligibilityStatus.RequiresReview)
-        {
-            return Review(eligibility, "fiscal.selection.eligibility_requires_review", eligibility.MissingFacts);
+            return Selected(
+                eligibility,
+                configured,
+                "fiscal.selection.export_service_strategy_selected");
         }
 
         if (eligibility.Candidates.Count != 1)
@@ -104,7 +119,10 @@ public sealed class CfeSelectionPolicy
                 new[] { "cfe_selection_policy" });
         }
 
-        return Selected(eligibility, eligibility.Candidates.Single(), "fiscal.selection.single_candidate_selected");
+        return Selected(
+            eligibility,
+            eligibility.Candidates.Single(),
+            "fiscal.selection.single_candidate_selected");
     }
 
     private static CfeSelectionResult Selected(
