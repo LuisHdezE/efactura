@@ -118,6 +118,7 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
             entity.Property(x => x.ResidenceCountry).HasMaxLength(2).IsRequired();
             entity.Property(x => x.TaxResidenceCountry).HasMaxLength(2).IsRequired();
+            entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
             entity.HasIndex(x => new { x.OrganizationId, x.Name });
@@ -165,6 +166,7 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(1000);
             entity.Property(x => x.Unit).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
             entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
@@ -179,6 +181,7 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Code).HasMaxLength(80).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
             entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
