@@ -24,6 +24,7 @@ public sealed class V1StockMovementRecord
     public decimal QuantityBefore { get; set; }
     public decimal QuantityDelta { get; set; }
     public decimal QuantityAfter { get; set; }
+    public long PositionVersionAfter { get; set; }
     public string ReasonCode { get; set; } = string.Empty;
     public string? Explanation { get; set; }
     public DateTimeOffset OccurredAtUtc { get; set; }
