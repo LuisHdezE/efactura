@@ -39,13 +39,11 @@ public sealed class SaleDraftBuilder
             {
                 throw Validation("sales.customer_required", "The selected sale intent requires a customer.");
             }
-
             return;
         }
 
         var party = await _parties.GetAsync(organizationId, customerPartyId.Value, cancellationToken)
             ?? throw Validation("sales.customer_not_found", "The selected customer does not exist in this organization.");
-
         if (!party.Active || !party.Roles.Contains(PartyRole.Customer))
         {
             throw Validation("sales.party_not_active_customer", "The selected party is not an active customer.");
@@ -58,39 +56,25 @@ public sealed class SaleDraftBuilder
         CancellationToken cancellationToken)
     {
         if (inputs.Count == 0)
-        {
             throw Validation("sales.lines_required", "At least one sale line is required.");
-        }
 
         var result = new List<SaleLine>(inputs.Count);
         foreach (var input in inputs)
         {
             var item = await _items.GetAsync(organizationId, input.ItemId, cancellationToken)
                 ?? throw Validation("sales.item_not_found", "A selected item does not exist in this organization.");
-
             if (!item.Active)
-            {
                 throw Validation("sales.item_inactive", $"Item {item.Code} is inactive.");
-            }
 
             try
             {
                 result.Add(SaleLine.Create(
-                    Guid.NewGuid(),
-                    item.Id,
-                    item.Code,
-                    item.Name,
+                    Guid.NewGuid(), item.Id, item.Code, item.Name,
                     item.Kind == CommercialItemKind.Product ? SaleLineKind.Product : SaleLineKind.Service,
-                    input.Quantity,
-                    input.UnitPrice,
-                    item.TaxProfileId,
-                    input.ServicePerformanceScope,
-                    input.ServiceUseCountry,
-                    input.ExportServiceKind,
-                    input.RecipientIsPersonAbroad,
-                    input.ExclusiveUseAbroad,
-                    input.ForeignEconomicRelation,
-                    input.RecipientInstalledInFreeZone,
+                    input.Quantity, input.UnitPrice, item.TaxProfileId,
+                    input.ServicePerformanceScope, input.ServiceUseCountry, input.ExportServiceKind,
+                    input.RecipientIsPersonAbroad, input.ExclusiveUseAbroad,
+                    input.ForeignEconomicRelation, input.RecipientInstalledInFreeZone,
                     input.ProviderFromNonFreeNationalTerritory));
             }
             catch (DomainRuleException ex)
@@ -98,7 +82,6 @@ public sealed class SaleDraftBuilder
                 throw Validation(ex.Code, ex.Message);
             }
         }
-
         return result;
     }
 
@@ -108,25 +91,19 @@ public sealed class SaleDraftBuilder
 
 internal static class SalesAuthorization
 {
-    public static void Ensure(
-        IActorContextAccessor actors,
-        string organizationId,
-        string permission)
+    public static void Ensure(IActorContextAccessor actors, string organizationId, string permission)
     {
         var actor = actors.Current;
         if (!actor.IsAuthenticated || !actor.HasPermission(permission))
         {
             throw new ApplicationProblemException(
-                ApplicationProblemKind.Forbidden,
-                "permission_denied",
+                ApplicationProblemKind.Forbidden, "permission_denied",
                 "The actor is not allowed to perform this sales operation.");
         }
-
         if (!actor.CompanyScopes.Contains(organizationId))
         {
             throw new ApplicationProblemException(
-                ApplicationProblemKind.Forbidden,
-                "organization_scope_denied",
+                ApplicationProblemKind.Forbidden, "organization_scope_denied",
                 "The actor is outside the requested organization scope.");
         }
     }
@@ -166,9 +143,7 @@ public sealed class CreateSaleUseCase
         _correlations = correlations;
     }
 
-    public Task<SaleMutationResult> ExecuteAsync(
-        CreateSaleCommand command,
-        CancellationToken cancellationToken = default)
+    public Task<SaleMutationResult> ExecuteAsync(CreateSaleCommand command, CancellationToken cancellationToken = default)
     {
         SalesAuthorization.Ensure(_actors, command.OrganizationId, Permissions.SalesCreate);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
@@ -178,7 +153,10 @@ public sealed class CreateSaleUseCase
         {
             var now = DateTimeOffset.UtcNow;
             var scope = $"sales.create:{command.OrganizationId}";
-            var reservation = await ReserveAsync(scope, command.IdempotencyKey, command.RequestHash, now, ct);
+            var reservation = await _idempotency.TryReserveAsync(
+                new IdempotencyReservation(
+                    scope, command.IdempotencyKey, command.RequestHash,
+                    _actors.Current.ActorId, _correlations.Current.CorrelationId, now.AddMinutes(10)), ct);
 
             if (reservation.Status == IdempotencyReservationStatus.ExistingCompleted)
             {
@@ -187,33 +165,20 @@ public sealed class CreateSaleUseCase
                     ?? throw Conflict("idempotency.missing_completed_resource", "The prior completed sale no longer exists.");
                 return new SaleMutationResult(replayed.Id, replayed.Version, true);
             }
-
             EnsureAcquired(reservation);
             await _unitOfWork.SaveChangesAsync(ct);
 
             await _builder.ValidateCustomerAsync(
-                command.OrganizationId,
-                command.CustomerPartyId,
-                command.Intent,
-                command.EffectiveOn,
-                ct);
+                command.OrganizationId, command.CustomerPartyId, command.Intent, command.EffectiveOn, ct);
             var lines = await _builder.BuildLinesAsync(command.OrganizationId, command.Lines, ct);
 
             Sale sale;
             try
             {
                 sale = Sale.Create(
-                    Guid.NewGuid(),
-                    command.OrganizationId,
-                    command.LocationId,
-                    command.TerminalId,
-                    command.CustomerPartyId,
-                    command.Intent,
-                    command.CurrencyCode,
-                    command.EffectiveOn,
-                    command.DeliveryCountry,
-                    command.GoodsExportConfirmed,
-                    lines);
+                    Guid.NewGuid(), command.OrganizationId, command.LocationId, command.TerminalId,
+                    command.CustomerPartyId, command.Intent, command.CurrencyCode, command.EffectiveOn,
+                    command.DeliveryCountry, command.GoodsExportConfirmed, lines);
             }
             catch (DomainRuleException ex)
             {
@@ -226,57 +191,27 @@ public sealed class CreateSaleUseCase
                 new SaleDraftCreatedIntegrationEvent(Guid.NewGuid(), now, sale.Id, sale.OrganizationId),
                 new OutboxContext(
                     _correlations.Current.CorrelationId,
-                    organizationId: sale.OrganizationId,
-                    actorId: _actors.Current.ActorId),
-                ct);
+                    OrganizationId: sale.OrganizationId,
+                    ActorId: _actors.Current.ActorId), ct);
             await _idempotency.CompleteAsync(
                 new IdempotencyCompletion(
-                    scope,
-                    command.IdempotencyKey,
-                    command.RequestHash,
-                    "sale_draft_created",
-                    "Sale",
-                    sale.Id.ToString(),
-                    _correlations.Current.CorrelationId,
-                    now),
-                ct);
+                    scope, command.IdempotencyKey, command.RequestHash, "sale_draft_created",
+                    "Sale", sale.Id.ToString(), _correlations.Current.CorrelationId, now), ct);
             await _unitOfWork.SaveChangesAsync(ct);
-
             return new SaleMutationResult(sale.Id, sale.Version, false);
         }, cancellationToken);
     }
 
-    private Task<IdempotencyReservationResult> ReserveAsync(
-        string scope,
-        string key,
-        string requestHash,
-        DateTimeOffset now,
-        CancellationToken cancellationToken) =>
-        _idempotency.TryReserveAsync(
-            new IdempotencyReservation(
-                scope,
-                key,
-                requestHash,
-                _actors.Current.ActorId,
-                _correlations.Current.CorrelationId,
-                now.AddMinutes(10)),
-            cancellationToken);
-
     private static void EnsureAcquired(IdempotencyReservationResult reservation)
     {
         if (reservation.Status == IdempotencyReservationStatus.PayloadMismatch)
-        {
             throw Conflict("idempotency_key_reused", "The idempotency key was already used with a different request.");
-        }
-
         if (reservation.Status == IdempotencyReservationStatus.ExistingInProgress)
         {
             throw new ApplicationProblemException(
-                ApplicationProblemKind.Conflict,
-                "idempotency_in_progress",
+                ApplicationProblemKind.Conflict, "idempotency_in_progress",
                 "An operation with this idempotency key is still in progress.",
-                conflictType: "in_progress",
-                retryAfterSeconds: 2);
+                conflictType: "in_progress", retryAfterSeconds: 2);
         }
     }
 
@@ -285,35 +220,19 @@ public sealed class CreateSaleUseCase
             ? id
             : throw Conflict("idempotency.invalid_completed_resource", "The prior completed sale cannot be reconstructed safely.");
 
-    private Task AppendAuditAsync(
-        string eventName,
-        Sale sale,
-        DateTimeOffset now,
-        CancellationToken cancellationToken) =>
-        _audit.AppendAsync(
-            new AuditEvent(
-                Guid.NewGuid(),
-                now,
-                eventName,
-                _actors.Current.ActorId,
-                sale.OrganizationId,
-                sale.LocationId,
-                sale.TerminalId,
-                "Sale",
-                sale.Id.ToString(),
-                AuditOutcome.Succeeded,
-                _correlations.Current.CorrelationId,
-                null,
-                new Dictionary<string, string?>
-                {
-                    ["status"] = sale.Status.ToString(),
-                    ["version"] = sale.Version.ToString()
-                }),
-            cancellationToken);
+    private Task AppendAuditAsync(string eventName, Sale sale, DateTimeOffset now, CancellationToken ct) =>
+        _audit.AppendAsync(new AuditEvent(
+            Guid.NewGuid(), now, eventName, _actors.Current.ActorId, sale.OrganizationId,
+            sale.LocationId, sale.TerminalId, "Sale", sale.Id.ToString(), AuditOutcome.Succeeded,
+            _correlations.Current.CorrelationId, null,
+            new Dictionary<string, string?>
+            {
+                ["status"] = sale.Status.ToString(),
+                ["version"] = sale.Version.ToString()
+            }), ct);
 
     private static ApplicationProblemException Validation(string code, string detail) =>
         new(ApplicationProblemKind.Validation, code, detail);
-
     private static ApplicationProblemException Conflict(string code, string detail) =>
         new(ApplicationProblemKind.Conflict, code, detail);
 }
@@ -352,9 +271,7 @@ public sealed class UpdateSaleDraftUseCase
         _correlations = correlations;
     }
 
-    public Task<SaleMutationResult> ExecuteAsync(
-        UpdateSaleDraftCommand command,
-        CancellationToken cancellationToken = default)
+    public Task<SaleMutationResult> ExecuteAsync(UpdateSaleDraftCommand command, CancellationToken cancellationToken = default)
     {
         SalesAuthorization.Ensure(_actors, command.OrganizationId, Permissions.SalesCreate);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
@@ -366,108 +283,65 @@ public sealed class UpdateSaleDraftUseCase
             var scope = $"sales.update:{command.OrganizationId}:{command.SaleId}";
             var reservation = await _idempotency.TryReserveAsync(
                 new IdempotencyReservation(
-                    scope,
-                    command.IdempotencyKey,
-                    command.RequestHash,
-                    _actors.Current.ActorId,
-                    _correlations.Current.CorrelationId,
-                    now.AddMinutes(10)),
-                ct);
+                    scope, command.IdempotencyKey, command.RequestHash,
+                    _actors.Current.ActorId, _correlations.Current.CorrelationId, now.AddMinutes(10)), ct);
 
             if (reservation.Status == IdempotencyReservationStatus.ExistingCompleted)
             {
                 var replayed = await _sales.GetAsync(command.OrganizationId, command.SaleId, ct)
                     ?? throw new ApplicationProblemException(
-                        ApplicationProblemKind.Conflict,
-                        "idempotency.missing_completed_resource",
+                        ApplicationProblemKind.Conflict, "idempotency.missing_completed_resource",
                         "The prior completed sale no longer exists.");
                 return new SaleMutationResult(replayed.Id, replayed.Version, true);
             }
-
             if (reservation.Status != IdempotencyReservationStatus.Acquired)
             {
                 throw new ApplicationProblemException(
                     ApplicationProblemKind.Conflict,
                     reservation.Status == IdempotencyReservationStatus.PayloadMismatch
-                        ? "idempotency_key_reused"
-                        : "idempotency_in_progress",
+                        ? "idempotency_key_reused" : "idempotency_in_progress",
                     "The update idempotency reservation could not be acquired.");
             }
 
             await _unitOfWork.SaveChangesAsync(ct);
-
             var sale = await _sales.GetAsync(command.OrganizationId, command.SaleId, ct)
                 ?? throw new ApplicationProblemException(ApplicationProblemKind.NotFound, "sales.not_found", "Sale was not found.");
 
             await _builder.ValidateCustomerAsync(
-                command.OrganizationId,
-                command.CustomerPartyId,
-                command.Intent,
-                command.EffectiveOn,
-                ct);
+                command.OrganizationId, command.CustomerPartyId, command.Intent, command.EffectiveOn, ct);
             var lines = await _builder.BuildLinesAsync(command.OrganizationId, command.Lines, ct);
 
             try
             {
                 sale.ReplaceDraft(
-                    command.CustomerPartyId,
-                    command.Intent,
-                    command.CurrencyCode,
-                    command.EffectiveOn,
-                    command.DeliveryCountry,
-                    command.GoodsExportConfirmed,
-                    lines,
-                    command.ExpectedVersion);
+                    command.CustomerPartyId, command.Intent, command.CurrencyCode, command.EffectiveOn,
+                    command.DeliveryCountry, command.GoodsExportConfirmed, lines, command.ExpectedVersion);
             }
             catch (DomainRuleException ex)
             {
                 var kind = ex.Code == "concurrency.stale_version"
-                    ? ApplicationProblemKind.Conflict
-                    : ApplicationProblemKind.Validation;
+                    ? ApplicationProblemKind.Conflict : ApplicationProblemKind.Validation;
                 throw new ApplicationProblemException(
-                    kind,
-                    ex.Code,
-                    ex.Message,
+                    kind, ex.Code, ex.Message,
                     conflictType: kind == ApplicationProblemKind.Conflict ? "stale_version" : null);
             }
 
             await _sales.SaveAsync(sale, ct);
-            await _audit.AppendAsync(
-                new AuditEvent(
-                    Guid.NewGuid(),
-                    now,
-                    "SALE_DRAFT_UPDATED",
-                    _actors.Current.ActorId,
-                    sale.OrganizationId,
-                    sale.LocationId,
-                    sale.TerminalId,
-                    "Sale",
-                    sale.Id.ToString(),
-                    AuditOutcome.Succeeded,
-                    _correlations.Current.CorrelationId,
-                    null,
-                    new Dictionary<string, string?> { ["version"] = sale.Version.ToString() }),
-                ct);
+            await _audit.AppendAsync(new AuditEvent(
+                Guid.NewGuid(), now, "SALE_DRAFT_UPDATED", _actors.Current.ActorId,
+                sale.OrganizationId, sale.LocationId, sale.TerminalId, "Sale", sale.Id.ToString(),
+                AuditOutcome.Succeeded, _correlations.Current.CorrelationId, null,
+                new Dictionary<string, string?> { ["version"] = sale.Version.ToString() }), ct);
             await _outbox.EnqueueAsync(
                 new SaleDraftUpdatedIntegrationEvent(Guid.NewGuid(), now, sale.Id, sale.OrganizationId),
                 new OutboxContext(
                     _correlations.Current.CorrelationId,
-                    organizationId: sale.OrganizationId,
-                    actorId: _actors.Current.ActorId),
-                ct);
-            await _idempotency.CompleteAsync(
-                new IdempotencyCompletion(
-                    scope,
-                    command.IdempotencyKey,
-                    command.RequestHash,
-                    "sale_draft_updated",
-                    "Sale",
-                    sale.Id.ToString(),
-                    _correlations.Current.CorrelationId,
-                    now),
-                ct);
+                    OrganizationId: sale.OrganizationId,
+                    ActorId: _actors.Current.ActorId), ct);
+            await _idempotency.CompleteAsync(new IdempotencyCompletion(
+                scope, command.IdempotencyKey, command.RequestHash, "sale_draft_updated",
+                "Sale", sale.Id.ToString(), _correlations.Current.CorrelationId, now), ct);
             await _unitOfWork.SaveChangesAsync(ct);
-
             return new SaleMutationResult(sale.Id, sale.Version, false);
         }, cancellationToken);
     }
@@ -485,9 +359,7 @@ public sealed class GetSaleUseCase
     }
 
     public async Task<SaleView> ExecuteAsync(
-        string organizationId,
-        Guid saleId,
-        CancellationToken cancellationToken = default)
+        string organizationId, Guid saleId, CancellationToken cancellationToken = default)
     {
         SalesAuthorization.Ensure(_actors, organizationId, Permissions.SalesRead);
         var sale = await _sales.GetAsync(organizationId, saleId, cancellationToken)
@@ -508,20 +380,14 @@ public sealed class ListSalesUseCase
     }
 
     public async Task<PageResult<SaleView>> ExecuteAsync(
-        SaleSearchRequest request,
-        CancellationToken cancellationToken = default)
+        SaleSearchRequest request, CancellationToken cancellationToken = default)
     {
         SalesAuthorization.Ensure(_actors, request.OrganizationId, Permissions.SalesRead);
         var page = Math.Max(1, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 200);
         var result = await _sales.SearchAsync(
-            request with { Page = page, PageSize = pageSize },
-            cancellationToken);
-
+            request with { Page = page, PageSize = pageSize }, cancellationToken);
         return new PageResult<SaleView>(
-            result.Items.Select(SaleView.FromDomain).ToArray(),
-            page,
-            pageSize,
-            result.Total);
+            result.Items.Select(SaleView.FromDomain).ToArray(), page, pageSize, result.Total);
     }
 }
