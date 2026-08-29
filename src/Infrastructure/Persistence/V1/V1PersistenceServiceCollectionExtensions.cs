@@ -4,6 +4,7 @@ using EFactura.Application.Common.Idempotency;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Fiscal;
+using EFactura.Application.Inventory;
 using EFactura.Application.Parties;
 using EFactura.Application.Sales;
 using EFactura.Application.Taxation;
@@ -66,6 +67,13 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<CfeSelectionPolicy>();
         services.AddSingleton<ICfeSelectionConfigurationProvider, Release1CfeSelectionConfigurationProvider>();
         services.AddScoped<SelectCfeUseCase>();
+
+        services.AddScoped<IInventoryRepository, EfInventoryRepository>();
+        services.AddScoped<IInventoryAvailabilityChecker, InventoryAvailabilityChecker>();
+        services.AddScoped<ListInventoryPositionsUseCase>();
+        services.AddScoped<GetInventoryPositionUseCase>();
+        services.AddScoped<ListStockMovementsUseCase>();
+        services.AddScoped<CreateStockAdjustmentUseCase>();
 
         services.AddScoped<ISaleRepository, EfSaleRepository>();
         services.AddScoped<SaleDraftBuilder>();
