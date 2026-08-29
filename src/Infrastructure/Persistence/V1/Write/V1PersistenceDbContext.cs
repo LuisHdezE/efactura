@@ -15,7 +15,20 @@ public sealed class V1PersistenceDbContext : DbContext
     public DbSet<V1OutboxMessageRecord> OutboxMessages => Set<V1OutboxMessageRecord>();
     public DbSet<V1InboxMessageRecord> InboxMessages => Set<V1InboxMessageRecord>();
 
+    public DbSet<V1PartyRecord> Parties => Set<V1PartyRecord>();
+    public DbSet<V1PartyRoleRecord> PartyRoles => Set<V1PartyRoleRecord>();
+    public DbSet<V1PartyFiscalIdentityRecord> PartyFiscalIdentities => Set<V1PartyFiscalIdentityRecord>();
+    public DbSet<V1CommercialItemRecord> CommercialItems => Set<V1CommercialItemRecord>();
+    public DbSet<V1ItemCategoryRecord> ItemCategories => Set<V1ItemCategoryRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        ConfigureCrossCutting(modelBuilder);
+        ConfigureParties(modelBuilder);
+        ConfigureCatalog(modelBuilder);
+    }
+
+    private static void ConfigureCrossCutting(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<V1AuditEventRecord>(entity =>
         {
@@ -91,6 +104,85 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.CompletedAtUtc).HasPrecision(6);
             entity.HasIndex(x => x.ExpiresAtUtc);
             entity.HasIndex(x => x.CorrelationId);
+        });
+    }
+
+    private static void ConfigureParties(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1PartyRecord>(entity =>
+        {
+            entity.ToTable("v1_parties");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.ResidenceCountry).HasMaxLength(2).IsRequired();
+            entity.Property(x => x.TaxResidenceCountry).HasMaxLength(2).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.Name });
+            entity.HasIndex(x => new { x.OrganizationId, x.Active });
+        });
+
+        modelBuilder.Entity<V1PartyRoleRecord>(entity =>
+        {
+            entity.ToTable("v1_party_roles");
+            entity.HasKey(x => new { x.PartyId, x.Role });
+            entity.HasOne(x => x.Party)
+                .WithMany(x => x.Roles)
+                .HasForeignKey(x => x.PartyId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<V1PartyFiscalIdentityRecord>(entity =>
+        {
+            entity.ToTable("v1_party_fiscal_identities");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.TypeCode).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.IssuingCountry).HasMaxLength(2).IsRequired();
+            entity.Property(x => x.ValidFromUtc).HasPrecision(6);
+            entity.Property(x => x.ValidToUtc).HasPrecision(6);
+            entity.HasOne(x => x.Party)
+                .WithMany(x => x.FiscalIdentities)
+                .HasForeignKey(x => x.PartyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.PartyId, x.Active });
+            entity.HasIndex(x => new { x.TypeCode, x.Number, x.IssuingCountry });
+        });
+    }
+
+    private static void ConfigureCatalog(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1CommercialItemRecord>(entity =>
+        {
+            entity.ToTable("v1_commercial_items");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.Unit).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.Active });
+        });
+
+        modelBuilder.Entity<V1ItemCategoryRecord>(entity =>
+        {
+            entity.ToTable("v1_item_categories");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.Active });
         });
     }
 }
