@@ -49,6 +49,33 @@ public sealed class ProjectDependencyTests
         "Dapper"
     };
 
+    private static readonly string[] ForbiddenV1WritePersistenceTokens =
+    {
+        "using Dapper;",
+        "ExecuteSqlRaw",
+        "ExecuteSqlInterpolated",
+        "FromSqlRaw",
+        "NpgsqlCommand",
+        "MySqlCommand",
+        "DbCommand",
+        "INSERT ",
+        "UPDATE ",
+        "DELETE ",
+        "MERGE "
+    };
+
+    private static readonly string[] ForbiddenRepositoryTransactionTokens =
+    {
+        "SaveChanges(",
+        "SaveChangesAsync(",
+        "BeginTransaction(",
+        "BeginTransactionAsync(",
+        "Commit(",
+        "CommitAsync(",
+        "Rollback(",
+        "RollbackAsync("
+    };
+
     [Fact]
     public void Domain_has_no_package_or_project_dependencies()
     {
@@ -127,6 +154,60 @@ public sealed class ProjectDependencyTests
         Assert.True(
             violations.Count == 0,
             $"API v1 controllers must depend on Application contracts, not legacy/infrastructure types:{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+    }
+
+    [Fact]
+    public void V1_write_persistence_does_not_use_Dapper_or_ad_hoc_mutation_SQL()
+    {
+        var directory = Path.Combine(RepositoryRoot, "src", "Infrastructure", "Persistence", "V1", "Write");
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+
+        var violations = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
+        {
+            var content = File.ReadAllText(file);
+            foreach (var token in ForbiddenV1WritePersistenceTokens)
+            {
+                if (content.Contains(token, StringComparison.OrdinalIgnoreCase))
+                {
+                    violations.Add($"{Path.GetRelativePath(RepositoryRoot, file)} -> {token}");
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            $"API v1 write persistence must use the approved EF Core transactional path, not Dapper/raw mutation SQL:{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
+    }
+
+    [Fact]
+    public void V1_write_repositories_do_not_commit_or_manage_transactions_independently()
+    {
+        var directory = Path.Combine(RepositoryRoot, "src", "Infrastructure", "Persistence", "V1", "Write", "Repositories");
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+
+        var violations = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
+        {
+            var content = File.ReadAllText(file);
+            foreach (var token in ForbiddenRepositoryTransactionTokens)
+            {
+                if (content.Contains(token, StringComparison.Ordinal))
+                {
+                    violations.Add($"{Path.GetRelativePath(RepositoryRoot, file)} -> {token}");
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            $"API v1 write repositories stage changes only. Save/transaction ownership belongs to UnitOfWork/TransactionManager:{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
     private static void AssertNoForbiddenPackages(XDocument project, string layer)
