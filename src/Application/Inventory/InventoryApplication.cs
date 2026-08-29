@@ -396,15 +396,20 @@ public sealed class CreateStockAdjustmentUseCase
                     throw new ApplicationProblemException(
                         ApplicationProblemKind.Conflict, "idempotency.invalid_completed_resource",
                         "The prior stock adjustment cannot be reconstructed safely.");
-                var movement = await _inventory.GetMovementAsync(command.OrganizationId, movementId, ct)
+                var replayedMovement = await _inventory.GetMovementAsync(command.OrganizationId, movementId, ct)
                     ?? throw new ApplicationProblemException(
                         ApplicationProblemKind.Conflict, "idempotency.missing_completed_resource",
                         "The prior stock adjustment no longer exists in the authoritative store.");
-                var position = await _inventory.GetPositionAsync(command.OrganizationId, movement.PositionId, ct)
+                var replayedPosition = await _inventory.GetPositionAsync(command.OrganizationId, replayedMovement.PositionId, ct)
                     ?? throw new ApplicationProblemException(
                         ApplicationProblemKind.Conflict, "idempotency.missing_completed_resource",
                         "The prior inventory position no longer exists in the authoritative store.");
-                return new StockAdjustmentResult(position.Id, movement.Id, position.Version, position.Quantity, true);
+                return new StockAdjustmentResult(
+                    replayedPosition.Id,
+                    replayedMovement.Id,
+                    replayedPosition.Version,
+                    replayedPosition.Quantity,
+                    true);
             }
 
             if (reservation.Status == IdempotencyReservationStatus.PayloadMismatch)
