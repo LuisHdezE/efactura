@@ -17,7 +17,7 @@ public sealed class ItemsController : ControllerBase
     private readonly ListCommercialItemsUseCase _list;
     private readonly GetCommercialItemUseCase _get;
     private readonly CreateCommercialItemUseCase _create;
-    private readonly UpdateCommercialItemUseCase _update;
+    private readonly TaxSafeUpdateCommercialItemUseCase _update;
     private readonly DeactivateCommercialItemUseCase _deactivate;
 
     public ItemsController(
@@ -25,7 +25,7 @@ public sealed class ItemsController : ControllerBase
         ListCommercialItemsUseCase list,
         GetCommercialItemUseCase get,
         CreateCommercialItemUseCase create,
-        UpdateCommercialItemUseCase update,
+        TaxSafeUpdateCommercialItemUseCase update,
         DeactivateCommercialItemUseCase deactivate)
     {
         _organization = organization;
