@@ -38,6 +38,17 @@ public sealed class ProjectDependencyTests
         "Azure."
     };
 
+    private static readonly string[] ForbiddenV1ControllerTokens =
+    {
+        "ApplicationCore.",
+        "Infrastructure.",
+        "Shared.",
+        "DbContext",
+        "Npgsql",
+        "MySql",
+        "Dapper"
+    };
+
     [Fact]
     public void Domain_has_no_package_or_project_dependencies()
     {
@@ -89,6 +100,33 @@ public sealed class ProjectDependencyTests
     {
         AssertSourceHasNoForbiddenTokens("src/Domain");
         AssertSourceHasNoForbiddenTokens("src/Application");
+    }
+
+    [Fact]
+    public void V1_controllers_do_not_reach_into_legacy_or_infrastructure_layers()
+    {
+        var directory = Path.Combine(RepositoryRoot, "src", "WebApi", "Controllers", "V1");
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+
+        var violations = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
+        {
+            var content = File.ReadAllText(file);
+            foreach (var token in ForbiddenV1ControllerTokens)
+            {
+                if (content.Contains(token, StringComparison.Ordinal))
+                {
+                    violations.Add($"{Path.GetRelativePath(RepositoryRoot, file)} -> {token}");
+                }
+            }
+        }
+
+        Assert.True(
+            violations.Count == 0,
+            $"API v1 controllers must depend on Application contracts, not legacy/infrastructure types:{Environment.NewLine}{string.Join(Environment.NewLine, violations)}");
     }
 
     private static void AssertNoForbiddenPackages(XDocument project, string layer)
