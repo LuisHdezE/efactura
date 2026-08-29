@@ -12,11 +12,11 @@ public sealed class EfUnitOfWork : IUnitOfWork
     private const string InventoryPositionUniqueIndex =
         "IX_v1_inventory_positions_OrganizationId_ItemId_LocationId";
     private const string CaeArtifactUniqueIndex =
-        "IX_v1_cae_authorizations_OrganizationId_SourceArtifactHash";
+        "UX_v1_cae_auth_org_artifact";
     private const string FiscalNumberUniqueIndex =
-        "IX_v1_fiscal_number_reservations_OrganizationId_CfeType_Series_Number";
+        "UX_v1_fiscal_res_identity";
     private const string FiscalOperationUniqueIndex =
-        "IX_v1_fiscal_number_reservations_OrganizationId_OperationId";
+        "UX_v1_fiscal_res_operation";
 
     private readonly Write.V1PersistenceDbContext _dbContext;
 
