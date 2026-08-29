@@ -9,6 +9,8 @@ on:
       - 'test/CrossCuttingTests/**'
       - 'test/PersistenceIntegrationTests/**'
       - 'api-accounting.sln'
+      - 'global.json'
+      - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
   push:
     branches: [main]
@@ -18,6 +20,8 @@ on:
       - 'test/CrossCuttingTests/**'
       - 'test/PersistenceIntegrationTests/**'
       - 'api-accounting.sln'
+      - 'global.json'
+      - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
 
 permissions:
@@ -33,10 +37,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Restore solution
         run: dotnet restore api-accounting.sln
@@ -88,10 +92,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Run transactional persistence integration tests
         env:
