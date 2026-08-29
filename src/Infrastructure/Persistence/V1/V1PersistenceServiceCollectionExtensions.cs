@@ -4,6 +4,7 @@ using EFactura.Application.Common.Idempotency;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Parties;
+using EFactura.Application.Taxation;
 using Infrastructure.Persistence.V1.Transactions;
 using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Repositories;
@@ -41,6 +42,8 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<ICommercialItemMaintenanceRepository>(sp => sp.GetRequiredService<EfCommercialItemRepository>());
 
         services.AddScoped<IItemCategoryRepository, EfItemCategoryRepository>();
+        services.AddScoped<ITaxProfileRepository, EfTaxProfileRepository>();
+        services.AddScoped<ITaxProfileAssignmentValidator, TaxProfileAssignmentValidator>();
 
         return services;
     }
