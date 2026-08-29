@@ -120,12 +120,20 @@ public sealed class GetSaleFiscalPreviewUseCase
             new SelectCfeRequest(
                 sale.OrganizationId, sale.EffectiveOn, overallTreatment, eligibility), cancellationToken);
 
+        // UC-SALE-001 requires stock availability validation for stock-tracked/product lines.
+        // Inventory is not implemented in this slice, so product-bearing sales fail closed
+        // instead of being promoted to VALIDATED on tax/fiscal evidence alone.
+        var inventoryAvailabilityRequired = sale.Lines.Any(line => line.Kind == SaleLineKind.Product);
         var findings = linePreviews.SelectMany(x => x.MissingFacts)
             .Concat(eligibility.MissingFacts)
             .Concat(selection.MissingFacts)
+            .Concat(inventoryAvailabilityRequired
+                ? new[] { "inventory_availability_check" }
+                : Array.Empty<string>())
             .Distinct(StringComparer.Ordinal)
             .ToArray();
-        var readyForConfirmation = linePreviews.All(line =>
+        var readyForConfirmation = !inventoryAvailabilityRequired
+                                   && linePreviews.All(line =>
                                        line.TaxTreatmentStatus == TaxDecisionStatus.Resolved
                                        && line.TaxRateStatus == TaxRateResolutionStatus.Resolved)
                                    && selection.Status == CfeSelectionStatus.Selected;
