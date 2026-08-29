@@ -52,7 +52,7 @@ public sealed class CaeAuthorizationsController : ControllerBase
     {
         EnsurePagination(page, pageSize);
         var organizationId = _organization.Resolve(Request);
-        var parsedType = cfeType.HasValue ? ParseCfeType(cfeType.Value) : null;
+        CfeFamily? parsedType = cfeType.HasValue ? ParseCfeType(cfeType.Value) : null;
         var result = await _list.ExecuteAsync(
             organizationId, parsedType, null, page, pageSize, cancellationToken);
         return Ok(new PageResponse<CaeAuthorizationDto>(
