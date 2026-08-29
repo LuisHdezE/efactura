@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Infrastructure.Persistence.V1.Write.Models;
 
 public sealed class V1CaeAuthorizationRecord
@@ -9,7 +11,9 @@ public sealed class V1CaeAuthorizationRecord
     public string Series { get; set; } = string.Empty;
     public long RangeFrom { get; set; }
     public long RangeTo { get; set; }
+    [Column(TypeName = "date")]
     public DateTime ValidFrom { get; set; }
+    [Column(TypeName = "date")]
     public DateTime ValidTo { get; set; }
     public int Status { get; set; }
     public string VerificationMethod { get; set; } = string.Empty;
