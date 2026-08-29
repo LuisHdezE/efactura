@@ -45,6 +45,7 @@ public sealed record CommercialItemCreatedIntegrationEvent(
 public sealed class CreateCommercialItemUseCase
 {
     private readonly ICommercialItemRepository _items;
+    private readonly IItemCategoryRepository _categories;
     private readonly ITransactionManager _transactions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdempotencyStore _idempotency;
@@ -55,6 +56,7 @@ public sealed class CreateCommercialItemUseCase
 
     public CreateCommercialItemUseCase(
         ICommercialItemRepository items,
+        IItemCategoryRepository categories,
         ITransactionManager transactions,
         IUnitOfWork unitOfWork,
         IIdempotencyStore idempotency,
@@ -64,6 +66,7 @@ public sealed class CreateCommercialItemUseCase
         ICorrelationContextAccessor correlationContext)
     {
         _items = items;
+        _categories = categories;
         _transactions = transactions;
         _unitOfWork = unitOfWork;
         _idempotency = idempotency;
@@ -145,6 +148,23 @@ public sealed class CreateCommercialItemUseCase
                     "catalog.code_exists",
                     "An item with the same code already exists in this organization.",
                     conflictType: "duplicate_code");
+            }
+
+            if (command.CategoryId.HasValue)
+            {
+                var category = await _categories.GetAsync(command.OrganizationId, command.CategoryId.Value, ct)
+                    ?? throw new ApplicationProblemException(
+                        ApplicationProblemKind.Validation,
+                        "catalog.category_not_found",
+                        "The selected category does not exist in this organization.");
+
+                if (!category.Active)
+                {
+                    throw new ApplicationProblemException(
+                        ApplicationProblemKind.Validation,
+                        "catalog.category_inactive",
+                        "The selected category is inactive.");
+                }
             }
 
             CommercialItem item;
