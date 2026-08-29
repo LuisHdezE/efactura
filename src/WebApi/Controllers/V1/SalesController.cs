@@ -188,23 +188,26 @@ public sealed class SalesController : ControllerBase
         SaleRegulatoryFactStatus.Unknown);
 
     private static SaleCommercialIntent ParseIntent(string value) =>
-        Enum.TryParse<SaleCommercialIntent>(value, true, out var parsed) && Enum.IsDefined(parsed)
-            ? parsed
-            : throw ValidationProblem("sales.invalid_intent", "Sale intent must be CONSUMER_FINAL, TAXPAYER_INVOICE or EXPORT.");
+        V1ApiEnum.Parse<SaleCommercialIntent>(
+            value,
+            "sales.invalid_intent",
+            "Sale intent must be CONSUMER_FINAL, TAXPAYER_INVOICE or EXPORT.");
 
     private static SaleStatus ParseStatus(string value) =>
-        Enum.TryParse<SaleStatus>(value, true, out var parsed) && Enum.IsDefined(parsed)
-            ? parsed
-            : throw ValidationProblem("sales.invalid_status", "Sale status is not supported by this API slice.");
+        V1ApiEnum.Parse<SaleStatus>(
+            value,
+            "sales.invalid_status",
+            "Sale status is not supported by this API slice.");
 
     private static SaleServicePerformanceScope ParseServiceScope(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return SaleServicePerformanceScope.UnknownOrMixed;
 
-        return Enum.TryParse<SaleServicePerformanceScope>(value, true, out var parsed) && Enum.IsDefined(parsed)
-            ? parsed
-            : throw ValidationProblem("sales.invalid_service_performance_scope", "Service performance scope is invalid.");
+        return V1ApiEnum.Parse<SaleServicePerformanceScope>(
+            value,
+            "sales.invalid_service_performance_scope",
+            "Service performance scope is invalid.");
     }
 
     private static SaleExportServiceKind ParseExportServiceKind(string? value)
@@ -212,9 +215,10 @@ public sealed class SalesController : ControllerBase
         if (string.IsNullOrWhiteSpace(value))
             return SaleExportServiceKind.None;
 
-        return Enum.TryParse<SaleExportServiceKind>(value, true, out var parsed) && Enum.IsDefined(parsed)
-            ? parsed
-            : throw ValidationProblem("sales.invalid_export_service_kind", "Export-service kind is invalid.");
+        return V1ApiEnum.Parse<SaleExportServiceKind>(
+            value,
+            "sales.invalid_export_service_kind",
+            "Export-service kind is invalid.");
     }
 
     private static Guid ParseGuid(string value, string code) =>
