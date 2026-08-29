@@ -25,14 +25,14 @@ public sealed class ItemsController : ControllerBase
         ListCommercialItemsUseCase list,
         GetCommercialItemUseCase get,
         CreateCommercialItemUseCase create,
-        UpdateCommercialItemUseCase update,
+        TaxSafeUpdateCommercialItemUseCase update,
         DeactivateCommercialItemUseCase deactivate)
     {
         _organization = organization;
         _list = list;
         _get = get;
         _create = create;
-        _update = new TaxSafeUpdateCommercialItemUseCase(update);
+        _update = update;
         _deactivate = deactivate;
     }
 
