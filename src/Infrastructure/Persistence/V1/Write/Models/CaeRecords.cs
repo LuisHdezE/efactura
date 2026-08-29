@@ -40,6 +40,7 @@ public sealed class V1CaeAllocationRecord
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset? ClosedAtUtc { get; set; }
     public V1CaeAuthorizationRecord Authorization { get; set; } = null!;
+    public List<V1FiscalNumberReservationRecord> Reservations { get; set; } = new();
 }
 
 public sealed class V1FiscalNumberReservationRecord
@@ -56,4 +57,5 @@ public sealed class V1FiscalNumberReservationRecord
     public string OperationId { get; set; } = string.Empty;
     public DateTimeOffset ReservedAtUtc { get; set; }
     public V1CaeAuthorizationRecord Authorization { get; set; } = null!;
+    public V1CaeAllocationRecord? Allocation { get; set; }
 }
