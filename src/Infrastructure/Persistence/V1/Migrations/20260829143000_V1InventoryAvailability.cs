@@ -47,6 +47,7 @@ public sealed class V1InventoryAvailability : Migration
                 QuantityBefore = table.Column<decimal>(precision: 18, scale: 6, nullable: false),
                 QuantityDelta = table.Column<decimal>(precision: 18, scale: 6, nullable: false),
                 QuantityAfter = table.Column<decimal>(precision: 18, scale: 6, nullable: false),
+                PositionVersionAfter = table.Column<long>(nullable: false),
                 ReasonCode = table.Column<string>(maxLength: 80, nullable: false),
                 Explanation = table.Column<string>(maxLength: 1000, nullable: true),
                 OccurredAtUtc = table.Column<DateTimeOffset>(precision: 6, nullable: false)
