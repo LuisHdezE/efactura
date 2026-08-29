@@ -418,20 +418,15 @@ public sealed class CaeAuthorization
         EnsureUsable(on);
         EnsureVersion(expectedVersion);
 
-        var candidate = NextNumber;
-        foreach (var allocation in allocations.OrderBy(x => x.RangeFrom))
-        {
-            if (allocation.Range.Contains(candidate))
-                candidate = allocation.RangeTo + 1;
-            if (candidate < allocation.RangeFrom)
-                break;
-        }
-
+        var candidate = FindNextDirectCandidate(NextNumber, allocations);
         if (candidate > RangeTo)
             throw new DomainRuleException("cae.exhausted", "CAE has no unallocated number available for direct reservation.");
 
         NextNumber = candidate + 1;
+        if (!HasRemainingNumber(allocations))
+            Status = CaeAuthorizationStatus.Exhausted;
         Version++;
+
         return FiscalNumberReservation.Create(
             Id, null, OrganizationId, CfeType, Series, candidate,
             locationId, terminalId, operationId, now);
@@ -444,6 +439,31 @@ public sealed class CaeAuthorization
             return;
         Status = CaeAuthorizationStatus.Exhausted;
         Version++;
+    }
+
+    private bool HasRemainingNumber(IReadOnlyCollection<CaeAllocation> allocations)
+    {
+        if (allocations.Any(x => x.Status == CaeAllocationStatus.Active && x.NextNumber <= x.RangeTo))
+            return true;
+
+        return FindNextDirectCandidate(NextNumber, allocations) <= RangeTo;
+    }
+
+    private static long FindNextDirectCandidate(
+        long start,
+        IReadOnlyCollection<CaeAllocation> allocations)
+    {
+        var candidate = start;
+        foreach (var allocation in allocations.OrderBy(x => x.RangeFrom))
+        {
+            // Once a subrange is allocated it never re-enters the direct pool, even after
+            // the allocation is closed or exhausted.
+            if (allocation.Range.Contains(candidate))
+                candidate = allocation.RangeTo + 1;
+            if (candidate < allocation.RangeFrom)
+                break;
+        }
+        return candidate;
     }
 
     private void EnsureUsable(DateOnly on)
