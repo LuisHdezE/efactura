@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'test/ArchitectureTests/**'
       - 'test/CrossCuttingTests/**'
+      - 'test/PersistenceIntegrationTests/**'
       - 'api-accounting.sln'
       - '.github/workflows/clean-architecture.yml'
   push:
@@ -15,6 +16,7 @@ on:
       - 'src/**'
       - 'test/ArchitectureTests/**'
       - 'test/CrossCuttingTests/**'
+      - 'test/PersistenceIntegrationTests/**'
       - 'api-accounting.sln'
       - '.github/workflows/clean-architecture.yml'
 
@@ -47,3 +49,53 @@ jobs:
 
       - name: Run API v1 cross-cutting tests
         run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
+
+  persistence-integration:
+    name: PostgreSQL and MySQL transaction tests
+    needs: architecture
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: efactura_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: efactura_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -prootpass --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run transactional persistence integration tests
+        env:
+          PERSISTENCE_INTEGRATION_REQUIRED: 'true'
+          POSTGRES_TEST_CONNECTION: 'Host=127.0.0.1;Port=5432;Username=postgres;Password=postgres;Database=efactura_ci'
+          MYSQL_TEST_CONNECTION: 'Server=127.0.0.1;Port=3306;User ID=root;Password=rootpass;Database=efactura_ci;SslMode=None;AllowPublicKeyRetrieval=True'
+        run: dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"
