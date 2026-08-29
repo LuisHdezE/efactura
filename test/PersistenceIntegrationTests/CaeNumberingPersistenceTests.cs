@@ -399,7 +399,9 @@ public sealed class CaeNumberingPersistenceTests
         long CaeAuthorizationVersionBefore,
         long CaeAuthorizationVersionAfter);
 
-    private sealed class InjectedFailure : Exception;
+    private sealed class InjectedFailure : Exception
+    {
+    }
 
     private sealed class FixedActorContextAccessor : IActorContextAccessor
     {
