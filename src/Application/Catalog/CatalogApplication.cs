@@ -84,6 +84,14 @@ public sealed class CreateCommercialItemUseCase
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.RequestHash);
 
+        if (command.TaxProfileId.HasValue)
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Validation,
+                "catalog.tax_profile_assignment_pending",
+                "Tax profile assignment is not enabled until the Taxation rule slice provides authoritative validation.");
+        }
+
         return _transactions.ExecuteAsync(async ct =>
         {
             var now = DateTimeOffset.UtcNow;
@@ -187,7 +195,7 @@ public sealed class CreateCommercialItemUseCase
                     command.Kind,
                     command.Unit,
                     command.TrackInventory,
-                    command.TaxProfileId,
+                    null,
                     command.CategoryId);
             }
             catch (DomainRuleException ex)
