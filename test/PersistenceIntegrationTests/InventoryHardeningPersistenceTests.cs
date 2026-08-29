@@ -206,7 +206,7 @@ public sealed class InventoryHardeningPersistenceTests
 
             var connectionBuilder = new DbConnectionStringBuilder { ConnectionString = baseConnectionString };
             connectionBuilder["Database"] =
-                $"efactura_inventory_hardening_{provider.ToString().ToLowerInvariant()}_{Guid.NewGuid():N}";
+                $"ef_inv_h_{provider.ToString().ToLowerInvariant()}_{Guid.NewGuid():N}";
             var optionsBuilder = new DbContextOptionsBuilder<V1PersistenceDbContext>();
             V1PersistenceDatabaseConfigurator.Configure(
                 optionsBuilder, provider, connectionBuilder.ConnectionString);
