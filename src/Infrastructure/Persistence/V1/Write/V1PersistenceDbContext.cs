@@ -21,6 +21,8 @@ public sealed class V1PersistenceDbContext : DbContext
     public DbSet<V1CommercialItemRecord> CommercialItems => Set<V1CommercialItemRecord>();
     public DbSet<V1ItemCategoryRecord> ItemCategories => Set<V1ItemCategoryRecord>();
     public DbSet<V1TaxProfileRecord> TaxProfiles => Set<V1TaxProfileRecord>();
+    public DbSet<V1SaleRecord> Sales => Set<V1SaleRecord>();
+    public DbSet<V1SaleLineRecord> SaleLines => Set<V1SaleLineRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +30,7 @@ public sealed class V1PersistenceDbContext : DbContext
         ConfigureParties(modelBuilder);
         ConfigureTaxation(modelBuilder);
         ConfigureCatalog(modelBuilder);
+        ConfigureSales(modelBuilder);
     }
 
     private static void ConfigureCrossCutting(ModelBuilder modelBuilder)
@@ -217,6 +220,60 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
             entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
             entity.HasIndex(x => new { x.OrganizationId, x.Active });
+        });
+    }
+
+    private static void ConfigureSales(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1SaleRecord>(entity =>
+        {
+            entity.ToTable("v1_sales");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.LocationId).HasMaxLength(200);
+            entity.Property(x => x.TerminalId).HasMaxLength(200);
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.EffectiveOnUtc).HasPrecision(6);
+            entity.Property(x => x.DeliveryCountry).HasMaxLength(2);
+            entity.Property(x => x.ValidationFingerprint).HasMaxLength(64);
+            entity.Property(x => x.ValidatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.EffectiveOnUtc });
+            entity.HasIndex(x => new { x.OrganizationId, x.Status });
+            entity.HasIndex(x => new { x.OrganizationId, x.CustomerPartyId });
+            entity.HasOne<V1PartyRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.CustomerPartyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<V1SaleLineRecord>(entity =>
+        {
+            entity.ToTable("v1_sale_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.ItemCode).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.ItemName).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.Quantity).HasPrecision(18, 6);
+            entity.Property(x => x.UnitPrice).HasPrecision(18, 6);
+            entity.Property(x => x.ServiceUseCountry).HasMaxLength(2);
+            entity.HasOne(x => x.Sale)
+                .WithMany(x => x.Lines)
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<V1CommercialItemRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<V1TaxProfileRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.TaxProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => x.SaleId);
+            entity.HasIndex(x => x.ItemId);
         });
     }
 }
