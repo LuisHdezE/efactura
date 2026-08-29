@@ -19,7 +19,7 @@ public sealed class EfTaxProfileRepository : ITaxProfileRepository
         TaxProfileSearchRequest request,
         CancellationToken cancellationToken = default)
     {
-        var onDate = request.OnDate.ToDateTime(TimeOnly.MinValue);
+        var onDate = ToUtcStartOfDay(request.OnDate);
         var query = _dbContext.TaxProfiles
             .AsNoTracking()
             .Where(x => x.Active
@@ -48,7 +48,7 @@ public sealed class EfTaxProfileRepository : ITaxProfileRepository
         DateOnly onDate,
         CancellationToken cancellationToken = default)
     {
-        var date = onDate.ToDateTime(TimeOnly.MinValue);
+        var date = ToUtcStartOfDay(onDate);
         var row = await _dbContext.TaxProfiles
             .AsNoTracking()
             .SingleOrDefaultAsync(
@@ -61,6 +61,9 @@ public sealed class EfTaxProfileRepository : ITaxProfileRepository
 
         return row is null ? null : Map(row);
     }
+
+    private static DateTime ToUtcStartOfDay(DateOnly date) =>
+        DateTime.SpecifyKind(date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
 
     private static TaxProfile Map(V1TaxProfileRecord row) =>
         TaxProfile.Rehydrate(
