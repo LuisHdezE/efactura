@@ -146,6 +146,8 @@ public sealed class CaeNumberingPersistenceTests
         var reservations = await verification.FiscalNumberReservations.AsNoTracking().ToListAsync();
         Assert.Single(reservations);
         Assert.Equal(4000, reservations.Single().Number);
+        var authorization = await verification.CaeAuthorizations.AsNoTracking().SingleAsync();
+        Assert.Equal((int)CaeAuthorizationStatus.Exhausted, authorization.Status);
         Assert.Contains(
             await verification.AuditEvents.AsNoTracking().Select(x => x.EventName).ToListAsync(),
             x => x == "cae.exhausted");
@@ -175,6 +177,27 @@ public sealed class CaeNumberingPersistenceTests
 
         await using var verification = database.CreateContext();
         Assert.Equal(2, await verification.FiscalNumberReservations.CountAsync());
+    }
+
+    [Theory]
+    [InlineData(V1DatabaseProvider.PostgreSql)]
+    [InlineData(V1DatabaseProvider.MySql)]
+    public async Task Multiple_disjoint_allocations_for_same_terminal_are_consumed_deterministically(V1DatabaseProvider provider)
+    {
+        await using var database = await TestDatabase.CreateAsync(provider);
+        if (database is null)
+            return;
+
+        var caeId = await SeedActiveCaeAsync(database, 5200, 5210);
+        await CreateAllocationAsync(database, caeId, "loc-1", "term-1", 5200, 5200);
+        await CreateAllocationAsync(database, caeId, "loc-1", "term-1", 5202, 5203);
+
+        var first = await ReserveWithRetryAsync(database, "multi-allocation-sale-1", "loc-1", "term-1");
+        var second = await ReserveWithRetryAsync(database, "multi-allocation-sale-2", "loc-1", "term-1");
+
+        Assert.Equal(5200, first.Number);
+        Assert.Equal(5202, second.Number);
+        Assert.NotEqual(first.AllocationId, second.AllocationId);
     }
 
     [Theory]
@@ -274,7 +297,7 @@ public sealed class CaeNumberingPersistenceTests
         string locationId,
         string terminalId)
     {
-        ApplicationProblemException? last = null;
+        Exception? last = null;
         for (var attempt = 0; attempt < 4; attempt++)
         {
             try
