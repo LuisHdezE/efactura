@@ -5,6 +5,7 @@ using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Parties;
 using EFactura.Application.Taxation;
+using EFactura.Domain.Taxation;
 using Infrastructure.Persistence.V1.Transactions;
 using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Repositories;
@@ -46,6 +47,11 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<ITaxProfileAssignmentValidator, TaxProfileAssignmentValidator>();
         services.AddScoped<ListTaxProfilesUseCase>();
         services.AddScoped<TaxSafeUpdateCommercialItemUseCase>();
+
+        services.AddSingleton<TaxTreatmentDecisionEngine>();
+        services.AddSingleton<ITaxTreatmentRulePackProvider, UruguayRelease1TaxTreatmentRulePackProvider>();
+        services.AddSingleton<IExportServiceEligibilityEvaluator, Article34Numeral11ExportServiceEligibilityEvaluator>();
+        services.AddScoped<ResolveTaxTreatmentUseCase>();
 
         return services;
     }
