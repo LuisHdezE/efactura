@@ -52,13 +52,20 @@ public sealed class TaxTreatmentApplicationTests
     }
 
     [Fact]
-    public async Task Service_in_uruguay_invokes_article_34_evaluator_once()
+    public async Task Service_in_uruguay_invokes_article_34_evaluator_once_and_passes_context()
     {
         var evaluator = new CountingExportServiceEvaluator(QualifiedEvaluation());
         var useCase = new ResolveTaxTreatmentUseCase(
             new FixedRulePackProvider(RulePack()),
             evaluator,
             new TaxTreatmentDecisionEngine());
+        var context = new ExportServiceEvaluationContext(
+            ExportServiceRuleFamily.Article34Numeral11,
+            new Article34Numeral11Facts(
+                Article34Numeral11ServiceKind.AdvisoryOrTechnical,
+                RegulatoryFactStatus.Confirmed,
+                RegulatoryFactStatus.Confirmed,
+                RegulatoryFactStatus.Confirmed));
 
         var decision = await useCase.ExecuteAsync(new ResolveTaxTreatmentRequest(
             "company-1",
@@ -67,10 +74,12 @@ public sealed class TaxTreatmentApplicationTests
             ForeignReceiver(),
             ServicePerformanceScope: ServicePerformanceScope.EntirelyInUruguay,
             ServiceUseCountry: "AR",
-            EvidenceReferences: new[] { "evidence:exclusive-use-abroad" }));
+            EvidenceReferences: new[] { "evidence:exclusive-use-abroad" },
+            ExportServiceContext: context));
 
         Assert.Equal(TaxTreatmentClassification.ExportServices, decision.Classification);
         Assert.Equal(1, evaluator.CallCount);
+        Assert.Same(context, evaluator.LastContext);
     }
 
     private static ReceiverTaxFacts ForeignReceiver() =>
@@ -126,12 +135,15 @@ public sealed class TaxTreatmentApplicationTests
         public CountingExportServiceEvaluator(ExportServiceEligibilityEvaluation result) => _result = result;
 
         public int CallCount { get; private set; }
+        public ExportServiceEvaluationContext? LastContext { get; private set; }
 
         public Task<ExportServiceEligibilityEvaluation> EvaluateAsync(
             TaxTransactionFacts facts,
+            ExportServiceEvaluationContext? context,
             CancellationToken cancellationToken = default)
         {
             CallCount++;
+            LastContext = context;
             return Task.FromResult(_result);
         }
     }

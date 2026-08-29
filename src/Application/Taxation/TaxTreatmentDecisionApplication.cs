@@ -11,7 +11,8 @@ public sealed record ResolveTaxTreatmentRequest(
     ServicePerformanceScope ServicePerformanceScope = ServicePerformanceScope.UnknownOrMixed,
     string? DeliveryCountry = null,
     string? ServiceUseCountry = null,
-    IReadOnlyCollection<string>? EvidenceReferences = null);
+    IReadOnlyCollection<string>? EvidenceReferences = null,
+    ExportServiceEvaluationContext? ExportServiceContext = null);
 
 public interface ITaxTreatmentRulePackProvider
 {
@@ -25,6 +26,7 @@ public interface IExportServiceEligibilityEvaluator
 {
     Task<ExportServiceEligibilityEvaluation> EvaluateAsync(
         TaxTransactionFacts facts,
+        ExportServiceEvaluationContext? context,
         CancellationToken cancellationToken = default);
 }
 
@@ -68,7 +70,7 @@ public sealed class ResolveTaxTreatmentUseCase
 
         var exportEvaluation = request.OperationKind == TaxOperationKind.Services
             && request.ServicePerformanceScope == ServicePerformanceScope.EntirelyInUruguay
-            ? await _exportServices.EvaluateAsync(facts, cancellationToken)
+            ? await _exportServices.EvaluateAsync(facts, request.ExportServiceContext, cancellationToken)
             : ExportServiceEligibilityEvaluation.NotEvaluated();
 
         return _engine.Resolve(facts, rulePack, exportEvaluation);

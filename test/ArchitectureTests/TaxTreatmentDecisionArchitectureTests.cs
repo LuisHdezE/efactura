@@ -48,6 +48,28 @@ public sealed class TaxTreatmentDecisionArchitectureTests
         Assert.DoesNotContain("bool IsForeign", domain, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Release1_regulatory_policy_uses_explicit_facts_and_has_no_rate_or_cfe_leakage()
+    {
+        var policy = Read("src/Application/Taxation/UruguayRelease1TaxRules.cs");
+
+        Assert.Contains("RecipientIsPersonAbroad", policy, StringComparison.Ordinal);
+        Assert.Contains("ExclusiveUseAbroad", policy, StringComparison.Ordinal);
+        Assert.Contains("ForeignEconomicRelation", policy, StringComparison.Ordinal);
+        Assert.Contains("RecipientInstalledInFreeZone", policy, StringComparison.Ordinal);
+        Assert.Contains("ProviderFromNonFreeNationalTerritory", policy, StringComparison.Ordinal);
+        Assert.Contains("https://www.impo.com.uy/bases/decretos/220-1998/34", policy, StringComparison.Ordinal);
+        Assert.Contains("https://www.impo.com.uy/bases/todgi2023/101-2024/5_T10", policy, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("IsForeign", policy, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("RatePercent", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("TaxProfile", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain("Cfe", policy, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EntityFramework", policy, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Npgsql", policy, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("MySql", policy, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string Read(string relativePath) =>
         File.ReadAllText(Path.Combine(RepositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
 
