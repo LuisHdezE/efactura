@@ -44,6 +44,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IItemCategoryRepository, EfItemCategoryRepository>();
         services.AddScoped<ITaxProfileRepository, EfTaxProfileRepository>();
         services.AddScoped<ITaxProfileAssignmentValidator, TaxProfileAssignmentValidator>();
+        services.AddScoped<ListTaxProfilesUseCase>();
 
         return services;
     }
