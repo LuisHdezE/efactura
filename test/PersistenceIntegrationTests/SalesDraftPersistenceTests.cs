@@ -21,6 +21,18 @@ namespace PersistenceIntegrationTests;
 public sealed class SalesDraftPersistenceTests
 {
     [Fact]
+    public async Task Release1_UI_projection_accepts_UYI_without_inventing_quotes_for_other_currencies()
+    {
+        var converter = new Release1UiAmountConverter();
+        var effectiveOn = new DateOnly(2026, 8, 29);
+
+        Assert.Equal(5000m, await converter.TryConvertToUiAsync("UYI", 5000m, effectiveOn));
+        Assert.Null(await converter.TryConvertToUiAsync("UYU", 5000m, effectiveOn));
+        Assert.Null(await converter.TryConvertToUiAsync("USD", 5000m, effectiveOn));
+        Assert.Null(await converter.TryConvertToUiAsync("UI", 5000m, effectiveOn));
+    }
+
+    [Fact]
     public void Editing_a_validated_sale_invalidates_the_prior_validation_fingerprint()
     {
         var itemId = Guid.NewGuid();
@@ -31,7 +43,7 @@ public sealed class SalesDraftPersistenceTests
             null,
             null,
             SaleCommercialIntent.ConsumerFinal,
-            "UI",
+            "UYU",
             new DateOnly(2026, 8, 29),
             "UY",
             false,
@@ -44,7 +56,7 @@ public sealed class SalesDraftPersistenceTests
         sale.ReplaceDraft(
             null,
             SaleCommercialIntent.ConsumerFinal,
-            "UI",
+            "UYU",
             new DateOnly(2026, 8, 29),
             "UY",
             false,
@@ -105,7 +117,7 @@ public sealed class SalesDraftPersistenceTests
                     "term-1",
                     null,
                     SaleCommercialIntent.ConsumerFinal,
-                    "UI",
+                    "UYU",
                     new DateOnly(2026, 8, 29),
                     "UY",
                     false,
@@ -179,7 +191,7 @@ public sealed class SalesDraftPersistenceTests
                 "term-1",
                 null,
                 SaleCommercialIntent.ConsumerFinal,
-                "UI",
+                "UYU",
                 new DateOnly(2026, 8, 29),
                 "UY",
                 false,
