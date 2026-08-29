@@ -21,6 +21,11 @@ public sealed class EfInventoryRepository : IInventoryRepository
         Guid positionId,
         CancellationToken cancellationToken = default)
     {
+        var local = _dbContext.InventoryPositions.Local
+            .SingleOrDefault(x => x.OrganizationId == organizationId && x.Id == positionId);
+        if (local is not null)
+            return Map(local);
+
         var record = await _dbContext.InventoryPositions
             .AsNoTracking()
             .SingleOrDefaultAsync(
@@ -36,6 +41,13 @@ public sealed class EfInventoryRepository : IInventoryRepository
         CancellationToken cancellationToken = default)
     {
         var normalizedLocation = locationId.Trim();
+        var local = _dbContext.InventoryPositions.Local
+            .SingleOrDefault(x => x.OrganizationId == organizationId
+                                  && x.ItemId == itemId
+                                  && x.LocationId == normalizedLocation);
+        if (local is not null)
+            return Map(local);
+
         var record = await _dbContext.InventoryPositions
             .AsNoTracking()
             .SingleOrDefaultAsync(
@@ -113,6 +125,11 @@ public sealed class EfInventoryRepository : IInventoryRepository
         Guid movementId,
         CancellationToken cancellationToken = default)
     {
+        var local = _dbContext.StockMovements.Local
+            .SingleOrDefault(x => x.OrganizationId == organizationId && x.Id == movementId);
+        if (local is not null)
+            return Map(local);
+
         var record = await _dbContext.StockMovements
             .AsNoTracking()
             .SingleOrDefaultAsync(
@@ -140,6 +157,16 @@ public sealed class EfInventoryRepository : IInventoryRepository
 
     public async Task SavePositionAsync(InventoryPosition position, CancellationToken cancellationToken = default)
     {
+        var local = _dbContext.InventoryPositions.Local
+            .SingleOrDefault(x => x.OrganizationId == position.OrganizationId && x.Id == position.Id);
+        if (local is not null && _dbContext.Entry(local).State == EntityState.Added)
+        {
+            local.Quantity = position.Quantity;
+            local.Version = position.Version;
+            local.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            return;
+        }
+
         var record = await _dbContext.InventoryPositions
             .SingleOrDefaultAsync(
                 x => x.OrganizationId == position.OrganizationId && x.Id == position.Id,
