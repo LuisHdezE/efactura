@@ -93,12 +93,22 @@ public sealed class FiscalNumberAllocator : IFiscalNumberAllocator
             {
                 FiscalNumberReservation reservation;
                 bool allocationExhausted;
+                bool authorizationExhausted;
+
                 if (allocation is not null)
                 {
                     var priorVersion = allocation.Version;
-                    reservation = allocation.Reserve(authorization, request.OperationId, DateTimeOffset.UtcNow, priorVersion);
+                    reservation = allocation.Reserve(
+                        authorization, request.OperationId, DateTimeOffset.UtcNow, priorVersion);
                     await _repository.SaveAllocationAsync(allocation, cancellationToken);
                     allocationExhausted = allocation.Status == CaeAllocationStatus.Exhausted;
+
+                    authorizationExhausted = !HasRemainingNumber(authorization, allocations, allocation);
+                    if (authorizationExhausted)
+                    {
+                        authorization.MarkExhausted(authorization.Version);
+                        await _repository.SaveAuthorizationAsync(authorization, cancellationToken);
+                    }
                 }
                 else
                 {
@@ -108,10 +118,10 @@ public sealed class FiscalNumberAllocator : IFiscalNumberAllocator
                         allocations, priorVersion, request.FiscalDate, DateTimeOffset.UtcNow);
                     await _repository.SaveAuthorizationAsync(authorization, cancellationToken);
                     allocationExhausted = false;
+                    authorizationExhausted = authorization.Status == CaeAuthorizationStatus.Exhausted;
                 }
 
                 await _repository.AddReservationAsync(reservation, cancellationToken);
-                var authorizationExhausted = !HasRemainingNumber(authorization, allocations, allocation);
                 await AppendReservationEvidenceAsync(
                     authorization, reservation, authorizationExhausted, allocationExhausted, cancellationToken);
 
@@ -203,19 +213,21 @@ public sealed class FiscalNumberAllocator : IFiscalNumberAllocator
 
         var location = locationId.Trim();
         var terminal = string.IsNullOrWhiteSpace(terminalId) ? null : terminalId.Trim();
-        var active = allocations
-            .Where(x => x.Status == CaeAllocationStatus.Active)
+        var available = allocations
+            .Where(x => x.Status == CaeAllocationStatus.Active && x.NextNumber <= x.RangeTo)
             .Where(x => string.Equals(x.LocationId, location, StringComparison.Ordinal))
+            .OrderBy(x => x.RangeFrom)
             .ToArray();
 
         if (terminal is not null)
         {
-            var exact = active.SingleOrDefault(x => string.Equals(x.TerminalId, terminal, StringComparison.Ordinal));
+            var exact = available.FirstOrDefault(
+                x => string.Equals(x.TerminalId, terminal, StringComparison.Ordinal));
             if (exact is not null)
                 return exact;
         }
 
-        return active.SingleOrDefault(x => x.TerminalId is null);
+        return available.FirstOrDefault(x => x.TerminalId is null);
     }
 
     private static bool HasRemainingNumber(
