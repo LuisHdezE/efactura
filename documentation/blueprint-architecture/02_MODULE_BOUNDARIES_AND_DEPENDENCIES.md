@@ -78,6 +78,30 @@ Examples where a local atomic boundary may be justified:
 
 External DGI/provider/email/blob network work is not performed while holding the transaction. It is represented by durable workflow/outbox state.
 
+### Mandatory v1 write invariant
+
+For every new `/api/v1` use case that mutates authoritative business state:
+
+1. Application defines the atomic boundary;
+2. Infrastructure executes that boundary through the Application-owned `ITransactionManager` and `IUnitOfWork` contracts;
+3. participating repositories stage changes and do not independently commit;
+4. the business mutation, required idempotency state, durable audit evidence and Outbox messages that belong to that operation commit together when the use case requires them atomically;
+5. any exception or cancellation before commit produces a complete rollback of the local authoritative mutation;
+6. external network work runs only after the local commit, normally through Outbox/background processing;
+7. PostgreSQL and MySQL must demonstrate equivalent commit/rollback behavior through integration tests.
+
+The target is not merely to "use transactions somewhere". The transaction boundary must surround the complete local business invariant so an operation cannot remain half applied.
+
+### No ad-hoc SQL for business-state mutation
+
+New v1 write-side persistence uses EF Core repositories/change tracking as the default mutation mechanism.
+
+Runtime business-state writes through flat/ad-hoc SQL are prohibited, including direct `INSERT`, `UPDATE`, `DELETE` or `MERGE`, Dapper mutation commands, provider-specific command objects and EF raw-SQL mutation APIs.
+
+Dapper/optimized SQL remain valid for approved read-only query/reporting models. Schema migrations and deployment-time database evolution are separate from runtime business-state mutation.
+
+A future exception requires an explicit ADR and human approval, must participate in the same transaction model, must have equivalent PostgreSQL/MySQL behavior and must include rollback/concurrency tests. No write-side exception is introduced silently as an implementation shortcut.
+
 ## Integration event examples
 
 - `SaleConfirmed`
