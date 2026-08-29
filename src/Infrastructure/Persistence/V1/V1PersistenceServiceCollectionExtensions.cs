@@ -3,8 +3,10 @@ using EFactura.Application.Common.Auditing;
 using EFactura.Application.Common.Idempotency;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
+using EFactura.Application.Fiscal;
 using EFactura.Application.Parties;
 using EFactura.Application.Taxation;
+using EFactura.Domain.Fiscal;
 using EFactura.Domain.Taxation;
 using Infrastructure.Persistence.V1.Transactions;
 using Infrastructure.Persistence.V1.Write;
@@ -52,6 +54,13 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<ITaxTreatmentRulePackProvider, UruguayRelease1TaxTreatmentRulePackProvider>();
         services.AddSingleton<IExportServiceEligibilityEvaluator, Article34Numeral11ExportServiceEligibilityEvaluator>();
         services.AddScoped<ResolveTaxTreatmentUseCase>();
+
+        services.AddSingleton<IVatRateRulePackProvider, UruguayRelease1VatRateRulePackProvider>();
+        services.AddScoped<ResolveTaxRateUseCase>();
+
+        services.AddSingleton<CfeEligibilityPolicy>();
+        services.AddSingleton<ICfeEligibilityRulePackProvider, UruguayCfe25_2EligibilityRulePackProvider>();
+        services.AddScoped<PrepareCfeEligibilityUseCase>();
 
         return services;
     }
