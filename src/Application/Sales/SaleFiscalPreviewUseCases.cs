@@ -8,6 +8,7 @@ using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Common.Security;
 using EFactura.Application.Fiscal;
+using EFactura.Application.Inventory;
 using EFactura.Application.Parties;
 using EFactura.Application.Taxation;
 using EFactura.Domain.Common;
@@ -26,6 +27,7 @@ public sealed class GetSaleFiscalPreviewUseCase
     private readonly PrepareCfeEligibilityUseCase _eligibility;
     private readonly SelectCfeUseCase _selector;
     private readonly IUiAmountConverter _uiAmount;
+    private readonly IInventoryAvailabilityChecker _inventoryAvailability;
     private readonly IActorContextAccessor _actors;
 
     public GetSaleFiscalPreviewUseCase(
@@ -36,6 +38,7 @@ public sealed class GetSaleFiscalPreviewUseCase
         PrepareCfeEligibilityUseCase eligibility,
         SelectCfeUseCase selector,
         IUiAmountConverter uiAmount,
+        IInventoryAvailabilityChecker inventoryAvailability,
         IActorContextAccessor actors)
     {
         _sales = sales;
@@ -45,6 +48,7 @@ public sealed class GetSaleFiscalPreviewUseCase
         _eligibility = eligibility;
         _selector = selector;
         _uiAmount = uiAmount;
+        _inventoryAvailability = inventoryAvailability;
         _actors = actors;
     }
 
@@ -120,19 +124,22 @@ public sealed class GetSaleFiscalPreviewUseCase
             new SelectCfeRequest(
                 sale.OrganizationId, sale.EffectiveOn, overallTreatment, eligibility), cancellationToken);
 
-        // UC-SALE-001 requires stock availability validation for stock-tracked/product lines.
-        // Inventory is not implemented in this slice, so product-bearing sales fail closed
-        // instead of being promoted to VALIDATED on tax/fiscal evidence alone.
-        var inventoryAvailabilityRequired = sale.Lines.Any(line => line.Kind == SaleLineKind.Product);
+        var inventory = await _inventoryAvailability.CheckAsync(
+            sale.OrganizationId,
+            sale.LocationId,
+            sale.Lines
+                .Where(line => line.Kind == SaleLineKind.Product)
+                .Select(line => new InventoryAvailabilityRequirement(line.ItemId, line.Quantity))
+                .ToArray(),
+            cancellationToken);
+
         var findings = linePreviews.SelectMany(x => x.MissingFacts)
             .Concat(eligibility.MissingFacts)
             .Concat(selection.MissingFacts)
-            .Concat(inventoryAvailabilityRequired
-                ? new[] { "inventory_availability_check" }
-                : Array.Empty<string>())
+            .Concat(inventory.Findings)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
-        var readyForConfirmation = !inventoryAvailabilityRequired
+        var readyForConfirmation = inventory.Ready
                                    && linePreviews.All(line =>
                                        line.TaxTreatmentStatus == TaxDecisionStatus.Resolved
                                        && line.TaxRateStatus == TaxRateResolutionStatus.Resolved)
@@ -141,7 +148,7 @@ public sealed class GetSaleFiscalPreviewUseCase
         decimal? totalAmount = taxAmount.HasValue
             ? decimal.Round(sale.NetAmount + taxAmount.Value, 2, MidpointRounding.AwayFromZero)
             : null;
-        var fingerprint = BuildFingerprint(sale, linePreviews, overallTreatment, selection);
+        var fingerprint = BuildFingerprint(sale, linePreviews, overallTreatment, selection, inventory);
 
         return new SaleFiscalPreviewView(
             sale.Id,
@@ -303,7 +310,8 @@ public sealed class GetSaleFiscalPreviewUseCase
         Sale sale,
         IEnumerable<SaleFiscalPreviewLineView> lines,
         TaxTreatmentDecision treatment,
-        CfeSelectionResult selection)
+        CfeSelectionResult selection,
+        InventoryAvailabilityResult inventory)
     {
         var material = new StringBuilder()
             .Append(sale.Id).Append('|')
@@ -312,7 +320,8 @@ public sealed class GetSaleFiscalPreviewUseCase
             .Append(treatment.Status).Append('|')
             .Append(treatment.Classification).Append('|')
             .Append(selection.Status).Append('|')
-            .Append(selection.SelectedFamily);
+            .Append(selection.SelectedFamily).Append('|')
+            .Append(inventory.Ready);
         foreach (var line in lines.OrderBy(x => x.LineId))
         {
             material.Append('|')
@@ -320,6 +329,16 @@ public sealed class GetSaleFiscalPreviewUseCase
                 .Append(line.NetAmount).Append(':')
                 .Append(line.TaxTreatment).Append(':')
                 .Append(line.AppliedRatePercent);
+        }
+        foreach (var item in inventory.Lines.OrderBy(x => x.ItemId))
+        {
+            material.Append('|')
+                .Append(item.ItemId).Append(':')
+                .Append(item.TracksInventory).Append(':')
+                .Append(item.RequiredQuantity).Append(':')
+                .Append(item.AvailableQuantity).Append(':')
+                .Append(item.PositionVersion).Append(':')
+                .Append(item.Sufficient);
         }
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(material.ToString()))).ToLowerInvariant();
     }
