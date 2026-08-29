@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <Compile Remove="Repositories\Log\**" />
     <Compile Remove="Repositories\Menu\**" />
@@ -44,6 +44,8 @@
     <PackageReference Include="System.Runtime.Caching" Version="8.0.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\ApplicationCore\ApplicationCore.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
