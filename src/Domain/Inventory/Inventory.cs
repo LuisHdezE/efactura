@@ -19,6 +19,7 @@ public sealed class StockMovement
         decimal quantityBefore,
         decimal quantityDelta,
         decimal quantityAfter,
+        long positionVersionAfter,
         string reasonCode,
         string? explanation,
         DateTimeOffset occurredAtUtc)
@@ -32,6 +33,7 @@ public sealed class StockMovement
         QuantityBefore = quantityBefore;
         QuantityDelta = quantityDelta;
         QuantityAfter = quantityAfter;
+        PositionVersionAfter = positionVersionAfter;
         ReasonCode = reasonCode;
         Explanation = explanation;
         OccurredAtUtc = occurredAtUtc;
@@ -46,6 +48,7 @@ public sealed class StockMovement
     public decimal QuantityBefore { get; }
     public decimal QuantityDelta { get; }
     public decimal QuantityAfter { get; }
+    public long PositionVersionAfter { get; }
     public string ReasonCode { get; }
     public string? Explanation { get; }
     public DateTimeOffset OccurredAtUtc { get; }
@@ -59,6 +62,7 @@ public sealed class StockMovement
         decimal quantityBefore,
         decimal quantityDelta,
         decimal quantityAfter,
+        long positionVersionAfter,
         string reasonCode,
         string? explanation,
         DateTimeOffset occurredAtUtc) =>
@@ -72,6 +76,7 @@ public sealed class StockMovement
             quantityBefore,
             quantityDelta,
             quantityAfter,
+            positionVersionAfter,
             Required(reasonCode, 80, "inventory.adjustment_reason_required"),
             Optional(explanation, 1000),
             occurredAtUtc);
@@ -86,11 +91,12 @@ public sealed class StockMovement
         decimal quantityBefore,
         decimal quantityDelta,
         decimal quantityAfter,
+        long positionVersionAfter,
         string reasonCode,
         string? explanation,
         DateTimeOffset occurredAtUtc) =>
         new(id, positionId, organizationId, itemId, locationId, kind, quantityBefore, quantityDelta,
-            quantityAfter, reasonCode, explanation, occurredAtUtc);
+            quantityAfter, positionVersionAfter, reasonCode, explanation, occurredAtUtc);
 
     private static string Required(string value, int max, string code)
     {
@@ -168,7 +174,7 @@ public sealed class InventoryPosition
 
         return StockMovement.CreateAdjustment(
             Guid.NewGuid(), Id, OrganizationId, ItemId, LocationId,
-            before, quantityDelta, Quantity, reasonCode, explanation, occurredAtUtc);
+            before, quantityDelta, Quantity, Version, reasonCode, explanation, occurredAtUtc);
     }
 
     private static string Required(string value, int max, string code)
