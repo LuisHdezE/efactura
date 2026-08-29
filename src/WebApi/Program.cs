@@ -73,11 +73,15 @@ using Infrastructure.Repositories.Supplier;
 using ApplicationCore.Interfaces.Repositories.Supplier;
 using ApplicationCore.Interfaces.Services.Supplier;
 using ApplicationCore.Services.Supplier;
+using EFactura.Application.Catalog;
 using EFactura.Application.Common.Context;
+using EFactura.Application.Parties;
+using Infrastructure.Persistence.V1;
 using WebApi.CrossCutting.Authorization;
 using WebApi.CrossCutting.Context;
 using WebApi.CrossCutting.Correlation;
 using WebApi.CrossCutting.Errors;
+using WebApi.CrossCutting.Requests;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -209,6 +213,45 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddAutoMapper(typeof(AutomapperProfiles));
 
 #endregion Automapper
+
+#region API v1 Persistence + Parties/Catalog Application
+
+var v1DatabaseProvider = V1DatabaseProviderParser.Parse(builder.Configuration["V1Persistence:Provider"]);
+var v1ConnectionStringName = builder.Configuration["V1Persistence:ConnectionStringName"];
+if (string.IsNullOrWhiteSpace(v1ConnectionStringName))
+{
+    v1ConnectionStringName = AppConstants.NOMBRE_CADENA_CONEXION;
+}
+
+var v1ConnectionString = builder.Configuration.GetConnectionString(v1ConnectionStringName)
+    ?? throw new InvalidOperationException(
+        $"The configured v1 database connection string '{v1ConnectionStringName}' is missing. " +
+        "Configure V1Persistence:ConnectionStringName and the corresponding ConnectionStrings entry outside source control.");
+
+builder.Services.AddV1Persistence(v1DatabaseProvider, v1ConnectionString);
+builder.Services.AddScoped<V1OrganizationContextResolver>();
+
+builder.Services.AddScoped<ListPartiesUseCase>();
+builder.Services.AddScoped<GetPartyUseCase>();
+builder.Services.AddScoped<CreatePartyUseCase>();
+builder.Services.AddScoped<PartyMutationWorkflow>();
+builder.Services.AddScoped<UpdatePartyUseCase>();
+builder.Services.AddScoped<AddPartyFiscalIdentityUseCase>();
+builder.Services.AddScoped<UpdatePartyFiscalIdentityUseCase>();
+builder.Services.AddScoped<SetPartyRolesUseCase>();
+
+builder.Services.AddScoped<ListCommercialItemsUseCase>();
+builder.Services.AddScoped<GetCommercialItemUseCase>();
+builder.Services.AddScoped<CreateCommercialItemUseCase>();
+builder.Services.AddScoped<CatalogItemMutationWorkflow>();
+builder.Services.AddScoped<UpdateCommercialItemUseCase>();
+builder.Services.AddScoped<DeactivateCommercialItemUseCase>();
+builder.Services.AddScoped<ListItemCategoriesUseCase>();
+builder.Services.AddScoped<GetItemCategoryUseCase>();
+builder.Services.AddScoped<CreateItemCategoryUseCase>();
+builder.Services.AddScoped<UpdateItemCategoryUseCase>();
+
+#endregion API v1 Persistence + Parties/Catalog Application
 
 #region Service and Repository Dependency Injection
 
