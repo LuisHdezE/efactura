@@ -54,7 +54,6 @@ public sealed class GetSaleFiscalPreviewUseCase
         CancellationToken cancellationToken = default)
     {
         SalesAuthorization.Ensure(_actors, organizationId, Permissions.SalesRead);
-
         var sale = await _sales.GetAsync(organizationId, saleId, cancellationToken)
             ?? throw new ApplicationProblemException(ApplicationProblemKind.NotFound, "sales.not_found", "Sale was not found.");
         var receiver = await BuildReceiverAsync(sale, cancellationToken);
@@ -67,17 +66,11 @@ public sealed class GetSaleFiscalPreviewUseCase
         foreach (var line in sale.Lines)
         {
             var treatment = await _taxTreatment.ExecuteAsync(
-                BuildTreatmentRequest(sale, line, receiver),
-                cancellationToken);
+                BuildTreatmentRequest(sale, line, receiver), cancellationToken);
             taxDecisions.Add(treatment);
-
             var rate = await _taxRate.ExecuteAsync(
                 new ResolveTaxRateRequest(
-                    sale.OrganizationId,
-                    sale.EffectiveOn,
-                    treatment,
-                    line.TaxProfileId),
-                cancellationToken);
+                    sale.OrganizationId, sale.EffectiveOn, treatment, line.TaxProfileId), cancellationToken);
 
             decimal? previewTaxAmount = null;
             if (rate.Status == TaxRateResolutionStatus.Resolved && rate.AppliedRatePercent.HasValue)
@@ -114,11 +107,7 @@ public sealed class GetSaleFiscalPreviewUseCase
 
         var overallTreatment = CombineTaxTreatments(taxDecisions);
         var netAmountUi = await _uiAmount.TryConvertToUiAsync(
-            sale.CurrencyCode,
-            sale.NetAmount,
-            sale.EffectiveOn,
-            cancellationToken);
-
+            sale.CurrencyCode, sale.NetAmount, sale.EffectiveOn, cancellationToken);
         var eligibility = await _eligibility.ExecuteAsync(
             new PrepareCfeEligibilityRequest(
                 sale.EffectiveOn,
@@ -126,30 +115,22 @@ public sealed class GetSaleFiscalPreviewUseCase
                 receiver,
                 MapIntent(sale.Intent),
                 netAmountUi,
-                HasRetentionsOrPerceptions: false),
-            cancellationToken);
-
+                HasRetentionsOrPerceptions: false), cancellationToken);
         var selection = await _selector.ExecuteAsync(
             new SelectCfeRequest(
-                sale.OrganizationId,
-                sale.EffectiveOn,
-                overallTreatment,
-                eligibility),
-            cancellationToken);
+                sale.OrganizationId, sale.EffectiveOn, overallTreatment, eligibility), cancellationToken);
 
         var findings = linePreviews.SelectMany(x => x.MissingFacts)
             .Concat(eligibility.MissingFacts)
             .Concat(selection.MissingFacts)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
-
         var readyForConfirmation = linePreviews.All(line =>
                                        line.TaxTreatmentStatus == TaxDecisionStatus.Resolved
                                        && line.TaxRateStatus == TaxRateResolutionStatus.Resolved)
                                    && selection.Status == CfeSelectionStatus.Selected;
-
-        var taxAmount = allAmountsResolved ? totalPreviewTax : null;
-        var totalAmount = taxAmount.HasValue
+        decimal? taxAmount = allAmountsResolved ? totalPreviewTax : null;
+        decimal? totalAmount = taxAmount.HasValue
             ? decimal.Round(sale.NetAmount + taxAmount.Value, 2, MidpointRounding.AwayFromZero)
             : null;
         var fingerprint = BuildFingerprint(sale, linePreviews, overallTreatment, selection);
@@ -170,46 +151,26 @@ public sealed class GetSaleFiscalPreviewUseCase
             findings);
     }
 
-    private async Task<ReceiverTaxFacts> BuildReceiverAsync(
-        Sale sale,
-        CancellationToken cancellationToken)
+    private async Task<ReceiverTaxFacts> BuildReceiverAsync(Sale sale, CancellationToken cancellationToken)
     {
         if (!sale.CustomerPartyId.HasValue)
-        {
             return new ReceiverTaxFacts("UY", "UY");
-        }
 
-        var party = await _parties.GetAsync(
-            sale.OrganizationId,
-            sale.CustomerPartyId.Value,
-            cancellationToken)
+        var party = await _parties.GetAsync(sale.OrganizationId, sale.CustomerPartyId.Value, cancellationToken)
             ?? throw new ApplicationProblemException(
-                ApplicationProblemKind.Validation,
-                "sales.customer_not_found",
-                "Sale customer no longer exists.");
-
+                ApplicationProblemKind.Validation, "sales.customer_not_found", "Sale customer no longer exists.");
         var identities = party.FiscalIdentities
             .Where(identity => identity.Active
                                && (!identity.ValidFrom.HasValue || identity.ValidFrom.Value <= sale.EffectiveOn)
                                && (!identity.ValidTo.HasValue || sale.EffectiveOn <= identity.ValidTo.Value))
             .Select(identity => new ReceiverFiscalIdentityFact(identity.TypeCode, identity.IssuingCountry))
             .ToArray();
-
-        return new ReceiverTaxFacts(
-            party.ResidenceCountry,
-            party.TaxResidenceCountry,
-            identities);
+        return new ReceiverTaxFacts(party.ResidenceCountry, party.TaxResidenceCountry, identities);
     }
 
-    private static ResolveTaxTreatmentRequest BuildTreatmentRequest(
-        Sale sale,
-        SaleLine line,
-        ReceiverTaxFacts receiver)
+    private static ResolveTaxTreatmentRequest BuildTreatmentRequest(Sale sale, SaleLine line, ReceiverTaxFacts receiver)
     {
-        var operationKind = line.Kind == SaleLineKind.Product
-            ? TaxOperationKind.Goods
-            : TaxOperationKind.Services;
-
+        var operationKind = line.Kind == SaleLineKind.Product ? TaxOperationKind.Goods : TaxOperationKind.Services;
         var goodsScope = line.Kind == SaleLineKind.Product
             ? sale.GoodsExportConfirmed
                 ? GoodsMovementScope.ExportConfirmed
@@ -218,7 +179,6 @@ public sealed class GetSaleFiscalPreviewUseCase
                     ? GoodsMovementScope.Unknown
                     : GoodsMovementScope.DomesticDelivery
             : GoodsMovementScope.Unknown;
-
         var serviceScope = line.ServicePerformanceScope switch
         {
             SaleServicePerformanceScope.EntirelyInUruguay => ServicePerformanceScope.EntirelyInUruguay,
@@ -252,8 +212,7 @@ public sealed class GetSaleFiscalPreviewUseCase
             ExportServiceContext: exportServiceContext);
     }
 
-    private static TaxTreatmentDecision CombineTaxTreatments(
-        IReadOnlyCollection<TaxTreatmentDecision> decisions)
+    private static TaxTreatmentDecision CombineTaxTreatments(IReadOnlyCollection<TaxTreatmentDecision> decisions)
     {
         if (decisions.Count == 0)
         {
@@ -346,7 +305,6 @@ public sealed class GetSaleFiscalPreviewUseCase
             .Append(treatment.Classification).Append('|')
             .Append(selection.Status).Append('|')
             .Append(selection.SelectedFamily);
-
         foreach (var line in lines.OrderBy(x => x.LineId))
         {
             material.Append('|')
@@ -355,10 +313,7 @@ public sealed class GetSaleFiscalPreviewUseCase
                 .Append(line.TaxTreatment).Append(':')
                 .Append(line.AppliedRatePercent);
         }
-
-        return Convert.ToHexString(
-                SHA256.HashData(Encoding.UTF8.GetBytes(material.ToString())))
-            .ToLowerInvariant();
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(material.ToString()))).ToLowerInvariant();
     }
 }
 
@@ -397,32 +352,22 @@ public sealed class ValidateSaleUseCase
     }
 
     public async Task<SaleValidationResult> ExecuteAsync(
-        ValidateSaleCommand command,
-        CancellationToken cancellationToken = default)
+        ValidateSaleCommand command, CancellationToken cancellationToken = default)
     {
         SalesAuthorization.Ensure(_actors, command.OrganizationId, Permissions.SalesCreate);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.RequestHash);
 
-        var preview = await _preview.ExecuteAsync(
-            command.OrganizationId,
-            command.SaleId,
-            cancellationToken);
+        var preview = await _preview.ExecuteAsync(command.OrganizationId, command.SaleId, cancellationToken);
         var current = await _sales.GetAsync(command.OrganizationId, command.SaleId, cancellationToken)
             ?? throw new ApplicationProblemException(ApplicationProblemKind.NotFound, "sales.not_found", "Sale was not found.");
-
         if (!preview.ReadyForConfirmation)
-        {
             return new SaleValidationResult(false, SaleView.FromDomain(current), preview, false);
-        }
-
         if (preview.SaleVersion != command.ExpectedVersion)
         {
             throw new ApplicationProblemException(
-                ApplicationProblemKind.Conflict,
-                "concurrency.stale_version",
-                "The sale changed after the preview was calculated.",
-                conflictType: "stale_version");
+                ApplicationProblemKind.Conflict, "concurrency.stale_version",
+                "The sale changed after the preview was calculated.", conflictType: "stale_version");
         }
 
         return await _transactions.ExecuteAsync(async ct =>
@@ -431,39 +376,28 @@ public sealed class ValidateSaleUseCase
             var scope = $"sales.validate:{command.OrganizationId}:{command.SaleId}";
             var reservation = await _idempotency.TryReserveAsync(
                 new IdempotencyReservation(
-                    scope,
-                    command.IdempotencyKey,
-                    command.RequestHash,
-                    _actors.Current.ActorId,
-                    _correlations.Current.CorrelationId,
-                    now.AddMinutes(10)),
-                ct);
-
+                    scope, command.IdempotencyKey, command.RequestHash,
+                    _actors.Current.ActorId, _correlations.Current.CorrelationId, now.AddMinutes(10)), ct);
             if (reservation.Status == IdempotencyReservationStatus.ExistingCompleted)
             {
                 var replayed = await _sales.GetAsync(command.OrganizationId, command.SaleId, ct)
                     ?? throw new ApplicationProblemException(
-                        ApplicationProblemKind.Conflict,
-                        "idempotency.missing_completed_resource",
+                        ApplicationProblemKind.Conflict, "idempotency.missing_completed_resource",
                         "The validated sale no longer exists.");
                 return new SaleValidationResult(true, SaleView.FromDomain(replayed), preview, true);
             }
-
             if (reservation.Status != IdempotencyReservationStatus.Acquired)
             {
                 throw new ApplicationProblemException(
                     ApplicationProblemKind.Conflict,
                     reservation.Status == IdempotencyReservationStatus.PayloadMismatch
-                        ? "idempotency_key_reused"
-                        : "idempotency_in_progress",
+                        ? "idempotency_key_reused" : "idempotency_in_progress",
                     "The validation idempotency reservation could not be acquired.");
             }
 
             await _unitOfWork.SaveChangesAsync(ct);
-
             var sale = await _sales.GetAsync(command.OrganizationId, command.SaleId, ct)
                 ?? throw new ApplicationProblemException(ApplicationProblemKind.NotFound, "sales.not_found", "Sale was not found.");
-
             try
             {
                 sale.MarkValidated(preview.ValidationFingerprint, now, command.ExpectedVersion);
@@ -471,58 +405,30 @@ public sealed class ValidateSaleUseCase
             catch (DomainRuleException ex)
             {
                 throw new ApplicationProblemException(
-                    ApplicationProblemKind.Conflict,
-                    ex.Code,
-                    ex.Message,
-                    conflictType: "stale_version");
+                    ApplicationProblemKind.Conflict, ex.Code, ex.Message, conflictType: "stale_version");
             }
 
             await _sales.SaveAsync(sale, ct);
-            await _audit.AppendAsync(
-                new AuditEvent(
-                    Guid.NewGuid(),
-                    now,
-                    "SALE_VALIDATED",
-                    _actors.Current.ActorId,
-                    sale.OrganizationId,
-                    sale.LocationId,
-                    sale.TerminalId,
-                    "Sale",
-                    sale.Id.ToString(),
-                    AuditOutcome.Succeeded,
-                    _correlations.Current.CorrelationId,
-                    null,
-                    new Dictionary<string, string?>
-                    {
-                        ["validationFingerprint"] = preview.ValidationFingerprint,
-                        ["version"] = sale.Version.ToString()
-                    }),
-                ct);
+            await _audit.AppendAsync(new AuditEvent(
+                Guid.NewGuid(), now, "SALE_VALIDATED", _actors.Current.ActorId,
+                sale.OrganizationId, sale.LocationId, sale.TerminalId, "Sale", sale.Id.ToString(),
+                AuditOutcome.Succeeded, _correlations.Current.CorrelationId, null,
+                new Dictionary<string, string?>
+                {
+                    ["validationFingerprint"] = preview.ValidationFingerprint,
+                    ["version"] = sale.Version.ToString()
+                }), ct);
             await _outbox.EnqueueAsync(
                 new SaleValidatedIntegrationEvent(
-                    Guid.NewGuid(),
-                    now,
-                    sale.Id,
-                    sale.OrganizationId,
-                    preview.ValidationFingerprint),
+                    Guid.NewGuid(), now, sale.Id, sale.OrganizationId, preview.ValidationFingerprint),
                 new OutboxContext(
                     _correlations.Current.CorrelationId,
-                    organizationId: sale.OrganizationId,
-                    actorId: _actors.Current.ActorId),
-                ct);
-            await _idempotency.CompleteAsync(
-                new IdempotencyCompletion(
-                    scope,
-                    command.IdempotencyKey,
-                    command.RequestHash,
-                    "sale_validated",
-                    "Sale",
-                    sale.Id.ToString(),
-                    _correlations.Current.CorrelationId,
-                    now),
-                ct);
+                    OrganizationId: sale.OrganizationId,
+                    ActorId: _actors.Current.ActorId), ct);
+            await _idempotency.CompleteAsync(new IdempotencyCompletion(
+                scope, command.IdempotencyKey, command.RequestHash, "sale_validated",
+                "Sale", sale.Id.ToString(), _correlations.Current.CorrelationId, now), ct);
             await _unitOfWork.SaveChangesAsync(ct);
-
             return new SaleValidationResult(true, SaleView.FromDomain(sale), preview, false);
         }, cancellationToken);
     }
