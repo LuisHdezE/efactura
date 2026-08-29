@@ -57,7 +57,7 @@ public sealed class V1CaeNumbering : Migration
             {
                 table.PrimaryKey("PK_v1_cae_allocations", x => x.Id);
                 table.ForeignKey(
-                    name: "FK_v1_cae_allocations_v1_cae_authorizations_CaeAuthorizationId",
+                    name: "FK_v1_cae_alloc_auth",
                     column: x => x.CaeAuthorizationId,
                     principalTable: "v1_cae_authorizations",
                     principalColumn: "Id",
@@ -84,13 +84,13 @@ public sealed class V1CaeNumbering : Migration
             {
                 table.PrimaryKey("PK_v1_fiscal_number_reservations", x => x.Id);
                 table.ForeignKey(
-                    name: "FK_v1_fiscal_number_reservations_v1_cae_authorizations_CaeAuthorizationId",
+                    name: "FK_v1_fiscal_res_auth",
                     column: x => x.CaeAuthorizationId,
                     principalTable: "v1_cae_authorizations",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
                 table.ForeignKey(
-                    name: "FK_v1_fiscal_number_reservations_v1_cae_allocations_AllocationId",
+                    name: "FK_v1_fiscal_res_alloc",
                     column: x => x.AllocationId,
                     principalTable: "v1_cae_allocations",
                     principalColumn: "Id",
@@ -98,47 +98,47 @@ public sealed class V1CaeNumbering : Migration
             });
 
         migrationBuilder.CreateIndex(
-            name: "IX_v1_cae_authorizations_OrganizationId_SourceArtifactHash",
+            name: "UX_v1_cae_auth_org_artifact",
             table: "v1_cae_authorizations",
             columns: new[] { "OrganizationId", "SourceArtifactHash" },
             unique: true);
         migrationBuilder.CreateIndex(
-            name: "IX_v1_cae_authorizations_OrganizationId_CfeType_Series_RangeFrom_RangeTo",
+            name: "IX_v1_cae_auth_org_type_series_range",
             table: "v1_cae_authorizations",
             columns: new[] { "OrganizationId", "CfeType", "Series", "RangeFrom", "RangeTo" });
         migrationBuilder.CreateIndex(
-            name: "IX_v1_cae_authorizations_OrganizationId_CfeType_Status_ValidTo",
+            name: "IX_v1_cae_auth_org_type_status_validto",
             table: "v1_cae_authorizations",
             columns: new[] { "OrganizationId", "CfeType", "Status", "ValidTo" });
 
         migrationBuilder.CreateIndex(
-            name: "IX_v1_cae_allocations_CaeAuthorizationId",
+            name: "IX_v1_cae_alloc_auth",
             table: "v1_cae_allocations",
             column: "CaeAuthorizationId");
         migrationBuilder.CreateIndex(
-            name: "IX_v1_cae_allocations_OrganizationId_LocationId_Status",
+            name: "IX_v1_cae_alloc_org_loc_status",
             table: "v1_cae_allocations",
             columns: new[] { "OrganizationId", "LocationId", "Status" });
         migrationBuilder.CreateIndex(
-            name: "IX_v1_cae_allocations_CaeAuthorizationId_RangeFrom_RangeTo",
+            name: "IX_v1_cae_alloc_auth_range",
             table: "v1_cae_allocations",
             columns: new[] { "CaeAuthorizationId", "RangeFrom", "RangeTo" });
 
         migrationBuilder.CreateIndex(
-            name: "IX_v1_fiscal_number_reservations_CaeAuthorizationId",
+            name: "IX_v1_fiscal_res_auth",
             table: "v1_fiscal_number_reservations",
             column: "CaeAuthorizationId");
         migrationBuilder.CreateIndex(
-            name: "IX_v1_fiscal_number_reservations_AllocationId",
+            name: "IX_v1_fiscal_res_alloc",
             table: "v1_fiscal_number_reservations",
             column: "AllocationId");
         migrationBuilder.CreateIndex(
-            name: "IX_v1_fiscal_number_reservations_OrganizationId_CfeType_Series_Number",
+            name: "UX_v1_fiscal_res_identity",
             table: "v1_fiscal_number_reservations",
             columns: new[] { "OrganizationId", "CfeType", "Series", "Number" },
             unique: true);
         migrationBuilder.CreateIndex(
-            name: "IX_v1_fiscal_number_reservations_OrganizationId_OperationId",
+            name: "UX_v1_fiscal_res_operation",
             table: "v1_fiscal_number_reservations",
             columns: new[] { "OrganizationId", "OperationId" },
             unique: true);
