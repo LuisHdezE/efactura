@@ -1,7 +1,9 @@
+using EFactura.Application.Catalog;
 using EFactura.Application.Common.Auditing;
 using EFactura.Application.Common.Idempotency;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
+using EFactura.Application.Parties;
 using Infrastructure.Persistence.V1.Transactions;
 using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Repositories;
@@ -28,6 +30,9 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IIdempotencyStore, EfIdempotencyStore>();
         services.AddScoped<IOutboxWriter, EfOutboxWriter>();
         services.AddScoped<IInboxStore, EfInboxStore>();
+
+        services.AddScoped<IPartyRepository, EfPartyRepository>();
+        services.AddScoped<ICommercialItemRepository, EfCommercialItemRepository>();
 
         return services;
     }
