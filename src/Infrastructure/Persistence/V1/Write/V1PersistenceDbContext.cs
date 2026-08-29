@@ -20,11 +20,13 @@ public sealed class V1PersistenceDbContext : DbContext
     public DbSet<V1PartyFiscalIdentityRecord> PartyFiscalIdentities => Set<V1PartyFiscalIdentityRecord>();
     public DbSet<V1CommercialItemRecord> CommercialItems => Set<V1CommercialItemRecord>();
     public DbSet<V1ItemCategoryRecord> ItemCategories => Set<V1ItemCategoryRecord>();
+    public DbSet<V1TaxProfileRecord> TaxProfiles => Set<V1TaxProfileRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureCrossCutting(modelBuilder);
         ConfigureParties(modelBuilder);
+        ConfigureTaxation(modelBuilder);
         ConfigureCatalog(modelBuilder);
     }
 
@@ -154,6 +156,31 @@ public sealed class V1PersistenceDbContext : DbContext
         });
     }
 
+    private static void ConfigureTaxation(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1TaxProfileRecord>(entity =>
+        {
+            entity.ToTable("v1_tax_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.TreatmentCode).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.RatePercent).HasPrecision(9, 4);
+            entity.Property(x => x.EffectiveFromUtc).HasPrecision(6);
+            entity.Property(x => x.EffectiveToUtc).HasPrecision(6);
+            entity.Property(x => x.SourceName).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.SourceReference).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.SourceVersion).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.Code, x.EffectiveFromUtc }).IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.Active, x.EffectiveFromUtc });
+        });
+    }
+
     private static void ConfigureCatalog(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<V1CommercialItemRecord>(entity =>
@@ -171,6 +198,10 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
             entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
             entity.HasIndex(x => new { x.OrganizationId, x.Active });
+            entity.HasOne<V1TaxProfileRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.TaxProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<V1ItemCategoryRecord>(entity =>

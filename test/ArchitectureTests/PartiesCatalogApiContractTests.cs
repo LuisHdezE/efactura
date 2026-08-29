@@ -23,10 +23,11 @@ public sealed class PartiesCatalogApiContractTests
     }
 
     [Fact]
-    public void Catalog_controller_exposes_the_approved_CAT_001_to_008_surface_without_inventing_category_detail_endpoint()
+    public void Catalog_controller_exposes_the_approved_CAT_001_to_009_surface_without_inventing_tax_mutations()
     {
         var items = Read("src/WebApi/Controllers/V1/ItemsController.cs");
         var categories = Read("src/WebApi/Controllers/V1/ItemCategoriesController.cs");
+        var taxProfiles = Read("src/WebApi/Controllers/V1/TaxProfilesController.cs");
 
         Assert.Contains("[Route(\"api/v1/items\")]", items, StringComparison.Ordinal);
         Assert.Contains("[HttpGet(\"{itemId:guid}\")]", items, StringComparison.Ordinal);
@@ -38,6 +39,13 @@ public sealed class PartiesCatalogApiContractTests
         Assert.Contains("[HttpPost]", categories, StringComparison.Ordinal);
         Assert.Contains("[HttpPatch(\"{categoryId:guid}\")]", categories, StringComparison.Ordinal);
         Assert.DoesNotContain("[HttpGet(\"{categoryId:guid}\")]", categories, StringComparison.Ordinal);
+
+        Assert.Contains("[Route(\"api/v1/tax-profiles\")]", taxProfiles, StringComparison.Ordinal);
+        Assert.Contains("[HttpGet]", taxProfiles, StringComparison.Ordinal);
+        Assert.DoesNotContain("[HttpPost", taxProfiles, StringComparison.Ordinal);
+        Assert.DoesNotContain("[HttpPatch", taxProfiles, StringComparison.Ordinal);
+        Assert.DoesNotContain("[HttpPut", taxProfiles, StringComparison.Ordinal);
+        Assert.DoesNotContain("[HttpDelete", taxProfiles, StringComparison.Ordinal);
     }
 
     [Fact]

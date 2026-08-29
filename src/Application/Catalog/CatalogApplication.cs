@@ -5,6 +5,7 @@ using EFactura.Application.Common.Idempotency;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Common.Security;
+using EFactura.Application.Taxation;
 using EFactura.Domain.Catalog;
 using EFactura.Domain.Common;
 
@@ -46,6 +47,7 @@ public sealed class CreateCommercialItemUseCase
 {
     private readonly ICommercialItemRepository _items;
     private readonly IItemCategoryRepository? _categories;
+    private readonly ITaxProfileAssignmentValidator? _taxProfiles;
     private readonly ITransactionManager _transactions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdempotencyStore _idempotency;
@@ -63,10 +65,12 @@ public sealed class CreateCommercialItemUseCase
         IOutboxWriter outbox,
         IActorContextAccessor actorContext,
         ICorrelationContextAccessor correlationContext,
-        IItemCategoryRepository? categories = null)
+        IItemCategoryRepository? categories = null,
+        ITaxProfileAssignmentValidator? taxProfiles = null)
     {
         _items = items;
         _categories = categories;
+        _taxProfiles = taxProfiles;
         _transactions = transactions;
         _unitOfWork = unitOfWork;
         _idempotency = idempotency;
@@ -83,14 +87,6 @@ public sealed class CreateCommercialItemUseCase
         EnsureAuthorized(command.OrganizationId);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.RequestHash);
-
-        if (command.TaxProfileId.HasValue)
-        {
-            throw new ApplicationProblemException(
-                ApplicationProblemKind.Validation,
-                "catalog.tax_profile_assignment_pending",
-                "Tax profile assignment is not enabled until the Taxation rule slice provides authoritative validation.");
-        }
 
         return _transactions.ExecuteAsync(async ct =>
         {
@@ -183,6 +179,23 @@ public sealed class CreateCommercialItemUseCase
                 }
             }
 
+            if (command.TaxProfileId.HasValue)
+            {
+                if (_taxProfiles is null)
+                {
+                    throw new ApplicationProblemException(
+                        ApplicationProblemKind.Validation,
+                        "catalog.tax_profile_validation_unavailable",
+                        "Tax profile assignment is unavailable in this application composition.");
+                }
+
+                await _taxProfiles.ValidateAssignableAsync(
+                    command.OrganizationId,
+                    command.TaxProfileId.Value,
+                    DateOnly.FromDateTime(now.UtcDateTime),
+                    ct);
+            }
+
             CommercialItem item;
             try
             {
@@ -195,7 +208,7 @@ public sealed class CreateCommercialItemUseCase
                     command.Kind,
                     command.Unit,
                     command.TrackInventory,
-                    null,
+                    command.TaxProfileId,
                     command.CategoryId);
             }
             catch (DomainRuleException ex)
@@ -226,7 +239,8 @@ public sealed class CreateCommercialItemUseCase
                     {
                         ["code"] = item.Code,
                         ["kind"] = item.Kind.ToString(),
-                        ["trackInventory"] = item.TrackInventory.ToString()
+                        ["trackInventory"] = item.TrackInventory.ToString(),
+                        ["taxProfileId"] = item.TaxProfileId?.ToString()
                     }),
                 ct);
 
