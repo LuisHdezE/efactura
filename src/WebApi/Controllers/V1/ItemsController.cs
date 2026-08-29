@@ -49,7 +49,7 @@ public sealed class ItemsController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var organizationId = _organization.Resolve(Request);
-        var parsedKind = string.IsNullOrWhiteSpace(kind) ? null : ParseKind(kind);
+        CommercialItemKind? parsedKind = string.IsNullOrWhiteSpace(kind) ? null : ParseKind(kind);
         var result = await _list.ExecuteAsync(
             new CommercialItemSearchRequest(
                 organizationId,
