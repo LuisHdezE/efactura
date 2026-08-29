@@ -23,6 +23,8 @@ public sealed class V1PersistenceDbContext : DbContext
     public DbSet<V1TaxProfileRecord> TaxProfiles => Set<V1TaxProfileRecord>();
     public DbSet<V1SaleRecord> Sales => Set<V1SaleRecord>();
     public DbSet<V1SaleLineRecord> SaleLines => Set<V1SaleLineRecord>();
+    public DbSet<V1InventoryPositionRecord> InventoryPositions => Set<V1InventoryPositionRecord>();
+    public DbSet<V1StockMovementRecord> StockMovements => Set<V1StockMovementRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +33,7 @@ public sealed class V1PersistenceDbContext : DbContext
         ConfigureTaxation(modelBuilder);
         ConfigureCatalog(modelBuilder);
         ConfigureSales(modelBuilder);
+        ConfigureInventory(modelBuilder);
     }
 
     private static void ConfigureCrossCutting(ModelBuilder modelBuilder)
@@ -274,6 +277,54 @@ public sealed class V1PersistenceDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => x.SaleId);
             entity.HasIndex(x => x.ItemId);
+        });
+    }
+
+    private static void ConfigureInventory(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1InventoryPositionRecord>(entity =>
+        {
+            entity.ToTable("v1_inventory_positions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.LocationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Quantity).HasPrecision(18, 6);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.ItemId, x.LocationId }).IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.LocationId });
+            entity.HasOne<V1CommercialItemRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<V1StockMovementRecord>(entity =>
+        {
+            entity.ToTable("v1_stock_movements");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.LocationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.QuantityBefore).HasPrecision(18, 6);
+            entity.Property(x => x.QuantityDelta).HasPrecision(18, 6);
+            entity.Property(x => x.QuantityAfter).HasPrecision(18, 6);
+            entity.Property(x => x.ReasonCode).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.Explanation).HasMaxLength(1000);
+            entity.Property(x => x.OccurredAtUtc).HasPrecision(6);
+            entity.HasOne(x => x.Position)
+                .WithMany(x => x.Movements)
+                .HasForeignKey(x => x.PositionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<V1CommercialItemRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => x.PositionId);
+            entity.HasIndex(x => x.ItemId);
+            entity.HasIndex(x => new { x.OrganizationId, x.LocationId, x.OccurredAtUtc });
         });
     }
 }
