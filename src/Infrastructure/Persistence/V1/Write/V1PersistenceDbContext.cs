@@ -20,12 +20,14 @@ public sealed class V1PersistenceDbContext : DbContext
     public DbSet<V1PartyFiscalIdentityRecord> PartyFiscalIdentities => Set<V1PartyFiscalIdentityRecord>();
     public DbSet<V1CommercialItemRecord> CommercialItems => Set<V1CommercialItemRecord>();
     public DbSet<V1ItemCategoryRecord> ItemCategories => Set<V1ItemCategoryRecord>();
+    public DbSet<V1TaxProfileRecord> TaxProfiles => Set<V1TaxProfileRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureCrossCutting(modelBuilder);
         ConfigureParties(modelBuilder);
         ConfigureCatalog(modelBuilder);
+        ConfigureTaxation(modelBuilder);
     }
 
     private static void ConfigureCrossCutting(ModelBuilder modelBuilder)
@@ -186,6 +188,31 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
             entity.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
             entity.HasIndex(x => new { x.OrganizationId, x.Active });
+        });
+    }
+
+    private static void ConfigureTaxation(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1TaxProfileRecord>(entity =>
+        {
+            entity.ToTable("v1_tax_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200);
+            entity.Property(x => x.Code).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.RatePercent).HasPrecision(9, 4);
+            entity.Property(x => x.EffectiveFromUtc).HasPrecision(6);
+            entity.Property(x => x.EffectiveToUtc).HasPrecision(6);
+            entity.Property(x => x.RuleVersion).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.SourceAuthority).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.SourceReference).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.SourceUri).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.CfeSpecificationVersion).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.VerifiedAtUtc).HasPrecision(6);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.HasIndex(x => new { x.OrganizationId, x.Code, x.RuleVersion }).IsUnique();
+            entity.HasIndex(x => new { x.Active, x.EffectiveFromUtc, x.EffectiveToUtc });
         });
     }
 }
