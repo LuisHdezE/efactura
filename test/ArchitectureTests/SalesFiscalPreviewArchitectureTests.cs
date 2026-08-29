@@ -39,6 +39,33 @@ public sealed class SalesFiscalPreviewArchitectureTests
     }
 
     [Fact]
+    public void Sales_controller_uses_the_shared_upper_snake_case_enum_parser()
+    {
+        var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
+        var parser = Read("src/WebApi/CrossCutting/Requests/V1ApiEnum.cs");
+
+        Assert.Contains("V1ApiEnum.Parse<SaleCommercialIntent>", controller, StringComparison.Ordinal);
+        Assert.Contains("V1ApiEnum.Parse<SaleStatus>", controller, StringComparison.Ordinal);
+        Assert.Contains("V1ApiEnum.Parse<SaleServicePerformanceScope>", controller, StringComparison.Ordinal);
+        Assert.Contains("V1ApiEnum.Parse<SaleExportServiceKind>", controller, StringComparison.Ordinal);
+        Assert.Contains("trimmed.Replace(\"_\", string.Empty", parser, StringComparison.Ordinal);
+        Assert.DoesNotContain("Enum.TryParse<SaleCommercialIntent>", controller, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Product_sales_fail_closed_until_inventory_availability_is_verified()
+    {
+        var preview = Read("src/Application/Sales/SaleFiscalPreviewUseCases.cs");
+
+        Assert.Contains(
+            "inventoryAvailabilityRequired = sale.Lines.Any(line => line.Kind == SaleLineKind.Product)",
+            preview,
+            StringComparison.Ordinal);
+        Assert.Contains("inventory_availability_check", preview, StringComparison.Ordinal);
+        Assert.Contains("readyForConfirmation = !inventoryAvailabilityRequired", preview, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Sales_domain_remains_framework_free_and_does_not_depend_on_Taxation_or_Fiscal_modules()
     {
         var content = Read("src/Domain/Sales/Sale.cs");
