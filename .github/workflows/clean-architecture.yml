@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'test/ArchitectureTests/**'
       - 'test/CrossCuttingTests/**'
+      - 'test/UnitTest/**'
       - 'test/PersistenceIntegrationTests/**'
       - 'api-accounting.sln'
       - 'global.json'
@@ -18,6 +19,7 @@ on:
       - 'src/**'
       - 'test/ArchitectureTests/**'
       - 'test/CrossCuttingTests/**'
+      - 'test/UnitTest/**'
       - 'test/PersistenceIntegrationTests/**'
       - 'api-accounting.sln'
       - 'global.json'
@@ -53,6 +55,9 @@ jobs:
 
       - name: Run API v1 cross-cutting tests
         run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
+
+      - name: Run legacy unit tests
+        run: dotnet test test/UnitTest/UnitTest.csproj --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
 
   persistence-integration:
     name: PostgreSQL and MySQL transaction tests
