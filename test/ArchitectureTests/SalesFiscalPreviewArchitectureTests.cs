@@ -53,16 +53,17 @@ public sealed class SalesFiscalPreviewArchitectureTests
     }
 
     [Fact]
-    public void Product_sales_fail_closed_until_inventory_availability_is_verified()
+    public void Sales_preview_uses_authoritative_inventory_availability_without_owning_inventory_state()
     {
         var preview = Read("src/Application/Sales/SaleFiscalPreviewUseCases.cs");
 
-        Assert.Contains(
-            "inventoryAvailabilityRequired = sale.Lines.Any(line => line.Kind == SaleLineKind.Product)",
-            preview,
-            StringComparison.Ordinal);
-        Assert.Contains("inventory_availability_check", preview, StringComparison.Ordinal);
-        Assert.Contains("readyForConfirmation = !inventoryAvailabilityRequired", preview, StringComparison.Ordinal);
+        Assert.Contains("IInventoryAvailabilityChecker", preview, StringComparison.Ordinal);
+        Assert.Contains("_inventoryAvailability.CheckAsync", preview, StringComparison.Ordinal);
+        Assert.Contains("readyForConfirmation = inventory.Ready", preview, StringComparison.Ordinal);
+        Assert.Contains("item.PositionVersion", preview, StringComparison.Ordinal);
+        Assert.DoesNotContain("V1PersistenceDbContext", preview, StringComparison.Ordinal);
+        Assert.DoesNotContain("DbContext", preview, StringComparison.Ordinal);
+        Assert.DoesNotContain("EfInventoryRepository", preview, StringComparison.Ordinal);
     }
 
     [Fact]
