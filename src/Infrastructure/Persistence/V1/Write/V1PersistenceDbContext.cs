@@ -25,6 +25,9 @@ public sealed class V1PersistenceDbContext : DbContext
     public DbSet<V1SaleLineRecord> SaleLines => Set<V1SaleLineRecord>();
     public DbSet<V1InventoryPositionRecord> InventoryPositions => Set<V1InventoryPositionRecord>();
     public DbSet<V1StockMovementRecord> StockMovements => Set<V1StockMovementRecord>();
+    public DbSet<V1CaeAuthorizationRecord> CaeAuthorizations => Set<V1CaeAuthorizationRecord>();
+    public DbSet<V1CaeAllocationRecord> CaeAllocations => Set<V1CaeAllocationRecord>();
+    public DbSet<V1FiscalNumberReservationRecord> FiscalNumberReservations => Set<V1FiscalNumberReservationRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +37,7 @@ public sealed class V1PersistenceDbContext : DbContext
         ConfigureCatalog(modelBuilder);
         ConfigureSales(modelBuilder);
         ConfigureInventory(modelBuilder);
+        ConfigureCae(modelBuilder);
     }
 
     private static void ConfigureCrossCutting(ModelBuilder modelBuilder)
@@ -325,6 +329,71 @@ public sealed class V1PersistenceDbContext : DbContext
             entity.HasIndex(x => x.PositionId);
             entity.HasIndex(x => x.ItemId);
             entity.HasIndex(x => new { x.OrganizationId, x.LocationId, x.OccurredAtUtc });
+        });
+    }
+
+    private static void ConfigureCae(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1CaeAuthorizationRecord>(entity =>
+        {
+            entity.ToTable("v1_cae_authorizations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.AuthorizationNumber).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.Series).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.VerificationMethod).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.SourceArtifactId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.SourceArtifactHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceName).HasMaxLength(250).IsRequired();
+            entity.Property(x => x.SourceReference).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.ImportedAtUtc).HasPrecision(6);
+            entity.Property(x => x.ActivatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.SourceArtifactHash }).IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.CfeType, x.Series, x.RangeFrom, x.RangeTo });
+            entity.HasIndex(x => new { x.OrganizationId, x.CfeType, x.Status, x.ValidTo });
+        });
+
+        modelBuilder.Entity<V1CaeAllocationRecord>(entity =>
+        {
+            entity.ToTable("v1_cae_allocations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.LocationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.TerminalId).HasMaxLength(200);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.ClosedAtUtc).HasPrecision(6);
+            entity.HasOne(x => x.Authorization)
+                .WithMany(x => x.Allocations)
+                .HasForeignKey(x => x.CaeAuthorizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => x.CaeAuthorizationId);
+            entity.HasIndex(x => new { x.OrganizationId, x.LocationId, x.Status });
+            entity.HasIndex(x => new { x.CaeAuthorizationId, x.RangeFrom, x.RangeTo });
+        });
+
+        modelBuilder.Entity<V1FiscalNumberReservationRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_number_reservations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Series).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.LocationId).HasMaxLength(200);
+            entity.Property(x => x.TerminalId).HasMaxLength(200);
+            entity.Property(x => x.OperationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.ReservedAtUtc).HasPrecision(6);
+            entity.HasOne(x => x.Authorization)
+                .WithMany(x => x.Reservations)
+                .HasForeignKey(x => x.CaeAuthorizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => x.CaeAuthorizationId);
+            entity.HasIndex(x => x.AllocationId);
+            entity.HasIndex(x => new { x.OrganizationId, x.CfeType, x.Series, x.Number }).IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.OperationId }).IsUnique();
         });
     }
 }
