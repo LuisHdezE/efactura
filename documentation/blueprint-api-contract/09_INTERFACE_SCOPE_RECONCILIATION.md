@@ -28,6 +28,7 @@ Important authentication resolution: `WEB-001` and `APP-001` asked for login/ses
 | `WEB-016` Received CFE and XML Validation | `listReceivedFiscalDocuments`, `importReceivedFiscalDocument`, `importReceivedFiscalDocumentsBatch`, `getReceivedFiscalDocument`, `downloadReceivedFiscalArtifact`, `listReceivedFiscalValidationFindings`, `validateFiscalXml` |
 | `WEB-017` Reports and Fiscal Calendar | `getSalesReport`, `getTaxReport`, `getInventoryReport`, `getReceivablesReport`, `getPayablesReport`, `getCashFlowReport`, `listDailyFiscalReports`, `getDailyFiscalReport`, `generateDailyFiscalReport`, `submitDailyFiscalReport`, `getFiscalCalendar`, `listAccountingExportFormats`, `createAccountingExport`, `getAccountingExport` |
 | `WEB-018` Audit, Security and Configuration | IAM/ORG operations, `listAuditEvents`, `getAuditEvent`, `createAuditExport`, `getAuditExport`, `getIntegrationStatus`, fiscal configuration and Integration operations |
+| `WEB-019` Technical Operations Console | `getOperationsOverview`, `getOperationsHealth`, `listTechnicalEvents`, `getTechnicalEvent`, `getTraceTimeline`, `getOperationalMetrics`, `getOperationalMetricSeries`, `listOperationalDependencies`, `listOperationalIntegrations`, `getOperationalIntegration`, `listOperationalQueues`, `listOperationalWorkItems`, `getOperationalWorkItem`, `requestOperationalRetry`, `listOperationalWorkers`, `getOperationalSyncOverview`, `listOperationalAlerts`, `getOperationalAlert`, `acknowledgeOperationalAlert`, `createDiagnosticBundle`, `getDiagnosticBundle`, `downloadDiagnosticBundle` |
 
 ## Android
 
@@ -60,6 +61,15 @@ Important authentication resolution: `WEB-001` and `APP-001` asked for login/ses
 - artifacts -> permissioned fiscal/received-document endpoints;
 - permission/scope context -> `getCurrentActor` + server policies;
 - dashboard/alerts -> `getDashboardSummary` + alerts;
-- offline sync -> batch/operation/cursor contract.
+- offline sync -> batch/operation/cursor contract;
+- technical observability -> `/api/v1/operations/**` normalized monitoring APIs;
+- log/event search -> bounded sanitized `listTechnicalEvents`/`getTechnicalEvent`;
+- incident reconstruction -> `getTraceTimeline`;
+- health/metrics/queues/workers/integrations -> dedicated operations read contracts;
+- privileged operational actions -> explicit `operations.*` permissioned/idempotent commands only.
 
 No unresolved interface need is permission for a future client to invent server behavior.
+
+## Amendment provenance
+
+`WEB-019` comes from the human-accepted Technical Operations Console amendment merged in PR #10. Its detailed requirement/API/change-impact traceability is recorded in `15_TECHNICAL_OPERATIONS_TRACEABILITY_AND_CHANGE_IMPACT.md`.
