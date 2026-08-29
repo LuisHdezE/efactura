@@ -181,10 +181,12 @@ public sealed class Release1UiAmountConverter : IUiAmountConverter
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Release 1 deliberately refuses to invent an effective-date UI quote.
-        // A deployment adapter must later supply authoritative conversion for UYU/USD/etc.
+        // UYI is the ISO 4217 currency code for Uruguayan Peso en Unidades Indexadas.
+        // Release 1 deliberately refuses to invent an effective-date UI quote for UYU/USD/etc.
+        // An authoritative quote adapter is required before those currencies can be compared
+        // against thresholds expressed in UI.
         return Task.FromResult<decimal?>(
-            string.Equals(currencyCode, "UI", StringComparison.OrdinalIgnoreCase) ? amount : null);
+            string.Equals(currencyCode, "UYI", StringComparison.OrdinalIgnoreCase) ? amount : null);
     }
 }
 
