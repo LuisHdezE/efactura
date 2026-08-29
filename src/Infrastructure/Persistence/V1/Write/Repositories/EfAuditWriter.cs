@@ -16,7 +16,11 @@ public sealed class EfAuditWriter : IAuditWriter
 
     public Task AppendAsync(AuditEvent auditEvent, CancellationToken cancellationToken = default)
     {
-        var metadata = new SortedDictionary<string, string?>(auditEvent.Metadata, StringComparer.Ordinal);
+        var metadata = new SortedDictionary<string, string?>(StringComparer.Ordinal);
+        foreach (var pair in auditEvent.Metadata)
+        {
+            metadata[pair.Key] = pair.Value;
+        }
 
         _dbContext.AuditEvents.Add(new V1AuditEventRecord
         {
