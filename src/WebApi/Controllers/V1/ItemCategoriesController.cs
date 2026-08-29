@@ -52,16 +52,6 @@ public sealed class ItemCategoriesController : ControllerBase
             result.Total));
     }
 
-    [HttpGet("{categoryId:guid}")]
-    [RequirePermission(Permissions.CatalogRead)]
-    public async Task<ActionResult<ItemCategoryDto>> Get(
-        Guid categoryId,
-        CancellationToken cancellationToken = default)
-    {
-        var organizationId = _organization.Resolve(Request);
-        return Ok(Map(await _get.ExecuteAsync(organizationId, categoryId, cancellationToken)));
-    }
-
     [HttpPost]
     [RequirePermission(Permissions.CatalogManage)]
     public async Task<ActionResult<ItemCategoryDto>> Create(
@@ -80,7 +70,7 @@ public sealed class ItemCategoriesController : ControllerBase
 
         SetReplayHeader(result.Replayed);
         var resource = Map(await _get.ExecuteAsync(organizationId, result.ResourceId, cancellationToken));
-        return CreatedAtAction(nameof(Get), new { categoryId = result.ResourceId }, resource);
+        return StatusCode(StatusCodes.Status201Created, resource);
     }
 
     [HttpPatch("{categoryId:guid}")]
