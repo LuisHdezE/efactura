@@ -9,8 +9,8 @@ public sealed class V1CaeAuthorizationRecord
     public string Series { get; set; } = string.Empty;
     public long RangeFrom { get; set; }
     public long RangeTo { get; set; }
-    public DateOnly ValidFrom { get; set; }
-    public DateOnly ValidTo { get; set; }
+    public DateTime ValidFrom { get; set; }
+    public DateTime ValidTo { get; set; }
     public int Status { get; set; }
     public string VerificationMethod { get; set; } = string.Empty;
     public string SourceArtifactId { get; set; } = string.Empty;
