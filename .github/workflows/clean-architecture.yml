@@ -83,7 +83,7 @@ jobs:
         run: dotnet package list --project api-accounting.sln --outdated --no-restore
 
       - name: Build solution
-        run: dotnet build api-accounting.sln --configuration Release --no-restore
+        run: dotnet build api-accounting.sln --configuration Release --no-restore --disable-build-servers
 
       - name: Run Clean Architecture guard tests
         run: dotnet test test/ArchitectureTests/ArchitectureTests.csproj --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
