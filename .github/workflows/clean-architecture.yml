@@ -15,7 +15,7 @@ on:
       - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
   push:
-    branches: [main]
+    branches: [main, blueprint/dotnet-10-modernization]
     paths:
       - 'src/**'
       - 'test/ArchitectureTests/**'
