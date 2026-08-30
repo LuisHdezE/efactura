@@ -9,8 +9,6 @@
     <None Remove="Utilities\Barcode\ors0hgsq.1n1~" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="NodaTime" Version="3.2.0" />
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
