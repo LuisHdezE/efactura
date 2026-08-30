@@ -29,6 +29,7 @@ namespace ApplicationCore.Tests.Services
             var departmentId = 1;
             var departmentVO = new GetDepartmentVO { Id = departmentId, Name = "TestDepartment", CountryId = 2 };
             _departmentRepositoryMock.Setup(repo => repo.GetById(departmentId)).ReturnsAsync(departmentVO);
+            _mapperMock.Setup(mapper => mapper.Map<GetDepartmentVO>(departmentVO)).Returns(departmentVO);
 
             // Act
             var result = await _departmentService.GetById(departmentId);
