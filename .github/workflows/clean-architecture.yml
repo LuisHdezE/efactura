@@ -39,13 +39,16 @@ jobs:
     name: Build and architecture tests
     runs-on: [self-hosted, linux, x64, efactura-ci]
     timeout-minutes: 30
-    env:
-      DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
-      NUGET_PACKAGES: ${{ runner.tool_cache }}/nuget-packages
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure persistent runner caches
+        shell: bash
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
@@ -72,9 +75,6 @@ jobs:
     needs: architecture
     runs-on: [self-hosted, linux, x64, efactura-ci]
     timeout-minutes: 30
-    env:
-      DOTNET_INSTALL_DIR: ${{ runner.tool_cache }}/dotnet
-      NUGET_PACKAGES: ${{ runner.tool_cache }}/nuget-packages
 
     services:
       postgres:
@@ -107,6 +107,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure persistent runner caches
+        shell: bash
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
