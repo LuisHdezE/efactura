@@ -20,6 +20,11 @@ namespace WebApi.Compatibility
         {
             return _mapper.Map<TDestination>(source);
         }
+
+        public TDestination Map<TSource, TDestination>(TSource source)
+        {
+            return _mapper.Map<TSource, TDestination>(source);
+        }
     }
 }
 
