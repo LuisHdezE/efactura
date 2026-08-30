@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth.AspNetCore3" Version="1.68.0" />
+    <PackageReference Include="Mapster.DependencyInjection" Version="10.0.12" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.30">
       <PrivateAssets>all</PrivateAssets>
