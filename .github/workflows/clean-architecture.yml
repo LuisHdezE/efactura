@@ -15,7 +15,7 @@ on:
       - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
   push:
-    branches: [main, blueprint/dotnet-10-modernization]
+    branches: [main, blueprint/dependency-security-modernization]
     paths:
       - 'src/**'
       - 'test/ArchitectureTests/**'
@@ -57,6 +57,18 @@ jobs:
 
       - name: Restore solution
         run: dotnet restore api-accounting.sln
+
+      - name: Audit NuGet vulnerabilities
+        continue-on-error: true
+        run: dotnet package list --project api-accounting.sln --vulnerable --include-transitive --no-restore
+
+      - name: Inventory deprecated NuGet packages
+        continue-on-error: true
+        run: dotnet package list --project api-accounting.sln --deprecated --no-restore
+
+      - name: Inventory outdated NuGet packages
+        continue-on-error: true
+        run: dotnet package list --project api-accounting.sln --outdated --no-restore
 
       - name: Build solution
         run: dotnet build api-accounting.sln --configuration Release --no-restore
