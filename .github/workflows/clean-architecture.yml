@@ -58,17 +58,21 @@ jobs:
       - name: Restore solution
         run: dotnet restore api-accounting.sln
 
-      - name: Audit NuGet vulnerabilities
-        continue-on-error: true
-        run: dotnet package list --project api-accounting.sln --vulnerable --include-transitive --no-restore
+      - name: Enforce NuGet vulnerability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit_output="$(mktemp)"
+          trap 'rm -f "$audit_output"' EXIT
 
-      - name: Trace Azure.Identity dependency
-        continue-on-error: true
-        run: dotnet nuget why src/Infrastructure/Infrastructure.csproj Azure.Identity
+          dotnet package list --project api-accounting.sln --vulnerable --include-transitive --no-restore | tee "$audit_output"
 
-      - name: Trace Microsoft.Identity.Client dependency
-        continue-on-error: true
-        run: dotnet nuget why src/Infrastructure/Infrastructure.csproj Microsoft.Identity.Client
+          if grep -Fq "has the following vulnerable packages" "$audit_output"; then
+            echo "::error::Known NuGet vulnerabilities detected. Update or replace the affected dependencies before merging."
+            exit 1
+          fi
+
+          echo "NuGet vulnerability gate passed: no known vulnerable packages detected."
 
       - name: Inventory deprecated NuGet packages
         continue-on-error: true
