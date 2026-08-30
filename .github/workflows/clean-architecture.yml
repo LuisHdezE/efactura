@@ -62,6 +62,14 @@ jobs:
         continue-on-error: true
         run: dotnet package list --project api-accounting.sln --vulnerable --include-transitive --no-restore
 
+      - name: Trace Azure.Identity dependency
+        continue-on-error: true
+        run: dotnet nuget why src/Infrastructure/Infrastructure.csproj Azure.Identity
+
+      - name: Trace Microsoft.Identity.Client dependency
+        continue-on-error: true
+        run: dotnet nuget why src/Infrastructure/Infrastructure.csproj Microsoft.Identity.Client
+
       - name: Inventory deprecated NuGet packages
         continue-on-error: true
         run: dotnet package list --project api-accounting.sln --deprecated --no-restore
