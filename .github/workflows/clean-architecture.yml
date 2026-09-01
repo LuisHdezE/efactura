@@ -15,7 +15,7 @@ on:
       - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
   push:
-    branches: [main, blueprint/dependency-security-modernization]
+    branches: [main]
     paths:
       - 'src/**'
       - 'test/ArchitectureTests/**'
@@ -44,77 +44,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure isolated job caches
+      - name: Configure persistent runner caches
         shell: bash
         run: |
-          set -euo pipefail
-          cache_root="${RUNNER_TEMP}/dotnet-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}"
-          mkdir -p "${cache_root}/packages" "${cache_root}/http" "${cache_root}/scratch" "${cache_root}/cli-home"
           echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
-          echo "NUGET_PACKAGES=${cache_root}/packages" >> "$GITHUB_ENV"
-          echo "NUGET_HTTP_CACHE_PATH=${cache_root}/http" >> "$GITHUB_ENV"
-          echo "NUGET_SCRATCH=${cache_root}/scratch" >> "$GITHUB_ENV"
-          echo "DOTNET_CLI_HOME=${cache_root}/cli-home" >> "$GITHUB_ENV"
-          echo "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1" >> "$GITHUB_ENV"
-          echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> "$GITHUB_ENV"
-          echo "DOTNET_NOLOGO=1" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 
-      - name: Verify .NET CLI responsiveness
+      - name: Restore solution
         shell: bash
-        run: timeout 30s dotnet --info
-
-      - name: Restore projects with controlled sources
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          offline_config="${RUNNER_TEMP}/nuget-offline.config"
-          cat > "$offline_config" <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <packageSources>
-              <clear />
-            </packageSources>
-          </configuration>
-          EOF
-
-          restore_offline_project() {
-            project="$1"
-            echo "::group::Offline restore ${project}"
-            timeout 90s dotnet restore "$project" --configfile "$offline_config" --disable-parallel --verbosity minimal || {
-              rc=$?
-              echo "::error::Offline restore failed or timed out for ${project} (exit ${rc})."
-              exit "$rc"
-            }
-            echo "::endgroup::"
-          }
-
-          restore_online_project() {
-            project="$1"
-            echo "::group::NuGet.org restore ${project}"
-            timeout 3m dotnet restore "$project" --source https://api.nuget.org/v3/index.json --disable-parallel --verbosity minimal || {
-              rc=$?
-              echo "::error::NuGet.org restore failed or timed out for ${project} (exit ${rc})."
-              exit "$rc"
-            }
-            echo "::endgroup::"
-          }
-
-          restore_offline_project src/Domain/Domain.csproj
-          restore_offline_project src/Application/Application.csproj
-          restore_online_project src/ApplicationCore/ApplicationCore.csproj
-          restore_online_project src/Shared/Shared.csproj
-          restore_online_project src/Infrastructure/Infrastructure.csproj
-          restore_online_project src/WebApi/WebApi.csproj
-          restore_online_project test/ArchitectureTests/ArchitectureTests.csproj
-          restore_online_project test/CrossCuttingTests/CrossCuttingTests.csproj
-          restore_online_project test/UnitTest/UnitTest.csproj
-          restore_online_project test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj
+        run: timeout 10m dotnet restore api-accounting.sln
 
       - name: Enforce NuGet vulnerability gate
         shell: bash
@@ -190,34 +133,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure isolated job caches
+      - name: Configure persistent runner caches
         shell: bash
         run: |
-          set -euo pipefail
-          cache_root="${RUNNER_TEMP}/dotnet-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}"
-          mkdir -p "${cache_root}/packages" "${cache_root}/http" "${cache_root}/scratch" "${cache_root}/cli-home"
           echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
-          echo "NUGET_PACKAGES=${cache_root}/packages" >> "$GITHUB_ENV"
-          echo "NUGET_HTTP_CACHE_PATH=${cache_root}/http" >> "$GITHUB_ENV"
-          echo "NUGET_SCRATCH=${cache_root}/scratch" >> "$GITHUB_ENV"
-          echo "DOTNET_CLI_HOME=${cache_root}/cli-home" >> "$GITHUB_ENV"
-          echo "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1" >> "$GITHUB_ENV"
-          echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> "$GITHUB_ENV"
-          echo "DOTNET_NOLOGO=1" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 
-      - name: Verify .NET CLI responsiveness
-        shell: bash
-        run: timeout 30s dotnet --info
-
       - name: Run transactional persistence integration tests
         env:
           PERSISTENCE_INTEGRATION_REQUIRED: 'true'
           POSTGRES_TEST_CONNECTION: 'Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Username=postgres;Password=postgres;Database=efactura_ci'
           MYSQL_TEST_CONNECTION: 'Server=127.0.0.1;Port=${{ job.services.mysql.ports[3306] }};User ID=root;Password=rootpass;Database=efactura_ci;SslMode=None;AllowPublicKeyRetrieval=True'
-        shell: bash
-        run: timeout 20m dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"
+        run: dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"
