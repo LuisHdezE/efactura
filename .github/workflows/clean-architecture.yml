@@ -61,8 +61,13 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Verify .NET CLI responsiveness
+        shell: bash
+        run: timeout 30s dotnet --info
+
       - name: Restore solution
-        run: dotnet restore api-accounting.sln --disable-parallel --verbosity minimal
+        shell: bash
+        run: timeout 10m dotnet restore api-accounting.sln --disable-parallel --verbosity minimal
 
       - name: Enforce NuGet vulnerability gate
         shell: bash
@@ -155,9 +160,14 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Verify .NET CLI responsiveness
+        shell: bash
+        run: timeout 30s dotnet --info
+
       - name: Run transactional persistence integration tests
         env:
           PERSISTENCE_INTEGRATION_REQUIRED: 'true'
           POSTGRES_TEST_CONNECTION: 'Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Username=postgres;Password=postgres;Database=efactura_ci'
           MYSQL_TEST_CONNECTION: 'Server=127.0.0.1;Port=${{ job.services.mysql.ports[3306] }};User ID=root;Password=rootpass;Database=efactura_ci;SslMode=None;AllowPublicKeyRetrieval=True'
-        run: dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"
+        shell: bash
+        run: timeout 20m dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"
