@@ -55,6 +55,9 @@ jobs:
           echo "NUGET_HTTP_CACHE_PATH=${cache_root}/http" >> "$GITHUB_ENV"
           echo "NUGET_SCRATCH=${cache_root}/scratch" >> "$GITHUB_ENV"
           echo "DOTNET_CLI_HOME=${cache_root}/cli-home" >> "$GITHUB_ENV"
+          echo "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1" >> "$GITHUB_ENV"
+          echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> "$GITHUB_ENV"
+          echo "DOTNET_NOLOGO=1" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
@@ -65,9 +68,32 @@ jobs:
         shell: bash
         run: timeout 30s dotnet --info
 
-      - name: Restore solution
+      - name: Restore projects sequentially
         shell: bash
-        run: timeout 10m dotnet restore api-accounting.sln --disable-parallel --verbosity minimal
+        run: |
+          set -euo pipefail
+
+          restore_project() {
+            project="$1"
+            echo "::group::Restore ${project}"
+            timeout 3m dotnet restore "$project" --disable-parallel --verbosity minimal || {
+              rc=$?
+              echo "::error::Restore failed or timed out for ${project} (exit ${rc})."
+              exit "$rc"
+            }
+            echo "::endgroup::"
+          }
+
+          restore_project src/Domain/Domain.csproj
+          restore_project src/Application/Application.csproj
+          restore_project src/ApplicationCore/ApplicationCore.csproj
+          restore_project src/Shared/Shared.csproj
+          restore_project src/Infrastructure/Infrastructure.csproj
+          restore_project src/WebApi/WebApi.csproj
+          restore_project test/ArchitectureTests/ArchitectureTests.csproj
+          restore_project test/CrossCuttingTests/CrossCuttingTests.csproj
+          restore_project test/UnitTest/UnitTest.csproj
+          restore_project test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj
 
       - name: Enforce NuGet vulnerability gate
         shell: bash
@@ -154,6 +180,9 @@ jobs:
           echo "NUGET_HTTP_CACHE_PATH=${cache_root}/http" >> "$GITHUB_ENV"
           echo "NUGET_SCRATCH=${cache_root}/scratch" >> "$GITHUB_ENV"
           echo "DOTNET_CLI_HOME=${cache_root}/cli-home" >> "$GITHUB_ENV"
+          echo "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1" >> "$GITHUB_ENV"
+          echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> "$GITHUB_ENV"
+          echo "DOTNET_NOLOGO=1" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
