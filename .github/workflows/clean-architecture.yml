@@ -68,32 +68,53 @@ jobs:
         shell: bash
         run: timeout 30s dotnet --info
 
-      - name: Restore projects sequentially
+      - name: Restore projects with controlled sources
         shell: bash
         run: |
           set -euo pipefail
 
-          restore_project() {
+          offline_config="${RUNNER_TEMP}/nuget-offline.config"
+          cat > "$offline_config" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+            </packageSources>
+          </configuration>
+          EOF
+
+          restore_offline_project() {
             project="$1"
-            echo "::group::Restore ${project}"
-            timeout 3m dotnet restore "$project" --disable-parallel --verbosity minimal || {
+            echo "::group::Offline restore ${project}"
+            timeout 90s dotnet restore "$project" --configfile "$offline_config" --disable-parallel --verbosity minimal || {
               rc=$?
-              echo "::error::Restore failed or timed out for ${project} (exit ${rc})."
+              echo "::error::Offline restore failed or timed out for ${project} (exit ${rc})."
               exit "$rc"
             }
             echo "::endgroup::"
           }
 
-          restore_project src/Domain/Domain.csproj
-          restore_project src/Application/Application.csproj
-          restore_project src/ApplicationCore/ApplicationCore.csproj
-          restore_project src/Shared/Shared.csproj
-          restore_project src/Infrastructure/Infrastructure.csproj
-          restore_project src/WebApi/WebApi.csproj
-          restore_project test/ArchitectureTests/ArchitectureTests.csproj
-          restore_project test/CrossCuttingTests/CrossCuttingTests.csproj
-          restore_project test/UnitTest/UnitTest.csproj
-          restore_project test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj
+          restore_online_project() {
+            project="$1"
+            echo "::group::NuGet.org restore ${project}"
+            timeout 3m dotnet restore "$project" --source https://api.nuget.org/v3/index.json --disable-parallel --verbosity minimal || {
+              rc=$?
+              echo "::error::NuGet.org restore failed or timed out for ${project} (exit ${rc})."
+              exit "$rc"
+            }
+            echo "::endgroup::"
+          }
+
+          restore_offline_project src/Domain/Domain.csproj
+          restore_offline_project src/Application/Application.csproj
+          restore_online_project src/ApplicationCore/ApplicationCore.csproj
+          restore_online_project src/Shared/Shared.csproj
+          restore_online_project src/Infrastructure/Infrastructure.csproj
+          restore_online_project src/WebApi/WebApi.csproj
+          restore_online_project test/ArchitectureTests/ArchitectureTests.csproj
+          restore_online_project test/CrossCuttingTests/CrossCuttingTests.csproj
+          restore_online_project test/UnitTest/UnitTest.csproj
+          restore_online_project test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj
 
       - name: Enforce NuGet vulnerability gate
         shell: bash
