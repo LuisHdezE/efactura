@@ -44,11 +44,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure persistent runner caches
+      - name: Configure isolated job caches
         shell: bash
         run: |
+          set -euo pipefail
+          cache_root="${RUNNER_TEMP}/dotnet-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}"
+          mkdir -p "${cache_root}/packages" "${cache_root}/http" "${cache_root}/scratch" "${cache_root}/cli-home"
           echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
-          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${cache_root}/packages" >> "$GITHUB_ENV"
+          echo "NUGET_HTTP_CACHE_PATH=${cache_root}/http" >> "$GITHUB_ENV"
+          echo "NUGET_SCRATCH=${cache_root}/scratch" >> "$GITHUB_ENV"
+          echo "DOTNET_CLI_HOME=${cache_root}/cli-home" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
@@ -56,7 +62,7 @@ jobs:
           global-json-file: global.json
 
       - name: Restore solution
-        run: dotnet restore api-accounting.sln
+        run: dotnet restore api-accounting.sln --disable-parallel --verbosity minimal
 
       - name: Enforce NuGet vulnerability gate
         shell: bash
@@ -132,11 +138,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure persistent runner caches
+      - name: Configure isolated job caches
         shell: bash
         run: |
+          set -euo pipefail
+          cache_root="${RUNNER_TEMP}/dotnet-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}"
+          mkdir -p "${cache_root}/packages" "${cache_root}/http" "${cache_root}/scratch" "${cache_root}/cli-home"
           echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
-          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${cache_root}/packages" >> "$GITHUB_ENV"
+          echo "NUGET_HTTP_CACHE_PATH=${cache_root}/http" >> "$GITHUB_ENV"
+          echo "NUGET_SCRATCH=${cache_root}/scratch" >> "$GITHUB_ENV"
+          echo "DOTNET_CLI_HOME=${cache_root}/cli-home" >> "$GITHUB_ENV"
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
