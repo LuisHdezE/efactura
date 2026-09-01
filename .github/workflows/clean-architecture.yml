@@ -57,7 +57,7 @@ jobs:
 
       - name: Restore solution
         shell: bash
-        run: timeout 10m dotnet restore api-accounting.sln
+        run: timeout 10m dotnet restore api-accounting.sln --disable-build-servers
 
       - name: Enforce NuGet vulnerability gate
         shell: bash
