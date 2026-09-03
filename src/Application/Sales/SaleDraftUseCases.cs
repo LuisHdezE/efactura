@@ -36,18 +36,14 @@ public sealed class SaleDraftBuilder
         if (!customerPartyId.HasValue)
         {
             if (intent != SaleCommercialIntent.ConsumerFinal)
-            {
                 throw Validation("sales.customer_required", "The selected sale intent requires a customer.");
-            }
             return;
         }
 
         var party = await _parties.GetAsync(organizationId, customerPartyId.Value, cancellationToken)
             ?? throw Validation("sales.customer_not_found", "The selected customer does not exist in this organization.");
         if (!party.Active || !party.Roles.Contains(PartyRole.Customer))
-        {
             throw Validation("sales.party_not_active_customer", "The selected party is not an active customer.");
-        }
     }
 
     public async Task<IReadOnlyCollection<SaleLine>> BuildLinesAsync(
@@ -75,7 +71,9 @@ public sealed class SaleDraftBuilder
                     input.ServicePerformanceScope, input.ServiceUseCountry, input.ExportServiceKind,
                     input.RecipientIsPersonAbroad, input.ExclusiveUseAbroad,
                     input.ForeignEconomicRelation, input.RecipientInstalledInFreeZone,
-                    input.ProviderFromNonFreeNationalTerritory));
+                    input.ProviderFromNonFreeNationalTerritory,
+                    discountAmount: input.DiscountAmount,
+                    surchargeAmount: input.SurchargeAmount));
             }
             catch (DomainRuleException ex)
             {
@@ -178,7 +176,7 @@ public sealed class CreateSaleUseCase
                 sale = Sale.Create(
                     Guid.NewGuid(), command.OrganizationId, command.LocationId, command.TerminalId,
                     command.CustomerPartyId, command.Intent, command.CurrencyCode, command.EffectiveOn,
-                    command.DeliveryCountry, command.GoodsExportConfirmed, lines);
+                    command.DeliveryCountry, command.GoodsExportConfirmed, lines, command.PriceMode);
             }
             catch (DomainRuleException ex)
             {
@@ -228,7 +226,8 @@ public sealed class CreateSaleUseCase
             new Dictionary<string, string?>
             {
                 ["status"] = sale.Status.ToString(),
-                ["version"] = sale.Version.ToString()
+                ["version"] = sale.Version.ToString(),
+                ["priceMode"] = sale.PriceMode.ToString()
             }), ct);
 
     private static ApplicationProblemException Validation(string code, string detail) =>
@@ -315,7 +314,8 @@ public sealed class UpdateSaleDraftUseCase
             {
                 sale.ReplaceDraft(
                     command.CustomerPartyId, command.Intent, command.CurrencyCode, command.EffectiveOn,
-                    command.DeliveryCountry, command.GoodsExportConfirmed, lines, command.ExpectedVersion);
+                    command.DeliveryCountry, command.GoodsExportConfirmed, lines, command.ExpectedVersion,
+                    command.PriceMode);
             }
             catch (DomainRuleException ex)
             {
@@ -331,7 +331,11 @@ public sealed class UpdateSaleDraftUseCase
                 Guid.NewGuid(), now, "SALE_DRAFT_UPDATED", _actors.Current.ActorId,
                 sale.OrganizationId, sale.LocationId, sale.TerminalId, "Sale", sale.Id.ToString(),
                 AuditOutcome.Succeeded, _correlations.Current.CorrelationId, null,
-                new Dictionary<string, string?> { ["version"] = sale.Version.ToString() }), ct);
+                new Dictionary<string, string?>
+                {
+                    ["version"] = sale.Version.ToString(),
+                    ["priceMode"] = sale.PriceMode.ToString()
+                }), ct);
             await _outbox.EnqueueAsync(
                 new SaleDraftUpdatedIntegrationEvent(Guid.NewGuid(), now, sale.Id, sale.OrganizationId),
                 new OutboxContext(
