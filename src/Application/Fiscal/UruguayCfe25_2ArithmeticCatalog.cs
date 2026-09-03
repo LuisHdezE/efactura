@@ -5,7 +5,7 @@ namespace EFactura.Application.Fiscal;
 
 public static class UruguayCfe25_2ArithmeticCatalog
 {
-    public const string PackVersion = "UY-CFE-ARITH-25.2-R1-2026.09.03";
+    public const string PackVersion = "UY-CFE-ARITH-25.2-R2-2026.09.03";
     public const string FormatVersion = "25.2";
     public static readonly DateOnly SupportedFrom = new(2026, 6, 30);
 
@@ -18,7 +18,7 @@ public static class UruguayCfe25_2ArithmeticCatalog
         FormatReference,
         "Formato CFE v25.2, reviewed 2026-09-03",
         SupportedFrom,
-        clause: "B-C24: monto item = cantidad x precio unitario - descuento + recargo; NUM 17 con 2 decimales");
+        clause: "B-C24=(B-C9*B-C11)-B-C13+B-C17; monto item con 2 decimales");
 
     public static readonly RegulatoryRuleEvidence HeaderTotalsRule = new(
         "UY-CFE-25.2-A-C116-A-C124-TOTALS",
@@ -26,7 +26,15 @@ public static class UruguayCfe25_2ArithmeticCatalog
         FormatReference,
         "Formato CFE v25.2, reviewed 2026-09-03",
         SupportedFrom,
-        clause: "A-C116/A-C117 acumulan netos por indicador; A-C121/A-C122 calculan IVA desde esos netos; A-C124 totaliza encabezado");
+        clause: "A-C116/A-C117 acumulan bases por indicador; A-C121/A-C122 calculan IVA desde esos netos; A-C124 totaliza encabezado");
+
+    public static readonly RegulatoryRuleEvidence GrossAmountsRule = new(
+        "UY-CFE-25.2-A-C10-GROSS-AMOUNTS",
+        "DGI e-Factura - Formato CFE",
+        FormatReference,
+        "Formato CFE v25.2, reviewed 2026-09-03",
+        SupportedFrom,
+        clause: "A-C10=1 indica lineas con IVA incluido; A-C116/A-C117 dividen el acumulado bruto por 1 + tasa IVA vigente");
 
     public static readonly RegulatoryRuleEvidence RoundingRule = new(
         "UY-CFE-HOMOLOGATION-MATHEMATICAL-ROUNDING-2",
@@ -43,5 +51,6 @@ public static class UruguayCfe25_2ArithmeticCatalog
         monetaryScale: 2,
         ItemAmountRule,
         HeaderTotalsRule,
-        RoundingRule);
+        RoundingRule,
+        GrossAmountsRule);
 }
