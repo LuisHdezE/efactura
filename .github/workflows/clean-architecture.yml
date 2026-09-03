@@ -15,7 +15,7 @@ on:
       - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
   push:
-    branches: [main, blueprint/dotnet-10-modernization]
+    branches: [main]
     paths:
       - 'src/**'
       - 'test/ArchitectureTests/**'
@@ -56,10 +56,35 @@ jobs:
           global-json-file: global.json
 
       - name: Restore solution
-        run: dotnet restore api-accounting.sln
+        shell: bash
+        run: timeout 10m dotnet restore api-accounting.sln --disable-build-servers
+
+      - name: Enforce NuGet vulnerability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit_output="$(mktemp)"
+          trap 'rm -f "$audit_output"' EXIT
+
+          dotnet package list --project api-accounting.sln --vulnerable --include-transitive --no-restore | tee "$audit_output"
+
+          if grep -Fq "has the following vulnerable packages" "$audit_output"; then
+            echo "::error::Known NuGet vulnerabilities detected. Update or replace the affected dependencies before merging."
+            exit 1
+          fi
+
+          echo "NuGet vulnerability gate passed: no known vulnerable packages detected."
+
+      - name: Inventory deprecated NuGet packages
+        continue-on-error: true
+        run: dotnet package list --project api-accounting.sln --deprecated --no-restore
+
+      - name: Inventory outdated NuGet packages
+        continue-on-error: true
+        run: dotnet package list --project api-accounting.sln --outdated --no-restore
 
       - name: Build solution
-        run: dotnet build api-accounting.sln --configuration Release --no-restore
+        run: dotnet build api-accounting.sln --configuration Release --no-restore --disable-build-servers
 
       - name: Run Clean Architecture guard tests
         run: dotnet test test/ArchitectureTests/ArchitectureTests.csproj --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
@@ -74,7 +99,7 @@ jobs:
     name: PostgreSQL and MySQL transaction tests
     needs: architecture
     runs-on: [self-hosted, linux, x64, efactura-ci]
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     services:
       postgres:
@@ -86,6 +111,7 @@ jobs:
         ports:
           - 5432
         options: >-
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1g
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
@@ -99,10 +125,11 @@ jobs:
         ports:
           - 3306
         options: >-
+          --tmpfs /var/lib/mysql:rw,noexec,nosuid,size=1g
           --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -prootpass --silent"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 15
+          --health-retries 30
 
     steps:
       - name: Checkout
@@ -124,4 +151,4 @@ jobs:
           PERSISTENCE_INTEGRATION_REQUIRED: 'true'
           POSTGRES_TEST_CONNECTION: 'Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Username=postgres;Password=postgres;Database=efactura_ci'
           MYSQL_TEST_CONNECTION: 'Server=127.0.0.1;Port=${{ job.services.mysql.ports[3306] }};User ID=root;Password=rootpass;Database=efactura_ci;SslMode=None;AllowPublicKeyRetrieval=True'
-        run: dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"
+        run: dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none --logger "console;verbosity=normal"
