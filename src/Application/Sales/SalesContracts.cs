@@ -17,7 +17,9 @@ public sealed record SaleLineInput(
     SaleRegulatoryFactStatus ExclusiveUseAbroad = SaleRegulatoryFactStatus.Unknown,
     SaleRegulatoryFactStatus ForeignEconomicRelation = SaleRegulatoryFactStatus.Unknown,
     SaleRegulatoryFactStatus RecipientInstalledInFreeZone = SaleRegulatoryFactStatus.Unknown,
-    SaleRegulatoryFactStatus ProviderFromNonFreeNationalTerritory = SaleRegulatoryFactStatus.Unknown);
+    SaleRegulatoryFactStatus ProviderFromNonFreeNationalTerritory = SaleRegulatoryFactStatus.Unknown,
+    decimal DiscountAmount = 0m,
+    decimal SurchargeAmount = 0m);
 
 public sealed record CreateSaleCommand(
     string OrganizationId,
@@ -31,7 +33,8 @@ public sealed record CreateSaleCommand(
     bool GoodsExportConfirmed,
     IReadOnlyCollection<SaleLineInput> Lines,
     string IdempotencyKey,
-    string RequestHash);
+    string RequestHash,
+    SalePriceMode PriceMode = SalePriceMode.Net);
 
 public sealed record UpdateSaleDraftCommand(
     string OrganizationId,
@@ -45,7 +48,8 @@ public sealed record UpdateSaleDraftCommand(
     bool GoodsExportConfirmed,
     IReadOnlyCollection<SaleLineInput> Lines,
     string IdempotencyKey,
-    string RequestHash);
+    string RequestHash,
+    SalePriceMode PriceMode = SalePriceMode.Net);
 
 public sealed record ValidateSaleCommand(
     string OrganizationId,
@@ -71,7 +75,10 @@ public sealed record SaleLineView(
     SaleLineKind Kind,
     decimal Quantity,
     decimal UnitPrice,
-    decimal NetAmount,
+    decimal DiscountAmount,
+    decimal SurchargeAmount,
+    decimal DetailAmount,
+    decimal? NetAmount,
     Guid? TaxProfileId);
 
 public sealed record SaleView(
@@ -87,7 +94,9 @@ public sealed record SaleView(
     DateOnly EffectiveOn,
     string? DeliveryCountry,
     bool GoodsExportConfirmed,
-    decimal NetAmount,
+    SalePriceMode PriceMode,
+    decimal DetailAmount,
+    decimal? NetAmount,
     string? ValidationFingerprint,
     DateTimeOffset? ValidatedAtUtc,
     IReadOnlyCollection<SaleLineView> Lines)
@@ -105,6 +114,8 @@ public sealed record SaleView(
         sale.EffectiveOn,
         sale.DeliveryCountry,
         sale.GoodsExportConfirmed,
+        sale.PriceMode,
+        sale.DetailAmount,
         sale.NetAmount,
         sale.ValidationFingerprint,
         sale.ValidatedAtUtc,
@@ -116,14 +127,18 @@ public sealed record SaleView(
             line.Kind,
             line.Quantity,
             line.UnitPrice,
-            line.NetAmount,
+            line.DiscountAmount,
+            line.SurchargeAmount,
+            line.DetailAmount,
+            sale.PriceMode == SalePriceMode.Net ? line.DetailAmount : null,
             line.TaxProfileId)).ToArray());
 }
 
 public sealed record SaleFiscalPreviewLineView(
     Guid LineId,
     string ItemCode,
-    decimal NetAmount,
+    decimal DetailAmount,
+    decimal? NetAmount,
     TaxDecisionStatus TaxTreatmentStatus,
     TaxTreatmentClassification TaxTreatment,
     string TreatmentCode,
@@ -131,7 +146,7 @@ public sealed record SaleFiscalPreviewLineView(
     VatLiabilityKind VatLiability,
     VatRateKind VatRateKind,
     decimal? AppliedRatePercent,
-    decimal? TaxAmount,
+    decimal? IndicativeLineTaxAmount,
     IReadOnlyCollection<string> Reasons,
     IReadOnlyCollection<string> MissingFacts,
     IReadOnlyCollection<RegulatoryRuleEvidence> RuleEvidence);
@@ -140,7 +155,9 @@ public sealed record SaleFiscalPreviewView(
     Guid SaleId,
     long SaleVersion,
     string CurrencyCode,
-    decimal NetAmount,
+    SalePriceMode PriceMode,
+    decimal DetailAmount,
+    decimal? NetAmount,
     decimal? TaxAmount,
     decimal? TotalAmount,
     IReadOnlyCollection<SaleFiscalPreviewLineView> Lines,
@@ -149,7 +166,8 @@ public sealed record SaleFiscalPreviewView(
     CfeSelectionResult CfeSelection,
     bool ReadyForConfirmation,
     string ValidationFingerprint,
-    IReadOnlyCollection<string> Findings);
+    IReadOnlyCollection<string> Findings,
+    string? ArithmeticRulePackVersion);
 
 public sealed record SaleMutationResult(Guid SaleId, long Version, bool Replayed);
 public sealed record SaleValidationResult(bool Valid, SaleView Sale, SaleFiscalPreviewView Preview, bool Replayed);
