@@ -15,6 +15,12 @@ public enum SaleCommercialIntent
     Export = 3
 }
 
+public enum SalePriceMode
+{
+    Net = 1,
+    VatIncluded = 2
+}
+
 public enum SaleLineKind
 {
     Product = 1,
@@ -62,7 +68,9 @@ public sealed class SaleLine
         SaleRegulatoryFactStatus exclusiveUseAbroad,
         SaleRegulatoryFactStatus foreignEconomicRelation,
         SaleRegulatoryFactStatus recipientInstalledInFreeZone,
-        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory)
+        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory,
+        decimal discountAmount,
+        decimal surchargeAmount)
     {
         Id = id;
         ItemId = itemId;
@@ -71,6 +79,8 @@ public sealed class SaleLine
         Kind = kind;
         Quantity = quantity;
         UnitPrice = unitPrice;
+        DiscountAmount = discountAmount;
+        SurchargeAmount = surchargeAmount;
         TaxProfileId = taxProfileId;
         ServicePerformanceScope = servicePerformanceScope;
         ServiceUseCountry = Country(serviceUseCountry, "sales.line.invalid_service_use_country");
@@ -90,6 +100,8 @@ public sealed class SaleLine
     public SaleLineKind Kind { get; }
     public decimal Quantity { get; }
     public decimal UnitPrice { get; }
+    public decimal DiscountAmount { get; }
+    public decimal SurchargeAmount { get; }
     public Guid? TaxProfileId { get; }
     public SaleServicePerformanceScope ServicePerformanceScope { get; }
     public string? ServiceUseCountry { get; }
@@ -99,7 +111,10 @@ public sealed class SaleLine
     public SaleRegulatoryFactStatus ForeignEconomicRelation { get; }
     public SaleRegulatoryFactStatus RecipientInstalledInFreeZone { get; }
     public SaleRegulatoryFactStatus ProviderFromNonFreeNationalTerritory { get; }
-    public decimal NetAmount => Quantity * UnitPrice;
+    public decimal DetailAmount => decimal.Round(
+        (Quantity * UnitPrice) - DiscountAmount + SurchargeAmount,
+        2,
+        MidpointRounding.AwayFromZero);
 
     public static SaleLine Create(
         Guid id,
@@ -117,11 +132,13 @@ public sealed class SaleLine
         SaleRegulatoryFactStatus exclusiveUseAbroad = SaleRegulatoryFactStatus.Unknown,
         SaleRegulatoryFactStatus foreignEconomicRelation = SaleRegulatoryFactStatus.Unknown,
         SaleRegulatoryFactStatus recipientInstalledInFreeZone = SaleRegulatoryFactStatus.Unknown,
-        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory = SaleRegulatoryFactStatus.Unknown) =>
+        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory = SaleRegulatoryFactStatus.Unknown,
+        decimal discountAmount = 0m,
+        decimal surchargeAmount = 0m) =>
         new(id, itemId, itemCode, itemName, kind, quantity, unitPrice, taxProfileId,
             servicePerformanceScope, serviceUseCountry, exportServiceKind, recipientIsPersonAbroad,
             exclusiveUseAbroad, foreignEconomicRelation, recipientInstalledInFreeZone,
-            providerFromNonFreeNationalTerritory);
+            providerFromNonFreeNationalTerritory, discountAmount, surchargeAmount);
 
     public static SaleLine Rehydrate(
         Guid id,
@@ -139,11 +156,13 @@ public sealed class SaleLine
         SaleRegulatoryFactStatus exclusiveUseAbroad,
         SaleRegulatoryFactStatus foreignEconomicRelation,
         SaleRegulatoryFactStatus recipientInstalledInFreeZone,
-        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory) =>
+        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory,
+        decimal discountAmount = 0m,
+        decimal surchargeAmount = 0m) =>
         new(id, itemId, itemCode, itemName, kind, quantity, unitPrice, taxProfileId,
             servicePerformanceScope, serviceUseCountry, exportServiceKind, recipientIsPersonAbroad,
             exclusiveUseAbroad, foreignEconomicRelation, recipientInstalledInFreeZone,
-            providerFromNonFreeNationalTerritory);
+            providerFromNonFreeNationalTerritory, discountAmount, surchargeAmount);
 
     private void Validate()
     {
@@ -155,6 +174,20 @@ public sealed class SaleLine
         if (UnitPrice < 0m)
         {
             throw new DomainRuleException("sales.line.unit_price_invalid", "Sale line unit price cannot be negative.");
+        }
+
+        if (DiscountAmount < 0m || SurchargeAmount < 0m)
+        {
+            throw new DomainRuleException(
+                "sales.line.adjustment_invalid",
+                "Sale line discount and surcharge amounts cannot be negative.");
+        }
+
+        if (DetailAmount < 0m)
+        {
+            throw new DomainRuleException(
+                "sales.line.detail_amount_negative",
+                "Sale line amount cannot become negative after discount and surcharge.");
         }
 
         if (Kind == SaleLineKind.Product)
@@ -222,7 +255,8 @@ public sealed class Sale
         SaleStatus status,
         string? validationFingerprint,
         DateTimeOffset? validatedAtUtc,
-        long version)
+        long version,
+        SalePriceMode priceMode)
     {
         Id = id;
         OrganizationId = Required(organizationId, 200, "sales.organization_required");
@@ -234,6 +268,7 @@ public sealed class Sale
         EffectiveOn = effectiveOn;
         DeliveryCountry = Country(deliveryCountry, "sales.invalid_delivery_country");
         GoodsExportConfirmed = goodsExportConfirmed;
+        PriceMode = priceMode;
         _lines = new List<SaleLine>(lines);
         Status = status;
         ValidationFingerprint = validationFingerprint;
@@ -252,12 +287,17 @@ public sealed class Sale
     public DateOnly EffectiveOn { get; private set; }
     public string? DeliveryCountry { get; private set; }
     public bool GoodsExportConfirmed { get; private set; }
+    public SalePriceMode PriceMode { get; private set; }
     public SaleStatus Status { get; private set; }
     public string? ValidationFingerprint { get; private set; }
     public DateTimeOffset? ValidatedAtUtc { get; private set; }
     public long Version { get; private set; }
     public IReadOnlyCollection<SaleLine> Lines => _lines;
-    public decimal NetAmount => _lines.Sum(x => x.NetAmount);
+    public decimal DetailAmount => decimal.Round(
+        _lines.Sum(x => x.DetailAmount),
+        2,
+        MidpointRounding.AwayFromZero);
+    public decimal? NetAmount => PriceMode == SalePriceMode.Net ? DetailAmount : null;
 
     public static Sale Create(
         Guid id,
@@ -270,9 +310,10 @@ public sealed class Sale
         DateOnly effectiveOn,
         string? deliveryCountry,
         bool goodsExportConfirmed,
-        IEnumerable<SaleLine> lines) =>
+        IEnumerable<SaleLine> lines,
+        SalePriceMode priceMode = SalePriceMode.Net) =>
         new(id, organizationId, locationId, terminalId, customerPartyId, intent, currencyCode,
-            effectiveOn, deliveryCountry, goodsExportConfirmed, lines, SaleStatus.Draft, null, null, 1);
+            effectiveOn, deliveryCountry, goodsExportConfirmed, lines, SaleStatus.Draft, null, null, 1, priceMode);
 
     public static Sale Rehydrate(
         Guid id,
@@ -289,10 +330,11 @@ public sealed class Sale
         SaleStatus status,
         string? validationFingerprint,
         DateTimeOffset? validatedAtUtc,
-        long version) =>
+        long version,
+        SalePriceMode priceMode = SalePriceMode.Net) =>
         new(id, organizationId, locationId, terminalId, customerPartyId, intent, currencyCode,
             effectiveOn, deliveryCountry, goodsExportConfirmed, lines, status,
-            validationFingerprint, validatedAtUtc, version);
+            validationFingerprint, validatedAtUtc, version, priceMode);
 
     public void ReplaceDraft(
         Guid? customerPartyId,
@@ -302,7 +344,8 @@ public sealed class Sale
         string? deliveryCountry,
         bool goodsExportConfirmed,
         IEnumerable<SaleLine> lines,
-        long expectedVersion)
+        long expectedVersion,
+        SalePriceMode priceMode = SalePriceMode.Net)
     {
         EnsureVersion(expectedVersion);
         CustomerPartyId = customerPartyId;
@@ -311,6 +354,7 @@ public sealed class Sale
         EffectiveOn = effectiveOn;
         DeliveryCountry = Country(deliveryCountry, "sales.invalid_delivery_country");
         GoodsExportConfirmed = goodsExportConfirmed;
+        PriceMode = priceMode;
         _lines.Clear();
         _lines.AddRange(lines);
         Status = SaleStatus.Draft;
@@ -339,6 +383,11 @@ public sealed class Sale
         if (CurrencyCode.Length != 3 || CurrencyCode.Any(ch => ch < 'A' || ch > 'Z'))
         {
             throw new DomainRuleException("sales.currency_invalid", "Currency code must use ISO alpha-3 form.");
+        }
+
+        if (!Enum.IsDefined(PriceMode))
+        {
+            throw new DomainRuleException("sales.price_mode_invalid", "Sale price mode is not supported.");
         }
 
         if (_lines.Count == 0)
