@@ -111,6 +111,7 @@ jobs:
         ports:
           - 5432
         options: >-
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1g
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
@@ -124,6 +125,7 @@ jobs:
         ports:
           - 3306
         options: >-
+          --tmpfs /var/lib/mysql:rw,noexec,nosuid,size=1g
           --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -prootpass --silent"
           --health-interval 10s
           --health-timeout 5s
