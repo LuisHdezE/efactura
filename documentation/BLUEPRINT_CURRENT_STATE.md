@@ -4,7 +4,7 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-03
 
-Canonical repository state: `main@0d6b68753700e8dfcb98ced03882e821fe76e252`
+Accepted functional baseline documented here: `main@0d6b68753700e8dfcb98ced03882e821fe76e252` (post-PR #33, before the documentation-only reconciliation PR #34).
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace the detailed requirements, architecture, API-contract or implementation documents. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -20,7 +20,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 
 ## Post-merge evidence
 
-`Clean Architecture Guard` run #136 validated the actual merged `main` at `0d6b68753700e8dfcb98ced03882e821fe76e252`:
+`Clean Architecture Guard` run #136 validated the functional baseline produced by PR #33 at `0d6b68753700e8dfcb98ced03882e821fe76e252`:
 
 - restore: PASS;
 - NuGet known-vulnerability gate: PASS, 0 known vulnerable packages across all 10 projects;
@@ -86,10 +86,10 @@ Where an old gap matrix conflicts with accepted merged implementation evidence, 
 
 ## Repository governance at this checkpoint
 
-- PR #33 is merged.
-- `main` is `0d6b68753700e8dfcb98ced03882e821fe76e252`.
-- post-merge CI #136 is SUCCESS.
-- no open pull requests were present when this checkpoint branch was created.
+- PR #33 established the accepted functional baseline at `0d6b68753700e8dfcb98ced03882e821fe76e252`.
+- post-merge CI #136 for that functional baseline is SUCCESS.
+- PR #34 subsequently merged this documentation checkpoint; its merge commit `b0cc098e7c003c1ca41fff1c7a0328b4436943b9` changes documentation only and is not a new functional validation baseline.
+- no open pull requests were present when the PR #34 checkpoint branch was created.
 - local `qa/` / Postman work is not represented as an accepted repository gate here.
 
 Any next implementation slice still requires explicit scope selection, exact-head validation and human review before merge.
