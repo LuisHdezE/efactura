@@ -3,6 +3,12 @@ using EFactura.Domain.Taxation;
 
 namespace EFactura.Domain.Fiscal;
 
+public enum CfeDetailAmountMode
+{
+    NetOfVat = 1,
+    VatIncluded = 2
+}
+
 public sealed class CfeArithmeticRulePack
 {
     public CfeArithmeticRulePack(
@@ -12,7 +18,8 @@ public sealed class CfeArithmeticRulePack
         int monetaryScale,
         RegulatoryRuleEvidence itemAmountRule,
         RegulatoryRuleEvidence headerTotalsRule,
-        RegulatoryRuleEvidence roundingRule)
+        RegulatoryRuleEvidence roundingRule,
+        RegulatoryRuleEvidence? grossAmountsRule = null)
     {
         if (string.IsNullOrWhiteSpace(version))
             throw new DomainRuleException("fiscal.arithmetic.rule_pack_version_required", "CFE arithmetic rule-pack version is required.");
@@ -28,6 +35,7 @@ public sealed class CfeArithmeticRulePack
         ItemAmountRule = itemAmountRule ?? throw new ArgumentNullException(nameof(itemAmountRule));
         HeaderTotalsRule = headerTotalsRule ?? throw new ArgumentNullException(nameof(headerTotalsRule));
         RoundingRule = roundingRule ?? throw new ArgumentNullException(nameof(roundingRule));
+        GrossAmountsRule = grossAmountsRule;
     }
 
     public string Version { get; }
@@ -37,6 +45,7 @@ public sealed class CfeArithmeticRulePack
     public RegulatoryRuleEvidence ItemAmountRule { get; }
     public RegulatoryRuleEvidence HeaderTotalsRule { get; }
     public RegulatoryRuleEvidence RoundingRule { get; }
+    public RegulatoryRuleEvidence? GrossAmountsRule { get; }
 
     public decimal Round(decimal value) =>
         decimal.Round(value, MonetaryScale, MidpointRounding.AwayFromZero);
@@ -53,7 +62,8 @@ public sealed record CfeArithmeticLineInput(
 public sealed record CfeArithmeticRequest(
     DateOnly EffectiveOn,
     string CurrencyCode,
-    IReadOnlyCollection<CfeArithmeticLineInput> Lines);
+    IReadOnlyCollection<CfeArithmeticLineInput> Lines,
+    CfeDetailAmountMode DetailAmountMode = CfeDetailAmountMode.NetOfVat);
 
 public sealed record CfeArithmeticLineResult(
     Guid LineId,
@@ -78,6 +88,7 @@ public sealed record CfeArithmeticResult(
     string CurrencyCode,
     string FormatVersion,
     string ArithmeticRulePackVersion,
+    CfeDetailAmountMode DetailAmountMode,
     IReadOnlyCollection<CfeArithmeticLineResult> Lines,
     CfeArithmeticTotals Totals,
     IReadOnlyCollection<RegulatoryRuleEvidence> RuleEvidence);
@@ -96,9 +107,26 @@ public sealed class CfeArithmeticCalculator
                 "The selected CFE arithmetic rule pack does not cover the requested fiscal date.");
         }
 
+        if (!Enum.IsDefined(request.DetailAmountMode))
+        {
+            throw new DomainRuleException(
+                "fiscal.arithmetic.detail_amount_mode_invalid",
+                "The CFE detail amount mode is not supported.");
+        }
+
         EnsureEvidenceCovers(rules.ItemAmountRule, request.EffectiveOn);
         EnsureEvidenceCovers(rules.HeaderTotalsRule, request.EffectiveOn);
         EnsureEvidenceCovers(rules.RoundingRule, request.EffectiveOn);
+        if (request.DetailAmountMode == CfeDetailAmountMode.VatIncluded)
+        {
+            if (rules.GrossAmountsRule is null)
+            {
+                throw new DomainRuleException(
+                    "fiscal.arithmetic.gross_amount_rule_required",
+                    "VAT-included CFE arithmetic requires explicit gross-amount regulatory evidence.");
+            }
+            EnsureEvidenceCovers(rules.GrossAmountsRule, request.EffectiveOn);
+        }
 
         var currencyCode = NormalizeCurrency(request.CurrencyCode);
         if (request.Lines is null || request.Lines.Count == 0)
@@ -110,13 +138,17 @@ public sealed class CfeArithmeticCalculator
 
         var lineResults = request.Lines.Select(line => CalculateLine(line, request.EffectiveOn, rules)).ToArray();
 
-        var minimumTaxable = Sum(lineResults, VatRateKind.Minimum);
-        var basicTaxable = Sum(lineResults, VatRateKind.Basic);
+        var minimumDetailAmount = Sum(lineResults, VatRateKind.Minimum);
+        var basicDetailAmount = Sum(lineResults, VatRateKind.Basic);
         var exportAmount = Sum(lineResults, VatRateKind.Export);
-        var netAmount = rules.Round(lineResults.Sum(line => line.ItemAmount));
 
         var minimumRate = ResolveBucketRate(lineResults, VatRateKind.Minimum);
         var basicRate = ResolveBucketRate(lineResults, VatRateKind.Basic);
+        var minimumTaxable = ResolveTaxableBucket(
+            minimumDetailAmount, minimumRate, request.DetailAmountMode, rules);
+        var basicTaxable = ResolveTaxableBucket(
+            basicDetailAmount, basicRate, request.DetailAmountMode, rules);
+
         var minimumVat = minimumRate.HasValue
             ? rules.Round(minimumTaxable * minimumRate.Value / 100m)
             : 0m;
@@ -124,6 +156,7 @@ public sealed class CfeArithmeticCalculator
             ? rules.Round(basicTaxable * basicRate.Value / 100m)
             : 0m;
         var vatAmount = rules.Round(minimumVat + basicVat);
+        var netAmount = rules.Round(minimumTaxable + basicTaxable + exportAmount);
         var totalAmount = rules.Round(netAmount + vatAmount);
 
         var totals = new CfeArithmeticTotals(
@@ -136,21 +169,22 @@ public sealed class CfeArithmeticCalculator
             vatAmount,
             totalAmount);
 
-        var evidence = lineResults
+        IEnumerable<RegulatoryRuleEvidence> evidenceSource = lineResults
             .SelectMany(line => line.RuleEvidence)
             .Append(rules.ItemAmountRule)
             .Append(rules.HeaderTotalsRule)
-            .Append(rules.RoundingRule)
-            .DistinctBy(item => item.RuleId)
-            .ToArray();
+            .Append(rules.RoundingRule);
+        if (request.DetailAmountMode == CfeDetailAmountMode.VatIncluded && rules.GrossAmountsRule is not null)
+            evidenceSource = evidenceSource.Append(rules.GrossAmountsRule);
 
         return new CfeArithmeticResult(
             currencyCode,
             rules.FormatVersion,
             rules.Version,
+            request.DetailAmountMode,
             lineResults,
             totals,
-            evidence);
+            evidenceSource.DistinctBy(item => item.RuleId).ToArray());
     }
 
     private static CfeArithmeticLineResult CalculateLine(
@@ -181,6 +215,28 @@ public sealed class CfeArithmeticCalculator
             line.TaxRate.AppliedRatePercent!.Value,
             line.TaxRate.RuleEvidence,
             line.TaxRate.RateRulePackVersion);
+    }
+
+    private static decimal ResolveTaxableBucket(
+        decimal detailAmount,
+        decimal? ratePercent,
+        CfeDetailAmountMode detailAmountMode,
+        CfeArithmeticRulePack rules)
+    {
+        if (!ratePercent.HasValue)
+            return 0m;
+
+        if (detailAmountMode == CfeDetailAmountMode.NetOfVat)
+            return rules.Round(detailAmount);
+
+        if (ratePercent.Value <= 0m)
+        {
+            throw new DomainRuleException(
+                "fiscal.arithmetic.gross_vat_rate_invalid",
+                "VAT-included taxable buckets require a positive VAT rate.");
+        }
+
+        return rules.Round(detailAmount / (1m + (ratePercent.Value / 100m)));
     }
 
     private static void ValidateResolvedRate(TaxRateResolution rate, DateOnly effectiveOn)
