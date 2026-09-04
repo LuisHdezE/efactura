@@ -15,6 +15,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
     {
         base.Customize(modelBuilder, context);
         ConfigureFinance(modelBuilder);
+        ConfigureSaleLocalEffects(modelBuilder);
     }
 
     private static void ConfigureFinance(ModelBuilder modelBuilder)
@@ -92,6 +93,52 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
                 .HasDatabaseName("UX_v1_ar_org_sale");
             entity.HasIndex(x => new { x.OrganizationId, x.CustomerPartyId, x.DueDate })
                 .HasDatabaseName("IX_v1_ar_org_customer_due");
+        });
+    }
+
+    private static void ConfigureSaleLocalEffects(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1StockMovementRecord>(entity =>
+        {
+            entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64);
+            entity.Property(x => x.SettlementFingerprint).HasMaxLength(64);
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SourceSaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_stock_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.SourceSaleId, x.PositionId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_stock_sale_position");
+        });
+
+        modelBuilder.Entity<V1FiscalizationRequestRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscalization_requests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.LocationId).HasMaxLength(200);
+            entity.Property(x => x.TerminalId).HasMaxLength(200);
+            entity.Property(x => x.FormatVersion).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettlementFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.NetAmount).HasPrecision(18, 6);
+            entity.Property(x => x.VatAmount).HasPrecision(18, 6);
+            entity.Property(x => x.TotalAmount).HasPrecision(18, 6);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.RequestedAtUtc).HasPrecision(6);
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fiscal_req_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fiscal_req_org_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.Status, x.RequestedAtUtc })
+                .HasDatabaseName("IX_v1_fiscal_req_work");
         });
     }
 }

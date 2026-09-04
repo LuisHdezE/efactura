@@ -208,7 +208,10 @@ public sealed class EfInventoryRepository : IInventoryRepository
             PositionVersionAfter = movement.PositionVersionAfter,
             ReasonCode = movement.ReasonCode,
             Explanation = movement.Explanation,
-            OccurredAtUtc = movement.OccurredAtUtc
+            OccurredAtUtc = movement.OccurredAtUtc,
+            SourceSaleId = movement.SourceSaleId,
+            ConfirmationFingerprint = movement.ConfirmationFingerprint,
+            SettlementFingerprint = movement.SettlementFingerprint
         });
         return Task.CompletedTask;
     }
@@ -234,5 +237,8 @@ public sealed class EfInventoryRepository : IInventoryRepository
         record.PositionVersionAfter,
         record.ReasonCode,
         record.Explanation,
-        record.OccurredAtUtc);
+        record.OccurredAtUtc,
+        record.SourceSaleId,
+        record.ConfirmationFingerprint,
+        record.SettlementFingerprint);
 }
