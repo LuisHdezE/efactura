@@ -28,5 +28,8 @@ public sealed class V1StockMovementRecord
     public string ReasonCode { get; set; } = string.Empty;
     public string? Explanation { get; set; }
     public DateTimeOffset OccurredAtUtc { get; set; }
+    public Guid? SourceSaleId { get; set; }
+    public string? ConfirmationFingerprint { get; set; }
+    public string? SettlementFingerprint { get; set; }
     public V1InventoryPositionRecord Position { get; set; } = null!;
 }

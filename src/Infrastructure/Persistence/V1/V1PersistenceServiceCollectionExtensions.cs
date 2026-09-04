@@ -73,6 +73,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<ICaeRepository, EfCaeRepository>();
         services.AddSingleton<ICaeArtifactVerifier, Release1CaeMetadataVerifier>();
         services.AddScoped<IFiscalNumberAllocator, FiscalNumberAllocator>();
+        services.AddScoped<IFiscalizationRequestRepository, EfFiscalizationRequestRepository>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
         services.AddScoped<GetCaeAuthorizationUseCase>();
         services.AddScoped<ImportCaeAuthorizationUseCase>();
@@ -83,6 +84,7 @@ public static class V1PersistenceServiceCollectionExtensions
 
         services.AddScoped<IInventoryRepository, EfInventoryRepository>();
         services.AddScoped<IInventoryAvailabilityChecker, InventoryAvailabilityChecker>();
+        services.AddScoped<SaleStockConsumer>();
         services.AddScoped<ListInventoryPositionsUseCase>();
         services.AddScoped<GetInventoryPositionUseCase>();
         services.AddScoped<ListStockMovementsUseCase>();
