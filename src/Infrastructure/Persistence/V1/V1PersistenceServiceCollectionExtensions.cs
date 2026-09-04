@@ -103,6 +103,10 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IUiAmountConverter, Release1UiAmountConverter>();
         services.AddScoped<GetSaleFiscalPreviewUseCase>();
         services.AddScoped<ValidateSaleUseCase>();
+        services.AddSingleton<SaleConfirmationPlanner>();
+        services.AddSingleton<SaleSettlementPlanner>();
+        services.AddScoped<ISaleConfirmationEvidenceResolver, SaleConfirmationEvidenceResolver>();
+        services.AddScoped<ConfirmSaleUseCase>();
 
         return services;
     }
