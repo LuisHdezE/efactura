@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Infrastructure.Persistence.V1;
 
@@ -25,5 +26,7 @@ public static class V1PersistenceDatabaseConfigurator
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unsupported v1 database provider.");
         }
+
+        options.ReplaceService<IModelCustomizer, V1PersistenceModelCustomizer>();
     }
 }

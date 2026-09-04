@@ -6,6 +6,8 @@ using EFactura.Application.Common.Persistence;
 using EFactura.Application.Fiscal;
 using EFactura.Application.Inventory;
 using EFactura.Application.Parties;
+using EFactura.Application.Payments;
+using EFactura.Application.Receivables;
 using EFactura.Application.Sales;
 using EFactura.Application.Taxation;
 using EFactura.Domain.Fiscal;
@@ -85,6 +87,10 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<GetInventoryPositionUseCase>();
         services.AddScoped<ListStockMovementsUseCase>();
         services.AddScoped<CreateStockAdjustmentUseCase>();
+
+        services.AddScoped<IPaymentMethodRepository, EfPaymentMethodRepository>();
+        services.AddScoped<IPaymentRepository, EfPaymentRepository>();
+        services.AddScoped<IReceivableRepository, EfReceivableRepository>();
 
         services.AddScoped<ISaleRepository, EfSaleRepository>();
         services.AddScoped<SaleDraftBuilder>();
