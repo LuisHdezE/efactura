@@ -50,15 +50,21 @@ public sealed class SaleLocalEffectsArchitectureTests
     }
 
     [Fact]
-    public void Local_effects_foundation_does_not_expose_confirm_or_change_sale_state_machine()
+    public void Local_effect_components_remain_staging_only_while_public_confirm_route_stays_closed()
     {
         var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
-        var sale = Read("src/Domain/Sales/Sale.cs");
+        var consumer = Read("src/Application/Inventory/SaleStockConsumption.cs");
+        var fiscalization = Read("src/Domain/Fiscal/FiscalizationRequest.cs");
+        var localEffects = consumer + Environment.NewLine + fiscalization;
 
         Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("HttpPost(\"{saleId:guid}/confirm\"", controller, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("SaleStatus.Confirmed", sale, StringComparison.Ordinal);
-        Assert.DoesNotContain("    Confirmed = 3", sale, StringComparison.Ordinal);
+        Assert.DoesNotContain("ISaleRepository", localEffects, StringComparison.Ordinal);
+        Assert.DoesNotContain("MarkConfirmed", localEffects, StringComparison.Ordinal);
+        Assert.DoesNotContain("SaleStatus.Confirmed", localEffects, StringComparison.Ordinal);
+        Assert.DoesNotContain("ITransactionManager", localEffects, StringComparison.Ordinal);
+        Assert.DoesNotContain("IIdempotencyStore", localEffects, StringComparison.Ordinal);
+        Assert.DoesNotContain("IOutboxWriter", localEffects, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>

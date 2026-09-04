@@ -16,6 +16,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         base.Customize(modelBuilder, context);
         ConfigureFinance(modelBuilder);
         ConfigureSaleLocalEffects(modelBuilder);
+        ConfigureSaleConfirmation(modelBuilder);
     }
 
     private static void ConfigureFinance(ModelBuilder modelBuilder)
@@ -139,6 +140,16 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
                 .HasDatabaseName("UX_v1_fiscal_req_org_sale");
             entity.HasIndex(x => new { x.OrganizationId, x.Status, x.RequestedAtUtc })
                 .HasDatabaseName("IX_v1_fiscal_req_work");
+        });
+    }
+
+    private static void ConfigureSaleConfirmation(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1SaleRecord>(entity =>
+        {
+            entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64);
+            entity.Property(x => x.SettlementFingerprint).HasMaxLength(64);
+            entity.Property(x => x.ConfirmedAtUtc).HasPrecision(6);
         });
     }
 }

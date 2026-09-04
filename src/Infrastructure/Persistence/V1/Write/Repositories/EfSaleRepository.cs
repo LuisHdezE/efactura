@@ -101,6 +101,9 @@ public sealed class EfSaleRepository : ISaleRepository
         record.Status = (int)sale.Status;
         record.ValidationFingerprint = sale.ValidationFingerprint;
         record.ValidatedAtUtc = sale.ValidatedAtUtc;
+        record.ConfirmationFingerprint = sale.ConfirmationFingerprint;
+        record.SettlementFingerprint = sale.SettlementFingerprint;
+        record.ConfirmedAtUtc = sale.ConfirmedAtUtc;
         record.Version = sale.Version;
         record.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
@@ -125,6 +128,9 @@ public sealed class EfSaleRepository : ISaleRepository
         Status = (int)sale.Status,
         ValidationFingerprint = sale.ValidationFingerprint,
         ValidatedAtUtc = sale.ValidatedAtUtc,
+        ConfirmationFingerprint = sale.ConfirmationFingerprint,
+        SettlementFingerprint = sale.SettlementFingerprint,
+        ConfirmedAtUtc = sale.ConfirmedAtUtc,
         Version = sale.Version,
         CreatedAtUtc = createdAtUtc,
         UpdatedAtUtc = updatedAtUtc,
@@ -167,7 +173,10 @@ public sealed class EfSaleRepository : ISaleRepository
         (SaleStatus)record.Status,
         record.ValidationFingerprint,
         record.ValidatedAtUtc,
-        record.Version);
+        record.Version,
+        record.ConfirmationFingerprint,
+        record.SettlementFingerprint,
+        record.ConfirmedAtUtc);
 
     private static SaleLine MapLine(V1SaleLineRecord line) => SaleLine.Rehydrate(
         line.Id,

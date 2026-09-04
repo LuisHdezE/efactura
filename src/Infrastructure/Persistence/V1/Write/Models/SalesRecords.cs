@@ -15,6 +15,9 @@ public sealed class V1SaleRecord
     public int Status { get; set; }
     public string? ValidationFingerprint { get; set; }
     public DateTimeOffset? ValidatedAtUtc { get; set; }
+    public string? ConfirmationFingerprint { get; set; }
+    public string? SettlementFingerprint { get; set; }
+    public DateTimeOffset? ConfirmedAtUtc { get; set; }
     public long Version { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }

@@ -5,7 +5,8 @@ namespace EFactura.Domain.Sales;
 public enum SaleStatus
 {
     Draft = 1,
-    Validated = 2
+    Validated = 2,
+    Confirmed = 3
 }
 
 public enum SaleCommercialIntent
@@ -222,7 +223,10 @@ public sealed class Sale
         SaleStatus status,
         string? validationFingerprint,
         DateTimeOffset? validatedAtUtc,
-        long version)
+        long version,
+        string? confirmationFingerprint = null,
+        string? settlementFingerprint = null,
+        DateTimeOffset? confirmedAtUtc = null)
     {
         Id = id;
         OrganizationId = Required(organizationId, 200, "sales.organization_required");
@@ -239,6 +243,9 @@ public sealed class Sale
         ValidationFingerprint = validationFingerprint;
         ValidatedAtUtc = validatedAtUtc;
         Version = version;
+        ConfirmationFingerprint = confirmationFingerprint;
+        SettlementFingerprint = settlementFingerprint;
+        ConfirmedAtUtc = confirmedAtUtc;
         Validate();
     }
 
@@ -255,6 +262,9 @@ public sealed class Sale
     public SaleStatus Status { get; private set; }
     public string? ValidationFingerprint { get; private set; }
     public DateTimeOffset? ValidatedAtUtc { get; private set; }
+    public string? ConfirmationFingerprint { get; private set; }
+    public string? SettlementFingerprint { get; private set; }
+    public DateTimeOffset? ConfirmedAtUtc { get; private set; }
     public long Version { get; private set; }
     public IReadOnlyCollection<SaleLine> Lines => _lines;
     public decimal NetAmount => _lines.Sum(x => x.NetAmount);
@@ -289,10 +299,14 @@ public sealed class Sale
         SaleStatus status,
         string? validationFingerprint,
         DateTimeOffset? validatedAtUtc,
-        long version) =>
+        long version,
+        string? confirmationFingerprint = null,
+        string? settlementFingerprint = null,
+        DateTimeOffset? confirmedAtUtc = null) =>
         new(id, organizationId, locationId, terminalId, customerPartyId, intent, currencyCode,
             effectiveOn, deliveryCountry, goodsExportConfirmed, lines, status,
-            validationFingerprint, validatedAtUtc, version);
+            validationFingerprint, validatedAtUtc, version,
+            confirmationFingerprint, settlementFingerprint, confirmedAtUtc);
 
     public void ReplaceDraft(
         Guid? customerPartyId,
@@ -305,6 +319,7 @@ public sealed class Sale
         long expectedVersion)
     {
         EnsureVersion(expectedVersion);
+        EnsureMutable();
         CustomerPartyId = customerPartyId;
         Intent = intent;
         CurrencyCode = Required(currencyCode, 3, "sales.currency_required").ToUpperInvariant();
@@ -316,6 +331,9 @@ public sealed class Sale
         Status = SaleStatus.Draft;
         ValidationFingerprint = null;
         ValidatedAtUtc = null;
+        ConfirmationFingerprint = null;
+        SettlementFingerprint = null;
+        ConfirmedAtUtc = null;
         Version++;
         Validate();
     }
@@ -323,6 +341,7 @@ public sealed class Sale
     public void MarkValidated(string fingerprint, DateTimeOffset validatedAtUtc, long expectedVersion)
     {
         EnsureVersion(expectedVersion);
+        EnsureMutable();
         if (string.IsNullOrWhiteSpace(fingerprint))
         {
             throw new DomainRuleException("sales.validation_fingerprint_required", "Validation fingerprint is required.");
@@ -331,7 +350,42 @@ public sealed class Sale
         Status = SaleStatus.Validated;
         ValidationFingerprint = fingerprint.Trim();
         ValidatedAtUtc = validatedAtUtc;
+        ConfirmationFingerprint = null;
+        SettlementFingerprint = null;
+        ConfirmedAtUtc = null;
         Version++;
+    }
+
+    public void MarkConfirmed(
+        string confirmationFingerprint,
+        string settlementFingerprint,
+        DateTimeOffset confirmedAtUtc,
+        long expectedVersion)
+    {
+        EnsureVersion(expectedVersion);
+        if (Status != SaleStatus.Validated)
+        {
+            throw new DomainRuleException(
+                "sales.confirmation.validation_required",
+                "Only a validated sale can be confirmed.");
+        }
+        if (string.IsNullOrWhiteSpace(ValidationFingerprint) || !ValidatedAtUtc.HasValue)
+        {
+            throw new DomainRuleException(
+                "sales.confirmation.validation_evidence_required",
+                "Validated sale evidence is required before confirmation.");
+        }
+
+        ConfirmationFingerprint = Fingerprint(
+            confirmationFingerprint,
+            "sales.confirmation.confirmation_fingerprint_invalid");
+        SettlementFingerprint = Fingerprint(
+            settlementFingerprint,
+            "sales.confirmation.settlement_fingerprint_invalid");
+        ConfirmedAtUtc = confirmedAtUtc;
+        Status = SaleStatus.Confirmed;
+        Version++;
+        Validate();
     }
 
     private void Validate()
@@ -356,6 +410,39 @@ public sealed class Sale
         {
             throw new DomainRuleException("sales.export_delivery_country_required", "Goods export drafts require a delivery country.");
         }
+
+        if (Status == SaleStatus.Confirmed)
+        {
+            if (string.IsNullOrWhiteSpace(ValidationFingerprint)
+                || !ValidatedAtUtc.HasValue
+                || string.IsNullOrWhiteSpace(ConfirmationFingerprint)
+                || string.IsNullOrWhiteSpace(SettlementFingerprint)
+                || !ConfirmedAtUtc.HasValue)
+            {
+                throw new DomainRuleException(
+                    "sales.confirmation.evidence_incomplete",
+                    "Confirmed sales require validation, confirmation and settlement evidence.");
+            }
+
+            _ = Fingerprint(ConfirmationFingerprint, "sales.confirmation.confirmation_fingerprint_invalid");
+            _ = Fingerprint(SettlementFingerprint, "sales.confirmation.settlement_fingerprint_invalid");
+        }
+        else if (ConfirmationFingerprint is not null || SettlementFingerprint is not null || ConfirmedAtUtc.HasValue)
+        {
+            throw new DomainRuleException(
+                "sales.confirmation.evidence_without_confirmed_state",
+                "Confirmation evidence cannot exist on a sale that is not confirmed.");
+        }
+    }
+
+    private void EnsureMutable()
+    {
+        if (Status == SaleStatus.Confirmed)
+        {
+            throw new DomainRuleException(
+                "sales.confirmed_immutable",
+                "A confirmed sale commercial snapshot is immutable.");
+        }
     }
 
     private void EnsureVersion(long expectedVersion)
@@ -364,6 +451,17 @@ public sealed class Sale
         {
             throw new DomainRuleException("concurrency.stale_version", "The sale changed before this operation was applied.");
         }
+    }
+
+    private static string Fingerprint(string value, string code)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new DomainRuleException(code, "Sale evidence fingerprint is required.");
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length != 64 || normalized.Any(ch => !Uri.IsHexDigit(ch)))
+            throw new DomainRuleException(code, "Sale evidence fingerprint must be a SHA-256 hexadecimal value.");
+        return normalized;
     }
 
     private static string Required(string value, int max, string code)

@@ -35,7 +35,7 @@ public sealed class TaxRateAndCfeEligibilityArchitectureTests
         Assert.Contains("CfeEligibilityPolicy", domain, StringComparison.Ordinal);
         Assert.Contains("PrepareCfeEligibilityUseCase", application, StringComparison.Ordinal);
         Assert.Contains("5000m", application, StringComparison.Ordinal);
-        Assert.Contains("CFE-25.2", application, StringComparison.Ordinal);
+        Assert.Contains("FormatVersion = \"25.2\"", application, StringComparison.Ordinal);
         Assert.Contains("exportServiceStrategyVerifiedCurrent: false", application, StringComparison.Ordinal);
 
         Assert.DoesNotContain("Infrastructure", combined, StringComparison.Ordinal);

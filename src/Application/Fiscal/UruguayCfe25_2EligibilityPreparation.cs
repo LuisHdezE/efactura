@@ -14,7 +14,7 @@ public interface ICfeEligibilityRulePackProvider
 public sealed class UruguayCfe25_2EligibilityRulePackProvider : ICfeEligibilityRulePackProvider
 {
     public static readonly DateOnly SupportedFrom = new(2026, 6, 30);
-    public const string FormatVersion = "CFE-25.2";
+    public const string FormatVersion = "25.2";
 
     private static readonly CfeEligibilityRulePack Pack = new(
         FormatVersion,
