@@ -22,6 +22,7 @@ public sealed class SalesController : ControllerBase
     private readonly UpdateSaleDraftUseCase _update;
     private readonly ValidateSaleUseCase _validate;
     private readonly GetSaleFiscalPreviewUseCase _preview;
+    private readonly ConfirmSaleUseCase _confirm;
 
     public SalesController(
         V1OrganizationContextResolver organization,
@@ -30,7 +31,8 @@ public sealed class SalesController : ControllerBase
         CreateSaleUseCase create,
         UpdateSaleDraftUseCase update,
         ValidateSaleUseCase validate,
-        GetSaleFiscalPreviewUseCase preview)
+        GetSaleFiscalPreviewUseCase preview,
+        ConfirmSaleUseCase confirm)
     {
         _organization = organization;
         _list = list;
@@ -39,6 +41,7 @@ public sealed class SalesController : ControllerBase
         _update = update;
         _validate = validate;
         _preview = preview;
+        _confirm = confirm;
     }
 
     [HttpGet]
@@ -172,6 +175,50 @@ public sealed class SalesController : ControllerBase
         return Ok(MapPreview(await _preview.ExecuteAsync(organizationId, saleId, cancellationToken)));
     }
 
+    [HttpPost("{saleId:guid}/confirm")]
+    [RequirePermission(Permissions.SalesConfirm)]
+    public async Task<ActionResult<SaleConfirmationDto>> Confirm(
+        Guid saleId,
+        [FromBody] SaleConfirmRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var organizationId = _organization.Resolve(Request);
+        var result = await _confirm.ExecuteAsync(
+            new ConfirmSaleCommand(
+                organizationId,
+                saleId,
+                request.ExpectedVersion,
+                MapImmediatePayments(request.PaymentIntents),
+                request.CreditTerms is null ? null : new SaleCreditTerms(request.CreditTerms.DueDate),
+                request.OperatorReason,
+                request.OperatorContext,
+                V1RequestContract.RequireIdempotencyKey(Request),
+                V1RequestContract.ComputeRequestHash(request)),
+            cancellationToken);
+
+        SetReplayHeader(result.Replayed);
+        return Ok(MapConfirmation(result));
+    }
+
+    private static IReadOnlyCollection<SaleImmediatePaymentIntent> MapImmediatePayments(
+        IReadOnlyCollection<SaleImmediatePaymentRequest>? payments)
+    {
+        if (payments is null)
+            throw ValidationProblem(
+                "sales.settlement.payment_intents_required",
+                "Payment intents collection is required, even when empty.");
+        if (payments.Any(payment => payment is null))
+            throw ValidationProblem(
+                "sales.settlement.payment_intent_required",
+                "Payment intents cannot contain null entries.");
+
+        return payments.Select(payment => new SaleImmediatePaymentIntent(
+            ParseGuid(payment.PaymentMethodId, "sales.settlement.invalid_payment_method_id"),
+            payment.Amount,
+            payment.CurrencyCode,
+            payment.ExternalReference)).ToArray();
+    }
+
     private static SaleLineInput MapLine(SaleLineRequest line) => new(
         ParseGuid(line.ItemId, "sales.invalid_item_id"),
         line.Quantity,
@@ -254,6 +301,17 @@ public sealed class SalesController : ControllerBase
             line.UnitPrice,
             line.NetAmount,
             line.TaxProfileId?.ToString())).ToArray());
+
+    private static SaleConfirmationDto MapConfirmation(SaleConfirmationResult result) => new(
+        result.SaleId.ToString(),
+        result.Version,
+        result.ConfirmationFingerprint,
+        result.SettlementFingerprint,
+        result.FiscalizationRequestId.ToString(),
+        result.PaymentCount,
+        result.ReceivableId?.ToString(),
+        result.ConfirmedAtUtc,
+        result.Replayed);
 
     private static SaleFiscalPreviewDto MapPreview(SaleFiscalPreviewView preview) => new(
         preview.SaleId.ToString(),

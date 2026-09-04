@@ -35,14 +35,14 @@ public sealed class FiscalCalculationArchitectureTests
     }
 
     [Fact]
-    public void Sales_preview_remains_non_authoritative_until_the_confirm_sale_slice_consumes_Cfe_arithmetic()
+    public void Sales_preview_remains_non_authoritative_while_confirmation_consumes_Cfe_arithmetic()
     {
         var preview = Read("src/Application/Sales/SaleFiscalPreviewUseCases.cs");
-        var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
+        var confirmationPlanner = Read("src/Application/Sales/SaleConfirmationPlanning.cs");
 
         Assert.Contains("Preview-only arithmetic", preview, StringComparison.Ordinal);
         Assert.DoesNotContain("CfeArithmeticCalculator", preview, StringComparison.Ordinal);
-        Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CfeArithmeticCalculator", confirmationPlanner, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>

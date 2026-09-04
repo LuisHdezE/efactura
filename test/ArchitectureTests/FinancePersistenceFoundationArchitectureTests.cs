@@ -50,14 +50,13 @@ public sealed class FinancePersistenceFoundationArchitectureTests
     }
 
     [Fact]
-    public void Finance_persistence_slice_does_not_expose_confirm_or_cross_cash_fiscal_boundaries()
+    public void Finance_persistence_stays_out_of_transport_cash_and_fiscal_workflow_boundaries()
     {
-        var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
         var paymentRepository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfPaymentRepository.cs");
         var receivableRepository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfReceivableRepository.cs");
         var combined = paymentRepository + receivableRepository;
 
-        Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SalesController", combined, StringComparison.Ordinal);
         Assert.DoesNotContain("CashShift", combined, StringComparison.Ordinal);
         Assert.DoesNotContain("IFiscalNumberAllocator", combined, StringComparison.Ordinal);
         Assert.DoesNotContain("Cae", combined, StringComparison.OrdinalIgnoreCase);
