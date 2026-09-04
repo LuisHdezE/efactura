@@ -34,10 +34,9 @@ public sealed class SaleSettlementPlanningArchitectureTests
     }
 
     [Fact]
-    public void Settlement_planning_does_not_cross_persistence_cash_inventory_or_public_confirm_boundaries()
+    public void Settlement_planning_does_not_cross_persistence_cash_inventory_or_transport_boundaries()
     {
         var planner = Read("src/Application/Sales/SaleSettlementPlanning.cs");
-        var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
 
         Assert.DoesNotContain("IUnitOfWork", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("ITransactionManager", planner, StringComparison.Ordinal);
@@ -47,7 +46,7 @@ public sealed class SaleSettlementPlanningArchitectureTests
         Assert.DoesNotContain("IInventoryRepository", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("IFiscalNumberAllocator", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("CashShift", planner, StringComparison.Ordinal);
-        Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("WebApi", planner, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>
