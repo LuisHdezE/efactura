@@ -1,306 +1,240 @@
+# eFactura
 
-# Template Api Backend .NET 8
-##  Descripción
-
-  Template web api desarrollado en .Net 8 diseñado utilizando la arquitectura "Clean Arquitecture"  y configurado con las siguientes características fundamentales para su utilización en proyectos .Net.
-  
----
-
-##  Índice
-- [Template Api Backend](#template-api-backend)
-	- [Descripción](#descripción)
-	- [Índice](#índice)
-	- [Características y configuraciones principales](#características-y-configuraciones-principales)
-	- [Tecnologías utilizadas](#tecnologías-utilizadas)
-	- [Detalles](#detalles)
-	- [Estructura de proyectos y directorios](#estructura-de-proyectos-y-directorios)
-		- [Dependencias](#dependencias)
-		- [Instalación](#instalación)
-	- [Desarrollo y mantenimiento](#desarrollo-y-mantenimiento)
-	- [Convenciones y estándares de desarrollo](#convenciones-y-estándares-de-desarrollo)
-	- [Autores](#autores)
-	- [Changelog](#changelog)
-	- [[2.0.0] - 2024-09-04](#200---2024-09-04)
-		- [Added](#added)
-
----
-
-## Características y configuraciones principales
-  
-- Configuración de proveedor de identidad Auth0
-- Manejo de excepciones global
-- Configuración de Redis
-- Configuración de Automapper
-- Configuración de EntitiFramework 6 con contexto y comando para Scaffold, repositorio generico y metodos de extencion para paginado
-- Configuración de Dapper
-- Configuración estandar de Cors
-- Configuración de Swagger con autenticación
-- Configuración de Serilog
-- Configuración de Application Insights
-- Request Compression
-- Controladores, servicios, factories y repositorios de demostración
-- Estructura general de directorio
-- Base de datos de la aplicación
-
----
-
-## Tecnologías utilizadas
-- .Net 6.0.4 LTS
-- Entity Framework Core 6.0.4
-- Dapper 2.1.35
-- Serilog 6.0
-- Automapper 12.0.1
-- Auth0 Autentication Api 7.26
-- StackExchange.Redis 2.5.61
-- Swagger 6.6.2
-- Polly 8.4.1
-- Microsoft Application Insights 2.22.0
-  
----
-
-##  Detalles
-
-*Clean Arquitecture*  
-
-![enter image description here](https://miro.medium.com/max/1200/1*eRYOS-hWwJzByQ_gT34WkQ.png)
-
----
-  
-# Estructura de proyectos y directorios en .NET 8
-
-## 1. Application.Core
-**Descripción**: Este proyecto contiene la lógica de negocio principal de la aplicación. Es el "corazón" de la aplicación, de ahí el nombre "Core".
-
-**Contenido típico**:
-- **Entidades**: Clases que representan los objetos principales de dominio de la aplicación.
-- **Interfaces**: Definiciones de contratos para los servicios, repositorios o cualquier otro tipo de dependencia externa.
-- **Servicios**: Implementación de la lógica de negocio principal, como reglas o validaciones.
-- **Casos de uso**: A veces este proyecto también incluye los "Use Cases" que implementan la lógica de cada acción en la aplicación.
-
-**Independencia**: Este proyecto debería ser independiente de otros proyectos, como el de infraestructura o la interfaz de usuario.
-
----
-
-## 2. Application.Infrastructure
-**Descripción**: Aquí es donde se implementan los detalles concretos de la infraestructura, como el acceso a datos, integración con servicios externos, almacenamiento en la nube, etc. Este proyecto actúa como una "puerta" entre el Core y las dependencias externas.
-
-**Contenido típico**:
-- **Repositorios**: Implementación de los patrones de acceso a datos como el patrón **Repository**.
-- **Servicios externos**: Implementaciones de interfaces para interactuar con APIs externas, mensajería, servicios de terceros, etc.
-- **Configuración de base de datos**: Código de conexión, mapeo de entidades y migraciones de la base de datos.
-- **Implementaciones de interfaces**: Todas las interfaces definidas en el Core son implementadas aquí.
-
-**Dependencias**: Este proyecto depende del proyecto **Application.Core**, ya que necesita conocer las interfaces y entidades para implementarlas.
-
----
-
-## 3. Application.Shared
-**Descripción**: El propósito de este proyecto es contener elementos que pueden ser utilizados de manera compartida tanto por el Core como por otros proyectos dentro de la solución.
-
-**Contenido típico**:
-- **DTOs (Data Transfer Objects)**: Objetos utilizados para transferir datos entre las capas.
-- **Utilidades**: Funciones, helpers o clases de utilidad que pueden ser comunes para varios proyectos.
-- **Excepciones personalizadas**: Clases de manejo de excepciones que pueden ser lanzadas desde el Core y manejadas en otras capas.
-- **Configuración compartida**: Elementos de configuración o constantes que son usados por múltiples capas.
+**Uruguay electronic invoicing and transactional sales modernization in .NET 10, built as a governed brownfield evolution toward Clean Architecture.**
 
----
+[![Clean Architecture Guard](https://github.com/LuisHdezE/efactura/actions/workflows/clean-architecture.yml/badge.svg)](https://github.com/LuisHdezE/efactura/actions/workflows/clean-architecture.yml)
 
-## 4. Web.Api
-**Descripción**: Este proyecto representa la capa de presentación o API de la aplicación. Es la puerta de entrada para los usuarios o clientes externos.
+> **Project status**  
+> This repository is an active modernization project. It contains a legacy/brownfield baseline plus a newer v1 path that is being migrated incrementally under explicit architecture, persistence, security and review gates. It is not presented as a production-certified DGI solution.
 
-**Contenido típico**:
-- **Controladores**: Clases que manejan las peticiones HTTP, coordinan la lógica de negocio llamando a los servicios del **Core** y devuelven las respuestas.
-- **Configuración de rutas**: Definición de las rutas y endpoints de la API.
-- **Manejo de autenticación y autorización**: Configuración y middleware para controlar el acceso de usuarios.
-- **Servicios y Middlewares**: Los middlewares necesarios para manejar las peticiones, como logs, autenticación, compresión, etc.
-- **Integración con Core**: Este proyecto utiliza el **Core** para ejecutar la lógica de negocio, así como también puede llamar al proyecto **Infrastructure** para interactuar con la base de datos.
+## At a glance
 
----
+| | |
+|---|---|
+| **Runtime** | .NET 10, SDK pinned to `10.0.400` |
+| **Architecture direction** | Clean Architecture for the new v1 path, with brownfield coexistence |
+| **API** | ASP.NET Core Web API |
+| **Persistence** | Provider-neutral EF Core write path validated against PostgreSQL 16 and MySQL 8.4 |
+| **Domain focus** | Sales, Catalog, Inventory, CAE/fiscal numbering, Finance foundations, fiscal calculation |
+| **Reliability** | Explicit transactions, idempotency, audit evidence, outbox evidence, optimistic/unique concurrency guards |
+| **Security gate** | Blocking NuGet known-vulnerability check |
+| **Latest accepted transaction-foundation CI** | 264 / 264 represented automated tests PASS |
 
-## Resumen de la separación de responsabilidades:
-- **Application.Core**: Lógica de negocio pura, sin dependencias externas.
-- **Application.Infrastructure**: Implementación de las dependencias externas (acceso a datos, servicios externos).
-- **Application.Shared**: Elementos compartidos entre las capas (DTOs, utilidades).
-- **Web.Api**: Punto de entrada para los usuarios (controladores, endpoints de la API).
- 
+## What this project demonstrates
 
-##  Dependencias
+`eFactura` is a practical modernization of an existing accounting/electronic-invoicing backend toward a stricter, testable architecture for Uruguay-oriented electronic fiscal workflows.
 
-***Herramientas de desarrollo y dependencias***  
+The work deliberately evolves the system in bounded slices instead of rewriting everything at once. New v1 business behavior is introduced behind explicit Domain, Application, Infrastructure and Web API boundaries while historical code remains isolated as brownfield debt until it is migrated safely.
 
-- [Visual Studio 2022 Professional](https://visualstudio.microsoft.com/es/thank-you-downloading-visual-studio/?sku=Professional&channel=Release&version=VS2022&source=VSLandingPage&cid=2030&passive=false)
-- [.Net 8](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-8.0.8-windows-x64-installer)
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [SQL Managment Studio](https://aka.ms/ssmsfullsetup)
-- [Postman](https://dl.pstmn.io/download/latest/win64)
-- [SQL Server 2022 Developer](https://www.microsoft.com/es-es/sql-server/sql-server-downloads)
-  
+### Accepted capabilities on `main`
 
-***Extensiones***
+The current accepted `main` includes modernized foundations and executable slices for:
 
-*Visual Studio*
+- parties and catalog foundations used by the new v1 path;
+- sales draft, validation and fiscal preview;
+- inventory availability and stock adjustments;
+- CAE authorization lifecycle and atomic fiscal-number reservation;
+- .NET 10 runtime and CI modernization;
+- dependency-security hardening and retirement of AutoMapper from the new architecture path;
+- Uruguay CFE 25.2 arithmetic foundation with source-controlled rule provenance;
+- deterministic sale-confirmation planning;
+- deterministic settlement planning;
+- versioned PaymentMethod, immutable Payment and server-derived Receivable persistence foundations;
+- tracked-stock sale-consumption effects;
+- durable `FiscalizationRequest(PENDING)` work-item evidence;
+- an atomic local sale-confirmation Application transaction that composes Finance, stock, fiscalization-request, audit, outbox and idempotency effects.
 
-- [CodeMaid](https://marketplace.visualstudio.com/items?itemName=SteveCadwallader.CodeMaid)
-  
----
+The public `confirmSale` Web API endpoint is **not** part of the accepted `main` baseline yet. It is being handled as a separate governed slice.
 
-###  Instalación  y uso
+## Architecture
 
-Generar una carpeta con el fin de alojar el repositorio, dicha carpeta se debe nombrar "Desarrollo" y debe estar ubicada en C:
+```mermaid
+flowchart LR
+    Client[API Client] --> Web[WebApi]
+    Web --> App[Application]
+    App --> Domain[Domain]
+    App --> Ports[Application Ports]
 
-Una vez clonado el repositorio se deberán de instalar las herramientas y dependencias listadas en la sección anterior.
+    Infra[Infrastructure] -. implements .-> Ports
+    Infra --> PG[(PostgreSQL 16)]
+    Infra --> MY[(MySQL 8.4)]
 
-El paso siguiente será realizar la restauración de la base de datos de la aplicación. Existe un respaldo que esta ubicado en \@Doc\Dbl\ApiUsersDataBase.bacpac. este debe ser restaurado utilizando SQL Managment Studio con la opción "Import Data-Tier Aplication".
-Esta base de datos contiene una entidad de demostración únicamente. 
+    Legacy[Brownfield ApplicationCore / legacy services] -. coexistence .-> Web
+```
 
-## Convenciones y estándares de desarrollo
+### New v1 dependency direction
 
-- Clases de negocio:
-	- Ubicación: Application.Core/Entities
-	- Nomenclatura: PascalCase en singular
-- Interfaces:
-	- Ubicación: `Application.Core/Interfaces/{TipoDeInterfaz}`
-	- Nomenclatura: PascalCase en singular, deben comenzar con "I" y terminar con el tipo de interfaz adecuado, Ej: `IPersonaService.cs` 
-- ValueObjects
-	- Ubicación: `Application.Core/ValueObject/{Ambito ValueObject}`
-	- Nomenclatura: PascalCase en singular, Terminando con el sufijo `VO` Ej: `PersonaVO`
-- Variables:
-	 - Nomenclatura: CamelCase ,  Ej: `persona`
-- Controladores: 
-	- Clases destinadas a exponer los diferentes endpoints para el acceso a la aplicación. estos deberán de utilizar rutas y métodos http basados en el protocolo REST.
-	- Ubicación: dentro de la carpeta controllers de cada api de dominio
-	- Nomenclatura: 
-			- PascalCase en singular
-			- {Entidad} + sufijo `Controller`
+```text
+WebApi -> Application -> Domain
+                   -> Ports <- Infrastructure
+```
 
+The modernization intentionally prevents new business use cases from drifting back into controller-owned transactions, repository-owned business orchestration or provider-specific persistence shortcuts.
 
-- Clases de Servicios:
-Cada entidad tendrá una interfaz que declarar sus métodos y una clase que lo implementara. el principal objetivo de las clases de servicios es la de implementar la lógica de negocio de la aplicación. En esta clases no se deberá de acceder directamente a los datos o realizar llamadas http, para realizar estas acciones se deberá de utilizar los repositorios.
-Ubicación:
-	- Interfaces : `Application.Core/Interfaces/Services/{NombreDominio.NombreEntidad}/`
+The repository still contains historical `ApplicationCore` and legacy paths. Their presence is explicit brownfield coexistence, not the target architecture for new v1 work.
 
-	- Implementación de la interfaz: `Application.Core/Services/{NombreDominio.NombreEntidad}/`
+## Transaction and consistency model
 
-- Factory de repositorios (Abstrac Factory)
-Este patrón se implemento bajo la necesidad del cliente de poder acceder a la implementación de un repositorio en tiempo de ejecución. Cada entidad tendrá su método dentro de la factory que retornara la clase que implemente el método deseado.
-Ubicación:
+The new write path uses application-owned transaction boundaries and portable persistence contracts.
 
-	- interfaces : `Application.Core/Interfaces/AbstractFactory/IAbstractFactory`
+Important guarantees already exercised by tests include:
 
-	- implementación : `Application.Infraestructure/AbstractFactory/AbstractFactory`
+- idempotent replay for retry-sensitive commands;
+- audit and outbox evidence committed with business state;
+- optimistic concurrency through expected-version checks;
+- database uniqueness for selected business invariants;
+- provider-neutral transaction behavior across PostgreSQL and MySQL;
+- rollback of multi-effect operations after injected post-flush failures;
+- server-owned authoritative evidence rather than trusting client-supplied totals, fiscal fingerprints or resulting balances.
 
-- Repositorios
-Cada entidad tendrá una interfaz que expondrá los métodos para el acceso a datos y otra clase para su implementación.
-Ubicación:
-	- interfaces: `Application.Core/Interfaces/Repositories/{NombreDominio.NombreEntidad}/`
-	- implementación: ` Application.Infraestructure/Repositories/{NombreDominio.NombreEntidad}/`
+The sale-confirmation transaction foundation currently coordinates:
 
-	Para el acceso a los repositorios basados en SQL Server se implemento  un repositorio generico con el fin de facilitar el acceso a los metodos basicos sobre EF core `GetByIdTracked, GetByIdAndMap, GetIQueryable, BeginTransaction, CommitTransaction,
-	RollbackTransaction, Create, Update,Delete` ademas de realizar la implementacion una clase de extencion para aportar funciones auxiliares de paginado `GetPagedAsNoTracking, GetPaged, GetPagedAndMap`, esta ultima realiza el paginado de una entidad y retorna un value object mapeado por automapper
+```text
+Validated Sale
+  -> authoritative confirmation evidence
+  -> settlement plan
+  -> Payment and/or Receivable effects
+  -> tracked-stock consumption
+  -> FiscalizationRequest(PENDING)
+  -> Sale CONFIRMED
+  -> audit + outbox
+  -> idempotency completion
+```
 
-  
+CAE allocation and FiscalDocument/XML/signing/transport remain part of a later fiscalization workflow and are not hidden inside the local confirmation transaction.
 
-***Manejo de excepciones***  
+## Uruguay fiscal foundation
 
-Las diferentes Apis se configuraron para la utilización de un middelware especifico que será el encargado de el manejo de excepciones, por lo que no resulta necesario la utilización de try/catch en los métodos salvo en excepciones que quieran ser tratadas puntualmente como por ejemplo en el acceso a datos. es posible registrar excepciones personalizadas y asignarles un handler especifico para su manipulación. como salida siempre se retornara un ResultObject con un estado de error http 500
+The repository contains a bounded CFE 25.2 arithmetic foundation reviewed against official DGI evidence during the modernization work.
 
-***Log de eventos***
+The current accepted arithmetic boundary includes:
 
-Cada api esta configurada con el paquete "Serilog" para la escritura de logs. estos se almacenan en archivo y en application insights.
+- exact `decimal` arithmetic;
+- two-decimal mathematical rounding for the supported Release-1 cases;
+- item arithmetic based on quantity, unit price, discount and surcharge inputs;
+- separate header buckets for supported fiscal indicators;
+- VAT totals derived from authoritative taxable header buckets;
+- source-controlled rule provenance;
+- fail-closed behavior for unresolved or unsupported tax evidence.
 
-***Seguridad***
+This does **not** mean the repository already provides complete production CFE issuance or DGI homologation.
 
----
-##  Autores
+## Validation evidence
 
-A/S Richard Pias 2024
+The project uses a dedicated **Clean Architecture Guard** workflow.
 
-  ---
+The latest accepted exact-head validation for the merged sale-confirmation transaction foundation reported:
 
-##  Changelog  
+| Suite | Result |
+|---|---:|
+| ArchitectureTests | 61 / 61 PASS |
+| CrossCuttingTests | 61 / 61 PASS |
+| UnitTest | 21 / 21 PASS |
+| PersistenceIntegrationTests | 121 / 121 PASS |
+| **Total represented** | **264 / 264 PASS** |
 
-Todos los cambios realizados se registraran en esta sección. 
+The same accepted run also reported:
 
-El formato esta basado en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), y la nomenclatura para las versiones en [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-  
+- Release build: PASS, 0 errors;
+- blocking NuGet vulnerability gate: PASS;
+- 0 known vulnerable packages across the 10 solution projects;
+- PostgreSQL 16 integration: PASS;
+- MySQL 8.4 integration: PASS;
+- application transaction rollback and replay scenarios: PASS.
 
-##  [1.0.0] - 2022-06-24  
-##  [2.0.0] - 2024-09-04  
+Earlier accepted checkpoints and the full evidence trail are documented under [`documentation/`](documentation/).
 
-###  Added  
-Version actualizada
+## Repository map
 
+```text
+src/
+  Domain/              New v1 domain model and fiscal/business rules
+  Application/         New v1 use cases, planners and ports
+  Infrastructure/      Persistence and external implementation details
+  WebApi/              HTTP presentation and composition boundary
+  ApplicationCore/     Historical brownfield application code
+  Shared/              Shared legacy/supporting concerns
 
----
- 
- ***Referencias***
+test/
+  ArchitectureTests/           Executable dependency/boundary guards
+  CrossCuttingTests/           Application and domain behavior
+  PersistenceIntegrationTests/ PostgreSQL + MySQL persistence evidence
+  UnitTest/                    Historical/legacy unit suite
 
-Azure Devops - Metodologies
+documentation/
+  BLUEPRINT_CURRENT_STATE.md
+  blueprint-brownfield/
+  blueprint-target/
+  blueprint-architecture/
+  blueprint-api-contract/
+  blueprint-api-implementation/
+```
 
-	https://learn.microsoft.com/es-es/azure/devops/boards/get-started/plan-track-work?view=azure-devops&tabs=agile-process
+## Modernization governance
 
-Clean arquitecture
+The repository is evolved in small PR-scoped slices with exact-head validation and explicit human merge approval.
 
-	https://docs.microsoft.com/es-es/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures
+The human-readable checkpoint is maintained in:
 
-	https://github.com/dotnet-architecture/eBooks/raw/main/current/architecting-modern-web-apps-azure/Architecting-Modern-Web-Applications-with-ASP.NET-Core-and-Azure.pdf?WT.mc_id=dotnet-35129-website
+[`documentation/BLUEPRINT_CURRENT_STATE.md`](documentation/BLUEPRINT_CURRENT_STATE.md)
 
-Factory pattern
+Historical inspection and gap-analysis documents are intentionally preserved as provenance. They are not rewritten to make old AS-IS observations appear current.
 
-	https://refactoring.guru/es/design-patterns/factory-method
+## Local development
 
-.Net 8
+### Requirements
 
-	https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8/overview
+- .NET SDK **10.0.400** as pinned by [`global.json`](global.json)
+- PostgreSQL and/or MySQL when running persistence integration scenarios
 
-Serilog
+### Restore and build
 
-	https://serilog.net/
+```bash
+dotnet --version
+dotnet restore api-accounting.sln
+dotnet build api-accounting.sln -c Release --no-restore
+```
 
-Swagger
+### Tests
 
-	https://swagger.io/
+```bash
+dotnet test test/ArchitectureTests -c Release
+dotnet test test/CrossCuttingTests -c Release
+dotnet test test/UnitTest -c Release
+```
 
-Redis
+`PersistenceIntegrationTests` require the database-provider environment used by the repository CI. The GitHub Actions workflow runs PostgreSQL 16 and MySQL 8.4 as disposable service containers.
 
-	https://redis.io/topics/introduction
+## Current boundaries and intentional non-claims
 
-	https://docs.microsoft.com/es-es/azure/azure-cache-for-redis/cache-overview
+The following are **not complete on the current accepted `main`** and should not be inferred from the implemented foundations:
 
-Rest
+- public `confirmSale` endpoint;
+- final FiscalDocument identity and complete CFE issuance workflow;
+- CFE XML generation;
+- XML signing;
+- certificate/private-key custody;
+- transport to DGI or an external provider;
+- final production choice between direct DGI and provider integration;
+- correction-note lifecycle;
+- contingency lifecycle;
+- daily fiscal reporting and homologation evidence;
+- production operational/SLA claims.
 
-	https://openwebinars.net/blog/que-es-rest-conoce-su-potencia/
+Open regulatory decisions remain open until separately reviewed against current official evidence.
 
-***Seguridad***
- 
+## Why this repository matters as a portfolio project
 
-Auth0
+This project is less about adding endpoints quickly and more about showing disciplined modernization of a risky transactional domain:
 
-https://auth0.com/universal-login
+- preserve working brownfield behavior while introducing cleaner boundaries;
+- make business rules server-authoritative;
+- prove PostgreSQL/MySQL portability with integration tests;
+- treat idempotency, concurrency, audit and rollback as first-class behavior;
+- keep fiscal/regulatory assumptions explicit and evidence-backed;
+- separate local sale confirmation from irreversible fiscalization concerns;
+- evolve through small, reviewable, CI-certified increments.
 
-https://auth0.com/docs/architecture-scenarios/web-app-sso
+## Maintainer note
 
-  
-***Azure***
-
-App Service
-
-https://docs.microsoft.com/en-us/azure/app-service/
-
-https://azure.github.io/AppService
-  
-
-Slots
-
-https://docs.microsoft.com/en-us/azure/app-service/deploy-staging-slots
-  
-
-Continuous Integration / Continuous deployment
-
-https://docs.microsoft.com/en-us/azure/architecture/example-scenario/apps/devops-dotnet-webapp#:~:text=Continuous%20integration%20triggers%20application%20build,deployed%20to%20Azure%20App%20Service.
-
-https://docs.microsoft.com/en-us/sharepoint/dev/spfx/toolchain/implement-ci-cd-with-azure-devops
-
-https://www.azuredevopslabs.com/labs/azuredevops/continuousintegration/
-
----
+The current modernization work and governance are maintained by **Luis A. Hernández Elias**. The repository contains historical brownfield code and documentation that predate parts of the current modernization, and that provenance is intentionally preserved rather than rewritten.
