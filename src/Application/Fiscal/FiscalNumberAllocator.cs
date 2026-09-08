@@ -132,6 +132,11 @@ public sealed class FiscalNumberAllocator : IFiscalNumberAllocator
                     reservation.CfeType,
                     reservation.Series,
                     reservation.Number,
+                    authorization.AuthorizationNumber,
+                    authorization.RangeFrom,
+                    authorization.RangeTo,
+                    authorization.ValidFrom,
+                    authorization.ValidTo,
                     reservation.ReservedAtUtc,
                     authorizationExhausted,
                     allocationExhausted);

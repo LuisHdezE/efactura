@@ -4,7 +4,8 @@ namespace EFactura.Domain.Fiscal;
 
 public enum FiscalizationRequestStatus
 {
-    Pending = 1
+    Pending = 1,
+    IdentityCreated = 2
 }
 
 public sealed class FiscalizationRequest
@@ -26,7 +27,9 @@ public sealed class FiscalizationRequest
         decimal totalAmount,
         FiscalizationRequestStatus status,
         long version,
-        DateTimeOffset requestedAtUtc)
+        DateTimeOffset requestedAtUtc,
+        Guid? fiscalDocumentId = null,
+        DateTimeOffset? identityCreatedAtUtc = null)
     {
         if (id == Guid.Empty)
             throw Rule("fiscalization.request_id_required", "Fiscalization request id is required.");
@@ -58,6 +61,9 @@ public sealed class FiscalizationRequest
         Status = status;
         Version = version;
         RequestedAtUtc = requestedAtUtc;
+        FiscalDocumentId = fiscalDocumentId;
+        IdentityCreatedAtUtc = identityCreatedAtUtc;
+        ValidateLifecycle();
     }
 
     public Guid Id { get; }
@@ -74,9 +80,11 @@ public sealed class FiscalizationRequest
     public decimal NetAmount { get; }
     public decimal VatAmount { get; }
     public decimal TotalAmount { get; }
-    public FiscalizationRequestStatus Status { get; }
-    public long Version { get; }
+    public FiscalizationRequestStatus Status { get; private set; }
+    public long Version { get; private set; }
     public DateTimeOffset RequestedAtUtc { get; }
+    public Guid? FiscalDocumentId { get; private set; }
+    public DateTimeOffset? IdentityCreatedAtUtc { get; private set; }
 
     public static FiscalizationRequest CreateFromSale(
         Guid id,
@@ -130,7 +138,9 @@ public sealed class FiscalizationRequest
         decimal totalAmount,
         FiscalizationRequestStatus status,
         long version,
-        DateTimeOffset requestedAtUtc) =>
+        DateTimeOffset requestedAtUtc,
+        Guid? fiscalDocumentId = null,
+        DateTimeOffset? identityCreatedAtUtc = null) =>
         new(
             id,
             organizationId,
@@ -148,7 +158,58 @@ public sealed class FiscalizationRequest
             totalAmount,
             status,
             version,
-            requestedAtUtc);
+            requestedAtUtc,
+            fiscalDocumentId,
+            identityCreatedAtUtc);
+
+    public void MarkIdentityCreated(
+        Guid fiscalDocumentId,
+        DateTimeOffset identityCreatedAtUtc,
+        long expectedVersion)
+    {
+        if (Version != expectedVersion)
+            throw Rule("concurrency.stale_version", "The fiscalization request changed before identity creation.");
+        if (fiscalDocumentId == Guid.Empty)
+            throw Rule("fiscalization.document_id_required", "Fiscal document id is required.");
+
+        if (Status == FiscalizationRequestStatus.IdentityCreated)
+        {
+            if (FiscalDocumentId == fiscalDocumentId)
+                return;
+            throw Rule(
+                "fiscalization.identity_already_created",
+                "The fiscalization request already points to a different fiscal document.");
+        }
+
+        if (Status != FiscalizationRequestStatus.Pending)
+            throw Rule("fiscalization.invalid_state", "Only a pending fiscalization request can create fiscal identity.");
+
+        FiscalDocumentId = fiscalDocumentId;
+        IdentityCreatedAtUtc = identityCreatedAtUtc;
+        Status = FiscalizationRequestStatus.IdentityCreated;
+        Version++;
+        ValidateLifecycle();
+    }
+
+    private void ValidateLifecycle()
+    {
+        if (Status == FiscalizationRequestStatus.Pending)
+        {
+            if (FiscalDocumentId.HasValue || IdentityCreatedAtUtc.HasValue)
+                throw Rule(
+                    "fiscalization.identity_evidence_without_state",
+                    "Pending fiscalization cannot carry fiscal-document identity evidence.");
+            return;
+        }
+
+        if (Status == FiscalizationRequestStatus.IdentityCreated
+            && (!FiscalDocumentId.HasValue || FiscalDocumentId.Value == Guid.Empty || !IdentityCreatedAtUtc.HasValue))
+        {
+            throw Rule(
+                "fiscalization.identity_evidence_incomplete",
+                "Identity-created fiscalization requires its fiscal document and timestamp.");
+        }
+    }
 
     private static string Required(string value, int max, string code)
     {

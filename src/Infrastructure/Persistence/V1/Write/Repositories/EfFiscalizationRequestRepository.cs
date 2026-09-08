@@ -1,3 +1,4 @@
+using EFactura.Application.Common.Errors;
 using EFactura.Application.Fiscal;
 using EFactura.Domain.Fiscal;
 using Infrastructure.Persistence.V1.Write.Models;
@@ -13,28 +14,7 @@ public sealed class EfFiscalizationRequestRepository : IFiscalizationRequestRepo
 
     public Task AddAsync(FiscalizationRequest request, CancellationToken cancellationToken = default)
     {
-        _dbContext.Set<V1FiscalizationRequestRecord>().Add(new V1FiscalizationRequestRecord
-        {
-            Id = request.Id,
-            OrganizationId = request.OrganizationId,
-            SaleId = request.SaleId,
-            LocationId = request.LocationId,
-            TerminalId = request.TerminalId,
-            CfeFamily = (int)request.CfeFamily,
-            ReceiverIdentification = request.ReceiverIdentification.HasValue
-                ? (int)request.ReceiverIdentification.Value
-                : null,
-            FormatVersion = request.FormatVersion,
-            ConfirmationFingerprint = request.ConfirmationFingerprint,
-            SettlementFingerprint = request.SettlementFingerprint,
-            CurrencyCode = request.CurrencyCode,
-            NetAmount = request.NetAmount,
-            VatAmount = request.VatAmount,
-            TotalAmount = request.TotalAmount,
-            Status = (int)request.Status,
-            Version = request.Version,
-            RequestedAtUtc = request.RequestedAtUtc
-        });
+        _dbContext.Set<V1FiscalizationRequestRecord>().Add(MapRecord(request));
         return Task.CompletedTask;
     }
 
@@ -64,6 +44,62 @@ public sealed class EfFiscalizationRequestRepository : IFiscalizationRequestRepo
         return record is null ? null : Map(record);
     }
 
+    public async Task SaveAsync(
+        FiscalizationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var record = await _dbContext.Set<V1FiscalizationRequestRecord>()
+            .SingleOrDefaultAsync(
+                x => x.OrganizationId == request.OrganizationId && x.Id == request.Id,
+                cancellationToken)
+            ?? throw new ApplicationProblemException(
+                ApplicationProblemKind.NotFound,
+                "fiscalization.not_found",
+                "Fiscalization request was not found.");
+
+        var priorVersion = request.Version - 1;
+        if (record.Version != priorVersion)
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "concurrency_conflict",
+                "The fiscalization request changed before this operation could be persisted.",
+                conflictType: "stale_version",
+                currentVersion: record.Version.ToString());
+        }
+
+        _dbContext.Entry(record).Property(x => x.Version).OriginalValue = priorVersion;
+        record.Status = (int)request.Status;
+        record.Version = request.Version;
+        record.FiscalDocumentId = request.FiscalDocumentId;
+        record.IdentityCreatedAtUtc = request.IdentityCreatedAtUtc;
+    }
+
+    private static V1FiscalizationRequestRecord MapRecord(FiscalizationRequest request) => new()
+    {
+        Id = request.Id,
+        OrganizationId = request.OrganizationId,
+        SaleId = request.SaleId,
+        LocationId = request.LocationId,
+        TerminalId = request.TerminalId,
+        CfeFamily = (int)request.CfeFamily,
+        ReceiverIdentification = request.ReceiverIdentification.HasValue
+            ? (int)request.ReceiverIdentification.Value
+            : null,
+        FormatVersion = request.FormatVersion,
+        ConfirmationFingerprint = request.ConfirmationFingerprint,
+        SettlementFingerprint = request.SettlementFingerprint,
+        CurrencyCode = request.CurrencyCode,
+        NetAmount = request.NetAmount,
+        VatAmount = request.VatAmount,
+        TotalAmount = request.TotalAmount,
+        Status = (int)request.Status,
+        Version = request.Version,
+        RequestedAtUtc = request.RequestedAtUtc,
+        FiscalDocumentId = request.FiscalDocumentId,
+        IdentityCreatedAtUtc = request.IdentityCreatedAtUtc
+    };
+
     private static FiscalizationRequest Map(V1FiscalizationRequestRecord record) =>
         FiscalizationRequest.Rehydrate(
             record.Id,
@@ -84,5 +120,7 @@ public sealed class EfFiscalizationRequestRepository : IFiscalizationRequestRepo
             record.TotalAmount,
             (FiscalizationRequestStatus)record.Status,
             record.Version,
-            record.RequestedAtUtc);
+            record.RequestedAtUtc,
+            record.FiscalDocumentId,
+            record.IdentityCreatedAtUtc);
 }

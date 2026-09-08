@@ -17,6 +17,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         ConfigureFinance(modelBuilder);
         ConfigureSaleLocalEffects(modelBuilder);
         ConfigureSaleConfirmation(modelBuilder);
+        ConfigureFiscalDocumentIdentity(modelBuilder);
     }
 
     private static void ConfigureFinance(ModelBuilder modelBuilder)
@@ -130,6 +131,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.TotalAmount).HasPrecision(18, 6);
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.RequestedAtUtc).HasPrecision(6);
+            entity.Property(x => x.IdentityCreatedAtUtc).HasPrecision(6);
             entity.HasOne<V1SaleRecord>()
                 .WithMany()
                 .HasForeignKey(x => x.SaleId)
@@ -150,6 +152,67 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64);
             entity.Property(x => x.SettlementFingerprint).HasMaxLength(64);
             entity.Property(x => x.ConfirmedAtUtc).HasPrecision(6);
+        });
+    }
+
+    private static void ConfigureFiscalDocumentIdentity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1FiscalDocumentRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_documents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Series).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.CaeAuthorizationNumber).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.CaeValidFrom).HasColumnType("date");
+            entity.Property(x => x.CaeValidTo).HasColumnType("date");
+            entity.Property(x => x.FiscalDate).HasColumnType("date");
+            entity.Property(x => x.LocationId).HasMaxLength(200);
+            entity.Property(x => x.TerminalId).HasMaxLength(200);
+            entity.Property(x => x.FormatVersion).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SettlementFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.NetAmount).HasPrecision(18, 6);
+            entity.Property(x => x.VatAmount).HasPrecision(18, 6);
+            entity.Property(x => x.TotalAmount).HasPrecision(18, 6);
+            entity.Property(x => x.IdentityCreatedAtUtc).HasPrecision(6);
+
+            entity.HasOne<V1FiscalizationRequestRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalizationRequestId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_req");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_sale");
+            entity.HasOne<V1FiscalNumberReservationRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalNumberReservationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_res");
+            entity.HasOne<V1CaeAuthorizationRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.CaeAuthorizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_cae");
+
+            entity.HasIndex(x => new { x.OrganizationId, x.FiscalizationRequestId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fd_org_req");
+            entity.HasIndex(x => new { x.OrganizationId, x.CfeType, x.Series, x.Number })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fd_identity");
+            entity.HasIndex(x => x.FiscalNumberReservationId)
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fd_res");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .HasDatabaseName("IX_v1_fd_org_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.Status, x.IdentityCreatedAtUtc })
+                .HasDatabaseName("IX_v1_fd_org_status");
         });
     }
 }

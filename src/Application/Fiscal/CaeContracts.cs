@@ -110,6 +110,11 @@ public sealed record FiscalNumberReservationResult(
     CfeFamily CfeType,
     string Series,
     long Number,
+    string CaeAuthorizationNumber,
+    long CaeRangeFrom,
+    long CaeRangeTo,
+    DateOnly CaeValidFrom,
+    DateOnly CaeValidTo,
     DateTimeOffset ReservedAtUtc,
     bool AuthorizationExhausted,
     bool AllocationExhausted);

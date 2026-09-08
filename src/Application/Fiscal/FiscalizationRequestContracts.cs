@@ -15,4 +15,5 @@ public interface IFiscalizationRequestRepository
         CancellationToken cancellationToken = default);
 
     Task AddAsync(FiscalizationRequest request, CancellationToken cancellationToken = default);
+    Task SaveAsync(FiscalizationRequest request, CancellationToken cancellationToken = default);
 }

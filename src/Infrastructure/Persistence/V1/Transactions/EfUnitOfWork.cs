@@ -17,6 +17,12 @@ public sealed class EfUnitOfWork : IUnitOfWork
         "UX_v1_fiscal_res_identity";
     private const string FiscalOperationUniqueIndex =
         "UX_v1_fiscal_res_operation";
+    private const string FiscalDocumentRequestUniqueIndex =
+        "UX_v1_fd_org_req";
+    private const string FiscalDocumentIdentityUniqueIndex =
+        "UX_v1_fd_identity";
+    private const string FiscalDocumentReservationUniqueIndex =
+        "UX_v1_fd_res";
 
     private readonly Write.V1PersistenceDbContext _dbContext;
 
@@ -69,6 +75,30 @@ public sealed class EfUnitOfWork : IUnitOfWork
                 ApplicationProblemKind.Conflict,
                 "fiscal.operation_already_reserved",
                 "The fiscal operation already owns a number reservation.",
+                conflictType: "duplicate_resource");
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex, FiscalDocumentRequestUniqueIndex, typeof(V1FiscalDocumentRecord)))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "fiscalization.identity_already_created",
+                "The fiscalization request already owns a fiscal-document identity.",
+                conflictType: "duplicate_resource");
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex, FiscalDocumentIdentityUniqueIndex, typeof(V1FiscalDocumentRecord)))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "concurrency_conflict",
+                "The fiscal document identity was created concurrently by another transaction.",
+                conflictType: "duplicate_fiscal_identity");
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex, FiscalDocumentReservationUniqueIndex, typeof(V1FiscalDocumentRecord)))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "fiscal.number_already_consumed",
+                "The fiscal number reservation is already linked to a fiscal document.",
                 conflictType: "duplicate_resource");
         }
     }
