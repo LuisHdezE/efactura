@@ -4,8 +4,8 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-08
 
-Accepted functional baseline: `main@c080fa7b298f971ad4490a580bb0d44c6bd8b009`
-(merge of PR #44, `feat(fiscal): establish fiscal document identity foundation`).
+Accepted functional baseline: `main@4e69e8f1c3808b89c2d5e4663553a625140ea75d`
+(merge of PR #46, `feat(organization): establish fiscal issuer profile foundation`).
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization.
 It does not replace requirements, architecture, API-contract or implementation records.
@@ -24,20 +24,20 @@ evidence and must not be rewritten to make the original AS-IS observations look 
 
 ## Post-merge evidence
 
-`Clean Architecture Guard` run #174 (`34251929111`) validated the accepted merge commit
-`c080fa7b298f971ad4490a580bb0d44c6bd8b009` after PR #44 merged:
+`Clean Architecture Guard` run #179 (`34262530790`) validated the accepted merge commit
+`4e69e8f1c3808b89c2d5e4663553a625140ea75d` after PR #46 merged:
 
 - runner: `efactura-ci-01` on `Elena`;
 - .NET SDK: `10.0.400`;
 - .NET runtime observed: `10.0.11`;
 - restore: PASS;
 - NuGet known-vulnerability gate: PASS, 0 known vulnerable packages across all 10 projects;
-- Release build: PASS, 89 warnings, 0 errors;
-- ArchitectureTests: 70/70 PASS;
-- CrossCuttingTests: 64/64 PASS;
+- Release build: PASS, 93 warnings, 0 errors;
+- ArchitectureTests: 75/75 PASS;
+- CrossCuttingTests: 73/73 PASS;
 - legacy UnitTest: 21/21 PASS;
-- PersistenceIntegrationTests: 127/127 PASS on PostgreSQL 16 and MySQL 8.4;
-- total represented automated tests: 282/282 PASS;
+- PersistenceIntegrationTests: 133/133 PASS on PostgreSQL 16 and MySQL 8.4;
+- total represented automated tests: 302/302 PASS;
 - 5-minute per-test `blame-hang` guard did not trigger.
 
 The warnings remain advisory legacy/modernization debt and are not security-gate failures.
@@ -59,8 +59,9 @@ Key accepted slices now include:
 11. One atomic local `ConfirmSaleUseCase`.
 12. Public `API-SAL-007 confirmSale`, merged by PR #42.
 13. Fiscal Document Identity Foundation, merged by PR #44.
+14. Organization Fiscal Issuer Profile Foundation, merged by PR #46.
 
-Detailed implementation evidence is maintained through file 24 under
+Detailed implementation evidence is maintained through file 25 under
 `documentation/blueprint-api-implementation/`.
 
 ## Cross-cutting capabilities now present
@@ -77,31 +78,84 @@ For the new v1 write path, accepted slices include:
 - authoritative sale confirmation with Payment/Receivable, tracked inventory and one durable
   `FiscalizationRequest`;
 - deterministic fiscalization retry identity based on `FiscalizationRequestId`;
-- atomic CAE-backed number reservation plus immutable `FiscalDocument` identity/snapshot;
+- atomic CAE-backed number reservation plus immutable `FiscalDocument` identity snapshot;
 - rollback of number reservation, fiscal document, workflow state, audit and outbox as one local
-  transaction.
+  transaction;
+- mutable issuer master data through `CompanyFiscalProfile` and `FiscalLocation`, including
+  structural RUC, legal/commercial denomination, fiscal domicile fields and four-digit DGI branch
+  code with portable optimistic-concurrency and uniqueness behavior.
 
 These capabilities do not imply that every legacy endpoint has been migrated to the same standards.
 
-## Accepted fiscal boundary after PR #44
+## Accepted fiscal boundary after PR #46
 
-The accepted fiscal flow now reaches:
+The accepted fiscal flow still reaches:
 
 `Sale CONFIRMED`
 `-> FiscalizationRequest PENDING`
 `-> CAE number reserved`
 `-> FiscalDocument IDENTITY_CREATED`
 
-The `FiscalDocument` identity snapshot owns server-assigned fiscal identity and accepted evidence,
-including CFE type, series/number, CAE provenance, fiscal date, format version, confirmation and
-settlement fingerprints and authoritative monetary totals.
+PR #46 does not advance the fiscal-document lifecycle state. It supplies authoritative mutable
+issuer master data needed by later fiscal snapshots:
 
-It is not yet a complete signed CFE artifact.
+- company RUC and denomination;
+- fiscal location/branch code;
+- fiscal address, city and department.
+
+The existing `FiscalDocument` identity snapshot owns server-assigned fiscal identity and accepted
+evidence, including CFE type, series/number, CAE provenance, fiscal date, format version,
+confirmation/settlement fingerprints and authoritative monetary totals.
+
+It is not yet a complete immutable CFE content snapshot and is not yet a built, validated or signed
+CFE artifact.
+
+## Newly confirmed pre-XML gap
+
+Fresh review performed after PR #46 confirmed that jumping directly from `IDENTITY_CREATED` to an
+XML builder would violate the accepted architecture.
+
+`documentation/blueprint-architecture/09_FISCAL_INTEGRATION_ARCHITECTURE.md` defines
+`IFiscalXmlBuilder` as consuming immutable fiscal snapshots. The current `FiscalDocument` does not
+yet persist the complete issuer, receiver and line-level content required for that boundary.
+
+Two concrete prerequisites are therefore now explicit:
+
+1. **Complete the already-canonical Party address/contact contract.**
+   `documentation/blueprint-api-contract/07_REQUEST_RESPONSE_CONTRACTS.md` already says that
+   `PartyCreateRequest` carries addresses/contacts and that `PartyDto` returns them, but the current
+   v1 Party domain/persistence implementation does not yet store them. This is an implementation
+   gap in an accepted contract, not a newly invented endpoint family.
+2. **Create an immutable Fiscal CFE Content Snapshot.**
+   After Party address data exists, a fiscalization slice must freeze the issuer, receiver and
+   authoritative line/tax content used for the CFE. Later edits to Company, Location, Party or
+   Catalog masters must not rewrite or silently change an already-created fiscal document.
+
+Current DGI technical publication confirms why these fields cannot be deferred into ad-hoc builder
+lookups:
+
+- `Formato CFE v25.2` is currently published for Testing and Production;
+- `XSDs_FE_V1.44.2` is currently published for Testing and Production;
+- the CFE format requires receiver identification/content according to the CFE family and requires
+  line/detail information for goods/services;
+- for taxpayer e-Factura and export scenarios, receiver domicile/address is part of the relevant
+  receiver content.
+
+Official source registry:
+`https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es=`
+
+Official CFE format:
+`https://www.efactura.dgi.gub.uy/files/formato_cfe_v25-2-pdf?es=`
+
+No XML element, namespace, mandatory-field rule or address policy may be inferred from memory,
+legacy demo code or provider examples where the official format/XSD is authoritative.
 
 ## Explicitly not complete
 
 The following remain outside the accepted current baseline:
 
+- Party address/contact persistence required by the canonical Party contract;
+- immutable full CFE issuer/receiver/line snapshot;
 - CFE XML generation;
 - well-formedness/XSD validation against the active official DGI specification;
 - XML digital signature;
@@ -158,24 +212,42 @@ evaluator remains `0.5.1@ac8be4e3332b13cab7d27f12e6a62d5d60e9ff4e`.
 Historical files that correctly identify evaluator 0.5.1 remain historical evidence and must not be
 rewritten merely to display the newer Master version.
 
-## Next selected implementation slice
+## Corrected next implementation sequence
 
-The next bounded fiscal implementation slice is selected as:
+The previously selected direct `CFE XML Artifact Foundation - BUILD + VALIDATE` is **not** the
+immediate next product slice. The post-PR46 review exposed missing immutable input prerequisites.
 
-**CFE XML Artifact Foundation - BUILD + VALIDATE**
+The bounded sequence is now:
 
-Target boundary:
+1. **Party Address / Contact Contract Completion**
+   - implement the address/contact data already promised by `PartyCreateRequest`, `PartyDto` and
+     existing Party create/update operations;
+   - do not create a new endpoint family solely for this prerequisite;
+   - preserve residence, tax residence, fiscal identity, address and contact as distinct facts;
+   - retain existing idempotency, authorization, audit and optimistic-concurrency standards.
+2. **Fiscal CFE Content Snapshot Foundation**
+   - freeze issuer Company + FiscalLocation content;
+   - freeze receiver Party identity/name/address content when required by the selected CFE family;
+   - freeze confirmed Sale line commercial content plus authoritative CFE arithmetic/tax result and
+     rule/spec provenance;
+   - make later master-data changes unable to alter the fiscal snapshot.
+3. **CFE XML BUILD**
+   - `IFiscalXmlBuilder` consumes only the immutable fiscal snapshot and active accepted format
+     specification.
+4. **CFE XML/XSD VALIDATE**
+   - `IFiscalValidator` validates well-formedness, the active official XSD set and accepted
+     fiscal/arithmetic/CAE invariants.
+5. Signature, private-key/certificate trust boundary, signed-artifact archival and transport remain
+   separate later slices.
 
-`FiscalDocument IDENTITY_CREATED -> CFE BUILT -> CFE VALIDATED`
+The immediate selected implementation slice is therefore:
 
-The architecture already defines the intended Application ports `IFiscalXmlBuilder` and
-`IFiscalValidator`. The slice must stop before `IFiscalSigner`, certificate/private-key custody,
-immutable signed-artifact archival and `IFiscalTransportGateway`.
+**Party Address / Contact Contract Completion**
 
-Before implementation, current official DGI evidence must be collected for the active CFE 25.2 XML
-structures/XSDs and the Release-1 CFE families already bounded by this project. XML elements,
-namespaces, mandatory fields, schema rules and signing requirements must not be invented from
-memory, legacy demo code or provider-specific examples.
+Its exact DTO/domain field shape must be derived from the accepted API contract, current legacy data
+that is still authoritative/reusable, and official fiscal needs. The implementation must not invent
+provider-specific address semantics or collapse address into fiscal identity/residence-country
+fields.
 
 ## Known non-blocking modernization debt
 
@@ -193,7 +265,8 @@ compatibility analysis.
 ## Documentation interpretation
 
 - `documentation/blueprint-brownfield/01..12`: historical AS-IS, gap and remediation artifacts.
-- `documentation/blueprint-api-implementation/`: implementation evidence by bounded slice.
+- `documentation/blueprint-api-implementation/`: implementation evidence and bounded planning by
+  numbered slice.
 - `documentation/BLUEPRINT_0_5_2_CONSUMER_COMPLIANCE_REVIEW.md`: consumer evaluator/version review.
 - this file: current accepted operational checkpoint.
 
@@ -203,9 +276,9 @@ current repository reality.
 
 ## Repository governance at this checkpoint
 
-- PR #44 is merged.
-- accepted `main`: `c080fa7b298f971ad4490a580bb0d44c6bd8b009`.
-- post-merge Clean Architecture Guard #174: SUCCESS, 282/282 tests PASS.
+- PR #46 is merged.
+- accepted `main`: `4e69e8f1c3808b89c2d5e4663553a625140ea75d`.
+- post-merge Clean Architecture Guard #179: SUCCESS, 302/302 tests PASS.
 - the Blueprint 0.5.2 adoption decision is DEFER, not ADOPT.
 - local `qa/` / Postman work is not represented as an accepted repository gate here.
 - the next product slice still requires a bounded branch/commit, exact-head validation and explicit
