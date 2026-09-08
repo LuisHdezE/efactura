@@ -23,6 +23,8 @@ public sealed class EfUnitOfWork : IUnitOfWork
         "UX_v1_fd_identity";
     private const string FiscalDocumentReservationUniqueIndex =
         "UX_v1_fd_res";
+    private const string FiscalLocationBranchUniqueIndex =
+        "UX_v1_location_org_branch";
 
     private readonly Write.V1PersistenceDbContext _dbContext;
 
@@ -52,6 +54,14 @@ public sealed class EfUnitOfWork : IUnitOfWork
                 "concurrency_conflict",
                 "The inventory position was created concurrently before this operation could be committed.",
                 conflictType: "duplicate_position");
+        }
+        catch (DbUpdateException ex) when (IsLocationBranchUniqueViolation(ex))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "organization.location.branch_code_duplicate",
+                "The DGI branch code is already assigned to another location in this organization.",
+                conflictType: "duplicate_branch_code");
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex, CaeArtifactUniqueIndex, typeof(V1CaeAuthorizationRecord)))
         {
@@ -101,6 +111,18 @@ public sealed class EfUnitOfWork : IUnitOfWork
                 "The fiscal number reservation is already linked to a fiscal document.",
                 conflictType: "duplicate_resource");
         }
+    }
+
+    private static bool IsLocationBranchUniqueViolation(DbUpdateException exception)
+    {
+        if (!exception.Entries.Any(entry =>
+                entry.Entity is V1FiscalLocationRecord
+                && entry.State is EntityState.Added or EntityState.Modified))
+        {
+            return false;
+        }
+
+        return MatchesUniqueConstraint(exception, FiscalLocationBranchUniqueIndex);
     }
 
     private static bool IsInventoryPositionUniqueViolation(DbUpdateException exception)

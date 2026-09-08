@@ -5,6 +5,7 @@ using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Application.Fiscal;
 using EFactura.Application.Inventory;
+using EFactura.Application.Organizations;
 using EFactura.Application.Parties;
 using EFactura.Application.Payments;
 using EFactura.Application.Receivables;
@@ -39,6 +40,16 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IIdempotencyStore, EfIdempotencyStore>();
         services.AddScoped<IOutboxWriter, EfOutboxWriter>();
         services.AddScoped<IInboxStore, EfInboxStore>();
+
+        services.AddScoped<EfOrganizationRepository>();
+        services.AddScoped<ICompanyFiscalProfileRepository>(sp => sp.GetRequiredService<EfOrganizationRepository>());
+        services.AddScoped<IFiscalLocationRepository>(sp => sp.GetRequiredService<EfOrganizationRepository>());
+        services.AddScoped<GetCurrentCompanyUseCase>();
+        services.AddScoped<UpsertCompanyFiscalProfileUseCase>();
+        services.AddScoped<ListFiscalLocationsUseCase>();
+        services.AddScoped<GetFiscalLocationUseCase>();
+        services.AddScoped<CreateFiscalLocationUseCase>();
+        services.AddScoped<UpdateFiscalLocationUseCase>();
 
         services.AddScoped<EfPartyRepository>();
         services.AddScoped<IPartyRepository>(sp => sp.GetRequiredService<EfPartyRepository>());

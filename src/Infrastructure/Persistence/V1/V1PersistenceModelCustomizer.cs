@@ -14,10 +14,50 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
     public override void Customize(ModelBuilder modelBuilder, DbContext context)
     {
         base.Customize(modelBuilder, context);
+        ConfigureOrganization(modelBuilder);
         ConfigureFinance(modelBuilder);
         ConfigureSaleLocalEffects(modelBuilder);
         ConfigureSaleConfirmation(modelBuilder);
         ConfigureFiscalDocumentIdentity(modelBuilder);
+    }
+
+    private static void ConfigureOrganization(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1CompanyFiscalProfileRecord>(entity =>
+        {
+            entity.ToTable("v1_company_fiscal_profiles");
+            entity.HasKey(x => x.OrganizationId);
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Ruc).HasMaxLength(12).IsRequired();
+            entity.Property(x => x.LegalName).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.CommercialName).HasMaxLength(30);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => x.Ruc)
+                .HasDatabaseName("IX_v1_company_ruc");
+        });
+
+        modelBuilder.Entity<V1FiscalLocationRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_locations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasMaxLength(200).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.DgiBranchCode).HasMaxLength(4).IsRequired();
+            entity.Property(x => x.FiscalAddress).HasMaxLength(70).IsRequired();
+            entity.Property(x => x.City).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.Department).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+            entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
+            entity.HasIndex(x => new { x.OrganizationId, x.DgiBranchCode })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_location_org_branch");
+            entity.HasIndex(x => new { x.OrganizationId, x.Active })
+                .HasDatabaseName("IX_v1_location_org_active");
+        });
     }
 
     private static void ConfigureFinance(ModelBuilder modelBuilder)
