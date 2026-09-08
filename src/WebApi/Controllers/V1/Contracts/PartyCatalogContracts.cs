@@ -13,20 +13,38 @@ public sealed record PartyFiscalIdentityRequest(
     DateOnly? ValidFrom = null,
     DateOnly? ValidTo = null);
 
+public sealed record PartyAddressRequest(
+    string Kind,
+    string AddressLine,
+    string City,
+    string CountryCode,
+    string? Region = null,
+    string? PostalCode = null,
+    bool Primary = false);
+
+public sealed record PartyContactRequest(
+    string TypeCode,
+    string Value,
+    bool Primary = false);
+
 public sealed record PartyCreateRequest(
     string Kind,
     string Name,
     string ResidenceCountry,
     string TaxResidenceCountry,
     IReadOnlyCollection<string> Roles,
-    IReadOnlyCollection<PartyFiscalIdentityRequest>? FiscalIdentities = null);
+    IReadOnlyCollection<PartyFiscalIdentityRequest>? FiscalIdentities = null,
+    IReadOnlyCollection<PartyAddressRequest>? Addresses = null,
+    IReadOnlyCollection<PartyContactRequest>? Contacts = null);
 
 public sealed record PartyUpdateRequest(
     long ExpectedVersion,
     string? Kind = null,
     string? Name = null,
     string? ResidenceCountry = null,
-    string? TaxResidenceCountry = null);
+    string? TaxResidenceCountry = null,
+    IReadOnlyCollection<PartyAddressRequest>? Addresses = null,
+    IReadOnlyCollection<PartyContactRequest>? Contacts = null);
 
 public sealed record PartyFiscalIdentityCreateRequest(
     long ExpectedVersion,
@@ -58,6 +76,22 @@ public sealed record PartyFiscalIdentityDto(
     DateOnly? ValidTo,
     bool Active);
 
+public sealed record PartyAddressDto(
+    string Id,
+    string Kind,
+    string AddressLine,
+    string City,
+    string? Region,
+    string CountryCode,
+    string? PostalCode,
+    bool Primary);
+
+public sealed record PartyContactDto(
+    string Id,
+    string TypeCode,
+    string Value,
+    bool Primary);
+
 public sealed record PartyDto(
     string Id,
     long Version,
@@ -67,7 +101,9 @@ public sealed record PartyDto(
     string ResidenceCountry,
     string TaxResidenceCountry,
     IReadOnlyCollection<string> Roles,
-    IReadOnlyCollection<PartyFiscalIdentityDto> FiscalIdentities);
+    IReadOnlyCollection<PartyFiscalIdentityDto> FiscalIdentities,
+    IReadOnlyCollection<PartyAddressDto> Addresses,
+    IReadOnlyCollection<PartyContactDto> Contacts);
 
 public sealed record CommercialItemCreateRequest(
     string Code,

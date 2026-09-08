@@ -14,20 +14,20 @@ namespace WebApi.Controllers.V1;
 public sealed class PartiesController : ControllerBase
 {
     private readonly V1OrganizationContextResolver _organization;
-    private readonly ListPartiesUseCase _list;
-    private readonly GetPartyUseCase _get;
+    private readonly ListPartiesWithChannelsUseCase _list;
+    private readonly GetPartyWithChannelsUseCase _get;
     private readonly CreatePartyUseCase _create;
-    private readonly UpdatePartyUseCase _update;
+    private readonly UpdatePartyWithChannelsUseCase _update;
     private readonly AddPartyFiscalIdentityUseCase _addFiscalIdentity;
     private readonly UpdatePartyFiscalIdentityUseCase _updateFiscalIdentity;
     private readonly SetPartyRolesUseCase _setRoles;
 
     public PartiesController(
         V1OrganizationContextResolver organization,
-        ListPartiesUseCase list,
-        GetPartyUseCase get,
+        ListPartiesWithChannelsUseCase list,
+        GetPartyWithChannelsUseCase get,
         CreatePartyUseCase create,
-        UpdatePartyUseCase update,
+        UpdatePartyWithChannelsUseCase update,
         AddPartyFiscalIdentityUseCase addFiscalIdentity,
         UpdatePartyFiscalIdentityUseCase updateFiscalIdentity,
         SetPartyRolesUseCase setRoles)
@@ -90,7 +90,9 @@ public sealed class PartiesController : ControllerBase
             ParseRoles(request.Roles),
             (request.FiscalIdentities ?? Array.Empty<PartyFiscalIdentityRequest>()).Select(Map).ToArray(),
             idempotencyKey,
-            V1RequestContract.ComputeRequestHash(request));
+            V1RequestContract.ComputeRequestHash(request),
+            (request.Addresses ?? Array.Empty<PartyAddressRequest>()).Select(Map).ToArray(),
+            (request.Contacts ?? Array.Empty<PartyContactRequest>()).Select(Map).ToArray());
 
         var result = await _create.ExecuteAsync(command, cancellationToken);
         SetReplayHeader(result.Replayed);
@@ -107,7 +109,7 @@ public sealed class PartiesController : ControllerBase
     {
         var organizationId = _organization.Resolve(Request);
         var result = await _update.ExecuteAsync(
-            new UpdatePartyCommand(
+            new UpdatePartyWithChannelsCommand(
                 organizationId,
                 partyId,
                 string.IsNullOrWhiteSpace(request.Kind) ? null : ParseKind(request.Kind),
@@ -116,7 +118,9 @@ public sealed class PartiesController : ControllerBase
                 request.TaxResidenceCountry,
                 request.ExpectedVersion,
                 V1RequestContract.RequireIdempotencyKey(Request),
-                V1RequestContract.ComputeRequestHash(request)),
+                V1RequestContract.ComputeRequestHash(request),
+                request.Addresses?.Select(Map).ToArray(),
+                request.Contacts?.Select(Map).ToArray()),
             cancellationToken);
 
         SetReplayHeader(result.Replayed);
@@ -211,12 +215,19 @@ public sealed class PartiesController : ControllerBase
     }
 
     private static PartyKind ParseKind(string value) =>
-        Enum.TryParse<PartyKind>(value, true, out var parsed) && Enum.IsDefined(parsed)
+        Enum.TryParse<PartyKind>(value, true, out var parsed) && Enum.IsDefined(typeof(PartyKind), parsed)
             ? parsed
             : throw Validation("party.invalid_kind", "Party kind must be PERSON or ORGANIZATION.");
 
+    private static PartyAddressKind ParseAddressKind(string value) =>
+        Enum.TryParse<PartyAddressKind>(value, true, out var parsed) && Enum.IsDefined(typeof(PartyAddressKind), parsed)
+            ? parsed
+            : throw Validation(
+                "party.address.invalid_kind",
+                "Party address kind must be FISCAL, DELIVERY or OTHER.");
+
     private static PartyRole ParseRole(string value) =>
-        Enum.TryParse<PartyRole>(value, true, out var parsed) && Enum.IsDefined(parsed)
+        Enum.TryParse<PartyRole>(value, true, out var parsed) && Enum.IsDefined(typeof(PartyRole), parsed)
             ? parsed
             : throw Validation("party.invalid_role", "Party role must be CUSTOMER or SUPPLIER.");
 
@@ -234,7 +245,20 @@ public sealed class PartiesController : ControllerBase
     private static PartyFiscalIdentityInput Map(PartyFiscalIdentityRequest request) =>
         new(request.TypeCode, request.Number, request.IssuingCountry, request.ValidFrom, request.ValidTo);
 
-    private static PartyDto Map(PartyView party) =>
+    private static PartyAddressInput Map(PartyAddressRequest request) =>
+        new(
+            ParseAddressKind(request.Kind),
+            request.AddressLine,
+            request.City,
+            request.Region,
+            request.CountryCode,
+            request.PostalCode,
+            request.Primary);
+
+    private static PartyContactInput Map(PartyContactRequest request) =>
+        new(request.TypeCode, request.Value, request.Primary);
+
+    private static PartyDto Map(PartyDetailView party) =>
         new(
             party.Id.ToString(),
             party.Version,
@@ -251,7 +275,21 @@ public sealed class PartiesController : ControllerBase
                 x.IssuingCountry,
                 x.ValidFrom,
                 x.ValidTo,
-                x.Active)).ToArray());
+                x.Active)).ToArray(),
+            party.Addresses.Select(x => new PartyAddressDto(
+                x.Id.ToString(),
+                x.Kind.ToString().ToUpperInvariant(),
+                x.AddressLine,
+                x.City,
+                x.Region,
+                x.CountryCode,
+                x.PostalCode,
+                x.Primary)).ToArray(),
+            party.Contacts.Select(x => new PartyContactDto(
+                x.Id.ToString(),
+                x.TypeCode,
+                x.Value,
+                x.Primary)).ToArray());
 
     private static ApplicationProblemException Validation(string code, string detail) =>
         new(ApplicationProblemKind.Validation, code, detail);

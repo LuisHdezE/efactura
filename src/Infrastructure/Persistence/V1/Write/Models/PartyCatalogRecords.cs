@@ -14,6 +14,8 @@ public sealed class V1PartyRecord
     public DateTime UpdatedAtUtc { get; set; }
     public List<V1PartyRoleRecord> Roles { get; set; } = new();
     public List<V1PartyFiscalIdentityRecord> FiscalIdentities { get; set; } = new();
+    public List<V1PartyAddressRecord> Addresses { get; set; } = new();
+    public List<V1PartyContactRecord> Contacts { get; set; } = new();
 }
 
 public sealed class V1PartyRoleRecord

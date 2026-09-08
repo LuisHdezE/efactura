@@ -14,6 +14,174 @@ public enum PartyRole
     Supplier = 2
 }
 
+public enum PartyAddressKind
+{
+    Fiscal = 1,
+    Delivery = 2,
+    Other = 3
+}
+
+public sealed class PartyAddress
+{
+    private PartyAddress(
+        Guid id,
+        PartyAddressKind kind,
+        string addressLine,
+        string city,
+        string? region,
+        string countryCode,
+        string? postalCode,
+        bool primary)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new DomainRuleException("party.address.id_required", "Party address id is required.");
+        }
+
+        if (!Enum.IsDefined(typeof(PartyAddressKind), kind))
+        {
+            throw new DomainRuleException("party.address.invalid_kind", "Party address kind is invalid.");
+        }
+
+        Id = id;
+        Kind = kind;
+        AddressLine = NormalizeRequired(addressLine, 255, "party.address.line_required");
+        City = NormalizeRequired(city, 80, "party.address.city_required");
+        Region = NormalizeOptional(region, 100, "party.address.region_invalid");
+        CountryCode = NormalizeCountry(countryCode);
+        PostalCode = NormalizeOptional(postalCode, 20, "party.address.postal_code_invalid");
+        Primary = primary;
+    }
+
+    public Guid Id { get; }
+    public PartyAddressKind Kind { get; }
+    public string AddressLine { get; }
+    public string City { get; }
+    public string? Region { get; }
+    public string CountryCode { get; }
+    public string? PostalCode { get; }
+    public bool Primary { get; }
+
+    public static PartyAddress Create(
+        Guid id,
+        PartyAddressKind kind,
+        string addressLine,
+        string city,
+        string? region,
+        string countryCode,
+        string? postalCode,
+        bool primary) =>
+        new(id, kind, addressLine, city, region, countryCode, postalCode, primary);
+
+    public static PartyAddress Rehydrate(
+        Guid id,
+        PartyAddressKind kind,
+        string addressLine,
+        string city,
+        string? region,
+        string countryCode,
+        string? postalCode,
+        bool primary) =>
+        new(id, kind, addressLine, city, region, countryCode, postalCode, primary);
+
+    public string NormalizedKey => string.Join(
+        "|",
+        Kind.ToString(),
+        AddressLine.ToUpperInvariant(),
+        City.ToUpperInvariant(),
+        Region?.ToUpperInvariant() ?? string.Empty,
+        CountryCode,
+        PostalCode?.ToUpperInvariant() ?? string.Empty);
+
+    private static string NormalizeRequired(string value, int maxLength, string code)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DomainRuleException(code, "Required party address value is missing.");
+        }
+
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+        {
+            throw new DomainRuleException(code, $"Party address value cannot exceed {maxLength} characters.");
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeOptional(string? value, int maxLength, string code)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+        {
+            throw new DomainRuleException(code, $"Party address value cannot exceed {maxLength} characters.");
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeCountry(string value)
+    {
+        var normalized = NormalizeRequired(value, 2, "party.address.country_required").ToUpperInvariant();
+        if (normalized.Length != 2 || normalized.Any(ch => ch < 'A' || ch > 'Z'))
+        {
+            throw new DomainRuleException("party.address.invalid_country", "Address country must be an ISO alpha-2 code.");
+        }
+
+        return normalized;
+    }
+}
+
+public sealed class PartyContact
+{
+    private PartyContact(Guid id, string typeCode, string value, bool primary)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new DomainRuleException("party.contact.id_required", "Party contact id is required.");
+        }
+
+        Id = id;
+        TypeCode = NormalizeRequired(typeCode, 80, "party.contact.type_required");
+        Value = NormalizeRequired(value, 100, "party.contact.value_required");
+        Primary = primary;
+    }
+
+    public Guid Id { get; }
+    public string TypeCode { get; }
+    public string Value { get; }
+    public bool Primary { get; }
+
+    public static PartyContact Create(Guid id, string typeCode, string value, bool primary) =>
+        new(id, typeCode, value, primary);
+
+    public static PartyContact Rehydrate(Guid id, string typeCode, string value, bool primary) =>
+        new(id, typeCode, value, primary);
+
+    public string NormalizedKey => $"{TypeCode.ToUpperInvariant()}|{Value.ToUpperInvariant()}";
+
+    private static string NormalizeRequired(string value, int maxLength, string code)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DomainRuleException(code, "Required party contact value is missing.");
+        }
+
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+        {
+            throw new DomainRuleException(code, $"Party contact value cannot exceed {maxLength} characters.");
+        }
+
+        return normalized;
+    }
+}
+
 public sealed class PartyFiscalIdentity
 {
     private PartyFiscalIdentity(
@@ -135,6 +303,8 @@ public sealed class Party
 {
     private readonly HashSet<PartyRole> _roles;
     private readonly List<PartyFiscalIdentity> _fiscalIdentities;
+    private readonly List<PartyAddress> _addresses;
+    private readonly List<PartyContact> _contacts;
 
     private Party(
         Guid id,
@@ -145,6 +315,8 @@ public sealed class Party
         string taxResidenceCountry,
         IEnumerable<PartyRole> roles,
         IEnumerable<PartyFiscalIdentity> fiscalIdentities,
+        IEnumerable<PartyAddress> addresses,
+        IEnumerable<PartyContact> contacts,
         bool active,
         long version)
     {
@@ -156,10 +328,14 @@ public sealed class Party
         TaxResidenceCountry = NormalizeCountry(taxResidenceCountry, "party.invalid_tax_residence_country");
         _roles = new HashSet<PartyRole>(roles);
         _fiscalIdentities = new List<PartyFiscalIdentity>(fiscalIdentities);
+        _addresses = new List<PartyAddress>(addresses);
+        _contacts = new List<PartyContact>(contacts);
         Active = active;
         Version = version;
         ValidateRoles();
         ValidateIdentityUniqueness();
+        ValidateAddressCollection();
+        ValidateContactCollection();
     }
 
     public Guid Id { get; }
@@ -172,6 +348,8 @@ public sealed class Party
     public long Version { get; private set; }
     public IReadOnlyCollection<PartyRole> Roles => _roles;
     public IReadOnlyCollection<PartyFiscalIdentity> FiscalIdentities => _fiscalIdentities;
+    public IReadOnlyCollection<PartyAddress> Addresses => _addresses;
+    public IReadOnlyCollection<PartyContact> Contacts => _contacts;
 
     public static Party Create(
         Guid id,
@@ -181,7 +359,9 @@ public sealed class Party
         string residenceCountry,
         string taxResidenceCountry,
         IEnumerable<PartyRole> roles,
-        IEnumerable<PartyFiscalIdentity>? fiscalIdentities = null) =>
+        IEnumerable<PartyFiscalIdentity>? fiscalIdentities = null,
+        IEnumerable<PartyAddress>? addresses = null,
+        IEnumerable<PartyContact>? contacts = null) =>
         new(
             id,
             organizationId,
@@ -191,6 +371,8 @@ public sealed class Party
             taxResidenceCountry,
             roles,
             fiscalIdentities ?? Array.Empty<PartyFiscalIdentity>(),
+            addresses ?? Array.Empty<PartyAddress>(),
+            contacts ?? Array.Empty<PartyContact>(),
             true,
             1);
 
@@ -203,9 +385,23 @@ public sealed class Party
         string taxResidenceCountry,
         IEnumerable<PartyRole> roles,
         IEnumerable<PartyFiscalIdentity> fiscalIdentities,
+        IEnumerable<PartyAddress> addresses,
+        IEnumerable<PartyContact> contacts,
         bool active,
         long version) =>
-        new(id, organizationId, kind, name, residenceCountry, taxResidenceCountry, roles, fiscalIdentities, active, version);
+        new(
+            id,
+            organizationId,
+            kind,
+            name,
+            residenceCountry,
+            taxResidenceCountry,
+            roles,
+            fiscalIdentities,
+            addresses,
+            contacts,
+            active,
+            version);
 
     public void UpdateMasterData(
         PartyKind kind,
@@ -215,10 +411,28 @@ public sealed class Party
         long expectedVersion)
     {
         EnsureVersion(expectedVersion);
-        Kind = kind;
-        Name = NormalizeRequired(name, 250, "party.name_required");
-        ResidenceCountry = NormalizeCountry(residenceCountry, "party.invalid_residence_country");
-        TaxResidenceCountry = NormalizeCountry(taxResidenceCountry, "party.invalid_tax_residence_country");
+        ApplyScalarMasterData(kind, name, residenceCountry, taxResidenceCountry);
+        Version++;
+    }
+
+    public void UpdateMasterData(
+        PartyKind kind,
+        string name,
+        string residenceCountry,
+        string taxResidenceCountry,
+        IEnumerable<PartyAddress> addresses,
+        IEnumerable<PartyContact> contacts,
+        long expectedVersion)
+    {
+        EnsureVersion(expectedVersion);
+        ApplyScalarMasterData(kind, name, residenceCountry, taxResidenceCountry);
+
+        _addresses.Clear();
+        _addresses.AddRange(addresses);
+        _contacts.Clear();
+        _contacts.AddRange(contacts);
+        ValidateAddressCollection();
+        ValidateContactCollection();
         Version++;
     }
 
@@ -277,6 +491,18 @@ public sealed class Party
         Version++;
     }
 
+    private void ApplyScalarMasterData(
+        PartyKind kind,
+        string name,
+        string residenceCountry,
+        string taxResidenceCountry)
+    {
+        Kind = kind;
+        Name = NormalizeRequired(name, 250, "party.name_required");
+        ResidenceCountry = NormalizeCountry(residenceCountry, "party.invalid_residence_country");
+        TaxResidenceCountry = NormalizeCountry(taxResidenceCountry, "party.invalid_tax_residence_country");
+    }
+
     private void EnsureVersion(long expectedVersion)
     {
         if (Version != expectedVersion)
@@ -302,6 +528,42 @@ public sealed class Party
         if (duplicates)
         {
             throw new DomainRuleException("party.fiscal_identity.duplicate", "Duplicate fiscal identities are not allowed.");
+        }
+    }
+
+    private void ValidateAddressCollection()
+    {
+        if (_addresses.GroupBy(x => x.NormalizedKey, StringComparer.Ordinal).Any(group => group.Count() > 1))
+        {
+            throw new DomainRuleException("party.address.duplicate", "Duplicate party addresses are not allowed.");
+        }
+
+        if (_addresses
+            .Where(x => x.Primary)
+            .GroupBy(x => x.Kind)
+            .Any(group => group.Count() > 1))
+        {
+            throw new DomainRuleException(
+                "party.address.multiple_primary",
+                "Only one primary party address is allowed for each address kind.");
+        }
+    }
+
+    private void ValidateContactCollection()
+    {
+        if (_contacts.GroupBy(x => x.NormalizedKey, StringComparer.Ordinal).Any(group => group.Count() > 1))
+        {
+            throw new DomainRuleException("party.contact.duplicate", "Duplicate party contacts are not allowed.");
+        }
+
+        if (_contacts
+            .Where(x => x.Primary)
+            .GroupBy(x => x.TypeCode.ToUpperInvariant(), StringComparer.Ordinal)
+            .Any(group => group.Count() > 1))
+        {
+            throw new DomainRuleException(
+                "party.contact.multiple_primary",
+                "Only one primary party contact is allowed for each contact type.");
         }
     }
 

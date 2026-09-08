@@ -26,7 +26,9 @@ public sealed record CreatePartyCommand(
     IReadOnlyCollection<PartyRole> Roles,
     IReadOnlyCollection<PartyFiscalIdentityInput> FiscalIdentities,
     string IdempotencyKey,
-    string RequestHash);
+    string RequestHash,
+    IReadOnlyCollection<PartyAddressInput>? Addresses = null,
+    IReadOnlyCollection<PartyContactInput>? Contacts = null);
 
 public sealed record PartyCreatedResult(Guid PartyId, long Version, bool Replayed);
 
@@ -143,8 +145,6 @@ public sealed class CreatePartyUseCase
                     retryAfterSeconds: 2);
             }
 
-            // Persist the reservation while keeping it inside the same local transaction.
-            // A later failure must roll it back with the business state.
             await _unitOfWork.SaveChangesAsync(ct);
 
             foreach (var input in command.FiscalIdentities)
@@ -178,6 +178,26 @@ public sealed class CreatePartyUseCase
                         input.ValidTo))
                     .ToArray();
 
+                var addresses = (command.Addresses ?? Array.Empty<PartyAddressInput>())
+                    .Select(input => PartyAddress.Create(
+                        Guid.NewGuid(),
+                        input.Kind,
+                        input.AddressLine,
+                        input.City,
+                        input.Region,
+                        input.CountryCode,
+                        input.PostalCode,
+                        input.Primary))
+                    .ToArray();
+
+                var contacts = (command.Contacts ?? Array.Empty<PartyContactInput>())
+                    .Select(input => PartyContact.Create(
+                        Guid.NewGuid(),
+                        input.TypeCode,
+                        input.Value,
+                        input.Primary))
+                    .ToArray();
+
                 party = Party.Create(
                     Guid.NewGuid(),
                     command.OrganizationId,
@@ -186,7 +206,9 @@ public sealed class CreatePartyUseCase
                     command.ResidenceCountry,
                     command.TaxResidenceCountry,
                     command.Roles,
-                    identities);
+                    identities,
+                    addresses,
+                    contacts);
             }
             catch (DomainRuleException ex)
             {
@@ -216,7 +238,9 @@ public sealed class CreatePartyUseCase
                     {
                         ["kind"] = party.Kind.ToString(),
                         ["roles"] = string.Join(',', party.Roles.OrderBy(x => x)),
-                        ["fiscalIdentityCount"] = party.FiscalIdentities.Count.ToString()
+                        ["fiscalIdentityCount"] = party.FiscalIdentities.Count.ToString(),
+                        ["addressCount"] = party.Addresses.Count.ToString(),
+                        ["contactCount"] = party.Contacts.Count.ToString()
                     }),
                 ct);
 

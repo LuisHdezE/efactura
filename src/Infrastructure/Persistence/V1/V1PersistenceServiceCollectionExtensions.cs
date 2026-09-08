@@ -54,6 +54,9 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<EfPartyRepository>();
         services.AddScoped<IPartyRepository>(sp => sp.GetRequiredService<EfPartyRepository>());
         services.AddScoped<IPartyMaintenanceRepository>(sp => sp.GetRequiredService<EfPartyRepository>());
+        services.AddScoped<ListPartiesWithChannelsUseCase>();
+        services.AddScoped<GetPartyWithChannelsUseCase>();
+        services.AddScoped<UpdatePartyWithChannelsUseCase>();
 
         services.AddScoped<EfCommercialItemRepository>();
         services.AddScoped<ICommercialItemRepository>(sp => sp.GetRequiredService<EfCommercialItemRepository>());
