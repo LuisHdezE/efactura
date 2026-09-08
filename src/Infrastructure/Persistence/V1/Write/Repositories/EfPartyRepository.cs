@@ -36,7 +36,9 @@ public sealed class EfPartyRepository : IPartyRepository, IPartyMaintenanceRepos
                 PartyId = party.Id,
                 Role = (int)role
             }).ToList(),
-            FiscalIdentities = party.FiscalIdentities.Select(identity => MapIdentity(party.Id, identity)).ToList()
+            FiscalIdentities = party.FiscalIdentities.Select(identity => MapIdentity(party.Id, identity)).ToList(),
+            Addresses = party.Addresses.Select(address => MapAddress(party.Id, address)).ToList(),
+            Contacts = party.Contacts.Select(contact => MapContact(party.Id, contact)).ToList()
         };
 
         _dbContext.Parties.Add(record);
@@ -156,6 +158,52 @@ public sealed class EfPartyRepository : IPartyRepository, IPartyMaintenanceRepos
                 record.FiscalIdentities.Add(MapIdentity(party.Id, identity));
             }
         }
+
+        var desiredAddressIds = party.Addresses.Select(x => x.Id).ToHashSet();
+        foreach (var existing in record.Addresses.Where(x => !desiredAddressIds.Contains(x.Id)).ToArray())
+        {
+            _dbContext.Set<V1PartyAddressRecord>().Remove(existing);
+        }
+
+        var existingAddresses = record.Addresses.ToDictionary(x => x.Id);
+        foreach (var address in party.Addresses)
+        {
+            if (existingAddresses.TryGetValue(address.Id, out var existing))
+            {
+                existing.Kind = (int)address.Kind;
+                existing.AddressLine = address.AddressLine;
+                existing.City = address.City;
+                existing.Region = address.Region;
+                existing.CountryCode = address.CountryCode;
+                existing.PostalCode = address.PostalCode;
+                existing.Primary = address.Primary;
+            }
+            else
+            {
+                record.Addresses.Add(MapAddress(party.Id, address));
+            }
+        }
+
+        var desiredContactIds = party.Contacts.Select(x => x.Id).ToHashSet();
+        foreach (var existing in record.Contacts.Where(x => !desiredContactIds.Contains(x.Id)).ToArray())
+        {
+            _dbContext.Set<V1PartyContactRecord>().Remove(existing);
+        }
+
+        var existingContacts = record.Contacts.ToDictionary(x => x.Id);
+        foreach (var contact in party.Contacts)
+        {
+            if (existingContacts.TryGetValue(contact.Id, out var existing))
+            {
+                existing.TypeCode = contact.TypeCode;
+                existing.Value = contact.Value;
+                existing.Primary = contact.Primary;
+            }
+            else
+            {
+                record.Contacts.Add(MapContact(party.Id, contact));
+            }
+        }
     }
 
     public Task<bool> FiscalIdentityExistsAsync(
@@ -182,7 +230,9 @@ public sealed class EfPartyRepository : IPartyRepository, IPartyMaintenanceRepos
     private IQueryable<V1PartyRecord> BaseQuery() =>
         _dbContext.Parties
             .Include(x => x.Roles)
-            .Include(x => x.FiscalIdentities);
+            .Include(x => x.FiscalIdentities)
+            .Include(x => x.Addresses)
+            .Include(x => x.Contacts);
 
     private static V1PartyFiscalIdentityRecord MapIdentity(Guid partyId, PartyFiscalIdentity identity) =>
         new()
@@ -195,6 +245,30 @@ public sealed class EfPartyRepository : IPartyRepository, IPartyMaintenanceRepos
             ValidFromUtc = ToUtcDate(identity.ValidFrom),
             ValidToUtc = ToUtcDate(identity.ValidTo),
             Active = identity.Active
+        };
+
+    private static V1PartyAddressRecord MapAddress(Guid partyId, PartyAddress address) =>
+        new()
+        {
+            Id = address.Id,
+            PartyId = partyId,
+            Kind = (int)address.Kind,
+            AddressLine = address.AddressLine,
+            City = address.City,
+            Region = address.Region,
+            CountryCode = address.CountryCode,
+            PostalCode = address.PostalCode,
+            Primary = address.Primary
+        };
+
+    private static V1PartyContactRecord MapContact(Guid partyId, PartyContact contact) =>
+        new()
+        {
+            Id = contact.Id,
+            PartyId = partyId,
+            TypeCode = contact.TypeCode,
+            Value = contact.Value,
+            Primary = contact.Primary
         };
 
     private static DateTime? ToUtcDate(DateOnly? value) =>
@@ -211,6 +285,22 @@ public sealed class EfPartyRepository : IPartyRepository, IPartyMaintenanceRepos
             identity.ValidToUtc.HasValue ? DateOnly.FromDateTime(identity.ValidToUtc.Value) : null,
             identity.Active));
 
+        var addresses = record.Addresses.Select(address => PartyAddress.Rehydrate(
+            address.Id,
+            (PartyAddressKind)address.Kind,
+            address.AddressLine,
+            address.City,
+            address.Region,
+            address.CountryCode,
+            address.PostalCode,
+            address.Primary));
+
+        var contacts = record.Contacts.Select(contact => PartyContact.Rehydrate(
+            contact.Id,
+            contact.TypeCode,
+            contact.Value,
+            contact.Primary));
+
         return Party.Rehydrate(
             record.Id,
             record.OrganizationId,
@@ -220,6 +310,8 @@ public sealed class EfPartyRepository : IPartyRepository, IPartyMaintenanceRepos
             record.TaxResidenceCountry,
             record.Roles.Select(role => (PartyRole)role.Role),
             identities,
+            addresses,
+            contacts,
             record.Active,
             record.Version);
     }
