@@ -29,7 +29,8 @@ public sealed class FiscalizationRequest
         long version,
         DateTimeOffset requestedAtUtc,
         Guid? fiscalDocumentId = null,
-        DateTimeOffset? identityCreatedAtUtc = null)
+        DateTimeOffset? identityCreatedAtUtc = null,
+        FiscalConfirmationEvidence? confirmationEvidence = null)
     {
         if (id == Guid.Empty)
             throw Rule("fiscalization.request_id_required", "Fiscalization request id is required.");
@@ -63,6 +64,9 @@ public sealed class FiscalizationRequest
         RequestedAtUtc = requestedAtUtc;
         FiscalDocumentId = fiscalDocumentId;
         IdentityCreatedAtUtc = identityCreatedAtUtc;
+        ConfirmationEvidence = confirmationEvidence;
+        if (ConfirmationEvidence is not null)
+            EnsureConfirmationEvidenceMatches();
         ValidateLifecycle();
     }
 
@@ -85,6 +89,7 @@ public sealed class FiscalizationRequest
     public DateTimeOffset RequestedAtUtc { get; }
     public Guid? FiscalDocumentId { get; private set; }
     public DateTimeOffset? IdentityCreatedAtUtc { get; private set; }
+    public FiscalConfirmationEvidence? ConfirmationEvidence { get; }
 
     public static FiscalizationRequest CreateFromSale(
         Guid id,
@@ -101,7 +106,8 @@ public sealed class FiscalizationRequest
         decimal netAmount,
         decimal vatAmount,
         decimal totalAmount,
-        DateTimeOffset requestedAtUtc) =>
+        DateTimeOffset requestedAtUtc,
+        FiscalConfirmationEvidence? confirmationEvidence = null) =>
         new(
             id,
             organizationId,
@@ -119,7 +125,8 @@ public sealed class FiscalizationRequest
             totalAmount,
             FiscalizationRequestStatus.Pending,
             1,
-            requestedAtUtc);
+            requestedAtUtc,
+            confirmationEvidence: confirmationEvidence);
 
     public static FiscalizationRequest Rehydrate(
         Guid id,
@@ -140,7 +147,8 @@ public sealed class FiscalizationRequest
         long version,
         DateTimeOffset requestedAtUtc,
         Guid? fiscalDocumentId = null,
-        DateTimeOffset? identityCreatedAtUtc = null) =>
+        DateTimeOffset? identityCreatedAtUtc = null,
+        FiscalConfirmationEvidence? confirmationEvidence = null) =>
         new(
             id,
             organizationId,
@@ -160,7 +168,8 @@ public sealed class FiscalizationRequest
             version,
             requestedAtUtc,
             fiscalDocumentId,
-            identityCreatedAtUtc);
+            identityCreatedAtUtc,
+            confirmationEvidence);
 
     public void MarkIdentityCreated(
         Guid fiscalDocumentId,
@@ -189,6 +198,24 @@ public sealed class FiscalizationRequest
         Status = FiscalizationRequestStatus.IdentityCreated;
         Version++;
         ValidateLifecycle();
+    }
+
+    private void EnsureConfirmationEvidenceMatches()
+    {
+        ConfirmationEvidence!.EnsureIntegrity();
+        if (ConfirmationEvidence.CfeFamily != CfeFamily
+            || ConfirmationEvidence.ReceiverIdentification != ReceiverIdentification
+            || !string.Equals(ConfirmationEvidence.FormatVersion, FormatVersion, StringComparison.Ordinal)
+            || !string.Equals(ConfirmationEvidence.ConfirmationFingerprint, ConfirmationFingerprint, StringComparison.Ordinal)
+            || !string.Equals(ConfirmationEvidence.CurrencyCode, CurrencyCode, StringComparison.Ordinal)
+            || ConfirmationEvidence.Totals.NetAmount != NetAmount
+            || ConfirmationEvidence.Totals.VatAmount != VatAmount
+            || ConfirmationEvidence.Totals.TotalAmount != TotalAmount)
+        {
+            throw Rule(
+                "fiscalization.confirmation_evidence_mismatch",
+                "Frozen fiscal confirmation evidence does not match the fiscalization request summary.");
+        }
     }
 
     private void ValidateLifecycle()

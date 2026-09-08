@@ -75,30 +75,39 @@ public sealed class EfFiscalizationRequestRepository : IFiscalizationRequestRepo
         record.IdentityCreatedAtUtc = request.IdentityCreatedAtUtc;
     }
 
-    private static V1FiscalizationRequestRecord MapRecord(FiscalizationRequest request) => new()
+    private static V1FiscalizationRequestRecord MapRecord(FiscalizationRequest request)
     {
-        Id = request.Id,
-        OrganizationId = request.OrganizationId,
-        SaleId = request.SaleId,
-        LocationId = request.LocationId,
-        TerminalId = request.TerminalId,
-        CfeFamily = (int)request.CfeFamily,
-        ReceiverIdentification = request.ReceiverIdentification.HasValue
-            ? (int)request.ReceiverIdentification.Value
-            : null,
-        FormatVersion = request.FormatVersion,
-        ConfirmationFingerprint = request.ConfirmationFingerprint,
-        SettlementFingerprint = request.SettlementFingerprint,
-        CurrencyCode = request.CurrencyCode,
-        NetAmount = request.NetAmount,
-        VatAmount = request.VatAmount,
-        TotalAmount = request.TotalAmount,
-        Status = (int)request.Status,
-        Version = request.Version,
-        RequestedAtUtc = request.RequestedAtUtc,
-        FiscalDocumentId = request.FiscalDocumentId,
-        IdentityCreatedAtUtc = request.IdentityCreatedAtUtc
-    };
+        var confirmationEvidenceJson = request.ConfirmationEvidence is null
+            ? null
+            : FiscalSnapshotJson.SerializeConfirmation(request.ConfirmationEvidence);
+
+        return new V1FiscalizationRequestRecord
+        {
+            Id = request.Id,
+            OrganizationId = request.OrganizationId,
+            SaleId = request.SaleId,
+            LocationId = request.LocationId,
+            TerminalId = request.TerminalId,
+            CfeFamily = (int)request.CfeFamily,
+            ReceiverIdentification = request.ReceiverIdentification.HasValue
+                ? (int)request.ReceiverIdentification.Value
+                : null,
+            FormatVersion = request.FormatVersion,
+            ConfirmationFingerprint = request.ConfirmationFingerprint,
+            SettlementFingerprint = request.SettlementFingerprint,
+            CurrencyCode = request.CurrencyCode,
+            NetAmount = request.NetAmount,
+            VatAmount = request.VatAmount,
+            TotalAmount = request.TotalAmount,
+            ConfirmationEvidenceFingerprint = request.ConfirmationEvidence?.EvidenceFingerprint,
+            ConfirmationEvidenceJson = confirmationEvidenceJson,
+            Status = (int)request.Status,
+            Version = request.Version,
+            RequestedAtUtc = request.RequestedAtUtc,
+            FiscalDocumentId = request.FiscalDocumentId,
+            IdentityCreatedAtUtc = request.IdentityCreatedAtUtc
+        };
+    }
 
     private static FiscalizationRequest Map(V1FiscalizationRequestRecord record) =>
         FiscalizationRequest.Rehydrate(
@@ -122,5 +131,28 @@ public sealed class EfFiscalizationRequestRepository : IFiscalizationRequestRepo
             record.Version,
             record.RequestedAtUtc,
             record.FiscalDocumentId,
-            record.IdentityCreatedAtUtc);
+            record.IdentityCreatedAtUtc,
+            MapConfirmationEvidence(record));
+
+    private static FiscalConfirmationEvidence? MapConfirmationEvidence(
+        V1FiscalizationRequestRecord record)
+    {
+        var hasJson = !string.IsNullOrWhiteSpace(record.ConfirmationEvidenceJson);
+        var hasFingerprint = !string.IsNullOrWhiteSpace(record.ConfirmationEvidenceFingerprint);
+        if (!hasJson && !hasFingerprint)
+            return null;
+
+        if (!hasJson || !hasFingerprint)
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "fiscal.snapshot.persisted_evidence_invalid",
+                "Persisted fiscal confirmation evidence metadata is incomplete.",
+                conflictType: "inconsistent_state");
+        }
+
+        return FiscalSnapshotJson.DeserializeConfirmation(
+            record.ConfirmationEvidenceJson!,
+            record.ConfirmationEvidenceFingerprint!);
+    }
 }
