@@ -7,7 +7,7 @@ public sealed class SalesFiscalPreviewArchitectureTests
     private static readonly string RepositoryRoot = FindRepositoryRoot();
 
     [Fact]
-    public void Sales_controller_exposes_only_API_SAL_001_to_006_in_this_slice()
+    public void Sales_controller_exposes_only_API_SAL_001_to_007_in_this_slice()
     {
         var content = Read("src/WebApi/Controllers/V1/SalesController.cs");
 
@@ -18,8 +18,8 @@ public sealed class SalesFiscalPreviewArchitectureTests
         Assert.Contains("[HttpPatch(\"{saleId:guid}\")]", content, StringComparison.Ordinal);
         Assert.Contains("[HttpPost(\"{saleId:guid}/validate\")]", content, StringComparison.Ordinal);
         Assert.Contains("[HttpGet(\"{saleId:guid}/fiscal-preview\")]", content, StringComparison.Ordinal);
+        Assert.Contains("[HttpPost(\"{saleId:guid}/confirm\")]", content, StringComparison.Ordinal);
 
-        Assert.DoesNotContain("/confirm", content, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("/cancel", content, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("/fiscalization", content, StringComparison.OrdinalIgnoreCase);
     }

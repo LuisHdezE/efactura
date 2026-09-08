@@ -61,15 +61,22 @@ public sealed class SaleConfirmationTransactionArchitectureTests
     }
 
     [Fact]
-    public void Public_confirm_route_remains_closed_until_transaction_evidence_is_accepted()
+    public void Public_confirm_route_delegates_to_the_accepted_transaction_boundary()
     {
         var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
         var sale = Read("src/Domain/Sales/Sale.cs");
 
         Assert.Contains("Confirmed = 3", sale, StringComparison.Ordinal);
         Assert.Contains("sales.confirmed_immutable", sale, StringComparison.Ordinal);
-        Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("ConfirmSaleUseCase", controller, StringComparison.Ordinal);
+        Assert.Contains("[HttpPost(\"{saleId:guid}/confirm\")]", controller, StringComparison.Ordinal);
+        Assert.Contains("[RequirePermission(Permissions.SalesConfirm)]", controller, StringComparison.Ordinal);
+        Assert.Contains("ConfirmSaleUseCase", controller, StringComparison.Ordinal);
+        Assert.Contains("V1RequestContract.RequireIdempotencyKey(Request)", controller, StringComparison.Ordinal);
+        Assert.Contains("V1RequestContract.ComputeRequestHash(request)", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("IFiscalNumberAllocator", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("CaeAuthorization", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("FiscalDocument", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("HttpClient", controller, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>

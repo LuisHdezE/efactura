@@ -29,6 +29,32 @@ public sealed record SaleDraftUpdateRequest(
 
 public sealed record SaleValidateRequest(long ExpectedVersion);
 
+public sealed record SaleImmediatePaymentRequest(
+    string PaymentMethodId,
+    decimal Amount,
+    string CurrencyCode,
+    string? ExternalReference = null);
+
+public sealed record SaleCreditTermsRequest(DateOnly DueDate);
+
+public sealed record SaleConfirmRequest(
+    long ExpectedVersion,
+    IReadOnlyCollection<SaleImmediatePaymentRequest> PaymentIntents,
+    string OperatorReason,
+    SaleCreditTermsRequest? CreditTerms = null,
+    string? OperatorContext = null);
+
+public sealed record SaleConfirmationDto(
+    string SaleId,
+    long Version,
+    string ConfirmationFingerprint,
+    string SettlementFingerprint,
+    string FiscalizationRequestId,
+    int PaymentCount,
+    string? ReceivableId,
+    DateTimeOffset ConfirmedAtUtc,
+    bool Replayed);
+
 public sealed record SaleLineDto(
     string Id,
     string ItemId,

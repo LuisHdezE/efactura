@@ -41,14 +41,13 @@ public sealed class SaleConfirmationPlanningArchitectureTests
     public void Planning_slice_does_not_cross_the_irreversible_confirmation_boundary()
     {
         var planner = Read("src/Application/Sales/SaleConfirmationPlanning.cs");
-        var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
 
         Assert.DoesNotContain("IFiscalNumberAllocator", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("IUnitOfWork", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("IOutboxWriter", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("Receivable", planner, StringComparison.Ordinal);
         Assert.DoesNotContain("Payment", planner, StringComparison.Ordinal);
-        Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ConfirmSaleUseCase", planner, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>

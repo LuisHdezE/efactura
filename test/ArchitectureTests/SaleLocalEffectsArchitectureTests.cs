@@ -50,15 +50,15 @@ public sealed class SaleLocalEffectsArchitectureTests
     }
 
     [Fact]
-    public void Local_effect_components_remain_staging_only_while_public_confirm_route_stays_closed()
+    public void Local_effect_components_remain_staging_only_after_public_confirm_route_is_exposed()
     {
         var controller = Read("src/WebApi/Controllers/V1/SalesController.cs");
         var consumer = Read("src/Application/Inventory/SaleStockConsumption.cs");
         var fiscalization = Read("src/Domain/Fiscal/FiscalizationRequest.cs");
         var localEffects = consumer + Environment.NewLine + fiscalization;
 
-        Assert.DoesNotContain("/confirm", controller, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("HttpPost(\"{saleId:guid}/confirm\"", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("[HttpPost(\"{saleId:guid}/confirm\")]", controller, StringComparison.Ordinal);
+        Assert.Contains("ConfirmSaleUseCase", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("ISaleRepository", localEffects, StringComparison.Ordinal);
         Assert.DoesNotContain("MarkConfirmed", localEffects, StringComparison.Ordinal);
         Assert.DoesNotContain("SaleStatus.Confirmed", localEffects, StringComparison.Ordinal);
