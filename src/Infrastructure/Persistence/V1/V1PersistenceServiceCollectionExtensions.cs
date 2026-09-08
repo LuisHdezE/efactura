@@ -74,6 +74,8 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<ICaeArtifactVerifier, Release1CaeMetadataVerifier>();
         services.AddScoped<IFiscalNumberAllocator, FiscalNumberAllocator>();
         services.AddScoped<IFiscalizationRequestRepository, EfFiscalizationRequestRepository>();
+        services.AddScoped<IFiscalDocumentRepository, EfFiscalDocumentRepository>();
+        services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
         services.AddScoped<GetCaeAuthorizationUseCase>();
         services.AddScoped<ImportCaeAuthorizationUseCase>();

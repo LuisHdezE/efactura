@@ -35,12 +35,17 @@ public sealed class SaleLocalEffectsArchitectureTests
     public void Fiscalization_work_item_is_not_a_cae_or_fiscal_document_surrogate()
     {
         var domain = Read("src/Domain/Fiscal/FiscalizationRequest.cs");
-        var record = Read("src/Infrastructure/Persistence/V1/Write/Models/FiscalizationRecords.cs");
-        var combined = domain + record;
+        var records = Read("src/Infrastructure/Persistence/V1/Write/Models/FiscalizationRecords.cs");
+        var fiscalDocumentMarker = "public sealed class V1FiscalDocumentRecord";
+        var markerIndex = records.IndexOf(fiscalDocumentMarker, StringComparison.Ordinal);
+        Assert.True(markerIndex > 0, "Fiscalization record and FiscalDocument record must remain distinct persistence types.");
+        var requestRecord = records[..markerIndex];
+        var combined = domain + requestRecord;
 
         Assert.Contains("ConfirmationFingerprint", combined, StringComparison.Ordinal);
         Assert.Contains("SettlementFingerprint", combined, StringComparison.Ordinal);
         Assert.Contains("CfeFamily", combined, StringComparison.Ordinal);
+        Assert.Contains("FiscalDocumentId", combined, StringComparison.Ordinal);
         Assert.DoesNotContain("CaeAuthorization", combined, StringComparison.Ordinal);
         Assert.DoesNotContain("FiscalNumber", combined, StringComparison.Ordinal);
         Assert.DoesNotContain("Series", combined, StringComparison.Ordinal);
