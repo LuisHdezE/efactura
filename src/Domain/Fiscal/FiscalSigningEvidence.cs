@@ -1,3 +1,5 @@
+using EFactura.Domain.Common;
+
 namespace EFactura.Domain.Fiscal;
 
 /// <summary>
