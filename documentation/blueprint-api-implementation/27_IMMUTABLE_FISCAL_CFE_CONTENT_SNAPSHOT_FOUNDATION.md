@@ -1,6 +1,6 @@
 # 27 - Immutable Fiscal CFE Content Snapshot Foundation
 
-Status: **CANDIDATE / READY FOR CI**
+Status: **CANDIDATE / EXACT-HEAD CI VALIDATED**
 
 Date: 2026-09-08
 
@@ -205,6 +205,22 @@ The candidate adds tests for:
 - snapshot immutability after later Company/FiscalLocation/Party changes;
 - rollback of snapshot/audit/outbox on injected post-flush failure;
 - fail-closed behavior for historical identities that lack durable fiscal confirmation evidence.
+
+Exact-head validation for the current PR candidate is `Clean Architecture Guard` run #183
+(`34296321607`) for head `bc91e598f997946a5def2a62cf46cbc9aa4476f8`, with synthetic merge
+`37e6a7625e2fe235a8f6b1df2a0fdb1c059e2718` against the accepted base. Results:
+
+- .NET SDK 10.0.400 / runtime 10.0.12;
+- Release build: 99 warnings, 0 errors;
+- known-vulnerability gate: PASS, 0 known vulnerable packages across 10 projects;
+- ArchitectureTests: 83/83 PASS;
+- CrossCuttingTests: 80/80 PASS;
+- legacy UnitTest: 21/21 PASS;
+- PersistenceIntegrationTests: 141/141 PASS;
+- PostgreSQL actual 16.15;
+- MySQL actual 8.4.11;
+- total represented automated tests: 325/325 PASS;
+- 5-minute per-test blame-hang guard did not trigger.
 
 ## Explicit non-scope
 
