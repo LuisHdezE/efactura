@@ -1,0 +1,154 @@
+name: Import DGI XSD v1.44.2 once
+
+on:
+  push:
+    branches:
+      - blueprint/fiscal-signed-xsd-validation
+    paths:
+      - .github/workflows/import-dgi-xsd-v1-44-2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import-dgi-xsd:
+    runs-on: [self-hosted, linux, x64, efactura-ci]
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Download, verify and import official DGI schema pack
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DGI_URL='https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es='
+          DEST='src/Infrastructure/Fiscal/Schemas/DgiFeV1_44_2'
+          TMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TMP_DIR"' EXIT
+
+          echo "Downloading official DGI XSDs_FE_V1.44.2 archive..."
+          curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
+            "$DGI_URL" -o "$TMP_DIR/xsds_fe_1_44_2.zip"
+
+          python3 - <<'PY' "$TMP_DIR/xsds_fe_1_44_2.zip" "$TMP_DIR/extracted"
+          import pathlib, sys, zipfile
+          archive = pathlib.Path(sys.argv[1])
+          target = pathlib.Path(sys.argv[2])
+          if archive.read_bytes()[:4] != b'PK\x03\x04':
+              raise SystemExit('Downloaded DGI artifact is not a ZIP archive')
+          target.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(archive) as zf:
+              zf.extractall(target)
+          PY
+
+          declare -A EXPECTED_BLOBS=(
+            [CFEDGI.xsd]='f030a0478146849433ae55003175c567274abba9'
+            [CFEType.xsd]='f35c531b90b20c68d5f4e53bcbd0117b04686934'
+            [DGITypes.xsd]='5ee48a1a1e727d7be71c5d8d14983ba576edf67e'
+            [xmldsig-core-schema.xsd]='df126b30e684091b32a748cd2e408f5fb9d651a9'
+            [xenc-schema.xsd]='20a70209c899049ceaa6e0f39f4207cc95acc4f1'
+            [version.txt]='af042bd258b753e23bdb0dee3f4b1d35537e3d2b'
+          )
+
+          mkdir -p "$DEST"
+          for file in CFEDGI.xsd CFEType.xsd DGITypes.xsd xmldsig-core-schema.xsd xenc-schema.xsd version.txt; do
+            source_path="$(find "$TMP_DIR/extracted" -type f -name "$file" -print -quit)"
+            if [[ -z "$source_path" ]]; then
+              echo "Required file missing from official DGI archive: $file" >&2
+              exit 41
+            fi
+
+            actual_blob="$(git hash-object "$source_path")"
+            expected_blob="${EXPECTED_BLOBS[$file]}"
+            echo "$file git-blob=$actual_blob"
+            if [[ "$actual_blob" != "$expected_blob" ]]; then
+              echo "DGI schema drift detected for $file. Expected $expected_blob, got $actual_blob" >&2
+              exit 42
+            fi
+
+            cp "$source_path" "$DEST/$file"
+          done
+
+          if ! grep -Fxq 'version: 1.44.2' "$DEST/version.txt"; then
+            echo 'DGI schema version marker is not exactly version: 1.44.2' >&2
+            exit 43
+          fi
+
+          python3 - <<'PY' "$DEST"
+          import hashlib, json, pathlib, subprocess, sys
+          dest = pathlib.Path(sys.argv[1])
+          names = [
+              'CFEDGI.xsd',
+              'CFEType.xsd',
+              'DGITypes.xsd',
+              'xmldsig-core-schema.xsd',
+              'xenc-schema.xsd',
+              'version.txt',
+          ]
+          files = []
+          for name in names:
+              path = dest / name
+              data = path.read_bytes()
+              blob = subprocess.check_output(['git', 'hash-object', str(path)], text=True).strip()
+              files.append({
+                  'name': name,
+                  'bytes': len(data),
+                  'sha256': hashlib.sha256(data).hexdigest(),
+                  'gitBlobSha1': blob,
+              })
+          manifest = {
+              'schemaSetId': 'dgi-fe-xsd-v1.44.2',
+              'version': '1.44.2',
+              'rootSchema': 'CFEDGI.xsd',
+              'officialRegistry': 'https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es=',
+              'officialArchive': 'https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es=',
+              'verificationMirror': {
+                  'repository': 'olagopirez/factible',
+                  'commit': '9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3',
+                  'path': 'packages/cfe/spec/xsd',
+                  'purpose': 'byte-identity cross-check only; DGI remains the authority',
+              },
+              'files': files,
+          }
+          (dest / 'schema-manifest.json').write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + '\n',
+              encoding='utf-8')
+          PY
+
+          cat > "$DEST/PROVENANCE.md" <<'EOF'
+          # DGI FE XSD v1.44.2 provenance
+
+          This directory contains the minimal schema closure required to validate a signed `CFE` root with `CFEDGI.xsd`.
+
+          Authority: Dirección General Impositiva (Uruguay), e-Factura **Documentos de interés** registry.
+
+          Official publication status checked before import: `XSDs_FE_V1.44.2` is **Publicado** for Testing and Production.
+
+          The files were downloaded directly from the official DGI `xsds_fe_1_44_2` archive by a one-shot governed CI import. Before being committed, every required file was checked byte-for-byte through its Git blob identity against an immutable public mirror at `olagopirez/factible@9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3`. The mirror is corroborative evidence only; it is not the regulatory authority.
+
+          Imported closure:
+
+          - `CFEDGI.xsd`
+          - `CFEType.xsd`
+          - `DGITypes.xsd`
+          - `xmldsig-core-schema.xsd`
+          - `xenc-schema.xsd`
+          - `version.txt`
+
+          Runtime code must validate the embedded file hashes against `schema-manifest.json` before compiling the schema set.
+          EOF
+
+          git add "$DEST"
+          if git diff --cached --quiet; then
+            echo 'Schema pack already present with identical bytes; nothing to commit.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(fiscal): import official DGI XSD v1.44.2 closure'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
