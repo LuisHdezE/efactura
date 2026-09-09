@@ -75,7 +75,8 @@ public sealed class SaleDraftBuilder
                     input.ServicePerformanceScope, input.ServiceUseCountry, input.ExportServiceKind,
                     input.RecipientIsPersonAbroad, input.ExclusiveUseAbroad,
                     input.ForeignEconomicRelation, input.RecipientInstalledInFreeZone,
-                    input.ProviderFromNonFreeNationalTerritory));
+                    input.ProviderFromNonFreeNationalTerritory,
+                    item.Unit));
             }
             catch (DomainRuleException ex)
             {
