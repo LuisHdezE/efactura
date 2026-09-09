@@ -124,6 +124,48 @@ public sealed class FiscalContentSnapshotPersistenceTests
         Assert.Equal(0, await verification.Set<V1FiscalContentSnapshotRecord>().CountAsync());
     }
 
+    [Theory]
+    [InlineData(V1DatabaseProvider.PostgreSql)]
+    [InlineData(V1DatabaseProvider.MySql)]
+    public async Task Historical_sale_without_unit_evidence_fails_closed(V1DatabaseProvider provider)
+    {
+        await using var database = await TestDatabase.CreateAsync(provider);
+        if (database is null)
+            return;
+
+        var seed = await SeedAsync(database, withConfirmationEvidence: true, unitOfMeasure: null);
+        var fiscalDocumentId = await CreateIdentityAsync(database, seed.FiscalizationRequestId);
+
+        await using var context = database.CreateContext();
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+            SnapshotUseCase(context).ExecuteAsync(
+                new CreateFiscalContentSnapshotCommand("company-1", fiscalDocumentId)));
+        Assert.Equal("fiscal.snapshot.item_unit_missing", error.Code);
+        Assert.Equal(ApplicationProblemKind.Conflict, error.Kind);
+        Assert.Equal("missing_prerequisite", error.ConflictType);
+    }
+
+    [Theory]
+    [InlineData(V1DatabaseProvider.PostgreSql)]
+    [InlineData(V1DatabaseProvider.MySql)]
+    public async Task Sale_unit_longer_than_DGI_field_fails_without_truncation(V1DatabaseProvider provider)
+    {
+        await using var database = await TestDatabase.CreateAsync(provider);
+        if (database is null)
+            return;
+
+        var seed = await SeedAsync(database, withConfirmationEvidence: true, unitOfMeasure: "UNIDAD");
+        var fiscalDocumentId = await CreateIdentityAsync(database, seed.FiscalizationRequestId);
+
+        await using var context = database.CreateContext();
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+            SnapshotUseCase(context).ExecuteAsync(
+                new CreateFiscalContentSnapshotCommand("company-1", fiscalDocumentId)));
+        Assert.Equal("fiscal.snapshot.item_unit_not_dgi_compatible", error.Code);
+        Assert.Equal(ApplicationProblemKind.Conflict, error.Kind);
+        Assert.Equal("missing_prerequisite", error.ConflictType);
+    }
+
     private static async Task<Guid> CreateIdentityAsync(TestDatabase database, Guid requestId)
     {
         await using var context = database.CreateContext();
@@ -188,7 +230,8 @@ public sealed class FiscalContentSnapshotPersistenceTests
 
     private static async Task<Seed> SeedAsync(
         TestDatabase database,
-        bool withConfirmationEvidence)
+        bool withConfirmationEvidence,
+        string? unitOfMeasure = "UNIT")
     {
         var now = DateTimeOffset.UtcNow;
         var saleId = Guid.NewGuid();
@@ -280,7 +323,8 @@ public sealed class FiscalContentSnapshotPersistenceTests
                     SaleLineKind.Product,
                     1m,
                     100m,
-                    null)
+                    null,
+                    unitOfMeasure: unitOfMeasure)
             });
         sale.MarkValidated("validated-content-snapshot", now, 1);
         sale.MarkConfirmed(Confirmation, Settlement, now, 2);
@@ -415,6 +459,7 @@ public sealed class FiscalContentSnapshotPersistenceTests
         var line = Assert.Single(stored.Snapshot.Lines);
         Assert.Equal("SNAPSHOT-ITEM", line.ItemCode);
         Assert.Equal("Producto fiscal original", line.ItemName);
+        Assert.Equal("UNIT", line.UnitOfMeasure);
         Assert.Equal(1m, line.Quantity);
         Assert.Equal(100m, line.UnitPrice);
         Assert.Equal(100m, line.Fiscal.ItemAmount);

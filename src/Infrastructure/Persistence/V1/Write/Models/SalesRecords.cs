@@ -43,5 +43,6 @@ public sealed class V1SaleLineRecord
     public int ForeignEconomicRelation { get; set; }
     public int RecipientInstalledInFreeZone { get; set; }
     public int ProviderFromNonFreeNationalTerritory { get; set; }
+    public string? UnitOfMeasure { get; set; }
     public V1SaleRecord Sale { get; set; } = null!;
 }
