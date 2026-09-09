@@ -19,6 +19,94 @@ public enum FiscalReceiverAddressKind
     Other = 3
 }
 
+public enum FiscalSettlementKind
+{
+    NoCharge = 0,
+    ImmediatePayment = 1,
+    CreditReceivable = 2,
+    Mixed = 3
+}
+
+/// <summary>
+/// DGI CFE payment-form code. Only mappings already established by authoritative settlement facts
+/// are represented here. Ambiguous settlement shapes keep PaymentForm null and later XML BUILD must
+/// fail closed instead of inventing a fiscal payment form.
+/// </summary>
+public enum FiscalPaymentForm
+{
+    Cash = 1,
+    Credit = 2
+}
+
+public sealed record FiscalSettlementEvidence(
+    FiscalSettlementKind Kind,
+    FiscalPaymentForm? PaymentForm,
+    DateOnly? DueDate)
+{
+    public void EnsureValid()
+    {
+        if (!Enum.IsDefined(Kind))
+            throw FiscalConfirmationEvidence.Rule(
+                "fiscal.snapshot.settlement_kind_invalid",
+                "Fiscal settlement evidence contains an invalid settlement kind.");
+        if (PaymentForm.HasValue && !Enum.IsDefined(PaymentForm.Value))
+            throw FiscalConfirmationEvidence.Rule(
+                "fiscal.snapshot.payment_form_invalid",
+                "Fiscal settlement evidence contains an invalid DGI payment form.");
+
+        switch (Kind)
+        {
+            case FiscalSettlementKind.ImmediatePayment:
+                if (PaymentForm != FiscalPaymentForm.Cash || DueDate.HasValue)
+                {
+                    throw FiscalConfirmationEvidence.Rule(
+                        "fiscal.snapshot.payment_form_mismatch",
+                        "Immediate-payment settlement must preserve cash payment form without a credit due date.");
+                }
+                break;
+
+            case FiscalSettlementKind.CreditReceivable:
+                if (PaymentForm != FiscalPaymentForm.Credit)
+                {
+                    throw FiscalConfirmationEvidence.Rule(
+                        "fiscal.snapshot.payment_form_mismatch",
+                        "Credit settlement must preserve the accepted credit payment-form mapping.");
+                }
+                if (!DueDate.HasValue)
+                {
+                    throw FiscalConfirmationEvidence.Rule(
+                        "fiscal.snapshot.credit_due_date_required",
+                        "Credit settlement evidence requires the authoritative receivable due date.");
+                }
+                break;
+
+            case FiscalSettlementKind.Mixed:
+                if (PaymentForm.HasValue)
+                {
+                    throw FiscalConfirmationEvidence.Rule(
+                        "fiscal.snapshot.payment_form_ambiguous",
+                        "Mixed settlement cannot invent a single DGI payment form before an explicit mapping is accepted.");
+                }
+                if (!DueDate.HasValue)
+                {
+                    throw FiscalConfirmationEvidence.Rule(
+                        "fiscal.snapshot.mixed_due_date_required",
+                        "Mixed settlement evidence requires the authoritative residual receivable due date.");
+                }
+                break;
+
+            case FiscalSettlementKind.NoCharge:
+                if (PaymentForm.HasValue || DueDate.HasValue)
+                {
+                    throw FiscalConfirmationEvidence.Rule(
+                        "fiscal.snapshot.no_charge_payment_form_forbidden",
+                        "No-charge settlement cannot invent payment-form or due-date evidence.");
+                }
+                break;
+        }
+    }
+}
+
 public sealed record FiscalRuleEvidenceSnapshot(
     string RuleId,
     string SourceName,
@@ -97,7 +185,8 @@ public sealed record FiscalConfirmationEvidence(
     FiscalCalculationTotalsEvidence Totals,
     IReadOnlyCollection<FiscalRuleEvidenceSnapshot> SelectionRuleEvidence,
     IReadOnlyCollection<FiscalRuleEvidenceSnapshot> ArithmeticRuleEvidence,
-    string EvidenceFingerprint)
+    string EvidenceFingerprint,
+    FiscalSettlementEvidence? Settlement = null)
 {
     public static FiscalConfirmationEvidence Capture(
         CfeFamily cfeFamily,
@@ -105,10 +194,12 @@ public sealed record FiscalConfirmationEvidence(
         string formatVersion,
         string confirmationFingerprint,
         CfeArithmeticResult calculation,
-        IReadOnlyCollection<RegulatoryRuleEvidence> selectionRuleEvidence)
+        IReadOnlyCollection<RegulatoryRuleEvidence> selectionRuleEvidence,
+        FiscalSettlementEvidence? settlement = null)
     {
         ArgumentNullException.ThrowIfNull(calculation);
         ArgumentNullException.ThrowIfNull(selectionRuleEvidence);
+        settlement?.EnsureValid();
 
         var lines = calculation.Lines
             .Select(line => new FiscalCalculationLineEvidence(
@@ -143,7 +234,8 @@ public sealed record FiscalConfirmationEvidence(
             totals,
             selectionEvidence,
             arithmeticEvidence,
-            new string('0', 64));
+            new string('0', 64),
+            settlement);
         var result = provisional with { EvidenceFingerprint = provisional.ComputeFingerprint() };
         result.EnsureIntegrity();
         return result;
@@ -171,6 +263,8 @@ public sealed record FiscalConfirmationEvidence(
             throw Rule("fiscal.snapshot.selection_evidence_required", "CFE selection rule evidence is required.");
         if (ArithmeticRuleEvidence is null || ArithmeticRuleEvidence.Count == 0)
             throw Rule("fiscal.snapshot.arithmetic_evidence_required", "CFE arithmetic rule evidence is required.");
+
+        Settlement?.EnsureValid();
 
         foreach (var evidence in SelectionRuleEvidence.Concat(ArithmeticRuleEvidence).Concat(Lines.SelectMany(line => line.RuleEvidence)))
             evidence.EnsureValid();
@@ -231,6 +325,14 @@ public sealed record FiscalConfirmationEvidence(
                 .Append(Decimal(line.AppliedRatePercent)).Append(':')
                 .Append(line.RateRulePackVersion);
             AppendRules(material, line.RuleEvidence, "LR");
+        }
+
+        if (Settlement is not null)
+        {
+            material.Append('|').Append("SETTLEMENT:")
+                .Append((int)Settlement.Kind).Append(':')
+                .Append((int?)Settlement.PaymentForm ?? -1).Append(':')
+                .Append(Settlement.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "-");
         }
 
         return Hash(material.ToString());

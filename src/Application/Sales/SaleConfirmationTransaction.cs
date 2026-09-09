@@ -533,7 +533,8 @@ public sealed class ConfirmSaleUseCase
                 confirmation.Selection.FormatVersion,
                 confirmation.ConfirmationFingerprint,
                 confirmation.FiscalCalculation,
-                confirmation.Selection.RuleEvidence);
+                confirmation.Selection.RuleEvidence,
+                BuildFiscalSettlementEvidence(settlement));
             var fiscalization = FiscalizationRequest.CreateFromSale(
                 Guid.NewGuid(),
                 sale.OrganizationId,
@@ -640,6 +641,40 @@ public sealed class ConfirmSaleUseCase
                 false);
         }, cancellationToken);
     }
+
+    private static FiscalSettlementEvidence BuildFiscalSettlementEvidence(SaleSettlementPlan settlement) =>
+        settlement.Kind switch
+        {
+            SaleSettlementKind.ImmediatePayment => new(
+                FiscalSettlementKind.ImmediatePayment,
+                FiscalPaymentForm.Cash,
+                null),
+            SaleSettlementKind.CreditReceivable => new(
+                FiscalSettlementKind.CreditReceivable,
+                FiscalPaymentForm.Credit,
+                RequireReceivableDueDate(settlement)),
+            SaleSettlementKind.Mixed => new(
+                FiscalSettlementKind.Mixed,
+                null,
+                RequireReceivableDueDate(settlement)),
+            SaleSettlementKind.NoCharge => new(
+                FiscalSettlementKind.NoCharge,
+                null,
+                null),
+            _ => throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "sales.settlement.plan_inconsistent",
+                "The authoritative settlement plan contains an unsupported settlement kind.",
+                conflictType: "inconsistent_state")
+        };
+
+    private static DateOnly RequireReceivableDueDate(SaleSettlementPlan settlement) =>
+        settlement.Receivable?.DueDate
+        ?? throw new ApplicationProblemException(
+            ApplicationProblemKind.Conflict,
+            "sales.settlement.plan_inconsistent",
+            "The authoritative settlement plan requires receivable evidence but no due date is available.",
+            conflictType: "inconsistent_state");
 
     private async Task<IReadOnlyCollection<SalePaymentMethodEvidence>> LoadPaymentMethodEvidenceAsync(
         string organizationId,
