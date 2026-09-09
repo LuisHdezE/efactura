@@ -93,5 +93,8 @@ public sealed class V1FiscalSignedArtifactRecord
     public string SignatureProfileId { get; set; } = string.Empty;
     public string CertificateThumbprint { get; set; } = string.Empty;
     public string CertificateSerialNumber { get; set; } = string.Empty;
+    public string? SchemaSetId { get; set; }
+    public string? SchemaVersion { get; set; }
+    public string? SchemaSetFingerprint { get; set; }
     public string SignedXml { get; set; } = string.Empty;
 }
