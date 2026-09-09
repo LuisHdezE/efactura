@@ -30,12 +30,31 @@ public sealed class FiscalSigningArchitectureTests
         Assert.Contains("interface IFiscalSigningTimeSource", workflow, StringComparison.Ordinal);
         Assert.Contains("interface IFiscalSignatureProvider", workflow, StringComparison.Ordinal);
         Assert.Contains("_signingTime.GetSigningTimestamp()", workflow, StringComparison.Ordinal);
+        Assert.Contains("SigningPayloadXml", workflow, StringComparison.Ordinal);
+        Assert.Contains("SigningPayloadHash", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("DateTimeOffset.UtcNow", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("DateTime.Now", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("X509Certificate", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("PrivateKey", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("HttpClient", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("_signatureProvider.SignAsync", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Signing_payload_builder_inserts_durable_TmstFirma_without_secret_or_transport_dependencies()
+    {
+        var builder = Read("src/Application/Fiscal/FiscalSigningPayloadBuilder.cs");
+
+        Assert.Contains("TmstFirma", builder, StringComparison.Ordinal);
+        Assert.Contains("yyyy-MM-dd'T'HH:mm:sszzz", builder, StringComparison.Ordinal);
+        Assert.Contains("family.AddFirst", builder, StringComparison.Ordinal);
+        Assert.Contains("UnsignedContentHash", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTimeOffset.UtcNow", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTime.Now", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("X509Certificate", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("PrivateKey", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("KeyVault", builder, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("HttpClient", builder, StringComparison.Ordinal);
     }
 
     [Fact]
