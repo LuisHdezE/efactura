@@ -13,9 +13,12 @@ public sealed class FiscalSigningArchitectureTests
 
         Assert.DoesNotContain("Microsoft.EntityFrameworkCore", domain, StringComparison.Ordinal);
         Assert.DoesNotContain("Infrastructure.", domain, StringComparison.Ordinal);
-        Assert.DoesNotContain("X509", domain, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Certificate", domain, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("System.Security.Cryptography", domain, StringComparison.Ordinal);
+        Assert.DoesNotContain("X509Certificate", domain, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("CertificateThumbprint", domain, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("CertificatePath", domain, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("PrivateKey", domain, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("KeyVault", domain, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("HttpClient", domain, StringComparison.Ordinal);
     }
 
