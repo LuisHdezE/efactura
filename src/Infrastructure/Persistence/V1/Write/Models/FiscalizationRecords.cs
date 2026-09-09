@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Infrastructure.Persistence.V1.Write.Models;
 
 public sealed class V1FiscalizationRequestRecord
@@ -93,5 +95,11 @@ public sealed class V1FiscalSignedArtifactRecord
     public string SignatureProfileId { get; set; } = string.Empty;
     public string CertificateThumbprint { get; set; } = string.Empty;
     public string CertificateSerialNumber { get; set; } = string.Empty;
+    [MaxLength(120)]
+    public string? SchemaSetId { get; set; }
+    [MaxLength(40)]
+    public string? SchemaVersion { get; set; }
+    [MaxLength(64)]
+    public string? SchemaSetFingerprint { get; set; }
     public string SignedXml { get; set; } = string.Empty;
 }

@@ -13,6 +13,7 @@ using EFactura.Application.Sales;
 using EFactura.Application.Taxation;
 using EFactura.Domain.Fiscal;
 using EFactura.Domain.Taxation;
+using Infrastructure.Fiscal;
 using Infrastructure.Persistence.V1.Transactions;
 using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Repositories;
@@ -93,6 +94,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalContentSnapshotFactory, FiscalContentSnapshotFactory>();
         services.AddSingleton<IFiscalXmlBuilder, DeterministicUnsignedCfeBuilder>();
         services.AddSingleton<IFiscalSigningPayloadBuilder, DeterministicFiscalSigningPayloadBuilder>();
+        services.AddSingleton<IFiscalSignedCfeSchemaValidator, DgiFeV1_44_2SignedCfeSchemaValidator>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
