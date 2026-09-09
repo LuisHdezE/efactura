@@ -436,7 +436,8 @@ public sealed record FiscalContentLineSnapshot(
     decimal UnitPrice,
     decimal DiscountAmount,
     decimal SurchargeAmount,
-    FiscalCalculationLineEvidence Fiscal);
+    FiscalCalculationLineEvidence Fiscal,
+    string? UnitOfMeasure = null);
 
 /// <summary>
 /// Immutable CFE content source associated with a FiscalDocument identity. Later XML construction
@@ -551,6 +552,8 @@ public sealed record FiscalContentSnapshot(
                 throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.line_invalid", "Fiscal content snapshot contains invalid sale-line values.");
             FiscalConfirmationEvidence.Required(line.ItemCode, 80, "fiscal.snapshot.item_code_required");
             FiscalConfirmationEvidence.Required(line.ItemName, 250, "fiscal.snapshot.item_name_required");
+            if (line.UnitOfMeasure is not null)
+                FiscalConfirmationEvidence.Required(line.UnitOfMeasure, 4, "fiscal.snapshot.item_unit_invalid");
             if (!Enum.IsDefined(line.Kind))
                 throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.line_kind_invalid", "Fiscal content snapshot line kind is invalid.");
         }
@@ -633,6 +636,8 @@ public sealed record FiscalContentSnapshot(
                 .Append((int)line.Fiscal.VatRateKind).Append(':')
                 .Append(FiscalConfirmationEvidence.Decimal(line.Fiscal.AppliedRatePercent)).Append(':')
                 .Append(line.Fiscal.RateRulePackVersion);
+            if (line.UnitOfMeasure is not null)
+                material.Append(":UOM:").Append(line.UnitOfMeasure);
             FiscalConfirmationEvidence.AppendRules(material, line.Fiscal.RuleEvidence, "LINE-RULE");
         }
 
