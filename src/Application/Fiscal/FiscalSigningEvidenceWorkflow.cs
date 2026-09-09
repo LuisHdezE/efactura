@@ -20,7 +20,9 @@ public interface IFiscalSigningTimeSource
 }
 
 /// <summary>
-/// Future XMLDSig boundary. Infrastructure implementations will own certificate/private-key access.
+/// Future XMLDSig boundary. Infrastructure implementations own certificate/private-key access.
+/// The request contains the deterministic signing payload with durable TmstFirma already inserted;
+/// implementations may add ds:Signature but must not replace the payload or signing timestamp.
 /// This slice defines the contract only and does not invoke it yet.
 /// </summary>
 public interface IFiscalSignatureProvider
@@ -34,8 +36,10 @@ public sealed record FiscalSignatureRequest(
     Guid FiscalDocumentId,
     CfeFamily CfeFamily,
     string FormatVersion,
-    string UnsignedXml,
+    string FiscalContentFingerprint,
     string UnsignedContentHash,
+    string SigningPayloadXml,
+    string SigningPayloadHash,
     DateTimeOffset SigningTimestamp);
 
 public sealed record FiscalSignatureResult(string SignedXml);
