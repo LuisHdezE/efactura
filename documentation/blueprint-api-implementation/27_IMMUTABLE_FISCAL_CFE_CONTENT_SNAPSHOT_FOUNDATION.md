@@ -28,9 +28,9 @@ Party contract. Post-merge `Clean Architecture Guard` run #181 (`34287373497`) v
 
 - .NET SDK `10.0.400`;
 - ArchitectureTests 79/79 PASS;
-- CrossCuttingTests 79/79 PASS;
+- CrossCuttingTests 77/77 PASS;
 - legacy UnitTest 21/21 PASS;
-- PersistenceIntegrationTests 133/133 PASS on PostgreSQL 16.15 and MySQL 8.4.11;
+- PersistenceIntegrationTests 135/135 PASS on PostgreSQL 16.15 and MySQL 8.4.11;
 - 312/312 represented automated tests PASS;
 - known-vulnerability gate PASS with 0 known vulnerable packages;
 - Release build PASS with 0 errors.
