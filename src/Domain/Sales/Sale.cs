@@ -63,7 +63,8 @@ public sealed class SaleLine
         SaleRegulatoryFactStatus exclusiveUseAbroad,
         SaleRegulatoryFactStatus foreignEconomicRelation,
         SaleRegulatoryFactStatus recipientInstalledInFreeZone,
-        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory)
+        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory,
+        string? unitOfMeasure)
     {
         Id = id;
         ItemId = itemId;
@@ -81,6 +82,7 @@ public sealed class SaleLine
         ForeignEconomicRelation = foreignEconomicRelation;
         RecipientInstalledInFreeZone = recipientInstalledInFreeZone;
         ProviderFromNonFreeNationalTerritory = providerFromNonFreeNationalTerritory;
+        UnitOfMeasure = Optional(unitOfMeasure, 40);
         Validate();
     }
 
@@ -100,6 +102,7 @@ public sealed class SaleLine
     public SaleRegulatoryFactStatus ForeignEconomicRelation { get; }
     public SaleRegulatoryFactStatus RecipientInstalledInFreeZone { get; }
     public SaleRegulatoryFactStatus ProviderFromNonFreeNationalTerritory { get; }
+    public string? UnitOfMeasure { get; }
     public decimal NetAmount => Quantity * UnitPrice;
 
     public static SaleLine Create(
@@ -118,11 +121,12 @@ public sealed class SaleLine
         SaleRegulatoryFactStatus exclusiveUseAbroad = SaleRegulatoryFactStatus.Unknown,
         SaleRegulatoryFactStatus foreignEconomicRelation = SaleRegulatoryFactStatus.Unknown,
         SaleRegulatoryFactStatus recipientInstalledInFreeZone = SaleRegulatoryFactStatus.Unknown,
-        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory = SaleRegulatoryFactStatus.Unknown) =>
+        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory = SaleRegulatoryFactStatus.Unknown,
+        string? unitOfMeasure = null) =>
         new(id, itemId, itemCode, itemName, kind, quantity, unitPrice, taxProfileId,
             servicePerformanceScope, serviceUseCountry, exportServiceKind, recipientIsPersonAbroad,
             exclusiveUseAbroad, foreignEconomicRelation, recipientInstalledInFreeZone,
-            providerFromNonFreeNationalTerritory);
+            providerFromNonFreeNationalTerritory, unitOfMeasure);
 
     public static SaleLine Rehydrate(
         Guid id,
@@ -140,11 +144,12 @@ public sealed class SaleLine
         SaleRegulatoryFactStatus exclusiveUseAbroad,
         SaleRegulatoryFactStatus foreignEconomicRelation,
         SaleRegulatoryFactStatus recipientInstalledInFreeZone,
-        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory) =>
+        SaleRegulatoryFactStatus providerFromNonFreeNationalTerritory,
+        string? unitOfMeasure = null) =>
         new(id, itemId, itemCode, itemName, kind, quantity, unitPrice, taxProfileId,
             servicePerformanceScope, serviceUseCountry, exportServiceKind, recipientIsPersonAbroad,
             exclusiveUseAbroad, foreignEconomicRelation, recipientInstalledInFreeZone,
-            providerFromNonFreeNationalTerritory);
+            providerFromNonFreeNationalTerritory, unitOfMeasure);
 
     private void Validate()
     {
@@ -182,6 +187,22 @@ public sealed class SaleLine
         if (normalized.Length > max)
         {
             throw new DomainRuleException(code, $"Sale-line value cannot exceed {max} characters.");
+        }
+
+        return normalized;
+    }
+
+    private static string? Optional(string? value, int max)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var normalized = value.Trim().ToUpperInvariant();
+        if (normalized.Length > max)
+        {
+            throw new DomainRuleException(
+                "sales.line.unit_of_measure_too_long",
+                $"Sale-line unit of measure cannot exceed {max} characters.");
         }
 
         return normalized;
