@@ -20,6 +20,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         ConfigureSaleConfirmation(modelBuilder);
         ConfigureFiscalDocumentIdentity(modelBuilder);
         ConfigureFiscalContentSnapshot(modelBuilder);
+        ConfigureFiscalSigningEvidence(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -291,6 +292,30 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
                 .HasDatabaseName("UX_v1_fcs_document");
             entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
                 .HasDatabaseName("IX_v1_fcs_org_sale");
+        });
+    }
+
+    private static void ConfigureFiscalSigningEvidence(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1FiscalSigningEvidenceRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_signing_evidence");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.FiscalContentFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.UnsignedContentHash).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SigningTimestamp).HasPrecision(0);
+
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fse_document");
+
+            entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fse_org_document");
         });
     }
 }
