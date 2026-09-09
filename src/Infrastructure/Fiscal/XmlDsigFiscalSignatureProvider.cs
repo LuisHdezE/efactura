@@ -69,7 +69,8 @@ public sealed class FiscalSignatureProviderException : CryptographicException
 /// Creates an enveloped XML Digital Signature over the deterministic CFE signing payload. The
 /// payload must already contain durable TmstFirma and must not contain Adenda or a prior Signature.
 /// The adapter validates payload integrity, certificate suitability and its own produced signature
-/// before returning signed XML. It does not persist artifacts or contact DGI.
+/// before returning signed XML plus non-secret signature/certificate evidence. It does not persist
+/// artifacts or contact DGI.
 /// </summary>
 public sealed class XmlDsigFiscalSignatureProvider : IFiscalSignatureProvider
 {
@@ -78,12 +79,12 @@ public sealed class XmlDsigFiscalSignatureProvider : IFiscalSignatureProvider
 
     private static readonly HashSet<string> Sha2CertificateSignatureOids = new(StringComparer.Ordinal)
     {
-        "1.2.840.113549.1.1.11", // sha256WithRSAEncryption
-        "1.2.840.113549.1.1.12", // sha384WithRSAEncryption
-        "1.2.840.113549.1.1.13", // sha512WithRSAEncryption
-        "1.2.840.10045.4.3.2",   // ecdsa-with-SHA256
-        "1.2.840.10045.4.3.3",   // ecdsa-with-SHA384
-        "1.2.840.10045.4.3.4"    // ecdsa-with-SHA512
+        "1.2.840.113549.1.1.11",
+        "1.2.840.113549.1.1.12",
+        "1.2.840.113549.1.1.13",
+        "1.2.840.10045.4.3.2",
+        "1.2.840.10045.4.3.3",
+        "1.2.840.10045.4.3.4"
     };
 
     private readonly IFiscalSigningCertificateSource _certificateSource;
@@ -171,7 +172,13 @@ public sealed class XmlDsigFiscalSignatureProvider : IFiscalSignatureProvider
             root.AppendChild(document.ImportNode(signedXml.GetXml(), deep: true));
 
             VerifyProducedSignature(document, certificate);
-            return new FiscalSignatureResult(document.OuterXml);
+            var signedContent = document.OuterXml;
+            return new FiscalSignatureResult(
+                signedContent,
+                Sha256(signedContent),
+                _profile.ProfileId,
+                NormalizeIdentifier(certificate.Thumbprint),
+                NormalizeIdentifier(certificate.SerialNumber));
         }
         catch (FiscalSignatureProviderException)
         {
@@ -439,6 +446,11 @@ public sealed class XmlDsigFiscalSignatureProvider : IFiscalSignatureProvider
         var value = new BigInteger(serialBytes, isUnsigned: true, isBigEndian: false);
         return value.ToString(CultureInfo.InvariantCulture);
     }
+
+    private static string NormalizeIdentifier(string value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : value.Replace(" ", string.Empty, StringComparison.Ordinal).Trim().ToLowerInvariant();
 
     private static string Sha256(string value) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
