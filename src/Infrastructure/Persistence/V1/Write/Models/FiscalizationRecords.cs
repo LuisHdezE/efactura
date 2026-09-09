@@ -78,3 +78,20 @@ public sealed class V1FiscalSigningEvidenceRecord
     public string UnsignedContentHash { get; set; } = string.Empty;
     public DateTimeOffset SigningTimestamp { get; set; }
 }
+
+public sealed class V1FiscalSignedArtifactRecord
+{
+    public Guid Id { get; set; }
+    public string OrganizationId { get; set; } = string.Empty;
+    public Guid FiscalDocumentId { get; set; }
+    public Guid SigningEvidenceId { get; set; }
+    public string FiscalContentFingerprint { get; set; } = string.Empty;
+    public string UnsignedContentHash { get; set; } = string.Empty;
+    public string SigningPayloadHash { get; set; } = string.Empty;
+    public string SignedContentHash { get; set; } = string.Empty;
+    public DateTimeOffset SigningTimestamp { get; set; }
+    public string SignatureProfileId { get; set; } = string.Empty;
+    public string CertificateThumbprint { get; set; } = string.Empty;
+    public string CertificateSerialNumber { get; set; } = string.Empty;
+    public string SignedXml { get; set; } = string.Empty;
+}

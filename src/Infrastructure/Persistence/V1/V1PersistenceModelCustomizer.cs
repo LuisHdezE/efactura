@@ -21,6 +21,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         ConfigureFiscalDocumentIdentity(modelBuilder);
         ConfigureFiscalContentSnapshot(modelBuilder);
         ConfigureFiscalSigningEvidence(modelBuilder);
+        ConfigureFiscalSignedArtifact(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -316,6 +317,44 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId })
                 .IsUnique()
                 .HasDatabaseName("UX_v1_fse_org_document");
+        });
+    }
+
+    private static void ConfigureFiscalSignedArtifact(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1FiscalSignedArtifactRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_signed_artifacts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.FiscalContentFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.UnsignedContentHash).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SigningPayloadHash).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SignedContentHash).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SigningTimestamp).HasPrecision(0);
+            entity.Property(x => x.SignatureProfileId).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.CertificateThumbprint).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.CertificateSerialNumber).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.SignedXml).IsRequired();
+
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fsa_document");
+            entity.HasOne<V1FiscalSigningEvidenceRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SigningEvidenceId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fsa_evidence");
+
+            entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fsa_org_document");
+            entity.HasIndex(x => x.SigningEvidenceId)
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fsa_evidence");
         });
     }
 }
