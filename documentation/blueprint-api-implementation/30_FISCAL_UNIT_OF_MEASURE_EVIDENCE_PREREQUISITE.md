@@ -14,7 +14,7 @@ Blueprint evaluator for this consumer remains:
 
 Close one evidence gap discovered while preparing the deterministic **Unsigned CFE Builder**.
 
-The active DGI **Formato CFE v25.2** defines the detail-line unit-of-measure field as mandatory for the relevant CFE sale families and limits that field to four alphanumeric characters. The format explicitly permits `N/A` when a unit does not conceptually apply, but that value is still fiscal content and therefore must not be manufactured by the XML builder.
+The active DGI **Formato CFE v25.2** defines the detail-line unit-of-measure field as mandatory for the relevant CFE sale families and defines it as an `ALFA4` field with a maximum length of four characters. The format explicitly permits `N/A` when a unit does not conceptually apply, but that value is still fiscal content and therefore must not be manufactured by the XML builder.
 
 Before this slice:
 
@@ -96,7 +96,7 @@ The candidate proves, on the supported persistence providers, that:
 - old direct snapshot instances that do not contain the new optional field retain their legacy fingerprint semantics;
 - existing snapshot replay and rollback behavior remains unchanged.
 
-Exact-head CI evidence is to be filled after the candidate PR runs the Clean Architecture Guard.
+Exact-head CI evidence is recorded in PR #53 before review or merge approval. This implementation note intentionally does not embed a moving candidate head.
 
 ## Explicit non-scope
 
