@@ -155,7 +155,8 @@ public sealed class EfSaleRepository : ISaleRepository
         ExclusiveUseAbroad = (int)line.ExclusiveUseAbroad,
         ForeignEconomicRelation = (int)line.ForeignEconomicRelation,
         RecipientInstalledInFreeZone = (int)line.RecipientInstalledInFreeZone,
-        ProviderFromNonFreeNationalTerritory = (int)line.ProviderFromNonFreeNationalTerritory
+        ProviderFromNonFreeNationalTerritory = (int)line.ProviderFromNonFreeNationalTerritory,
+        UnitOfMeasure = line.UnitOfMeasure
     };
 
     private static Sale Map(V1SaleRecord record) => Sale.Rehydrate(
@@ -194,5 +195,6 @@ public sealed class EfSaleRepository : ISaleRepository
         (SaleRegulatoryFactStatus)line.ExclusiveUseAbroad,
         (SaleRegulatoryFactStatus)line.ForeignEconomicRelation,
         (SaleRegulatoryFactStatus)line.RecipientInstalledInFreeZone,
-        (SaleRegulatoryFactStatus)line.ProviderFromNonFreeNationalTerritory);
+        (SaleRegulatoryFactStatus)line.ProviderFromNonFreeNationalTerritory,
+        line.UnitOfMeasure);
 }
