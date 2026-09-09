@@ -284,6 +284,7 @@ public sealed class FiscalContentSnapshotFactory : IFiscalContentSnapshotFactory
                     "Frozen fiscal calculation evidence is missing a confirmed sale line.");
             }
 
+            var unitOfMeasure = DgiUnitOfMeasure(saleLine);
             result.Add(new FiscalContentLineSnapshot(
                 ++sequence,
                 saleLine.Id,
@@ -295,7 +296,8 @@ public sealed class FiscalContentSnapshotFactory : IFiscalContentSnapshotFactory
                 saleLine.UnitPrice,
                 0m,
                 0m,
-                fiscal));
+                fiscal,
+                unitOfMeasure));
         }
 
         if (fiscalByLine.Count != result.Count)
@@ -306,6 +308,26 @@ public sealed class FiscalContentSnapshotFactory : IFiscalContentSnapshotFactory
         }
 
         return result;
+    }
+
+    private static string DgiUnitOfMeasure(SaleLine saleLine)
+    {
+        if (string.IsNullOrWhiteSpace(saleLine.UnitOfMeasure))
+        {
+            throw MissingPrerequisite(
+                "fiscal.snapshot.item_unit_missing",
+                "Fiscal content snapshot requires the unit of measure frozen on every confirmed sale line.");
+        }
+
+        var normalized = saleLine.UnitOfMeasure.Trim().ToUpperInvariant();
+        if (normalized.Length > 4)
+        {
+            throw MissingPrerequisite(
+                "fiscal.snapshot.item_unit_not_dgi_compatible",
+                "The confirmed sale-line unit of measure exceeds the four-character DGI CFE field and cannot be transformed without inventing fiscal evidence.");
+        }
+
+        return normalized;
     }
 
     private static void EnsureSaleMatches(FiscalizationRequest request, Sale sale)
