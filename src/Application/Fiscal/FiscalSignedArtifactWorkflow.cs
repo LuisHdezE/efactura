@@ -25,6 +25,9 @@ public sealed record StoredFiscalSignedArtifact(
     string SignatureProfileId,
     string CertificateThumbprint,
     string CertificateSerialNumber,
+    string SchemaSetId,
+    string SchemaVersion,
+    string SchemaSetFingerprint,
     string SignedXml);
 
 public interface IFiscalSignedArtifactRepository
@@ -53,6 +56,9 @@ public sealed record FiscalSignedArtifactResult(
     string SignatureProfileId,
     string CertificateThumbprint,
     string CertificateSerialNumber,
+    string SchemaSetId,
+    string SchemaVersion,
+    string SchemaSetFingerprint,
     bool Replayed);
 
 public sealed record FiscalSignedArtifactCreatedIntegrationEvent(
@@ -69,12 +75,15 @@ public sealed record FiscalSignedArtifactCreatedIntegrationEvent(
     DateTimeOffset SigningTimestamp,
     string SignatureProfileId,
     string CertificateThumbprint,
-    string CertificateSerialNumber) : IIntegrationEvent;
+    string CertificateSerialNumber,
+    string SchemaSetId,
+    string SchemaVersion,
+    string SchemaSetFingerprint) : IIntegrationEvent;
 
 /// <summary>
 /// Produces and persists the first durable signed CFE artifact. Replays rebuild the unsigned CFE and
 /// deterministic TmstFirma payload from immutable evidence, validate the persisted signed artifact,
-/// and return it without crossing the private-key boundary again.
+/// validate it against the pinned DGI XSD set, and return it without crossing the private-key boundary again.
 /// </summary>
 public sealed class SignFiscalDocumentUseCase
 {
@@ -86,6 +95,7 @@ public sealed class SignFiscalDocumentUseCase
     private readonly IFiscalXmlBuilder _xmlBuilder;
     private readonly IFiscalSigningPayloadBuilder _payloadBuilder;
     private readonly IFiscalSignatureProvider _signatureProvider;
+    private readonly IFiscalSignedCfeSchemaValidator _schemaValidator;
     private readonly IFiscalSignedArtifactRepository _signedArtifacts;
     private readonly ITransactionManager _transactions;
     private readonly IUnitOfWork _unitOfWork;
@@ -101,6 +111,7 @@ public sealed class SignFiscalDocumentUseCase
         IFiscalXmlBuilder xmlBuilder,
         IFiscalSigningPayloadBuilder payloadBuilder,
         IFiscalSignatureProvider signatureProvider,
+        IFiscalSignedCfeSchemaValidator schemaValidator,
         IFiscalSignedArtifactRepository signedArtifacts,
         ITransactionManager transactions,
         IUnitOfWork unitOfWork,
@@ -115,6 +126,7 @@ public sealed class SignFiscalDocumentUseCase
         _xmlBuilder = xmlBuilder;
         _payloadBuilder = payloadBuilder;
         _signatureProvider = signatureProvider;
+        _schemaValidator = schemaValidator;
         _signedArtifacts = signedArtifacts;
         _transactions = transactions;
         _unitOfWork = unitOfWork;
@@ -181,6 +193,8 @@ public sealed class SignFiscalDocumentUseCase
             if (existing is not null)
             {
                 EnsureReplayMatches(existing, evidence, payload);
+                var replayValidation = EnsureSchemaValid(existing.SignedXml);
+                EnsureSchemaEvidenceMatches(existing, replayValidation);
                 return Result(existing, true);
             }
 
@@ -197,6 +211,7 @@ public sealed class SignFiscalDocumentUseCase
                 ct);
 
             ValidateSignatureResult(signature, payload);
+            var schemaValidation = EnsureSchemaValid(signature.SignedXml);
 
             var stored = new StoredFiscalSignedArtifact(
                 Guid.NewGuid(),
@@ -211,6 +226,9 @@ public sealed class SignFiscalDocumentUseCase
                 Required(signature.SignatureProfileId, 120, "fiscal.signed_artifact.profile_required"),
                 Required(signature.CertificateThumbprint, 160, "fiscal.signed_artifact.certificate_thumbprint_required"),
                 Required(signature.CertificateSerialNumber, 160, "fiscal.signed_artifact.certificate_serial_required"),
+                Required(schemaValidation.SchemaSetId, 120, "fiscal.signed_artifact.schema_set_id_required"),
+                Required(schemaValidation.SchemaVersion, 40, "fiscal.signed_artifact.schema_version_required"),
+                RequiredHash(schemaValidation.SchemaSetFingerprint, "fiscal.signed_artifact.schema_fingerprint_required"),
                 signature.SignedXml);
 
             await _signedArtifacts.AddAsync(stored, ct);
@@ -242,7 +260,10 @@ public sealed class SignFiscalDocumentUseCase
                     ["signingTimestamp"] = evidence.SigningTimestamp.ToString("O"),
                     ["signatureProfileId"] = stored.SignatureProfileId,
                     ["certificateThumbprint"] = stored.CertificateThumbprint,
-                    ["certificateSerialNumber"] = stored.CertificateSerialNumber
+                    ["certificateSerialNumber"] = stored.CertificateSerialNumber,
+                    ["schemaSetId"] = stored.SchemaSetId,
+                    ["schemaVersion"] = stored.SchemaVersion,
+                    ["schemaSetFingerprint"] = stored.SchemaSetFingerprint
                 }),
                 ct);
 
@@ -261,7 +282,10 @@ public sealed class SignFiscalDocumentUseCase
                     evidence.SigningTimestamp,
                     stored.SignatureProfileId,
                     stored.CertificateThumbprint,
-                    stored.CertificateSerialNumber),
+                    stored.CertificateSerialNumber,
+                    stored.SchemaSetId,
+                    stored.SchemaVersion,
+                    stored.SchemaSetFingerprint),
                 new OutboxContext(
                     correlation.CorrelationId,
                     null,
@@ -272,6 +296,58 @@ public sealed class SignFiscalDocumentUseCase
             await _unitOfWork.SaveChangesAsync(ct);
             return Result(stored, false);
         }, cancellationToken);
+    }
+
+    private FiscalSignedCfeSchemaValidationResult EnsureSchemaValid(string signedXml)
+    {
+        var validation = _schemaValidator.Validate(signedXml);
+        ArgumentNullException.ThrowIfNull(validation);
+
+        if (validation.Status == FiscalSignedCfeSchemaValidationStatus.SchemaSetInvalid)
+        {
+            throw Conflict(
+                "fiscal.signed_artifact.schema_set_invalid",
+                ValidationMessage("Pinned DGI schema set cannot be used safely.", validation),
+                "schema_set_invalid");
+        }
+
+        if (validation.Status != FiscalSignedCfeSchemaValidationStatus.Valid || !validation.IsValid)
+        {
+            throw Conflict(
+                "fiscal.signed_artifact.xsd_invalid",
+                ValidationMessage("Signed CFE failed DGI XSD validation.", validation),
+                "schema_validation_failed");
+        }
+
+        Required(validation.SchemaSetId, 120, "fiscal.signed_artifact.schema_set_id_required");
+        Required(validation.SchemaVersion, 40, "fiscal.signed_artifact.schema_version_required");
+        RequiredHash(validation.SchemaSetFingerprint, "fiscal.signed_artifact.schema_fingerprint_required");
+        return validation;
+    }
+
+    private static string ValidationMessage(
+        string prefix,
+        FiscalSignedCfeSchemaValidationResult validation)
+    {
+        var detail = validation.Errors.FirstOrDefault();
+        if (detail is null)
+            return $"{prefix} Schema={validation.SchemaSetId} v{validation.SchemaVersion}.";
+        return $"{prefix} Schema={validation.SchemaSetId} v{validation.SchemaVersion}; {detail.Code}: {detail.Message}";
+    }
+
+    private static void EnsureSchemaEvidenceMatches(
+        StoredFiscalSignedArtifact existing,
+        FiscalSignedCfeSchemaValidationResult validation)
+    {
+        if (!string.Equals(existing.SchemaSetId, validation.SchemaSetId, StringComparison.Ordinal)
+            || !string.Equals(existing.SchemaVersion, validation.SchemaVersion, StringComparison.Ordinal)
+            || !string.Equals(existing.SchemaSetFingerprint, validation.SchemaSetFingerprint, StringComparison.Ordinal))
+        {
+            throw Conflict(
+                "fiscal.signed_artifact.schema_validation_evidence_mismatch",
+                "Persisted signed artifact schema evidence no longer matches the pinned validator baseline.",
+                "inconsistent_replay");
+        }
     }
 
     private static void ValidateSignatureResult(
@@ -355,6 +431,9 @@ public sealed class SignFiscalDocumentUseCase
         Required(existing.SignatureProfileId, 120, "fiscal.signed_artifact.profile_required");
         Required(existing.CertificateThumbprint, 160, "fiscal.signed_artifact.certificate_thumbprint_required");
         Required(existing.CertificateSerialNumber, 160, "fiscal.signed_artifact.certificate_serial_required");
+        Required(existing.SchemaSetId, 120, "fiscal.signed_artifact.schema_set_id_required");
+        Required(existing.SchemaVersion, 40, "fiscal.signed_artifact.schema_version_required");
+        RequiredHash(existing.SchemaSetFingerprint, "fiscal.signed_artifact.schema_fingerprint_required");
     }
 
     private static void ValidateStoredStructure(string signedXml, string payloadXml)
@@ -390,6 +469,9 @@ public sealed class SignFiscalDocumentUseCase
             artifact.SignatureProfileId,
             artifact.CertificateThumbprint,
             artifact.CertificateSerialNumber,
+            artifact.SchemaSetId,
+            artifact.SchemaVersion,
+            artifact.SchemaSetFingerprint,
             replayed);
 
     private static string Required(string value, int maxLength, string code)
@@ -400,6 +482,14 @@ public sealed class SignFiscalDocumentUseCase
         if (normalized.Length > maxLength)
             throw Conflict(code, "Signed-artifact evidence exceeds its supported length.", "provider_contract_violation");
         return normalized;
+    }
+
+    private static string RequiredHash(string value, string code)
+    {
+        var normalized = Required(value, 64, code);
+        if (normalized.Length != 64 || normalized.Any(ch => !Uri.IsHexDigit(ch)))
+            throw Conflict(code, "Required signed-artifact hash evidence is not a SHA-256 hexadecimal value.", "provider_contract_violation");
+        return normalized.ToLowerInvariant();
     }
 
     private static string Sha256(string value) =>
