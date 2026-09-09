@@ -34,6 +34,9 @@ public sealed class EfFiscalSignedArtifactRepository : IFiscalSignedArtifactRepo
             record.SignatureProfileId,
             record.CertificateThumbprint,
             record.CertificateSerialNumber,
+            record.SchemaSetId,
+            record.SchemaVersion,
+            record.SchemaSetFingerprint,
             record.SignedXml);
     }
 
@@ -56,6 +59,9 @@ public sealed class EfFiscalSignedArtifactRepository : IFiscalSignedArtifactRepo
             SignatureProfileId = artifact.SignatureProfileId,
             CertificateThumbprint = artifact.CertificateThumbprint,
             CertificateSerialNumber = artifact.CertificateSerialNumber,
+            SchemaSetId = artifact.SchemaSetId,
+            SchemaVersion = artifact.SchemaVersion,
+            SchemaSetFingerprint = artifact.SchemaSetFingerprint,
             SignedXml = artifact.SignedXml
         });
         return Task.CompletedTask;
