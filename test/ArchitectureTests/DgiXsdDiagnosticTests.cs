@@ -64,6 +64,8 @@ public sealed class DgiXsdDiagnosticTests
 
         report.AppendLine($"ZIP_SHA256={Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()}");
         using var archive = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read, leaveOpen: false);
+        report.AppendLine($"ZIP_ENTRY_COUNT={archive.Entries.Count}");
+
         foreach (var entry in archive.Entries.OrderBy(e => e.FullName, StringComparer.Ordinal))
         {
             if (string.IsNullOrEmpty(entry.Name)) continue;
@@ -74,16 +76,37 @@ public sealed class DgiXsdDiagnosticTests
             report.AppendLine($"FILE={entry.FullName}|BYTES={fileBytes.Length}|SHA256={Convert.ToHexString(SHA256.HashData(fileBytes)).ToLowerInvariant()}");
 
             if (!entry.Name.EndsWith(".xsd", StringComparison.OrdinalIgnoreCase)) continue;
-            var doc = XDocument.Parse(Encoding.UTF8.GetString(fileBytes));
-            XNamespace xs = "http://www.w3.org/2001/XMLSchema";
-            var schema = doc.Root;
-            var target = schema?.Attribute("targetNamespace")?.Value ?? "<none>";
-            var roots = schema?.Elements(xs + "element")
-                .Select(x => x.Attribute("name")?.Value ?? $"ref:{x.Attribute("ref")?.Value}")
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToArray() ?? Array.Empty<string>();
-            report.AppendLine($"  TARGET_NS={target}");
-            report.AppendLine($"  TOP_ELEMENTS={string.Join(',', roots)}");
+            try
+            {
+                using var xmlStream = new MemoryStream(fileBytes, writable: false);
+                var doc = XDocument.Load(xmlStream, LoadOptions.None);
+                XNamespace xs = "http://www.w3.org/2001/XMLSchema";
+                var schema = doc.Root;
+                var target = schema?.Attribute("targetNamespace")?.Value ?? "<none>";
+                var roots = schema?.Elements(xs + "element")
+                    .Select(x => x.Attribute("name")?.Value ?? $"ref:{x.Attribute("ref")?.Value}")
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Take(40)
+                    .ToArray() ?? Array.Empty<string>();
+                var imports = schema?.Elements(xs + "import")
+                    .Select(x => $"{x.Attribute("namespace")?.Value}|{x.Attribute("schemaLocation")?.Value}")
+                    .Take(40)
+                    .ToArray() ?? Array.Empty<string>();
+                var includes = schema?.Elements(xs + "include")
+                    .Select(x => x.Attribute("schemaLocation")?.Value)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Take(40)
+                    .ToArray() ?? Array.Empty<string>();
+                report.AppendLine($"  TARGET_NS={target}");
+                report.AppendLine($"  TOP_ELEMENTS={string.Join(',', roots)}");
+                report.AppendLine($"  IMPORTS={string.Join(',', imports)}");
+                report.AppendLine($"  INCLUDES={string.Join(',', includes)}");
+            }
+            catch (Exception ex)
+            {
+                report.AppendLine($"  PARSE_ERROR={ex.GetType().Name}:{ex.Message}");
+                report.AppendLine($"  FIRST_BYTES={Convert.ToHexString(fileBytes.Take(32).ToArray())}");
+            }
         }
 
         Assert.Fail(report.ToString());
