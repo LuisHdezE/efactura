@@ -8,6 +8,7 @@ using EFactura.Application.Common.Errors;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Domain.Common;
+using EFactura.Domain.Fiscal;
 
 namespace EFactura.Application.Fiscal;
 
@@ -307,7 +308,7 @@ public sealed class SignFiscalDocumentUseCase
         }
 
         var signatures = signed.Descendants(XmlDsigNamespace + "Signature").ToArray();
-        var rootSignature = signed.Root?.Elements(XmlDsigNamespace + "Signature").SingleOrDefault();
+        var rootSignature = signed.Root?.Elements(XmlDsigNamespace + "Signature").FirstOrDefault();
         if (signatures.Length != 1
             || rootSignature is null
             || signed.Root!.Elements().LastOrDefault() != rootSignature)
@@ -331,7 +332,7 @@ public sealed class SignFiscalDocumentUseCase
 
     private static void EnsureReplayMatches(
         StoredFiscalSignedArtifact existing,
-        Domain.Fiscal.FiscalSigningEvidence evidence,
+        FiscalSigningEvidence evidence,
         FiscalSigningPayload payload)
     {
         if (existing.Id == Guid.Empty
@@ -366,7 +367,7 @@ public sealed class SignFiscalDocumentUseCase
             "replay");
         var payload = new FiscalSigningPayload(
             Guid.NewGuid(),
-            Domain.Fiscal.CfeFamily.EFactura,
+            CfeFamily.EFactura,
             "replay",
             new string('a', 64),
             new string('b', 64),
