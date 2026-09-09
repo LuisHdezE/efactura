@@ -74,6 +74,10 @@ public sealed class DeterministicFiscalSigningPayloadBuilder : IFiscalSigningPay
             ?? throw Rule("fiscal.signing_payload.root_required", "Unsigned CFE XML requires a root element.");
         if (root.Name != CfeNamespace + "CFE")
             throw Rule("fiscal.signing_payload.root_invalid", "Unsigned CFE XML must use the official DGI CFE root namespace.");
+        if (document.Descendants(XmlDsigNamespace + "Signature").Any())
+            throw Rule(
+                "fiscal.signing_payload.signature_already_present",
+                "Signing payload preparation must not accept an existing ds:Signature.");
 
         var expectedFamilyName = unsigned.Family switch
         {
@@ -100,10 +104,6 @@ public sealed class DeterministicFiscalSigningPayloadBuilder : IFiscalSigningPay
             throw Rule(
                 "fiscal.signing_payload.tmstfirma_already_present",
                 "Unsigned CFE content must not already contain TmstFirma.");
-        if (document.Descendants(XmlDsigNamespace + "Signature").Any())
-            throw Rule(
-                "fiscal.signing_payload.signature_already_present",
-                "Signing payload preparation must not accept an existing ds:Signature.");
 
         family.AddFirst(new XElement(
             CfeNamespace + "TmstFirma",
