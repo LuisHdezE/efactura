@@ -60,11 +60,11 @@ public sealed class FiscalSigningArchitectureTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "efactura.sln")))
+            if (File.Exists(Path.Combine(directory.FullName, "api-accounting.sln")))
                 return directory.FullName;
             directory = directory.Parent;
         }
 
-        throw new DirectoryNotFoundException("Repository root containing efactura.sln was not found.");
+        throw new DirectoryNotFoundException("Repository root containing api-accounting.sln was not found.");
     }
 }
