@@ -91,6 +91,8 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalDocumentRepository, EfFiscalDocumentRepository>();
         services.AddScoped<IFiscalContentSnapshotRepository, EfFiscalContentSnapshotRepository>();
         services.AddScoped<IFiscalContentSnapshotFactory, FiscalContentSnapshotFactory>();
+        services.AddSingleton<IFiscalXmlBuilder, DeterministicUnsignedCfeBuilder>();
+        services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
         services.AddScoped<CreateFiscalContentSnapshotUseCase>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
