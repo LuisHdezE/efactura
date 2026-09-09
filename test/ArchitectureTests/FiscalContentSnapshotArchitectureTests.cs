@@ -49,6 +49,26 @@ public sealed class FiscalContentSnapshotArchitectureTests
     }
 
     [Fact]
+    public void Unit_of_measure_is_frozen_before_fiscal_snapshot_and_never_reread_from_catalog()
+    {
+        var sale = Read("src/Domain/Sales/Sale.cs");
+        var draft = Read("src/Application/Sales/SaleDraftUseCases.cs");
+        var factory = Read("src/Application/Fiscal/FiscalContentSnapshotFactory.cs");
+        var repository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfSaleRepository.cs");
+        var migration = Read("src/Infrastructure/Persistence/V1/Migrations/20260909060000_V1SaleLineUnitOfMeasure.cs");
+
+        Assert.Contains("string? UnitOfMeasure", sale, StringComparison.Ordinal);
+        Assert.Contains("item.Unit", draft, StringComparison.Ordinal);
+        Assert.Contains("UnitOfMeasure = line.UnitOfMeasure", repository, StringComparison.Ordinal);
+        Assert.Contains("line.UnitOfMeasure", repository, StringComparison.Ordinal);
+        Assert.Contains("DgiUnitOfMeasure(saleLine)", factory, StringComparison.Ordinal);
+        Assert.DoesNotContain("ICommercialItemRepository", factory, StringComparison.Ordinal);
+        Assert.Contains("nullable: true", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateData", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sql(", migration, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Snapshot_persistence_is_append_only_one_per_fiscal_document_and_provider_neutral()
     {
         var model = Read("src/Infrastructure/Persistence/V1/V1PersistenceModelCustomizer.cs");
