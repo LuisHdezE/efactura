@@ -8,82 +8,147 @@ on:
       - .github/workflows/import-dgi-xsd-v1-44-2.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose-dgi-xsd:
+  import-dgi-xsd:
     runs-on: [self-hosted, linux, x64, efactura-ci]
     steps:
       - name: Checkout candidate branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Diagnose official DGI archive response
+      - name: Recover and verify DGI FE v1.44.2 schema closure
         shell: bash
         run: |
           set -euo pipefail
 
-          DGI_URL='https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es='
-          REGISTRY='https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es='
-          TMP_DIR="$(mktemp -d)"
-          trap 'rm -rf "$TMP_DIR"' EXIT
-          BODY="$TMP_DIR/body.bin"
-          HEADERS="$TMP_DIR/headers.txt"
+          DEST='src/Infrastructure/Fiscal/Schemas/DgiFeV1_44_2'
+          MIRROR_COMMIT='9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3'
+          MIRROR_BASE="https://raw.githubusercontent.com/olagopirez/factible/${MIRROR_COMMIT}/packages/cfe/spec/xsd"
+          mkdir -p "$DEST"
 
-          echo 'Requesting official DGI XSD archive with browser-compatible headers...'
-          HTTP_CODE="$(curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
-            --user-agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/152 Safari/537.36' \
-            --referer "$REGISTRY" \
-            --dump-header "$HEADERS" \
-            --output "$BODY" \
-            --write-out '%{http_code}' \
-            "$DGI_URL")"
+          declare -A EXPECTED_BLOBS=(
+            [CFEDGI.xsd]='f030a0478146849433ae55003175c567274abba9'
+            [CFEType.xsd]='f35c531b90b20c68d5f4e53bcbd0117b04686934'
+            [DGITypes.xsd]='5ee48a1a1e727d7be71c5d8d14983ba576edf67e'
+            [xmldsig-core-schema.xsd]='df126b30e684091b32a748cd2e408f5fb9d651a9'
+            [xenc-schema.xsd]='20a70209c899049ceaa6e0f39f4207cc95acc4f1'
+            [version.txt]='af042bd258b753e23bdb0dee3f4b1d35537e3d2b'
+          )
 
-          echo "HTTP status: $HTTP_CODE"
-          echo '--- final response headers (safe subset) ---'
-          tr -d '\r' < "$HEADERS" | grep -Ei '^(HTTP/|content-type:|content-length:|content-disposition:|location:|content-encoding:|server:)' | tail -20 || true
-          echo '--- payload diagnostics ---'
-          echo "bytes=$(wc -c < "$BODY" | tr -d ' ')"
-          echo "file=$(file -b "$BODY")"
-          echo -n 'first32.hex='
-          od -An -tx1 -N32 "$BODY" | tr -d ' \n'
-          echo
+          for file in CFEDGI.xsd CFEType.xsd DGITypes.xsd xmldsig-core-schema.xsd xenc-schema.xsd version.txt; do
+            echo "Recovering pinned schema byte stream: $file"
+            curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
+              "$MIRROR_BASE/$file" -o "$DEST/$file"
 
-          python3 - "$BODY" <<'PY'
-          import base64
+            actual_blob="$(git hash-object "$DEST/$file")"
+            expected_blob="${EXPECTED_BLOBS[$file]}"
+            echo "$file git-blob=$actual_blob"
+            if [[ "$actual_blob" != "$expected_blob" ]]; then
+              echo "Pinned schema identity mismatch for $file. Expected $expected_blob, got $actual_blob" >&2
+              exit 42
+            fi
+          done
+
+          if ! grep -Fxq 'version: 1.44.2' "$DEST/version.txt"; then
+            echo 'Schema version marker is not exactly version: 1.44.2' >&2
+            exit 43
+          fi
+
+          python3 - "$DEST" <<'PY'
+          import hashlib
+          import json
           import pathlib
-          import re
+          import subprocess
           import sys
 
-          path = pathlib.Path(sys.argv[1])
-          data = path.read_bytes()
-          stripped = data.lstrip(b'\xef\xbb\xbf\x00\t\r\n ')
+          dest = pathlib.Path(sys.argv[1])
+          names = [
+              'CFEDGI.xsd',
+              'CFEType.xsd',
+              'DGITypes.xsd',
+              'xmldsig-core-schema.xsd',
+              'xenc-schema.xsd',
+              'version.txt',
+          ]
+          files = []
+          for name in names:
+              path = dest / name
+              data = path.read_bytes()
+              blob = subprocess.check_output(['git', 'hash-object', str(path)], text=True).strip()
+              files.append({
+                  'name': name,
+                  'bytes': len(data),
+                  'sha256': hashlib.sha256(data).hexdigest(),
+                  'gitBlobSha1': blob,
+              })
 
-          if stripped.startswith(b'PK\x03\x04'):
-              print('representation=zip-with-leading-whitespace-or-bom' if stripped is not data else 'representation=raw-zip')
-              raise SystemExit(0)
-
-          lower = stripped[:512].lower()
-          if lower.startswith(b'<!doctype html') or lower.startswith(b'<html') or b'<html' in lower:
-              print('representation=html')
-              preview = re.sub(rb'\s+', b' ', stripped[:240])
-              print('preview=' + preview.decode('utf-8', errors='replace'))
-              raise SystemExit(0)
-
-          compact = re.sub(rb'\s+', b'', stripped)
-          if compact and len(compact) % 4 == 0 and re.fullmatch(rb'[A-Za-z0-9+/=]+', compact):
-              try:
-                  decoded = base64.b64decode(compact, validate=True)
-              except Exception:
-                  decoded = b''
-              if decoded.startswith(b'PK\x03\x04'):
-                  print('representation=base64-encoded-zip')
-                  print(f'decoded-bytes={len(decoded)}')
-                  raise SystemExit(0)
-
-          print('representation=unknown-non-zip')
-          printable = bytes(ch if 32 <= ch <= 126 else 46 for ch in stripped[:160])
-          print('ascii-preview=' + printable.decode('ascii', errors='replace'))
+          manifest = {
+              'schemaSetId': 'dgi-fe-xsd-v1.44.2',
+              'version': '1.44.2',
+              'rootSchema': 'CFEDGI.xsd',
+              'officialRegistry': 'https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es=',
+              'officialArchive': 'https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es=',
+              'officialArchiveRetrievalObservation': {
+                  'observedAt': '2026-09-09',
+                  'httpStatus': 200,
+                  'contentType': 'text/plain',
+                  'contentLength': 0,
+                  'note': 'Official registry publishes v1.44.2, but the listed archive endpoint returned an empty body to the governed CI runner.'
+              },
+              'byteRecoverySource': {
+                  'repository': 'olagopirez/factible',
+                  'commit': '9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3',
+                  'path': 'packages/cfe/spec/xsd',
+                  'role': 'immutable byte-recovery mirror only; DGI remains the regulatory authority for version and publication status'
+              },
+              'files': files,
+          }
+          (dest / 'schema-manifest.json').write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + '\n',
+              encoding='utf-8')
           PY
+
+          cat > "$DEST/PROVENANCE.md" <<'EOF'
+          # DGI FE XSD v1.44.2 provenance
+
+          This directory contains the minimal schema closure required to validate a signed `CFE` root with `CFEDGI.xsd`.
+
+          ## Regulatory authority
+
+          Dirección General Impositiva (Uruguay), e-Factura **Documentos de interés** registry, publishes `XSDs_FE_V1.44.2` for Testing and Production.
+
+          Official registry:
+          `https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es=`
+
+          Official archive link listed by DGI:
+          `https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es=`
+
+          On 2026-09-09 the governed self-hosted runner received HTTP 200, `Content-Type: text/plain`, `Content-Length: 0` from that archive URL. Therefore this repository does **not** claim that the committed bytes were downloaded from DGI in this import run.
+
+          ## Byte recovery
+
+          The schema bytes were recovered from the immutable public mirror `olagopirez/factible@9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3`, path `packages/cfe/spec/xsd`.
+
+          The mirror is **not** the regulatory authority. Every recovered file was pinned to a previously observed Git blob identity before commit, and `version.txt` was required to contain exactly `version: 1.44.2`.
+
+          Runtime code must verify the committed SHA-256 values recorded in `schema-manifest.json` before compiling the schema set.
+
+          Imported closure:
+
+          - `CFEDGI.xsd`
+          - `CFEType.xsd`
+          - `DGITypes.xsd`
+          - `xmldsig-core-schema.xsd`
+          - `xenc-schema.xsd`
+          - `version.txt`
+          EOF
+
+          git add "$DEST"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(fiscal): recover pinned DGI XSD v1.44.2 closure'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
