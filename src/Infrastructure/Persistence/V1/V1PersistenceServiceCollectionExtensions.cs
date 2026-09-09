@@ -92,9 +92,13 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalContentSnapshotRepository, EfFiscalContentSnapshotRepository>();
         services.AddScoped<IFiscalContentSnapshotFactory, FiscalContentSnapshotFactory>();
         services.AddSingleton<IFiscalXmlBuilder, DeterministicUnsignedCfeBuilder>();
+        services.AddSingleton<IFiscalSigningPayloadBuilder, DeterministicFiscalSigningPayloadBuilder>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
+        services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
         services.AddScoped<CreateFiscalContentSnapshotUseCase>();
+        services.AddScoped<PrepareFiscalSigningEvidenceUseCase>();
+        services.AddScoped<SignFiscalDocumentUseCase>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
         services.AddScoped<GetCaeAuthorizationUseCase>();
         services.AddScoped<ImportCaeAuthorizationUseCase>();
