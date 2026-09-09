@@ -68,3 +68,13 @@ public sealed class V1FiscalContentSnapshotRecord
     public string SnapshotJson { get; set; } = string.Empty;
     public DateTimeOffset CreatedAtUtc { get; set; }
 }
+
+public sealed class V1FiscalSigningEvidenceRecord
+{
+    public Guid Id { get; set; }
+    public string OrganizationId { get; set; } = string.Empty;
+    public Guid FiscalDocumentId { get; set; }
+    public string FiscalContentFingerprint { get; set; } = string.Empty;
+    public string UnsignedContentHash { get; set; } = string.Empty;
+    public DateTimeOffset SigningTimestamp { get; set; }
+}
