@@ -25,6 +25,13 @@ public sealed class DgiFeV1_44_2SignedCfeSchemaValidator : IFiscalSignedCfeSchem
         "version.txt"
     ];
 
+    private static readonly HashSet<string> LegacyW3cDoctypeSchemas =
+        new(StringComparer.Ordinal)
+        {
+            "xmldsig-core-schema.xsd",
+            "xenc-schema.xsd"
+        };
+
     private readonly SchemaState _state;
 
     public DgiFeV1_44_2SignedCfeSchemaValidator() => _state = BuildState();
@@ -203,6 +210,35 @@ public sealed class DgiFeV1_44_2SignedCfeSchemaValidator : IFiscalSignedCfeSchem
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
     }
 
+    private static byte[] PrepareSchemaForCompilation(string fileName, byte[] verifiedBytes)
+    {
+        if (!LegacyW3cDoctypeSchemas.Contains(fileName))
+            return verifiedBytes;
+
+        var text = Encoding.UTF8.GetString(verifiedBytes);
+        var start = text.IndexOf("<!DOCTYPE schema", StringComparison.Ordinal);
+        if (start < 0)
+            throw new InvalidDataException($"Expected legacy W3C schema DOCTYPE is missing from {fileName}.");
+
+        var end = text.IndexOf("]>", start, StringComparison.Ordinal);
+        if (end < 0)
+            throw new InvalidDataException($"Legacy W3C schema DOCTYPE is malformed in {fileName}.");
+
+        var doctype = text.Substring(start, end + 2 - start);
+        if (!doctype.Contains("http://www.w3.org/2001/XMLSchema.dtd", StringComparison.Ordinal))
+            throw new InvalidDataException($"Unexpected legacy schema DOCTYPE target in {fileName}.");
+
+        var normalized = text.Remove(start, end + 2 - start);
+        if (normalized.Contains("<!DOCTYPE", StringComparison.OrdinalIgnoreCase)
+            || normalized.Contains("&dsig;", StringComparison.Ordinal)
+            || normalized.Contains("&xenc;", StringComparison.Ordinal))
+        {
+            throw new InvalidDataException($"Unsafe or semantically required DTD content remains in {fileName} after local normalization.");
+        }
+
+        return Encoding.UTF8.GetBytes(normalized);
+    }
+
     private static XmlReaderSettings SecureXmlReaderSettings() => new()
     {
         DtdProcessing = DtdProcessing.Prohibit,
@@ -247,7 +283,8 @@ public sealed class DgiFeV1_44_2SignedCfeSchemaValidator : IFiscalSignedCfeSchem
             if (!resources.TryGetValue(fileName, out var data) || !fileName.EndsWith(".xsd", StringComparison.OrdinalIgnoreCase))
                 throw new XmlException($"Schema dependency is not part of the pinned DGI closure: {fileName}.");
 
-            return new MemoryStream(data, writable: false);
+            var compilationBytes = PrepareSchemaForCompilation(fileName, data);
+            return new MemoryStream(compilationBytes, writable: false);
         }
 
         public override Uri ResolveUri(Uri? baseUri, string? relativeUri)
