@@ -114,7 +114,12 @@ public sealed class DgiFeV1_44_2SignedCfeSchemaValidator : IFiscalSignedCfeSchem
 
             return new SchemaState(true, schemaSet, fingerprint, Array.Empty<FiscalSignedCfeSchemaValidationError>());
         }
-        catch (Exception ex) when (ex is InvalidDataException or JsonException or XmlException or XmlSchemaException)
+        catch (Exception ex) when (ex is InvalidDataException
+            or JsonException
+            or XmlException
+            or XmlSchemaException
+            or KeyNotFoundException
+            or InvalidOperationException)
         {
             errors.Add(new FiscalSignedCfeSchemaValidationError(
                 "fiscal.xsd.schema_set_invalid",
@@ -174,7 +179,6 @@ public sealed class DgiFeV1_44_2SignedCfeSchemaValidator : IFiscalSignedCfeSchem
 
     private static byte[] ReadResource(System.Reflection.Assembly assembly, string fileName)
     {
-        var resourceName = ResourcePrefix + fileName.Replace('-', '_');
         var exact = assembly.GetManifestResourceNames()
             .FirstOrDefault(name => string.Equals(name, ResourcePrefix + fileName, StringComparison.Ordinal))
             ?? assembly.GetManifestResourceNames()
