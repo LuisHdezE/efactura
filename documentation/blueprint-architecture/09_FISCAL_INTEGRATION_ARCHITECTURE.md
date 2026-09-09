@@ -39,7 +39,20 @@ Separate state dimensions are required.
 
 ### Document generation state
 
-`REQUESTED -> NUMBER_RESERVED -> BUILT -> VALIDATED -> SIGNED -> ARCHIVED`
+The conceptual ordering is:
+
+`REQUESTED -> NUMBER_RESERVED -> CONTENT_FROZEN -> UNSIGNED_BUILT -> SIGNED -> FULLY_VALIDATED -> ARCHIVED`
+
+Exact persisted state names remain subject to bounded implementation ADRs. The ordering is not optional:
+
+- the unsigned build boundary is deterministic and does not own the signing clock, certificate or private key;
+- `TmstFirma` belongs to the signing act and must be durable/replay-safe once established;
+- the active official CFE root schema requires `ds:Signature`, so complete official root-XSD validation occurs after signature insertion;
+- pre-sign well-formedness, business, arithmetic, CAE and other structural checks may run before signing, but they must not be represented as complete official root-XSD validation;
+- transport consumes an already signed and fully validated artifact and must not rebuild or resign opportunistically.
+
+The detailed reconciliation and retry semantics are recorded in
+`documentation/blueprint-api-implementation/29_CFE_BUILD_SIGN_VALIDATE_LIFECYCLE_RECONCILIATION.md`.
 
 ### Transport state
 
@@ -49,7 +62,7 @@ Separate state dimensions are required.
 
 `PENDING -> ACCEPTED / REJECTED / REGULARIZATION_REQUIRED`
 
-Exact names may change in implementation ADRs, but these concepts cannot be collapsed into one `estadoDgi` string.
+These concepts cannot be collapsed into one `estadoDgi` string.
 
 ## Numbering
 
@@ -65,19 +78,54 @@ Exact names may change in implementation ADRs, but these concepts cannot be coll
 
 Provider-specific sequence SQL is Infrastructure-only.
 
-## XML generation and validation
+## XML generation, signing and validation
 
-Builder uses the active fiscal specification version and immutable snapshots.
+The builder consumes accepted fiscal identity plus immutable fiscal-content evidence and the active accepted fiscal specification version.
 
-Validation layers:
+The builder must be deterministic for the same accepted inputs. It does not:
 
-1. well-formed XML;
-2. official XSD for active version;
-3. fiscal business rules;
-4. arithmetic/rounding rules;
-5. receiver/document applicability;
-6. CAE/range checks;
-7. XMLDSig/signature verification where applicable.
+- read mutable Company, Location, Party, Catalog, Sale, Payment or Receivable state;
+- call the system clock to manufacture `TmstFirma`;
+- access certificates or private keys;
+- contact DGI or an authorized provider;
+- own transport or artifact-storage implementation concerns.
+
+Validation is layered.
+
+### Pre-sign validation/checks
+
+Before signing, implementations may perform:
+
+1. XML well-formedness and serializer invariants that do not require the final signature node;
+2. fiscal business rules;
+3. arithmetic/rounding rules;
+4. receiver/document applicability;
+5. CAE/range checks;
+6. completeness checks against accepted immutable evidence.
+
+These checks fail closed but are not equivalent to complete validation of the final CFE against the official root XSD.
+
+### Signing boundary
+
+Signing is reached only after the deterministic unsigned content exists.
+
+The signing boundary:
+
+- establishes `TmstFirma` as signing evidence rather than builder input from an ambient clock;
+- persists/reuses that signing timestamp according to the accepted retry contract;
+- invokes signing through an application port;
+- keeps certificate/private-key custody and provider-specific signing mechanics in Infrastructure;
+- produces the final XML digital-signature content, including `ds:Signature`.
+
+Private keys never enter Domain or public API contracts.
+
+### Post-sign full validation
+
+The signed CFE is then validated against the complete active official DGI XSD set plus the applicable accepted fiscal invariants.
+
+A full-XSD failure blocks archival-as-valid and transport. It does not authorize CAE renumbering, mutable-master rereads or a fresh `TmstFirma` merely to produce different bytes.
+
+XMLDSig/signature verification may also be applied at this boundary according to the accepted signing implementation.
 
 Reference-demo string/tag checks are never production validation.
 
@@ -102,6 +150,8 @@ Metadata includes:
 - storage locator;
 - created/received time;
 - source/response type.
+
+Artifact storage must preserve replay identity. A transport retry consumes the accepted stored signed/validated artifact rather than rebuilding it from mutable business state.
 
 ## Provider callbacks / asynchronous results
 
