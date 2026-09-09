@@ -37,7 +37,8 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
-            entity.HasIndex(x => x.Ruc).HasDatabaseName("IX_v1_company_ruc");
+            entity.HasIndex(x => x.Ruc)
+                .HasDatabaseName("IX_v1_company_ruc");
         });
 
         modelBuilder.Entity<V1FiscalLocationRecord>(entity =>
@@ -54,8 +55,11 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
-            entity.HasIndex(x => new { x.OrganizationId, x.DgiBranchCode }).IsUnique().HasDatabaseName("UX_v1_location_org_branch");
-            entity.HasIndex(x => new { x.OrganizationId, x.Active }).HasDatabaseName("IX_v1_location_org_active");
+            entity.HasIndex(x => new { x.OrganizationId, x.DgiBranchCode })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_location_org_branch");
+            entity.HasIndex(x => new { x.OrganizationId, x.Active })
+                .HasDatabaseName("IX_v1_location_org_active");
         });
     }
 
@@ -71,7 +75,8 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
             entity.Property(x => x.UpdatedAtUtc).HasPrecision(6);
-            entity.HasIndex(x => new { x.OrganizationId, x.Enabled }).HasDatabaseName("IX_v1_pm_org_enabled");
+            entity.HasIndex(x => new { x.OrganizationId, x.Enabled })
+                .HasDatabaseName("IX_v1_pm_org_enabled");
         });
 
         modelBuilder.Entity<V1PaymentRecord>(entity =>
@@ -86,11 +91,23 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64).IsRequired();
             entity.Property(x => x.SettlementFingerprint).HasMaxLength(64).IsRequired();
             entity.Property(x => x.RecordedAtUtc).HasPrecision(6);
-            entity.HasOne<V1SaleRecord>().WithMany().HasForeignKey(x => x.SaleId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_pay_sale");
-            entity.HasOne<V1PaymentMethodRecord>().WithMany().HasForeignKey(x => x.PaymentMethodId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_pay_method");
-            entity.HasIndex(x => new { x.OrganizationId, x.SaleId }).HasDatabaseName("IX_v1_pay_org_sale");
-            entity.HasIndex(x => x.PaymentMethodId).HasDatabaseName("IX_v1_pay_method");
-            entity.HasIndex(x => new { x.OrganizationId, x.SaleId, x.SettlementFingerprint, x.Sequence }).IsUnique().HasDatabaseName("UX_v1_pay_sale_plan_seq");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_pay_sale");
+            entity.HasOne<V1PaymentMethodRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.PaymentMethodId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_pay_method");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .HasDatabaseName("IX_v1_pay_org_sale");
+            entity.HasIndex(x => x.PaymentMethodId)
+                .HasDatabaseName("IX_v1_pay_method");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId, x.SettlementFingerprint, x.Sequence })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_pay_sale_plan_seq");
         });
 
         modelBuilder.Entity<V1ReceivableRecord>(entity =>
@@ -106,10 +123,21 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.SettlementFingerprint).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
-            entity.HasOne<V1SaleRecord>().WithMany().HasForeignKey(x => x.SaleId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_ar_sale");
-            entity.HasOne<V1PartyRecord>().WithMany().HasForeignKey(x => x.CustomerPartyId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_ar_customer");
-            entity.HasIndex(x => new { x.OrganizationId, x.SaleId }).IsUnique().HasDatabaseName("UX_v1_ar_org_sale");
-            entity.HasIndex(x => new { x.OrganizationId, x.CustomerPartyId, x.DueDate }).HasDatabaseName("IX_v1_ar_org_customer_due");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_ar_sale");
+            entity.HasOne<V1PartyRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.CustomerPartyId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_ar_customer");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_ar_org_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.CustomerPartyId, x.DueDate })
+                .HasDatabaseName("IX_v1_ar_org_customer_due");
         });
     }
 
@@ -119,8 +147,14 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         {
             entity.Property(x => x.ConfirmationFingerprint).HasMaxLength(64);
             entity.Property(x => x.SettlementFingerprint).HasMaxLength(64);
-            entity.HasOne<V1SaleRecord>().WithMany().HasForeignKey(x => x.SourceSaleId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_stock_sale");
-            entity.HasIndex(x => new { x.OrganizationId, x.SourceSaleId, x.PositionId }).IsUnique().HasDatabaseName("UX_v1_stock_sale_position");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SourceSaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_stock_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.SourceSaleId, x.PositionId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_stock_sale_position");
         });
 
         modelBuilder.Entity<V1FiscalizationRequestRecord>(entity =>
@@ -142,9 +176,16 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.RequestedAtUtc).HasPrecision(6);
             entity.Property(x => x.IdentityCreatedAtUtc).HasPrecision(6);
-            entity.HasOne<V1SaleRecord>().WithMany().HasForeignKey(x => x.SaleId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fiscal_req_sale");
-            entity.HasIndex(x => new { x.OrganizationId, x.SaleId }).IsUnique().HasDatabaseName("UX_v1_fiscal_req_org_sale");
-            entity.HasIndex(x => new { x.OrganizationId, x.Status, x.RequestedAtUtc }).HasDatabaseName("IX_v1_fiscal_req_work");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fiscal_req_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fiscal_req_org_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.Status, x.RequestedAtUtc })
+                .HasDatabaseName("IX_v1_fiscal_req_work");
         });
     }
 
@@ -181,15 +222,41 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.VatAmount).HasPrecision(18, 6);
             entity.Property(x => x.TotalAmount).HasPrecision(18, 6);
             entity.Property(x => x.IdentityCreatedAtUtc).HasPrecision(6);
-            entity.HasOne<V1FiscalizationRequestRecord>().WithMany().HasForeignKey(x => x.FiscalizationRequestId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fd_req");
-            entity.HasOne<V1SaleRecord>().WithMany().HasForeignKey(x => x.SaleId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fd_sale");
-            entity.HasOne<V1FiscalNumberReservationRecord>().WithMany().HasForeignKey(x => x.FiscalNumberReservationId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fd_res");
-            entity.HasOne<V1CaeAuthorizationRecord>().WithMany().HasForeignKey(x => x.CaeAuthorizationId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fd_cae");
-            entity.HasIndex(x => new { x.OrganizationId, x.FiscalizationRequestId }).IsUnique().HasDatabaseName("UX_v1_fd_org_req");
-            entity.HasIndex(x => new { x.OrganizationId, x.CfeType, x.Series, x.Number }).IsUnique().HasDatabaseName("UX_v1_fd_identity");
-            entity.HasIndex(x => x.FiscalNumberReservationId).IsUnique().HasDatabaseName("UX_v1_fd_res");
-            entity.HasIndex(x => new { x.OrganizationId, x.SaleId }).HasDatabaseName("IX_v1_fd_org_sale");
-            entity.HasIndex(x => new { x.OrganizationId, x.Status, x.IdentityCreatedAtUtc }).HasDatabaseName("IX_v1_fd_org_status");
+
+            entity.HasOne<V1FiscalizationRequestRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalizationRequestId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_req");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_sale");
+            entity.HasOne<V1FiscalNumberReservationRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalNumberReservationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_res");
+            entity.HasOne<V1CaeAuthorizationRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.CaeAuthorizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fd_cae");
+
+            entity.HasIndex(x => new { x.OrganizationId, x.FiscalizationRequestId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fd_org_req");
+            entity.HasIndex(x => new { x.OrganizationId, x.CfeType, x.Series, x.Number })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fd_identity");
+            entity.HasIndex(x => x.FiscalNumberReservationId)
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fd_res");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .HasDatabaseName("IX_v1_fd_org_sale");
+            entity.HasIndex(x => new { x.OrganizationId, x.Status, x.IdentityCreatedAtUtc })
+                .HasDatabaseName("IX_v1_fd_org_status");
         });
     }
 
@@ -204,11 +271,28 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.ContentFingerprint).HasMaxLength(64).IsRequired();
             entity.Property(x => x.SnapshotJson).IsRequired();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
-            entity.HasOne<V1FiscalDocumentRecord>().WithMany().HasForeignKey(x => x.FiscalDocumentId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fcs_document");
-            entity.HasOne<V1FiscalizationRequestRecord>().WithMany().HasForeignKey(x => x.FiscalizationRequestId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fcs_request");
-            entity.HasOne<V1SaleRecord>().WithMany().HasForeignKey(x => x.SaleId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fcs_sale");
-            entity.HasIndex(x => x.FiscalDocumentId).IsUnique().HasDatabaseName("UX_v1_fcs_document");
-            entity.HasIndex(x => new { x.OrganizationId, x.SaleId }).HasDatabaseName("IX_v1_fcs_org_sale");
+
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcs_document");
+            entity.HasOne<V1FiscalizationRequestRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalizationRequestId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcs_request");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcs_sale");
+
+            entity.HasIndex(x => x.FiscalDocumentId)
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fcs_document");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .HasDatabaseName("IX_v1_fcs_org_sale");
         });
     }
 
@@ -223,8 +307,16 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.FiscalContentFingerprint).HasMaxLength(64).IsRequired();
             entity.Property(x => x.UnsignedContentHash).HasMaxLength(64).IsRequired();
             entity.Property(x => x.SigningTimestamp).HasPrecision(0);
-            entity.HasOne<V1FiscalDocumentRecord>().WithMany().HasForeignKey(x => x.FiscalDocumentId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fse_document");
-            entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId }).IsUnique().HasDatabaseName("UX_v1_fse_org_document");
+
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fse_document");
+
+            entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fse_org_document");
         });
     }
 
@@ -245,10 +337,24 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.CertificateThumbprint).HasMaxLength(160).IsRequired();
             entity.Property(x => x.CertificateSerialNumber).HasMaxLength(160).IsRequired();
             entity.Property(x => x.SignedXml).IsRequired();
-            entity.HasOne<V1FiscalDocumentRecord>().WithMany().HasForeignKey(x => x.FiscalDocumentId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fsa_document");
-            entity.HasOne<V1FiscalSigningEvidenceRecord>().WithMany().HasForeignKey(x => x.SigningEvidenceId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_v1_fsa_evidence");
-            entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId }).IsUnique().HasDatabaseName("UX_v1_fsa_org_document");
-            entity.HasIndex(x => x.SigningEvidenceId).IsUnique().HasDatabaseName("UX_v1_fsa_evidence");
+
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fsa_document");
+            entity.HasOne<V1FiscalSigningEvidenceRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SigningEvidenceId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fsa_evidence");
+
+            entity.HasIndex(x => new { x.OrganizationId, x.FiscalDocumentId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fsa_org_document");
+            entity.HasIndex(x => x.SigningEvidenceId)
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fsa_evidence");
         });
     }
 }
