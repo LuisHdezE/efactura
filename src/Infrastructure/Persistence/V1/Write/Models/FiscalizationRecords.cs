@@ -16,6 +16,8 @@ public sealed class V1FiscalizationRequestRecord
     public decimal NetAmount { get; set; }
     public decimal VatAmount { get; set; }
     public decimal TotalAmount { get; set; }
+    public string? ConfirmationEvidenceFingerprint { get; set; }
+    public string? ConfirmationEvidenceJson { get; set; }
     public int Status { get; set; }
     public long Version { get; set; }
     public DateTimeOffset RequestedAtUtc { get; set; }
@@ -53,4 +55,16 @@ public sealed class V1FiscalDocumentRecord
     public decimal TotalAmount { get; set; }
     public int Status { get; set; }
     public DateTimeOffset IdentityCreatedAtUtc { get; set; }
+}
+
+public sealed class V1FiscalContentSnapshotRecord
+{
+    public Guid Id { get; set; }
+    public string OrganizationId { get; set; } = string.Empty;
+    public Guid FiscalDocumentId { get; set; }
+    public Guid FiscalizationRequestId { get; set; }
+    public Guid SaleId { get; set; }
+    public string ContentFingerprint { get; set; } = string.Empty;
+    public string SnapshotJson { get; set; } = string.Empty;
+    public DateTimeOffset CreatedAtUtc { get; set; }
 }

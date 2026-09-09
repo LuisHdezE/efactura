@@ -19,6 +19,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         ConfigureSaleLocalEffects(modelBuilder);
         ConfigureSaleConfirmation(modelBuilder);
         ConfigureFiscalDocumentIdentity(modelBuilder);
+        ConfigureFiscalContentSnapshot(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -169,6 +170,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
             entity.Property(x => x.NetAmount).HasPrecision(18, 6);
             entity.Property(x => x.VatAmount).HasPrecision(18, 6);
             entity.Property(x => x.TotalAmount).HasPrecision(18, 6);
+            entity.Property(x => x.ConfirmationEvidenceFingerprint).HasMaxLength(64);
             entity.Property(x => x.Version).IsConcurrencyToken();
             entity.Property(x => x.RequestedAtUtc).HasPrecision(6);
             entity.Property(x => x.IdentityCreatedAtUtc).HasPrecision(6);
@@ -253,6 +255,42 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
                 .HasDatabaseName("IX_v1_fd_org_sale");
             entity.HasIndex(x => new { x.OrganizationId, x.Status, x.IdentityCreatedAtUtc })
                 .HasDatabaseName("IX_v1_fd_org_status");
+        });
+    }
+
+    private static void ConfigureFiscalContentSnapshot(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<V1FiscalContentSnapshotRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_content_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.ContentFingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SnapshotJson).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcs_document");
+            entity.HasOne<V1FiscalizationRequestRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalizationRequestId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcs_request");
+            entity.HasOne<V1SaleRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcs_sale");
+
+            entity.HasIndex(x => x.FiscalDocumentId)
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fcs_document");
+            entity.HasIndex(x => new { x.OrganizationId, x.SaleId })
+                .HasDatabaseName("IX_v1_fcs_org_sale");
         });
     }
 }

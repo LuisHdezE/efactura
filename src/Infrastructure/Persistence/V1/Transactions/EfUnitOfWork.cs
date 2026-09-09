@@ -25,6 +25,8 @@ public sealed class EfUnitOfWork : IUnitOfWork
         "UX_v1_fd_res";
     private const string FiscalLocationBranchUniqueIndex =
         "UX_v1_location_org_branch";
+    private const string FiscalContentSnapshotDocumentUniqueIndex =
+        "UX_v1_fcs_document";
 
     private readonly Write.V1PersistenceDbContext _dbContext;
 
@@ -109,6 +111,14 @@ public sealed class EfUnitOfWork : IUnitOfWork
                 ApplicationProblemKind.Conflict,
                 "fiscal.number_already_consumed",
                 "The fiscal number reservation is already linked to a fiscal document.",
+                conflictType: "duplicate_resource");
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex, FiscalContentSnapshotDocumentUniqueIndex, typeof(V1FiscalContentSnapshotRecord)))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "fiscal.snapshot.already_created",
+                "The fiscal document already owns an immutable content snapshot.",
                 conflictType: "duplicate_resource");
         }
     }

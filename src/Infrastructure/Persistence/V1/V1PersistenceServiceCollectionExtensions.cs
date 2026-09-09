@@ -89,7 +89,10 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalNumberAllocator, FiscalNumberAllocator>();
         services.AddScoped<IFiscalizationRequestRepository, EfFiscalizationRequestRepository>();
         services.AddScoped<IFiscalDocumentRepository, EfFiscalDocumentRepository>();
+        services.AddScoped<IFiscalContentSnapshotRepository, EfFiscalContentSnapshotRepository>();
+        services.AddScoped<IFiscalContentSnapshotFactory, FiscalContentSnapshotFactory>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
+        services.AddScoped<CreateFiscalContentSnapshotUseCase>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
         services.AddScoped<GetCaeAuthorizationUseCase>();
         services.AddScoped<ImportCaeAuthorizationUseCase>();

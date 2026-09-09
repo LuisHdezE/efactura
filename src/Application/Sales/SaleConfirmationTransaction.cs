@@ -527,6 +527,13 @@ public sealed class ConfirmSaleUseCase
                     confirmation.Inventory.Lines), ct);
             }
 
+            var fiscalEvidence = FiscalConfirmationEvidence.Capture(
+                confirmation.Selection.SelectedFamily!.Value,
+                confirmation.Selection.ReceiverIdentification,
+                confirmation.Selection.FormatVersion,
+                confirmation.ConfirmationFingerprint,
+                confirmation.FiscalCalculation,
+                confirmation.Selection.RuleEvidence);
             var fiscalization = FiscalizationRequest.CreateFromSale(
                 Guid.NewGuid(),
                 sale.OrganizationId,
@@ -542,7 +549,8 @@ public sealed class ConfirmSaleUseCase
                 confirmation.FiscalCalculation.Totals.NetAmount,
                 confirmation.FiscalCalculation.Totals.VatAmount,
                 confirmation.FiscalCalculation.Totals.TotalAmount,
-                now);
+                now,
+                fiscalEvidence);
             await _fiscalization.AddAsync(fiscalization, ct);
 
             try
