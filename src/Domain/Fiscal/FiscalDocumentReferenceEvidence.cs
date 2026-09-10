@@ -72,12 +72,19 @@ public sealed record FiscalDocumentReferenceEvidence(
             Series,
             2,
             "fiscal.snapshot.reference_series_required");
+        var xsdCompatibleSeries = series.Length switch
+        {
+            1 => series[0] is >= 'A' and <= 'Z',
+            2 => (series[0] is >= 'A' and <= 'Z' && series[1] is >= 'A' and <= 'Z')
+                || (series[0] is >= '1' and <= '9' && series[1] is >= 'A' and <= 'Z'),
+            _ => false
+        };
         if (!string.Equals(series, series.ToUpperInvariant(), StringComparison.Ordinal)
-            || series.Any(ch => ch is < 'A' or > 'Z'))
+            || !xsdCompatibleSeries)
         {
             throw FiscalConfirmationEvidence.Rule(
                 "fiscal.snapshot.reference_series_invalid",
-                "Referenced CFE series must contain one or two uppercase letters.");
+                "Referenced CFE series must match the pinned DGI SerieType form: A, AB or 1A-9Z.");
         }
 
         if (Number is < 1 or > 9_999_999)
