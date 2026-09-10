@@ -81,8 +81,12 @@ public sealed class DeterministicFiscalSigningPayloadBuilder : IFiscalSigningPay
 
         var expectedFamilyName = unsigned.Family switch
         {
-            CfeFamily.ETicket => "eTck",
-            CfeFamily.EFactura => "eFact",
+            CfeFamily.ETicket or
+            CfeFamily.ETicketCreditNote or
+            CfeFamily.ETicketDebitNote => "eTck",
+            CfeFamily.EFactura or
+            CfeFamily.EFacturaCreditNote or
+            CfeFamily.EFacturaDebitNote => "eFact",
             CfeFamily.EFacturaExportacion => throw Rule(
                 "fiscal.signing_payload.export_not_supported",
                 "Release-1 signing payload does not enable export CFE signing."),
