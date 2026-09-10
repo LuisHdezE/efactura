@@ -49,8 +49,10 @@ The current DGI reference zone is represented by `Referencia`, with up to 40 ref
 - optional `RazonRef`
 - optional `FechaCFEref`
 - optional `MntCFEref`
-- optional `Moneda`
+- optional `TpoMonedaRef`
 - `TpoCambioRef` when a preserved referenced currency is not UYU
+
+The pinned `SerieType` accepts the DGI structural forms `A`, `AB` and `1A` through `9Z`; the domain evidence validates those forms without widening them.
 
 The v25/v25.2 evidence was explicitly rechecked because amount, currency and exchange-rate reference fields were added to the current format line.
 
