@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using System.Xml.Linq;
 using EFactura.Application.Fiscal;
 using EFactura.Domain.Common;
 using EFactura.Domain.Fiscal;
@@ -60,7 +59,25 @@ public sealed class DomesticCorrectionNoteFoundationTests
         Assert.NotNull(roundTrip);
         roundTrip!.EnsureIntegrity();
         Assert.Equal(first.ContentFingerprint, roundTrip.ContentFingerprint);
-        Assert.Equal(first.References.Single(), roundTrip.References!.Single());
+        Assert.Equal(first.References!.Single(), roundTrip.References!.Single());
+    }
+
+    [Fact]
+    public void Pinned_DGI_numeric_prefix_series_form_is_accepted()
+    {
+        var reference = FiscalDocumentReferenceEvidence.Capture(
+            1,
+            "company-1",
+            CfeFamily.EFactura,
+            "1A",
+            77,
+            new DateOnly(2026, 9, 9),
+            122m,
+            "UYU",
+            reason: "Corrección");
+
+        Assert.Equal("1A", reference.Series);
+        reference.EnsureIntegrity();
     }
 
     [Fact]
@@ -145,7 +162,7 @@ public sealed class DomesticCorrectionNoteFoundationTests
         Assert.Contains("<Serie>B</Serie><NroCFERef>77</NroCFERef>", first.Xml);
         Assert.Contains("<RazonRef>Corrección de comprobante original</RazonRef>", first.Xml);
         Assert.Contains("<FechaCFEref>2026-09-09</FechaCFEref>", first.Xml);
-        Assert.Contains("<MntCFEref>122</MntCFEref><Moneda>UYU</Moneda>", first.Xml);
+        Assert.Contains("<MntCFEref>122</MntCFEref><TpoMonedaRef>UYU</TpoMonedaRef>", first.Xml);
         Assert.True(first.Xml.IndexOf("<Referencia>", StringComparison.Ordinal)
             < first.Xml.IndexOf("<CAEData>", StringComparison.Ordinal));
         Assert.DoesNotContain("IndGlobal", first.Xml);
@@ -173,7 +190,7 @@ public sealed class DomesticCorrectionNoteFoundationTests
 
         var artifact = new DeterministicUnsignedCfeBuilder().Build(document, snapshot);
 
-        Assert.Contains("<Moneda>USD</Moneda><TpoCambioRef>39.5</TpoCambioRef>", artifact.Xml);
+        Assert.Contains("<TpoMonedaRef>USD</TpoMonedaRef><TpoCambioRef>39.5</TpoCambioRef>", artifact.Xml);
     }
 
     [Fact]
@@ -231,7 +248,9 @@ public sealed class DomesticCorrectionNoteFoundationTests
 
         var validation = new DgiFeV1_44_2SignedCfeSchemaValidator().Validate(signed.SignedXml);
 
-        Assert.True(validation.IsValid);
+        Assert.True(
+            validation.IsValid,
+            string.Join(Environment.NewLine, validation.Errors.Select(error => $"{error.Code}: {error.Message}")));
         Assert.Equal(FiscalSignedCfeSchemaValidationStatus.Valid, validation.Status);
         Assert.Contains("TmstFirma", signed.SignedXml);
         Assert.Contains("Signature", signed.SignedXml);
