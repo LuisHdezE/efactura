@@ -319,8 +319,12 @@ public sealed class XmlDsigFiscalSignatureProvider : IFiscalSignatureProvider
 
         var expectedFamily = request.CfeFamily switch
         {
-            CfeFamily.ETicket => "eTck",
-            CfeFamily.EFactura => "eFact",
+            CfeFamily.ETicket or
+            CfeFamily.ETicketCreditNote or
+            CfeFamily.ETicketDebitNote => "eTck",
+            CfeFamily.EFactura or
+            CfeFamily.EFacturaCreditNote or
+            CfeFamily.EFacturaDebitNote => "eFact",
             CfeFamily.EFacturaExportacion => throw Error(
                 "fiscal.signature.export_not_supported",
                 "Release-1 XMLDSig signing does not enable export CFE."),

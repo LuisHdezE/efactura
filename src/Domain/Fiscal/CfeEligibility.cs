@@ -5,7 +5,11 @@ namespace EFactura.Domain.Fiscal;
 public enum CfeFamily
 {
     ETicket = 101,
+    ETicketCreditNote = 102,
+    ETicketDebitNote = 103,
     EFactura = 111,
+    EFacturaCreditNote = 112,
+    EFacturaDebitNote = 113,
     EFacturaExportacion = 121
 }
 
