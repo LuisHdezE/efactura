@@ -95,6 +95,9 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalXmlBuilder, DeterministicUnsignedCfeBuilder>();
         services.AddSingleton<IFiscalSigningPayloadBuilder, DeterministicFiscalSigningPayloadBuilder>();
         services.AddSingleton<IFiscalSignedCfeSchemaValidator, DgiFeV1_44_2SignedCfeSchemaValidator>();
+        services.AddSingleton<IFiscalSigningTimeSource, UruguayFiscalSigningTimeSource>();
+        services.AddSingleton<IFiscalSigningCertificateSource, PfxFiscalSigningCertificateSource>();
+        services.AddSingleton<IFiscalSignatureProvider, XmlDsigFiscalSignatureProvider>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();

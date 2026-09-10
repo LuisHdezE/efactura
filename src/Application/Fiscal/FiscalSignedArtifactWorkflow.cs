@@ -207,7 +207,8 @@ public sealed class SignFiscalDocumentUseCase
                     payload.UnsignedContentHash,
                     payload.Xml,
                     payload.ContentHash,
-                    payload.SigningTimestamp),
+                    payload.SigningTimestamp,
+                    organizationId),
                 ct);
 
             ValidateSignatureResult(signature, payload);
