@@ -85,10 +85,14 @@ public sealed record FiscalDocumentReferenceEvidence(
                 "fiscal.snapshot.reference_number_invalid",
                 "Referenced CFE number is outside the supported DGI structural range.");
 
-        if (FiscalDate is < new DateOnly(2011, 10, 1) or > new DateOnly(2050, 12, 31))
+        if (FiscalDate.HasValue
+            && (FiscalDate.Value < new DateOnly(2011, 10, 1)
+                || FiscalDate.Value > new DateOnly(2050, 12, 31)))
+        {
             throw FiscalConfirmationEvidence.Rule(
                 "fiscal.snapshot.reference_date_invalid",
                 "Referenced CFE fiscal date is outside the supported DGI structural range.");
+        }
 
         if (Amount is < 0m)
             throw FiscalConfirmationEvidence.Rule(
