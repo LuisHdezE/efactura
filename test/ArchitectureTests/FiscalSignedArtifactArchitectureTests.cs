@@ -48,7 +48,7 @@ public sealed class FiscalSignedArtifactArchitectureTests
     }
 
     [Fact]
-    public void Composition_registers_storage_and_payload_builder_but_not_a_secret_source()
+    public void Composition_registers_storage_payload_builder_and_explicit_secret_source_boundary()
     {
         var services = Read("src/Infrastructure/Persistence/V1/V1PersistenceServiceCollectionExtensions.cs");
 
@@ -56,8 +56,8 @@ public sealed class FiscalSignedArtifactArchitectureTests
         Assert.Contains("IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository", services, StringComparison.Ordinal);
         Assert.Contains("PrepareFiscalSigningEvidenceUseCase", services, StringComparison.Ordinal);
         Assert.Contains("SignFiscalDocumentUseCase", services, StringComparison.Ordinal);
-        Assert.DoesNotContain("IFiscalSigningCertificateSource", services, StringComparison.Ordinal);
-        Assert.DoesNotContain("Pfx", services, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("IFiscalSigningCertificateSource, PfxFiscalSigningCertificateSource", services, StringComparison.Ordinal);
+        Assert.Contains("IFiscalSignatureProvider, XmlDsigFiscalSignatureProvider", services, StringComparison.Ordinal);
         Assert.DoesNotContain("KeyVault", services, StringComparison.OrdinalIgnoreCase);
     }
 

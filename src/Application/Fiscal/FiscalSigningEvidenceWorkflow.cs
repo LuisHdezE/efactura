@@ -40,7 +40,8 @@ public sealed record FiscalSignatureRequest(
     string UnsignedContentHash,
     string SigningPayloadXml,
     string SigningPayloadHash,
-    DateTimeOffset SigningTimestamp);
+    DateTimeOffset SigningTimestamp,
+    string OrganizationId = "");
 
 public sealed record FiscalSignatureResult(
     string SignedXml,
