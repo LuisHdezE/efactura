@@ -35,8 +35,12 @@ public sealed class DeterministicUnsignedCfeBuilder : IFiscalXmlBuilder
 
         var familyElementName = document.CfeType switch
         {
-            CfeFamily.ETicket => "eTck",
-            CfeFamily.EFactura => "eFact",
+            CfeFamily.ETicket or
+            CfeFamily.ETicketCreditNote or
+            CfeFamily.ETicketDebitNote => "eTck",
+            CfeFamily.EFactura or
+            CfeFamily.EFacturaCreditNote or
+            CfeFamily.EFacturaDebitNote => "eFact",
             CfeFamily.EFacturaExportacion => throw Rule(
                 "fiscal.cfe_builder.export_not_supported",
                 "Release-1 unsigned CFE BUILD does not invent export-specific evidence."),
@@ -54,14 +58,19 @@ public sealed class DeterministicUnsignedCfeBuilder : IFiscalXmlBuilder
                 throw Rule("fiscal.cfe_builder.unit_required", "Unsigned CFE BUILD requires frozen DGI unit-of-measure evidence for every line.");
         }
 
-        var family = new XElement(CfeNamespace + familyElementName,
+        var family = new XElement(
+            CfeNamespace + familyElementName,
             BuildHeader(document, snapshot, settlement),
-            BuildDetail(snapshot),
-            new XElement(CfeNamespace + "CAEData",
-                Element("CAE_ID", document.CaeAuthorizationNumber),
-                Element("DNro", document.CaeRangeFrom),
-                Element("HNro", document.CaeRangeTo),
-                Element("FecVenc", Date(document.CaeValidTo))));
+            BuildDetail(snapshot));
+
+        if (snapshot.References is { Count: > 0 })
+            family.Add(BuildReferences(snapshot.References));
+
+        family.Add(new XElement(CfeNamespace + "CAEData",
+            Element("CAE_ID", document.CaeAuthorizationNumber),
+            Element("DNro", document.CaeRangeFrom),
+            Element("HNro", document.CaeRangeTo),
+            Element("FecVenc", Date(document.CaeValidTo))));
 
         var root = new XElement(CfeNamespace + "CFE",
             new XAttribute("version", "1.0"),
@@ -170,6 +179,28 @@ public sealed class DeterministicUnsignedCfeBuilder : IFiscalXmlBuilder
                 return item;
             }));
 
+    private static XElement BuildReferences(IEnumerable<FiscalDocumentReferenceEvidence> references) =>
+        new(CfeNamespace + "Referencia",
+            references.OrderBy(reference => reference.Sequence).Select(reference =>
+            {
+                var item = new XElement(CfeNamespace + "Referencia",
+                    Element("NroLinRef", reference.Sequence),
+                    Element("TpoDocRef", (int)reference.ReferencedCfeType),
+                    Element("Serie", reference.Series),
+                    Element("NroCFERef", reference.Number));
+                if (!string.IsNullOrWhiteSpace(reference.Reason))
+                    item.Add(Element("RazonRef", reference.Reason!));
+                if (reference.FiscalDate.HasValue)
+                    item.Add(Element("FechaCFEref", Date(reference.FiscalDate.Value)));
+                if (reference.Amount.HasValue)
+                    item.Add(Element("MntCFEref", reference.Amount.Value));
+                if (!string.IsNullOrWhiteSpace(reference.CurrencyCode))
+                    item.Add(Element("Moneda", reference.CurrencyCode!));
+                if (reference.ExchangeRate.HasValue)
+                    item.Add(Element("TpoCambioRef", reference.ExchangeRate.Value));
+                return item;
+            }));
+
     private static int Indicator(VatRateKind kind) => kind switch
     {
         VatRateKind.Exempt => 1,
@@ -206,6 +237,14 @@ public sealed class DeterministicUnsignedCfeBuilder : IFiscalXmlBuilder
             || document.TotalAmount != snapshot.FiscalEvidence.Totals.TotalAmount)
         {
             throw Rule("fiscal.cfe_builder.identity_snapshot_mismatch", "Fiscal document identity and immutable content snapshot do not match.");
+        }
+
+        if (snapshot.References?.Any(reference =>
+                reference.ReferencedCfeType == document.CfeType
+                && string.Equals(reference.Series, document.Series, StringComparison.Ordinal)
+                && reference.Number == document.Number) == true)
+        {
+            throw Rule("fiscal.cfe_builder.reference_self_forbidden", "A CFE cannot reference its own fiscal identity.");
         }
     }
 
