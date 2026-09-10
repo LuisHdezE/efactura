@@ -195,7 +195,7 @@ public sealed class DeterministicUnsignedCfeBuilder : IFiscalXmlBuilder
                 if (reference.Amount.HasValue)
                     item.Add(Element("MntCFEref", reference.Amount.Value));
                 if (!string.IsNullOrWhiteSpace(reference.CurrencyCode))
-                    item.Add(Element("Moneda", reference.CurrencyCode!));
+                    item.Add(Element("TpoMonedaRef", reference.CurrencyCode!));
                 if (reference.ExchangeRate.HasValue)
                     item.Add(Element("TpoCambioRef", reference.ExchangeRate.Value));
                 return item;
