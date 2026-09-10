@@ -4,8 +4,8 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-10
 
-Accepted functional baseline: `main@dd379ea000a5cf55673659b74c241901bf3e52db`
-(merge of PR #60, `feat(fiscal): compose organization-scoped PFX signing identity`).
+Accepted functional baseline: `main@0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`
+(merge of PR #63, `feat(fiscal): add daily report reconciliation foundation`).
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization.
 It does not replace requirements, architecture, API-contract or numbered implementation records.
@@ -22,9 +22,20 @@ and must not be rewritten to make the original AS-IS observations look current.
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Deprecated/outdated package inventories remain advisory modernization evidence.
 
-PR #60 exact-head `Clean Architecture Guard` run #218 (`34427603949`) completed successfully before merge.
-Post-merge `Clean Architecture Guard` run #219 (`34429049916`) completed successfully on accepted
-`main@dd379ea000a5cf55673659b74c241901bf3e52db`, including:
+The accepted lineage immediately after the former PR #60 checkpoint is:
+
+- PR #61 `docs(fiscal): reconcile DGI Testing readiness gate`
+  - merge commit: `808f0e70da6c2a39a3380bcb0068f5a66c6e754a`;
+  - post-merge Clean Architecture Guard #221 (`34438269480`): SUCCESS.
+- PR #62 `feat(fiscal): add domestic credit/debit note foundation`
+  - merge commit: `af3e9c6c031a3954d51f0ee76045e899c1c22826`;
+  - post-merge Clean Architecture Guard #228 (`34461958084`): SUCCESS.
+- PR #63 `feat(fiscal): add daily report reconciliation foundation`
+  - approved feature head: `60106136c771b4178dafd0eb793ad9b9ec2ad2a3`;
+  - merge commit / accepted baseline: `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`;
+  - post-merge Clean Architecture Guard #230 (`34538620978`): SUCCESS.
+
+The PR #63 post-merge guard passed:
 
 - restore and dependency security gates: PASS;
 - Release build: PASS;
@@ -61,12 +72,15 @@ Accepted slices now include:
 19. Durable signed CFE artifact persistence and replay validation.
 20. Full signed-root validation against the pinned DGI FE XSD v1.44.2 set.
 21. Organization-scoped externally configured PFX certificate composition with SHA-256 identity pinning and ephemeral key loading.
+22. DGI Testing readiness reconciliation that distinguishes free technical Testing from the formal traditional `Prueba de Testing`.
+23. Domestic 102/103/112/113 credit/debit-note foundation with immutable referenced-CFE evidence, deterministic unsigned XML, signing mapping and signed-root DGI XSD v1.44.2 validation.
+24. Reporte Diario v13.2 internal reconciliation foundation with immutable document/annulment evidence, deterministic monetary grouping, explicit numbering consumption and fail-closed currency/status boundaries.
 
 Detailed bounded evidence remains under `documentation/blueprint-api-implementation/`.
 
-## Accepted fiscal boundary after PR #60
+## Accepted fiscal boundary after PR #63
 
-The accepted product flow now reaches:
+The accepted normal 101/111 sale flow reaches:
 
 ```text
 Sale CONFIRMED
@@ -83,10 +97,17 @@ Sale CONFIRMED
 -> immutable signed artifact persistence
 ```
 
-Release-1 signed-CFE support currently covers:
+The accepted codebase also contains a bounded local correction-note chain for:
 
-- 101 e-Ticket;
-- 111 e-Factura.
+- 102 Nota de Crédito de e-Ticket;
+- 103 Nota de Débito de e-Ticket;
+- 112 Nota de Crédito de e-Factura;
+- 113 Nota de Débito de e-Factura.
+
+That correction-note foundation freezes referenced-CFE evidence into fiscal content, builds the note
+deterministically, maps it through the existing signing pipeline and validates the signed root against
+the pinned DGI FE XSD v1.44.2 set. It is not yet exposed through an operational note command/API or
+connected automatically to the normal sale workflow.
 
 The signing source is selected by `OrganizationId` from external configuration. PFX material is loaded
 with `X509KeyStorageFlags.EphemeralKeySet`, must match a configured SHA-256 certificate fingerprint,
@@ -96,7 +117,19 @@ Replay never rebuilds a different signing timestamp or opportunistically resigns
 artifact. Persisted signed bytes, hashes, signing metadata and schema-validation evidence are checked
 again before a replay result is returned.
 
-No accepted product slice yet submits a CFE to DGI or interprets an authoritative DGI response.
+PR #63 additionally accepts the internal Reporte Diario reconciliation foundation. It can freeze and
+validate same-issuer daily evidence for domestic 101/102/103/111/112/113, support zero-operation days,
+aggregate monetary evidence by CFE type + document date + DGI branch + `Pagos por cuenta de terceros`,
+reconstruct explicitly evidenced used/emitted/annulled numbering and produce a deterministic SHA-256
+reconciliation fingerprint.
+
+The Reporte Diario foundation is deliberately not a sendable DGI report. It currently requires
+explicit external fingerprints for reporting-status and third-party-payment evidence, rejects
+non-UYU monetary evidence until authoritative fiscal exchange-rate evidence is frozen, never infers
+annulments from numbering gaps and does not serialize/sign/persist/submit the Reporte Diario XML.
+
+No accepted product slice yet submits a CFE or Reporte Diario to DGI or interprets an authoritative
+DGI response.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -124,10 +157,10 @@ evidence is authoritative.
 
 ## DGI Testing readiness reconciliation
 
-The post-PR #60 review found that the earlier shorthand idea of proving DGI Testing with only one
-signed e-Ticket and one signed e-Factura is insufficient for the formal traditional `Prueba de Testing`.
+The DGI readiness review established that proving local signing with one e-Ticket and one e-Factura is
+insufficient for the formal traditional `Prueba de Testing`.
 
-The current DGI instructive distinguishes free technical Testing from the formal test required for the
+Current DGI guidance distinguishes free technical Testing from the formal test required for the
 traditional onboarding path.
 
 For traditional onboarding, the formal test requires at least 50 distinct `Recibido` documents for
@@ -149,27 +182,40 @@ without explicit operational evidence.
 
 Current readiness classification:
 
-- local signed-CFE readiness for 101/111: **READY**;
+- deterministic local build/sign/XSD-validation foundation for 101/102/103/111/112/113: **IMPLEMENTED / LOCALLY VALIDATED**;
+- operational correction-note API/workflow for 102/103/112/113: **NOT YET IMPLEMENTED**;
+- internal Reporte Diario v13.2 reconciliation foundation: **IMPLEMENTED / LOCALLY VALIDATED**;
+- sendable/signed/persisted Reporte Diario v13.2 artifact: **NOT YET IMPLEMENTED**;
 - free external DGI Testing validation: **NOT YET EVIDENCED**;
 - formal traditional `Prueba de Testing`: **BLOCKED BY MISSING PRODUCT CAPABILITIES**;
 - Production transport/readiness: **OUT OF SCOPE AND NOT EVIDENCED**.
 
-The detailed reconciliation is recorded in:
+The detailed readiness reconciliation is recorded in:
 `documentation/blueprint-api-implementation/36_DGI_TESTING_READINESS_RECONCILIATION.md`.
+
+The accepted domestic-note foundation is recorded in:
+`documentation/blueprint-api-implementation/37_FISCAL_DOMESTIC_CREDIT_DEBIT_NOTE_FOUNDATION.md`.
+
+The accepted Daily Report reconciliation foundation is recorded in:
+`documentation/blueprint-api-implementation/38_FISCAL_DAILY_REPORT_RECONCILIATION_FOUNDATION.md`.
 
 ## Explicitly not complete
 
 The following remain outside the accepted current product baseline:
 
-- 102 Nota de Crédito de e-Ticket;
-- 103 Nota de Débito de e-Ticket;
-- 112 Nota de Crédito de e-Factura;
-- 113 Nota de Débito de e-Factura;
+- operational correction-note command/API and integration into the normal application workflow;
+- note-level `IndGlobal` synthesis/global-reference workflow;
 - export CFE families and export-specific immutable evidence;
 - contingency/CFC lifecycle;
-- Reporte Diario generation/lifecycle;
-- DGI Sobre packaging/submission;
-- DGI Mensaje de Respuesta parsing and status interpretation;
+- automatic capture/freeze of CFE A-C19 `Pagos por cuenta de terceros` evidence;
+- authoritative fiscal/BCU exchange-rate acquisition and immutable conversion evidence for Reporte Diario;
+- authoritative DGI reporting-status/rejection evidence lifecycle;
+- Reporte Diario v13.2 XML serializer and pinned report XSD/signature package;
+- Reporte Diario advanced signature;
+- Reporte Diario persistence/replay/sequence lifecycle;
+- automatic Reporte Diario scheduling and next-business-day send orchestration;
+- DGI Sobre v05 packaging/submission;
+- DGI Mensaje de Respuesta v19 parsing and status interpretation;
 - authoritative Testing acceptance evidence;
 - DGI/provider Production transport;
 - direct-DGI-vs-provider Production decision;
@@ -207,22 +253,30 @@ merely to display the newer Master version.
 
 ## Reconciled next bounded implementation sequence
 
-The next sequence after the PR #60 signing composition is:
+The next sequence after accepted PR #63 is:
 
-1. **Domestic credit/debit note foundation**
-   - implement the official correction/reference semantics needed for 102/103/112/113;
-   - freeze reference/correction evidence so later mutable state cannot rewrite a note;
-   - keep export and contingency families fail-closed.
-2. **Daily Report foundation**
-   - implement the currently published Reporte Diario v13.2 contract and durable reconciliation evidence.
-3. **Testing package/submission contract**
+1. **Freeze missing Reporte Diario source facts**
+   - connect the currently explicit reporting-status evidence boundary to authoritative durable DGI outcome evidence when that lifecycle exists;
+   - freeze A-C19 `Pagos por cuenta de terceros` source evidence instead of defaulting absence to false;
+   - freeze authoritative fiscal/BCU exchange-rate source/date/value evidence required for non-UYU report amounts;
+   - keep unsupported export/CFC paths fail-closed.
+2. **Pin the authoritative Reporte Diario v13.2 wire contract**
+   - preserve the official XML/XSD/signature package in-repository with provenance;
+   - document namespace, ordering, required fields and signature rules from authoritative material only.
+3. **Deterministic Reporte Diario artifact generation and validation**
+   - serialize from immutable reconciliation evidence;
+   - sign and validate without rereading mutable fiscal masters.
+4. **Reporte Diario persistence/replay/sequence lifecycle**
+   - persist immutable report bytes/hash/signing evidence;
+   - preserve correction sequence semantics and replay the same artifact rather than rebuilding it opportunistically.
+5. **Testing package/submission contract**
    - evidence Sobre v05 and Mensaje de Respuesta v19;
    - choose an isolated Testing submission mechanism or operator-assisted export path;
    - keep Production transport separately gated.
-4. **External DGI Testing evidence**
+6. **External DGI Testing evidence**
    - execute only with legitimate credentials/certificate material supplied outside source control;
    - record authoritative DGI receipt/status evidence without manufacturing success.
-5. **Production transport and operational lifecycle**
+7. **Production transport and operational lifecycle**
    - only after the required external evidence and transport contract are separately reviewed and accepted.
 
 If the actual taxpayer uses the simplified onboarding path, the formal 50-per-type test may not be
@@ -243,11 +297,11 @@ without compatibility analysis.
 
 ## Repository governance at this checkpoint
 
-- PR #60 is merged.
-- accepted `main`: `dd379ea000a5cf55673659b74c241901bf3e52db`.
-- PR #60 exact-head Guard #218: SUCCESS.
-- post-merge Guard #219 on accepted main: SUCCESS.
-- no open PRs existed immediately before this reconciliation branch was created.
+- PR #61 is merged at `808f0e70da6c2a39a3380bcb0068f5a66c6e754a`; post-merge Guard #221: SUCCESS.
+- PR #62 is merged at `af3e9c6c031a3954d51f0ee76045e899c1c22826`; post-merge Guard #228: SUCCESS.
+- PR #63 is merged at `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`; post-merge Guard #230: SUCCESS.
+- accepted `main`: `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`.
+- no open PRs existed immediately before the current checkpoint-reconciliation branch was created.
 - Blueprint 0.5.2 consumer adoption remains DEFER.
 - one atomic slice per PR remains required.
 - merge requires final exact-head green CI and explicit human approval.
