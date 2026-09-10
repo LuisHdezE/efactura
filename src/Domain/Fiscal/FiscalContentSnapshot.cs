@@ -458,6 +458,8 @@ public sealed record FiscalContentSnapshot(
     FiscalConfirmationEvidence FiscalEvidence,
     string ContentFingerprint)
 {
+    public IReadOnlyCollection<FiscalDocumentReferenceEvidence>? References { get; init; }
+
     public static FiscalContentSnapshot Create(
         string organizationId,
         Guid saleId,
@@ -470,7 +472,8 @@ public sealed record FiscalContentSnapshot(
         FiscalIssuerContentSnapshot issuer,
         FiscalReceiverContentSnapshot? receiver,
         IReadOnlyCollection<FiscalContentLineSnapshot> lines,
-        FiscalConfirmationEvidence fiscalEvidence)
+        FiscalConfirmationEvidence fiscalEvidence,
+        IReadOnlyCollection<FiscalDocumentReferenceEvidence>? references = null)
     {
         var provisional = new FiscalContentSnapshot(
             organizationId.Trim(),
@@ -485,7 +488,10 @@ public sealed record FiscalContentSnapshot(
             receiver,
             lines,
             fiscalEvidence,
-            new string('0', 64));
+            new string('0', 64))
+        {
+            References = references
+        };
         var result = provisional with { ContentFingerprint = provisional.ComputeFingerprint() };
         result.EnsureIntegrity();
         return result;
@@ -556,6 +562,41 @@ public sealed record FiscalContentSnapshot(
                 FiscalConfirmationEvidence.Required(line.UnitOfMeasure, 4, "fiscal.snapshot.item_unit_invalid");
             if (!Enum.IsDefined(line.Kind))
                 throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.line_kind_invalid", "Fiscal content snapshot line kind is invalid.");
+        }
+
+        var references = References ?? Array.Empty<FiscalDocumentReferenceEvidence>();
+        if (references.Count > 40)
+            throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_limit_exceeded", "Fiscal content snapshot cannot preserve more than 40 CFE references.");
+        if (IsDomesticCorrectionNote(CfeFamily) && references.Count == 0)
+            throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_required", "Domestic credit/debit notes require immutable referenced-CFE evidence.");
+        if (references.Select(reference => reference.Sequence).OrderBy(sequence => sequence)
+            .SequenceEqual(Enumerable.Range(1, references.Count)) is false)
+        {
+            throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_sequence_invalid", "Fiscal reference sequence must be contiguous and one-based.");
+        }
+
+        foreach (var reference in references)
+        {
+            if (reference is null)
+                throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_invalid", "Fiscal content snapshot contains a null CFE reference.");
+            reference.EnsureIntegrity();
+            if (!string.Equals(reference.OrganizationId, OrganizationId, StringComparison.Ordinal))
+                throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_organization_mismatch", "Referenced CFE evidence belongs to a different organization.");
+        }
+
+        if (references.Select(reference => (reference.ReferencedCfeType, reference.Series, reference.Number)).Distinct().Count() != references.Count)
+            throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_duplicate", "Fiscal content snapshot contains a duplicated CFE reference.");
+
+        if (CfeFamily is CfeFamily.ETicketCreditNote or CfeFamily.ETicketDebitNote
+            && references.Any(reference => !IsETicketReferenceType(reference.ReferencedCfeType)))
+        {
+            throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_family_incompatible", "e-Ticket correction notes require references from the e-Ticket domestic family.");
+        }
+
+        if (CfeFamily is CfeFamily.EFacturaCreditNote or CfeFamily.EFacturaDebitNote
+            && references.Any(reference => !IsEFacturaReferenceType(reference.ReferencedCfeType)))
+        {
+            throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.reference_family_incompatible", "e-Factura correction notes require references from the e-Factura domestic family.");
         }
 
         if (FiscalEvidence is null) throw FiscalConfirmationEvidence.Rule("fiscal.snapshot.fiscal_evidence_required", "Frozen fiscal confirmation evidence is required.");
@@ -641,8 +682,30 @@ public sealed record FiscalContentSnapshot(
             FiscalConfirmationEvidence.AppendRules(material, line.Fiscal.RuleEvidence, "LINE-RULE");
         }
 
+        if (References is { Count: > 0 })
+        {
+            foreach (var reference in References.OrderBy(reference => reference.Sequence))
+                material.Append("|REF:").Append(reference.EvidenceFingerprint);
+        }
+
         return FiscalConfirmationEvidence.Hash(material.ToString());
     }
+
+    private static bool IsDomesticCorrectionNote(CfeFamily family) => family is
+        CfeFamily.ETicketCreditNote or
+        CfeFamily.ETicketDebitNote or
+        CfeFamily.EFacturaCreditNote or
+        CfeFamily.EFacturaDebitNote;
+
+    private static bool IsETicketReferenceType(CfeFamily family) => family is
+        CfeFamily.ETicket or
+        CfeFamily.ETicketCreditNote or
+        CfeFamily.ETicketDebitNote;
+
+    private static bool IsEFacturaReferenceType(CfeFamily family) => family is
+        CfeFamily.EFactura or
+        CfeFamily.EFacturaCreditNote or
+        CfeFamily.EFacturaDebitNote;
 
     private static bool SameFiscalLine(FiscalCalculationLineEvidence left, FiscalCalculationLineEvidence right)
     {
