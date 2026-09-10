@@ -18,11 +18,23 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@dd379ea000a5cf55673659b74c241901bf3e52db",
+            "main@0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
             "formal traditional `Prueba de Testing`: **BLOCKED BY MISSING PRODUCT CAPABILITIES**",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Domestic 102/103/112/113 credit/debit-note foundation",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Reporte Diario v13.2 internal reconciliation foundation",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "sendable/signed/persisted Reporte Diario v13.2 artifact: **NOT YET IMPLEMENTED**",
             currentState,
             StringComparison.Ordinal);
 
