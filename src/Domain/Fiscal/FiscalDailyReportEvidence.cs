@@ -17,8 +17,9 @@ public enum FiscalDailyReportAnnulmentKind
 
 /// <summary>
 /// Frozen evidence for one CFE that is eligible to contribute monetary totals to a Daily Report.
-/// The caller must provide separate evidence that the document belongs in the "emitted and not
-/// rejected by DGI" population. A signed artifact alone is intentionally insufficient.
+/// Monetary partitions are always expressed in UYU. For a foreign-currency source CFE the original
+/// currency, conversion-evidence fingerprint and reliquidation marker remain frozen alongside the
+/// converted amounts so provenance is not lost during reconciliation.
 /// </summary>
 public sealed record FiscalDailyReportDocumentEvidence(
     Guid FiscalDocumentId,
@@ -37,6 +38,10 @@ public sealed record FiscalDailyReportDocumentEvidence(
     string FiscalContentFingerprint,
     string SignedContentHash,
     string ReportingStatusEvidenceFingerprint,
+    string OriginalCurrencyCode,
+    string ReportingCurrencyCode,
+    string? CurrencyConversionEvidenceFingerprint,
+    bool CurrencyConversionRequiresReliquidation,
     decimal NetAmount,
     decimal NonTaxedAmount,
     decimal MinimumTaxableAmount,
@@ -48,6 +53,11 @@ public sealed record FiscalDailyReportDocumentEvidence(
     decimal TotalAmount,
     string EvidenceFingerprint)
 {
+    public const string DailyReportCurrencyCode = "UYU";
+
+    /// <summary>
+    /// Existing UYU-only boundary. Foreign-currency callers must use the explicit typed FX composer.
+    /// </summary>
     public static FiscalDailyReportDocumentEvidence Capture(
         FiscalDocument document,
         FiscalContentSnapshot snapshot,
@@ -60,28 +70,12 @@ public sealed record FiscalDailyReportDocumentEvidence(
         bool paymentOnBehalfOfThirdParty,
         string thirdPartyPaymentEvidenceFingerprint)
     {
-        ArgumentNullException.ThrowIfNull(document);
-        ArgumentNullException.ThrowIfNull(snapshot);
-
-        snapshot.EnsureIntegrity();
-        EnsureSupportedFamily(document.CfeType);
+        ValidateDocumentSnapshot(document, snapshot);
 
         if (signedArtifactId == Guid.Empty)
             throw Rule("fiscal.daily_report.signed_artifact_id_required", "Daily-report evidence requires a signed artifact id.");
         if (signingEvidenceId == Guid.Empty)
             throw Rule("fiscal.daily_report.signing_evidence_id_required", "Daily-report evidence requires signing evidence.");
-
-        if (!string.Equals(document.OrganizationId, snapshot.OrganizationId, StringComparison.Ordinal)
-            || document.SaleId != snapshot.SaleId
-            || document.CfeType != snapshot.CfeFamily
-            || !string.Equals(document.FormatVersion, snapshot.FormatVersion, StringComparison.Ordinal)
-            || !string.Equals(document.ConfirmationFingerprint, snapshot.ConfirmationFingerprint, StringComparison.Ordinal)
-            || !string.Equals(document.SettlementFingerprint, snapshot.SettlementFingerprint, StringComparison.Ordinal))
-        {
-            throw Rule(
-                "fiscal.daily_report.identity_snapshot_mismatch",
-                "Fiscal document identity and immutable content snapshot do not match.");
-        }
 
         var artifactFingerprint = Fingerprint(
             artifactFiscalContentFingerprint,
@@ -93,59 +87,110 @@ public sealed record FiscalDailyReportDocumentEvidence(
                 "Signed artifact fiscal-content fingerprint does not match the immutable snapshot.");
         }
 
-        if (!string.Equals(document.CurrencyCode, "UYU", StringComparison.Ordinal)
-            || !string.Equals(snapshot.FiscalEvidence.CurrencyCode, "UYU", StringComparison.Ordinal))
+        var sourceCurrency = Currency(document.CurrencyCode);
+        if (!string.Equals(sourceCurrency, DailyReportCurrencyCode, StringComparison.Ordinal))
         {
             throw Rule(
                 "fiscal.daily_report.foreign_currency_conversion_evidence_required",
                 "Daily-report monetary evidence must be in UYU; foreign-currency CFE requires separately frozen fiscal exchange-rate evidence.");
         }
 
-        var totals = snapshot.FiscalEvidence.Totals;
-        var nonTaxed = totals.NetAmount
-            - totals.MinimumTaxableAmount
-            - totals.BasicTaxableAmount
-            - totals.ExportAmount;
-        if (nonTaxed < 0m)
-        {
-            throw Rule(
-                "fiscal.daily_report.amount_partition_invalid",
-                "Frozen fiscal totals cannot be partitioned safely for Daily Report reconciliation.");
-        }
-
-        var provisional = new FiscalDailyReportDocumentEvidence(
-            document.Id,
+        var amounts = AmountsFromSnapshot(snapshot);
+        return Build(
+            document,
+            snapshot,
             signedArtifactId,
             signingEvidenceId,
-            document.OrganizationId,
-            snapshot.Issuer.Ruc,
-            document.CfeType,
-            document.Series,
-            document.Number,
-            document.FiscalDate,
-            snapshot.Issuer.DgiBranchCode,
-            paymentOnBehalfOfThirdParty,
-            Fingerprint(
-                thirdPartyPaymentEvidenceFingerprint,
-                "fiscal.daily_report.third_party_payment_evidence_invalid"),
-            NormalizeToSecond(signingTimestamp),
+            signingTimestamp,
             artifactFingerprint,
-            Fingerprint(signedContentHash, "fiscal.daily_report.signed_content_hash_invalid"),
-            Fingerprint(reportingStatusEvidenceFingerprint, "fiscal.daily_report.reporting_status_evidence_invalid"),
-            totals.NetAmount,
-            nonTaxed,
-            totals.MinimumTaxableAmount,
-            totals.BasicTaxableAmount,
-            totals.ExportAmount,
-            totals.MinimumVatAmount,
-            totals.BasicVatAmount,
-            totals.VatAmount,
-            totals.TotalAmount,
-            new string('0', 64));
+            signedContentHash,
+            reportingStatusEvidenceFingerprint,
+            paymentOnBehalfOfThirdParty,
+            thirdPartyPaymentEvidenceFingerprint,
+            sourceCurrency,
+            currencyConversionEvidenceFingerprint: null,
+            currencyConversionRequiresReliquidation: false,
+            amounts);
+    }
 
-        var result = provisional with { EvidenceFingerprint = provisional.ComputeFingerprint() };
-        result.EnsureIntegrity();
-        return result;
+    /// <summary>
+    /// Typed foreign-currency path used only after signed-CFE identity and fiscal FX evidence have
+    /// already been frozen. The conversion rate is never accepted as an unbound primitive here.
+    /// </summary>
+    internal static FiscalDailyReportDocumentEvidence CaptureConverted(
+        FiscalDocument document,
+        FiscalContentSnapshot snapshot,
+        FiscalDailyReportCfeIdentityEvidence identity,
+        FiscalDailyReportCurrencyConversionEvidence conversion,
+        string reportingStatusEvidenceFingerprint,
+        bool paymentOnBehalfOfThirdParty,
+        string thirdPartyPaymentEvidenceFingerprint)
+    {
+        ArgumentNullException.ThrowIfNull(identity);
+        ArgumentNullException.ThrowIfNull(conversion);
+        identity.EnsureIntegrity();
+        conversion.EnsureIntegrity();
+        ValidateDocumentSnapshot(document, snapshot);
+
+        if (identity.FiscalDocumentId != document.Id
+            || !string.Equals(identity.OrganizationId, document.OrganizationId, StringComparison.Ordinal)
+            || !string.Equals(identity.IssuerRuc, snapshot.Issuer.Ruc, StringComparison.Ordinal)
+            || identity.CfeType != document.CfeType
+            || !string.Equals(identity.Series, document.Series, StringComparison.Ordinal)
+            || identity.Number != document.Number
+            || identity.FiscalDate != document.FiscalDate
+            || !string.Equals(identity.CurrencyCode, Currency(document.CurrencyCode), StringComparison.Ordinal)
+            || !string.Equals(identity.FiscalContentFingerprint, snapshot.ContentFingerprint, StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.fx_identity_input_mismatch",
+                "Typed Daily Report FX identity does not match the supplied fiscal document and immutable snapshot.");
+        }
+
+        if (string.Equals(identity.CurrencyCode, DailyReportCurrencyCode, StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.fx_not_required_for_uyu",
+                "UYU CFE must use the ordinary Daily Report evidence path without currency conversion.");
+        }
+
+        if (!string.Equals(conversion.CfeIdentityFingerprint, identity.EvidenceFingerprint, StringComparison.Ordinal)
+            || conversion.CfeType != identity.CfeType
+            || conversion.FiscalDate != identity.FiscalDate
+            || !string.Equals(conversion.CurrencyCode, identity.CurrencyCode, StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.fx_evidence_identity_mismatch",
+                "Currency-conversion evidence belongs to a different signed CFE identity.");
+        }
+
+        var sourceAmounts = AmountsFromSnapshot(snapshot);
+        var convertedAmounts = new MonetaryAmounts(
+            conversion.ConvertToUyu(sourceAmounts.NetAmount),
+            conversion.ConvertToUyu(sourceAmounts.NonTaxedAmount),
+            conversion.ConvertToUyu(sourceAmounts.MinimumTaxableAmount),
+            conversion.ConvertToUyu(sourceAmounts.BasicTaxableAmount),
+            conversion.ConvertToUyu(sourceAmounts.ExportAmount),
+            conversion.ConvertToUyu(sourceAmounts.MinimumVatAmount),
+            conversion.ConvertToUyu(sourceAmounts.BasicVatAmount),
+            conversion.ConvertToUyu(sourceAmounts.VatAmount),
+            conversion.ConvertToUyu(sourceAmounts.TotalAmount));
+
+        return Build(
+            document,
+            snapshot,
+            identity.SignedArtifactId,
+            identity.SigningEvidenceId,
+            identity.SigningTimestamp,
+            identity.FiscalContentFingerprint,
+            identity.SignedContentHash,
+            reportingStatusEvidenceFingerprint,
+            paymentOnBehalfOfThirdParty,
+            thirdPartyPaymentEvidenceFingerprint,
+            identity.CurrencyCode,
+            conversion.EvidenceFingerprint,
+            conversion.RequiresReliquidation,
+            convertedAmounts);
     }
 
     public void EnsureIntegrity()
@@ -165,6 +210,29 @@ public sealed record FiscalDailyReportDocumentEvidence(
         Fingerprint(FiscalContentFingerprint, "fiscal.daily_report.content_fingerprint_invalid");
         Fingerprint(SignedContentHash, "fiscal.daily_report.signed_content_hash_invalid");
         Fingerprint(ReportingStatusEvidenceFingerprint, "fiscal.daily_report.reporting_status_evidence_invalid");
+
+        var originalCurrency = Currency(OriginalCurrencyCode);
+        var reportingCurrency = Currency(ReportingCurrencyCode);
+        if (!string.Equals(reportingCurrency, DailyReportCurrencyCode, StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.reporting_currency_invalid",
+                "Daily Report monetary evidence must always be expressed in UYU.");
+        }
+
+        if (string.Equals(originalCurrency, DailyReportCurrencyCode, StringComparison.Ordinal))
+        {
+            if (CurrencyConversionEvidenceFingerprint is not null)
+                throw Rule("fiscal.daily_report.fx_evidence_forbidden_for_uyu", "UYU Daily Report evidence must not carry a currency-conversion fingerprint.");
+            if (CurrencyConversionRequiresReliquidation)
+                throw Rule("fiscal.daily_report.fx_reliquidation_forbidden_for_uyu", "UYU Daily Report evidence cannot require FX reliquidation.");
+        }
+        else
+        {
+            if (CurrencyConversionEvidenceFingerprint is null)
+                throw Rule("fiscal.daily_report.fx_evidence_required", "Foreign-currency Daily Report evidence requires a frozen conversion-evidence fingerprint.");
+            Fingerprint(CurrencyConversionEvidenceFingerprint, "fiscal.daily_report.fx_evidence_invalid");
+        }
 
         var values = new[]
         {
@@ -205,6 +273,10 @@ public sealed record FiscalDailyReportDocumentEvidence(
             FiscalContentFingerprint,
             SignedContentHash,
             ReportingStatusEvidenceFingerprint,
+            OriginalCurrencyCode,
+            ReportingCurrencyCode,
+            CurrencyConversionEvidenceFingerprint ?? "-",
+            CurrencyConversionRequiresReliquidation ? "1" : "0",
             Decimal(NetAmount),
             Decimal(NonTaxedAmount),
             Decimal(MinimumTaxableAmount),
@@ -215,6 +287,108 @@ public sealed record FiscalDailyReportDocumentEvidence(
             Decimal(VatAmount),
             Decimal(TotalAmount));
         return Hash(material);
+    }
+
+    private static FiscalDailyReportDocumentEvidence Build(
+        FiscalDocument document,
+        FiscalContentSnapshot snapshot,
+        Guid signedArtifactId,
+        Guid signingEvidenceId,
+        DateTimeOffset signingTimestamp,
+        string artifactFiscalContentFingerprint,
+        string signedContentHash,
+        string reportingStatusEvidenceFingerprint,
+        bool paymentOnBehalfOfThirdParty,
+        string thirdPartyPaymentEvidenceFingerprint,
+        string originalCurrencyCode,
+        string? currencyConversionEvidenceFingerprint,
+        bool currencyConversionRequiresReliquidation,
+        MonetaryAmounts amounts)
+    {
+        var provisional = new FiscalDailyReportDocumentEvidence(
+            document.Id,
+            signedArtifactId,
+            signingEvidenceId,
+            document.OrganizationId,
+            snapshot.Issuer.Ruc,
+            document.CfeType,
+            document.Series,
+            document.Number,
+            document.FiscalDate,
+            snapshot.Issuer.DgiBranchCode,
+            paymentOnBehalfOfThirdParty,
+            Fingerprint(thirdPartyPaymentEvidenceFingerprint, "fiscal.daily_report.third_party_payment_evidence_invalid"),
+            NormalizeToSecond(signingTimestamp),
+            Fingerprint(artifactFiscalContentFingerprint, "fiscal.daily_report.content_fingerprint_invalid"),
+            Fingerprint(signedContentHash, "fiscal.daily_report.signed_content_hash_invalid"),
+            Fingerprint(reportingStatusEvidenceFingerprint, "fiscal.daily_report.reporting_status_evidence_invalid"),
+            Currency(originalCurrencyCode),
+            DailyReportCurrencyCode,
+            currencyConversionEvidenceFingerprint is null
+                ? null
+                : Fingerprint(currencyConversionEvidenceFingerprint, "fiscal.daily_report.fx_evidence_invalid"),
+            currencyConversionRequiresReliquidation,
+            amounts.NetAmount,
+            amounts.NonTaxedAmount,
+            amounts.MinimumTaxableAmount,
+            amounts.BasicTaxableAmount,
+            amounts.ExportAmount,
+            amounts.MinimumVatAmount,
+            amounts.BasicVatAmount,
+            amounts.VatAmount,
+            amounts.TotalAmount,
+            new string('0', 64));
+
+        var result = provisional with { EvidenceFingerprint = provisional.ComputeFingerprint() };
+        result.EnsureIntegrity();
+        return result;
+    }
+
+    private static MonetaryAmounts AmountsFromSnapshot(FiscalContentSnapshot snapshot)
+    {
+        var totals = snapshot.FiscalEvidence.Totals;
+        var nonTaxed = totals.NetAmount
+            - totals.MinimumTaxableAmount
+            - totals.BasicTaxableAmount
+            - totals.ExportAmount;
+        if (nonTaxed < 0m)
+        {
+            throw Rule(
+                "fiscal.daily_report.amount_partition_invalid",
+                "Frozen fiscal totals cannot be partitioned safely for Daily Report reconciliation.");
+        }
+
+        return new MonetaryAmounts(
+            totals.NetAmount,
+            nonTaxed,
+            totals.MinimumTaxableAmount,
+            totals.BasicTaxableAmount,
+            totals.ExportAmount,
+            totals.MinimumVatAmount,
+            totals.BasicVatAmount,
+            totals.VatAmount,
+            totals.TotalAmount);
+    }
+
+    private static void ValidateDocumentSnapshot(FiscalDocument document, FiscalContentSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(snapshot);
+        snapshot.EnsureIntegrity();
+        EnsureSupportedFamily(document.CfeType);
+
+        if (!string.Equals(document.OrganizationId, snapshot.OrganizationId, StringComparison.Ordinal)
+            || document.SaleId != snapshot.SaleId
+            || document.CfeType != snapshot.CfeFamily
+            || !string.Equals(document.FormatVersion, snapshot.FormatVersion, StringComparison.Ordinal)
+            || !string.Equals(document.ConfirmationFingerprint, snapshot.ConfirmationFingerprint, StringComparison.Ordinal)
+            || !string.Equals(document.SettlementFingerprint, snapshot.SettlementFingerprint, StringComparison.Ordinal)
+            || !string.Equals(Currency(document.CurrencyCode), Currency(snapshot.FiscalEvidence.CurrencyCode), StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.identity_snapshot_mismatch",
+                "Fiscal document identity and immutable content snapshot do not match.");
+        }
     }
 
     internal static void EnsureSupportedFamily(CfeFamily family)
@@ -230,6 +404,14 @@ public sealed record FiscalDailyReportDocumentEvidence(
                 "fiscal.daily_report.cfe_family_not_supported",
                 "Daily Report foundation only supports the accepted domestic 101/102/103/111/112/113 CFE families.");
         }
+    }
+
+    internal static string Currency(string value)
+    {
+        var normalized = Required(value, 3, "fiscal.daily_report.currency_required").ToUpperInvariant();
+        if (normalized.Length != 3 || normalized.Any(ch => ch is < 'A' or > 'Z'))
+            throw Rule("fiscal.daily_report.currency_invalid", "Daily-report currency must use three uppercase alphabetic characters.");
+        return normalized;
     }
 
     internal static string Fingerprint(string value, string code)
@@ -275,6 +457,17 @@ public sealed record FiscalDailyReportDocumentEvidence(
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
     internal static DomainRuleException Rule(string code, string message) => new(code, message);
+
+    private sealed record MonetaryAmounts(
+        decimal NetAmount,
+        decimal NonTaxedAmount,
+        decimal MinimumTaxableAmount,
+        decimal BasicTaxableAmount,
+        decimal ExportAmount,
+        decimal MinimumVatAmount,
+        decimal BasicVatAmount,
+        decimal VatAmount,
+        decimal TotalAmount);
 }
 
 /// <summary>
