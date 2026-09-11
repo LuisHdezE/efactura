@@ -35,12 +35,7 @@ public sealed record FiscalDailyReportAnnualUiQuoteEvidence(
         string sourceUri,
         string sourceArtifactFingerprint)
     {
-        if (reportDate < UruguayCfeHighValueThresholdPolicy.CurrentThresholdEffectiveFrom)
-        {
-            throw Rule(
-                "fiscal.daily_report.wire.high_value_historical_threshold_unsupported",
-                "The current Release-1 Daily Report boundary only supports the 5,000 UI threshold effective from 2022-11-01.");
-        }
+        EnsureSupportedReportDate(reportDate);
 
         var expectedQuoteDate = new DateOnly(reportDate.Year - 1, 12, 31);
         if (quoteDate != expectedQuoteDate)
@@ -76,6 +71,7 @@ public sealed record FiscalDailyReportAnnualUiQuoteEvidence(
     public void EnsureAppliesTo(DateOnly reportDate)
     {
         EnsureIntegrity();
+        EnsureSupportedReportDate(reportDate);
         if (reportDate.Year != ApplicableYear)
             throw Rule("fiscal.daily_report.wire.ui_quote_year_mismatch", "Annual UI quotation evidence belongs to a different Reporte Diario year.");
         if (QuoteDate != new DateOnly(reportDate.Year - 1, 12, 31))
@@ -95,7 +91,9 @@ public sealed record FiscalDailyReportAnnualUiQuoteEvidence(
         if (ThresholdUyu != checked(ThresholdUi * UyuPerUi))
             throw Rule("fiscal.daily_report.wire.ui_threshold_uyu_mismatch", "Annual UI quotation UYU threshold does not match its frozen quotation.");
 
-        NormalizeSourceUri(SourceUri);
+        var normalizedUri = NormalizeSourceUri(SourceUri);
+        if (!string.Equals(SourceUri, normalizedUri, StringComparison.Ordinal))
+            throw Rule("fiscal.daily_report.wire.ui_quote_source_uri_not_canonical", "Annual UI quotation source URI must be stored in canonical absolute form.");
         FiscalDailyReportCfeIdentityEvidence.Fingerprint(
             SourceArtifactFingerprint,
             "fiscal.daily_report.wire.ui_quote_source_fingerprint_invalid");
@@ -115,6 +113,16 @@ public sealed record FiscalDailyReportAnnualUiQuoteEvidence(
         Decimal(ThresholdUyu),
         SourceUri,
         SourceArtifactFingerprint));
+
+    private static void EnsureSupportedReportDate(DateOnly reportDate)
+    {
+        if (reportDate < UruguayCfeHighValueThresholdPolicy.CurrentThresholdEffectiveFrom)
+        {
+            throw Rule(
+                "fiscal.daily_report.wire.high_value_historical_threshold_unsupported",
+                "The current Release-1 Daily Report boundary only supports the 5,000 UI threshold effective from 2022-11-01.");
+        }
+    }
 
     private static string NormalizeSourceUri(string value)
     {
