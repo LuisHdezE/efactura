@@ -1,0 +1,50 @@
+name: One-shot PR73 test compile fix
+
+on:
+  push:
+    branches:
+      - blueprint/fiscal-daily-report-unsigned-xml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: [self-hosted, linux, x64, efactura-ci]
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: blueprint/fiscal-daily-report-unsigned-xml
+          fetch-depth: 0
+      - name: Configure persistent runner caches
+        shell: bash
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Apply focused test fix
+        shell: bash
+        run: python3 .github/one-shot/fix-pr73-tests.py
+      - name: Restore solution
+        shell: bash
+        run: dotnet restore api-accounting.sln --disable-build-servers
+      - name: Build cross-cutting tests
+        shell: bash
+        run: dotnet build test/CrossCuttingTests/CrossCuttingTests.csproj --configuration Release --no-restore --disable-build-servers
+      - name: Run unsigned daily report tests
+        shell: bash
+        run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~FiscalDailyReportUnsignedXmlTests
+      - name: Commit fix and remove one-shot files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "eFactura governed runner"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/one-shot-fix-pr73-tests.yml .github/one-shot/fix-pr73-tests.py
+          git add test/CrossCuttingTests/FiscalDailyReportUnsignedXmlTests.cs
+          git commit -m "test(fiscal): fix unsigned daily report assertions"
+          git push origin HEAD:blueprint/fiscal-daily-report-unsigned-xml
