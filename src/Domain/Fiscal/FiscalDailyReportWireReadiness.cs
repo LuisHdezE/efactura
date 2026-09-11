@@ -10,9 +10,13 @@ namespace EFactura.Domain.Fiscal;
 /// </summary>
 public sealed record FiscalDailyReportVatRateEvidence(
     Guid FiscalDocumentId,
+    Guid SignedArtifactId,
+    Guid SigningEvidenceId,
     CfeFamily CfeType,
     string Series,
     long Number,
+    string FiscalContentFingerprint,
+    string SignedContentHash,
     string CfeIdentityFingerprint,
     decimal? MinimumVatRatePercent,
     decimal? BasicVatRatePercent,
@@ -41,9 +45,13 @@ public sealed record FiscalDailyReportVatRateEvidence(
 
         var provisional = new FiscalDailyReportVatRateEvidence(
             identity.FiscalDocumentId,
+            identity.SignedArtifactId,
+            identity.SigningEvidenceId,
             identity.CfeType,
             identity.Series,
             identity.Number,
+            identity.FiscalContentFingerprint,
+            identity.SignedContentHash,
             identity.EvidenceFingerprint,
             minimum,
             basic,
@@ -56,13 +64,19 @@ public sealed record FiscalDailyReportVatRateEvidence(
 
     public void EnsureIntegrity()
     {
-        if (FiscalDocumentId == Guid.Empty)
-            throw Rule("fiscal.daily_report.wire.vat_rate_document_id_required", "Daily Report VAT-rate evidence requires a fiscal-document identity.");
+        if (FiscalDocumentId == Guid.Empty || SignedArtifactId == Guid.Empty || SigningEvidenceId == Guid.Empty)
+            throw Rule("fiscal.daily_report.wire.vat_rate_identity_required", "Daily Report VAT-rate evidence requires complete durable CFE and signing identities.");
         FiscalDailyReportDocumentEvidence.EnsureSupportedFamily(CfeType);
         FiscalDailyReportDocumentEvidence.Required(Series, 20, "fiscal.daily_report.wire.vat_rate_series_required");
         if (Number is < 1 or > FiscalDailyReportV13_2WireContract.MaximumDocumentNumber)
             throw Rule("fiscal.daily_report.wire.vat_rate_number_invalid", "Daily Report VAT-rate evidence contains an invalid CFE number.");
 
+        FiscalDailyReportCfeIdentityEvidence.Fingerprint(
+            FiscalContentFingerprint,
+            "fiscal.daily_report.wire.vat_rate_content_fingerprint_invalid");
+        FiscalDailyReportCfeIdentityEvidence.Fingerprint(
+            SignedContentHash,
+            "fiscal.daily_report.wire.vat_rate_signed_content_hash_invalid");
         FiscalDailyReportCfeIdentityEvidence.Fingerprint(
             CfeIdentityFingerprint,
             "fiscal.daily_report.wire.vat_rate_identity_fingerprint_invalid");
@@ -79,9 +93,13 @@ public sealed record FiscalDailyReportVatRateEvidence(
     public string ComputeFingerprint() => FiscalDailyReportCfeIdentityEvidence.Hash(string.Join(
         "|",
         FiscalDocumentId.ToString("N"),
+        SignedArtifactId.ToString("N"),
+        SigningEvidenceId.ToString("N"),
         ((int)CfeType).ToString(CultureInfo.InvariantCulture),
         Series,
         Number.ToString(CultureInfo.InvariantCulture),
+        FiscalContentFingerprint,
+        SignedContentHash,
         CfeIdentityFingerprint,
         MinimumVatRatePercent.HasValue ? Decimal(MinimumVatRatePercent.Value) : "-",
         BasicVatRatePercent.HasValue ? Decimal(BasicVatRatePercent.Value) : "-"));
@@ -103,11 +121,17 @@ public sealed record FiscalDailyReportVatRateEvidence(
     {
         if (!rate.HasValue)
             return;
-        if (rate.Value <= 0m || rate.Value >= 1000m || DecimalScale(rate.Value) > FiscalDailyReportV13_2WireContract.VatRateDecimalDigits)
+        if (rate.Value <= 0m
+            || rate.Value >= 1000m
+            || !FitsScale(rate.Value, FiscalDailyReportV13_2WireContract.VatRateDecimalDigits))
+        {
             throw Rule(code, "Reporte Diario VAT-rate evidence must be positive and fit NUM 6 (3 integer + 3 decimal digits).");
+        }
     }
 
-    private static int DecimalScale(decimal value) => (decimal.GetBits(value)[3] >> 16) & 0x7F;
+    private static bool FitsScale(decimal value, int scale) =>
+        value == decimal.Round(value, scale, MidpointRounding.ToEven);
+
     private static string Decimal(decimal value) => value.ToString("G29", CultureInfo.InvariantCulture);
     private static EFactura.Domain.Common.DomainRuleException Rule(string code, string message) =>
         FiscalDailyReportCfeIdentityEvidence.Rule(code, message);
@@ -221,12 +245,13 @@ public sealed record FiscalDailyReportWireProjection(
     IReadOnlyCollection<FiscalDailyReportWireAmountRow> AmountRows,
     IReadOnlyCollection<FiscalDailyReportWireTypeCounters> Counters,
     string SourceReconciliationFingerprint,
+    string WireEvidenceFingerprint,
     string ProjectionFingerprint);
 
 /// <summary>
 /// Produces a deterministic semantic projection only when no unresolved wire policy is needed.
-/// Foreign-currency rows with more than two decimals remain fail-closed until DGI quantization
-/// semantics are authoritatively pinned.
+/// Foreign-currency rows that require two-decimal quantization remain fail-closed until DGI
+/// quantization semantics are authoritatively pinned.
 /// </summary>
 public static class FiscalDailyReportWireReadinessProjector
 {
@@ -258,11 +283,15 @@ public static class FiscalDailyReportWireReadinessProjector
         foreach (var document in snapshot.Documents)
         {
             if (!ratesByDocument.TryGetValue(document.FiscalDocumentId, out var evidence)
+                || evidence.SignedArtifactId != document.SignedArtifactId
+                || evidence.SigningEvidenceId != document.SigningEvidenceId
                 || evidence.CfeType != document.CfeType
                 || !string.Equals(evidence.Series, document.Series, StringComparison.Ordinal)
-                || evidence.Number != document.Number)
+                || evidence.Number != document.Number
+                || !string.Equals(evidence.FiscalContentFingerprint, document.FiscalContentFingerprint, StringComparison.Ordinal)
+                || !string.Equals(evidence.SignedContentHash, document.SignedContentHash, StringComparison.Ordinal))
             {
-                throw Rule("fiscal.daily_report.wire.vat_rate_evidence_required", "Every emitted CFE in a wire-ready Reporte Diario requires matching VAT-rate evidence.");
+                throw Rule("fiscal.daily_report.wire.vat_rate_evidence_required", "Every emitted CFE in a wire-ready Reporte Diario requires VAT-rate evidence bound to the same signed artifact and immutable content.");
             }
         }
         if (ratesByDocument.Keys.Except(snapshot.Documents.Select(item => item.FiscalDocumentId)).Any())
@@ -299,6 +328,7 @@ public static class FiscalDailyReportWireReadinessProjector
         if (highValueByType.Keys.Except(snapshot.Consumptions.Select(item => item.CfeType)).Any())
             throw Rule("fiscal.daily_report.wire.high_value_evidence_unexpected", "B-C27 evidence contains a CFE type outside the Daily Report snapshot.");
 
+        var wireEvidenceFingerprint = BuildWireEvidenceFingerprint(vatRateEvidence, highValueCounters);
         var provisional = new FiscalDailyReportWireProjection(
             snapshot.OrganizationId,
             snapshot.IssuerRuc,
@@ -308,6 +338,7 @@ public static class FiscalDailyReportWireReadinessProjector
             rows,
             counters,
             snapshot.ReconciliationFingerprint,
+            wireEvidenceFingerprint,
             new string('0', 64));
 
         return provisional with { ProjectionFingerprint = ComputeFingerprint(provisional) };
@@ -343,11 +374,11 @@ public static class FiscalDailyReportWireReadinessProjector
             summary.BasicVatAmount,
             summary.TotalAmount
         };
-        if (values.Any(value => DecimalScale(value) > FiscalDailyReportV13_2WireContract.MonetaryDecimalDigits))
+        if (values.Any(value => !FitsScale(value, FiscalDailyReportV13_2WireContract.MonetaryDecimalDigits)))
         {
             throw Rule(
                 "fiscal.daily_report.wire.quantization_required",
-                "Reporte Diario contains UYU monetary evidence with more than two decimal places; no DGI quantization rule is pinned, so wire projection remains fail-closed.");
+                "Reporte Diario contains UYU monetary evidence that cannot be represented exactly with two decimals; no DGI quantization rule is pinned, so wire projection remains fail-closed.");
         }
 
         return new FiscalDailyReportWireAmountRow(
@@ -386,6 +417,18 @@ public static class FiscalDailyReportWireReadinessProjector
         return rates.Length == 0 ? null : rates[0];
     }
 
+    private static string BuildWireEvidenceFingerprint(
+        IEnumerable<FiscalDailyReportVatRateEvidence> vatRates,
+        IEnumerable<FiscalDailyReportHighValueCounterEvidence> highValueCounters)
+    {
+        var material = new StringBuilder(SupportedReleaseProfile);
+        foreach (var evidence in vatRates.OrderBy(item => item.FiscalDocumentId))
+            material.Append("|VAT:").Append(evidence.EvidenceFingerprint);
+        foreach (var evidence in highValueCounters.OrderBy(item => (int)item.CfeType))
+            material.Append("|C27:").Append(evidence.EvidenceFingerprint);
+        return FiscalDailyReportCfeIdentityEvidence.Hash(material.ToString());
+    }
+
     private static string ComputeFingerprint(FiscalDailyReportWireProjection projection)
     {
         var material = new StringBuilder()
@@ -395,6 +438,7 @@ public static class FiscalDailyReportWireReadinessProjector
             .Append(projection.Sequence.ToString(CultureInfo.InvariantCulture)).Append('|')
             .Append(projection.UsedCfeCount.ToString(CultureInfo.InvariantCulture)).Append('|')
             .Append(projection.SourceReconciliationFingerprint).Append('|')
+            .Append(projection.WireEvidenceFingerprint).Append('|')
             .Append(SupportedReleaseProfile);
 
         foreach (var row in projection.AmountRows.OrderBy(item => (int)item.CfeType)
@@ -441,7 +485,9 @@ public static class FiscalDailyReportWireReadinessProjector
         return FiscalDailyReportCfeIdentityEvidence.Hash(material.ToString());
     }
 
-    private static int DecimalScale(decimal value) => (decimal.GetBits(value)[3] >> 16) & 0x7F;
+    private static bool FitsScale(decimal value, int scale) =>
+        value == decimal.Round(value, scale, MidpointRounding.ToEven);
+
     private static string Decimal(decimal value) => value.ToString("G29", CultureInfo.InvariantCulture);
     private static EFactura.Domain.Common.DomainRuleException Rule(string code, string message) =>
         FiscalDailyReportCfeIdentityEvidence.Rule(code, message);
