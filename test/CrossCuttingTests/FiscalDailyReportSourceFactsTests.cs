@@ -31,6 +31,7 @@ public sealed class FiscalDailyReportSourceFactsTests
             artifactId,
             signingId,
             SigningTimestamp,
+            snapshot.ContentFingerprint,
             SignedContentHash);
         var second = FiscalDailyReportCfeIdentityEvidence.Capture(
             document,
@@ -38,12 +39,31 @@ public sealed class FiscalDailyReportSourceFactsTests
             artifactId,
             signingId,
             SigningTimestamp,
+            snapshot.ContentFingerprint,
             SignedContentHash);
 
         Assert.Equal(first.EvidenceFingerprint, second.EvidenceFingerprint);
         Assert.Equal(snapshot.ContentFingerprint, first.FiscalContentFingerprint);
         Assert.Equal("UYU", first.CurrencyCode);
         first.EnsureIntegrity();
+    }
+
+    [Fact]
+    public void Signed_CFE_identity_rejects_artifact_snapshot_fingerprint_mismatch()
+    {
+        var (document, snapshot) = Fixture(CfeFamily.EFactura, 10);
+
+        var error = Assert.Throws<DomainRuleException>(() =>
+            FiscalDailyReportCfeIdentityEvidence.Capture(
+                document,
+                snapshot,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                SigningTimestamp,
+                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                SignedContentHash));
+
+        Assert.Equal("fiscal.daily_report.source_identity.artifact_snapshot_fingerprint_mismatch", error.Code);
     }
 
     [Theory]
@@ -196,6 +216,30 @@ public sealed class FiscalDailyReportSourceFactsTests
     }
 
     [Fact]
+    public void Bcu_fiscal_rate_requires_a_real_source_date_before_the_CFE_date()
+    {
+        var identity = Identity(CfeFamily.EFactura, 10, currency: "USD");
+
+        var missingDate = Assert.Throws<DomainRuleException>(() =>
+            FiscalDailyReportCurrencyConversionEvidence.Capture(
+                identity,
+                FiscalDailyReportFxRateSource.BcuFiscalQuotation,
+                39.5m,
+                default,
+                FxSourceHash));
+        Assert.Equal("fiscal.daily_report.fx.source_date_required", missingDate.Code);
+
+        var sameDay = Assert.Throws<DomainRuleException>(() =>
+            FiscalDailyReportCurrencyConversionEvidence.Capture(
+                identity,
+                FiscalDailyReportFxRateSource.BcuFiscalQuotation,
+                39.5m,
+                ReportDate,
+                FxSourceHash));
+        Assert.Equal("fiscal.daily_report.fx.bcu_rate_date_invalid", sameDay.Code);
+    }
+
+    [Fact]
     public void Domestic_correction_note_requires_exchange_rate_from_correction_CFE()
     {
         var identity = Identity(CfeFamily.EFacturaCreditNote, 10, currency: "USD");
@@ -333,6 +377,7 @@ public sealed class FiscalDailyReportSourceFactsTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             SigningTimestamp,
+            snapshot.ContentFingerprint,
             SignedContentHash);
 
     private static (FiscalDocument Document, FiscalContentSnapshot Snapshot) Fixture(
