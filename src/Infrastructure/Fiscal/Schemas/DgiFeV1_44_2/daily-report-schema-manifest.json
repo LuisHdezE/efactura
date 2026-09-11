@@ -59,6 +59,7 @@
   "safetyBoundary": {
     "functionalFormatAndXsdAreIndependentGates": true,
     "exampleSignatureAlgorithmsAreHistoricalEvidenceOnly": true,
+    "officialByteEqualityDirectlyObserved": false,
     "serializerImplementationIncluded": false
   }
 }
