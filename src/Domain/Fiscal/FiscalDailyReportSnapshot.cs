@@ -24,8 +24,7 @@ public sealed record FiscalDailyReportSnapshot(
     IReadOnlyCollection<FiscalDailyReportTypeConsumption> Consumptions,
     string ReconciliationFingerprint)
 {
-    public const string CurrentFormatVersion = "13.2";
-    private const int MaximumRangeRepetitions = 50_000;
+    public const string CurrentFormatVersion = FiscalDailyReportV13_2WireContract.Version;
 
     public static FiscalDailyReportSnapshot Create(
         string organizationId,
@@ -129,6 +128,15 @@ public sealed record FiscalDailyReportSnapshot(
         if (UsedCfeCount != Documents.Count + Annulments.Count)
             throw FiscalDailyReportDocumentEvidence.Rule("fiscal.daily_report.used_count_mismatch", "Daily Report used-CFE count is inconsistent with its frozen evidence.");
 
+        if (Summaries
+            .GroupBy(summary => summary.CfeType)
+            .Any(group => group.Count() > FiscalDailyReportV13_2WireContract.MaximumAmountRowsPerSummary))
+        {
+            throw FiscalDailyReportDocumentEvidence.Rule(
+                "fiscal.daily_report.summary_repetition_limit_exceeded",
+                "Daily Report amount-table repetitions exceed the pinned v13.2 limit for one CFE type.");
+        }
+
         var expectedSummaries = BuildSummaries(Documents);
         if (!Summaries.SequenceEqual(expectedSummaries))
             throw FiscalDailyReportDocumentEvidence.Rule("fiscal.daily_report.summary_mismatch", "Daily Report monetary summaries do not match frozen CFE evidence.");
@@ -137,8 +145,8 @@ public sealed record FiscalDailyReportSnapshot(
         if (!SameConsumptions(Consumptions, expectedConsumptions))
             throw FiscalDailyReportDocumentEvidence.Rule("fiscal.daily_report.consumption_mismatch", "Daily Report numbering consumption does not match frozen evidence.");
 
-        if (Consumptions.SelectMany(consumption => consumption.UsedRanges).Count() > MaximumRangeRepetitions
-            || Consumptions.SelectMany(consumption => consumption.AnnulledRanges).Count() > MaximumRangeRepetitions)
+        if (Consumptions.SelectMany(consumption => consumption.UsedRanges).Count() > FiscalDailyReportV13_2WireContract.MaximumNumberRangeRepetitions
+            || Consumptions.SelectMany(consumption => consumption.AnnulledRanges).Count() > FiscalDailyReportV13_2WireContract.MaximumNumberRangeRepetitions)
         {
             throw FiscalDailyReportDocumentEvidence.Rule(
                 "fiscal.daily_report.range_repetition_limit_exceeded",
