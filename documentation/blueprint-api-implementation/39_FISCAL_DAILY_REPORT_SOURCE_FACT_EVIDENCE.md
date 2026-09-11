@@ -58,11 +58,14 @@ Current DGI FAQ 9.6 states that Reporte Diario amounts are expressed in UYU and,
 
 - use the BCU quotation with all decimal digits for the fiscal exchange rate;
 - foreign currency generally uses the interbank buyer-banknote closing quotation from the day before the operation;
+- if that quotation does not exist, use the last previous business-day quotation;
 - if no quotation exists for the transaction currency, the CFE exchange rate may be used;
 - domestic correction notes use the exchange rate carried by the correction CFE for Reporte Diario purposes;
 - a future-dated CFE fallback may require later Reporte Diario reliquidation.
 
 This slice freezes the chosen source kind, exact decimal rate, source date, source-evidence fingerprint and reliquidation marker. It does not round the rate or converted amount at the source-evidence layer.
+
+For `BcuFiscalQuotation`, the source date must be a real date strictly before the CFE fiscal date. This does not attempt to calculate business days inside Domain; acquisition/selection of the correct BCU quotation remains an external source responsibility.
 
 ## Implemented domain evidence
 
@@ -78,9 +81,11 @@ Binds every later source fact to the exact signed CFE through:
 - fiscal date;
 - currency;
 - CFE advanced-signature timestamp;
-- immutable fiscal-content fingerprint;
+- signed artifact fiscal-content fingerprint;
 - signed-content SHA-256;
 - deterministic evidence fingerprint.
+
+Capture requires the signed artifact fiscal-content fingerprint explicitly and verifies that it equals the immutable `FiscalContentSnapshot.ContentFingerprint`. Merely naming a `SignedArtifactId` is insufficient.
 
 The identity is revalidated against `FiscalDocument` + `FiscalContentSnapshot` before composition.
 
@@ -120,7 +125,7 @@ For non-UYU domestic accepted CFE it freezes:
 - original currency;
 - typed rate source;
 - exact decimal rate to UYU;
-- rate source date;
+- non-default rate source date;
 - source-evidence SHA-256;
 - whether later reliquidation may be required;
 - deterministic evidence fingerprint.
@@ -135,6 +140,8 @@ Accepted source kinds in this bounded model:
 Domestic 102/103/112/113 require `CorrectionCfeRate` in this evidence layer.
 
 A future-date fallback requires the reliquidation marker.
+
+A BCU quotation source date cannot be the CFE date or a later date because the published rule requires the previous-day quotation, or an earlier previous business day when necessary.
 
 ## Composition now enabled
 
@@ -168,6 +175,7 @@ This is intentional, not a missing test workaround.
 `FiscalDailyReportSourceFactsTests` covers:
 
 - deterministic signed-CFE source identity;
+- signed-artifact/snapshot fingerprint mismatch rejection;
 - AE/BE mapping;
 - immutable supersession chain;
 - A-C19 absent vs exact value `1`;
@@ -176,6 +184,7 @@ This is intentional, not a missing test workaround.
 - BE rejection excluded from emitted population;
 - BE -> explicit annulment composition;
 - exact-decimal BCU conversion calculation;
+- non-default and strictly previous BCU source-date rule;
 - correction-note exchange-rate source rule;
 - future-date reliquidation marker;
 - foreign-currency composition remains fail closed;
