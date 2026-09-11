@@ -19,7 +19,7 @@ public sealed class UruguayCfe25_2EligibilityRulePackProvider : ICfeEligibilityR
     private static readonly CfeEligibilityRulePack Pack = new(
         FormatVersion,
         SupportedFrom,
-        5000m,
+        UruguayCfeHighValueThresholdPolicy.CurrentThresholdUi,
         exportServiceStrategyVerifiedCurrent: false,
         new RegulatoryRuleEvidence(
             "UY-CFE-FORMAT-25.2",
@@ -40,7 +40,7 @@ public sealed class UruguayCfe25_2EligibilityRulePackProvider : ICfeEligibilityR
             "DGI - Formato CFE v25.2 Tabla E",
             "https://www.efactura.dgi.gub.uy/files/formato_cfe_v25-2-pdf?es=",
             "Formato_CFE_v25-2, reviewed 2026-08-29",
-            new DateOnly(2022, 11, 1),
+            UruguayCfeHighValueThresholdPolicy.CurrentThresholdEffectiveFrom,
             clause: "Identificación y envío obligatorio de e-Tickets cuando monto neto supera 5.000 UI o existen retenciones/percepciones"),
         new RegulatoryRuleEvidence(
             "UY-CFE-FAQ-EXPORT-SERVICES-STRATEGY",

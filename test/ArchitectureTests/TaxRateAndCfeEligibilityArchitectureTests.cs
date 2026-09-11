@@ -30,11 +30,15 @@ public sealed class TaxRateAndCfeEligibilityArchitectureTests
     {
         var domain = Read("src/Domain/Fiscal/CfeEligibility.cs");
         var application = Read("src/Application/Fiscal/UruguayCfe25_2EligibilityPreparation.cs");
+        var highValuePolicy = Read("src/Domain/Fiscal/FiscalDailyReportHighValueAutomation.cs");
         var combined = domain + Environment.NewLine + application;
 
         Assert.Contains("CfeEligibilityPolicy", domain, StringComparison.Ordinal);
         Assert.Contains("PrepareCfeEligibilityUseCase", application, StringComparison.Ordinal);
-        Assert.Contains("5000m", application, StringComparison.Ordinal);
+        Assert.Contains("UruguayCfeHighValueThresholdPolicy.CurrentThresholdUi", application, StringComparison.Ordinal);
+        Assert.Contains("UruguayCfeHighValueThresholdPolicy.CurrentThresholdEffectiveFrom", application, StringComparison.Ordinal);
+        Assert.Contains("CurrentThresholdUi = 5_000m", highValuePolicy, StringComparison.Ordinal);
+        Assert.Contains("CurrentThresholdEffectiveFrom = new(2022, 11, 1)", highValuePolicy, StringComparison.Ordinal);
         Assert.Contains("FormatVersion = \"25.2\"", application, StringComparison.Ordinal);
         Assert.Contains("exportServiceStrategyVerifiedCurrent: false", application, StringComparison.Ordinal);
 
