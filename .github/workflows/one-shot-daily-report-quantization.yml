@@ -22,17 +22,27 @@ jobs:
           ref: blueprint/fiscal-daily-report-monetary-quantization
           fetch-depth: 0
 
+      - name: Configure persistent runner caches
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
       - name: Apply governed patch
         run: python3 .github/one-shot/daily-report-quantization.py
 
       - name: Restore solution
-        run: dotnet restore api-accounting.sln
+        run: timeout 10m dotnet restore api-accounting.sln --disable-build-servers
 
       - name: Run focused architecture tests
-        run: dotnet test test/ArchitectureTests/ArchitectureTests.csproj --no-restore --filter FullyQualifiedName~FiscalDailyReportWireReadinessArchitectureTests
+        run: dotnet test test/ArchitectureTests/ArchitectureTests.csproj --configuration Release --no-restore --filter FullyQualifiedName~FiscalDailyReportWireReadinessArchitectureTests
 
       - name: Run focused cross-cutting tests
-        run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --no-restore --filter FullyQualifiedName~FiscalDailyReportWireReadinessTests
+        run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --configuration Release --no-restore --filter FullyQualifiedName~FiscalDailyReportWireReadinessTests
 
       - name: Commit candidate and remove one-shot files
         run: |
