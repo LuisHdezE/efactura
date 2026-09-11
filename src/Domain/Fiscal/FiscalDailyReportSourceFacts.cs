@@ -54,6 +54,7 @@ public sealed record FiscalDailyReportCfeIdentityEvidence(
         Guid signedArtifactId,
         Guid signingEvidenceId,
         DateTimeOffset signingTimestamp,
+        string artifactFiscalContentFingerprint,
         string signedContentHash)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -80,6 +81,16 @@ public sealed record FiscalDailyReportCfeIdentityEvidence(
                 "Fiscal document identity and immutable content snapshot do not match for Daily Report source evidence.");
         }
 
+        var artifactFingerprint = Fingerprint(
+            artifactFiscalContentFingerprint,
+            "fiscal.daily_report.source_identity.artifact_content_fingerprint_invalid");
+        if (!string.Equals(artifactFingerprint, snapshot.ContentFingerprint, StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.source_identity.artifact_snapshot_fingerprint_mismatch",
+                "Signed artifact fiscal-content fingerprint does not match the immutable snapshot.");
+        }
+
         var provisional = new FiscalDailyReportCfeIdentityEvidence(
             document.Id,
             signedArtifactId,
@@ -92,7 +103,7 @@ public sealed record FiscalDailyReportCfeIdentityEvidence(
             document.FiscalDate,
             Currency(document.CurrencyCode),
             FiscalDailyReportDocumentEvidence.NormalizeToSecond(signingTimestamp),
-            Fingerprint(snapshot.ContentFingerprint, "fiscal.daily_report.source_identity.content_fingerprint_invalid"),
+            artifactFingerprint,
             Fingerprint(signedContentHash, "fiscal.daily_report.source_identity.signed_content_hash_invalid"),
             new string('0', 64));
 
@@ -356,10 +367,12 @@ public sealed record FiscalDailyReportCurrencyConversionEvidence(
             throw Rule("fiscal.daily_report.fx.source_invalid", "Daily-report currency-conversion source is invalid.");
         if (rateToUyu <= 0m)
             throw Rule("fiscal.daily_report.fx.rate_invalid", "Daily-report conversion rate to UYU must be positive.");
+        if (rateSourceDate == default)
+            throw Rule("fiscal.daily_report.fx.source_date_required", "Daily-report conversion evidence requires the authoritative rate source date.");
 
         EnsureSourceRule(identity.CfeType, rateSource, requiresReliquidation);
-        if (rateSource == FiscalDailyReportFxRateSource.BcuFiscalQuotation && rateSourceDate > identity.FiscalDate)
-            throw Rule("fiscal.daily_report.fx.bcu_rate_date_invalid", "BCU fiscal quotation source date cannot be after the CFE fiscal date.");
+        if (rateSource == FiscalDailyReportFxRateSource.BcuFiscalQuotation && rateSourceDate >= identity.FiscalDate)
+            throw Rule("fiscal.daily_report.fx.bcu_rate_date_invalid", "BCU fiscal quotation source date must be before the CFE fiscal date.");
 
         var provisional = new FiscalDailyReportCurrencyConversionEvidence(
             identity.EvidenceFingerprint,
@@ -395,9 +408,11 @@ public sealed record FiscalDailyReportCurrencyConversionEvidence(
             throw Rule("fiscal.daily_report.fx.source_invalid", "Daily-report currency-conversion source is invalid.");
         if (RateToUyu <= 0m)
             throw Rule("fiscal.daily_report.fx.rate_invalid", "Daily-report conversion rate to UYU must be positive.");
+        if (RateSourceDate == default)
+            throw Rule("fiscal.daily_report.fx.source_date_required", "Daily-report conversion evidence requires the authoritative rate source date.");
         EnsureSourceRule(CfeType, RateSource, RequiresReliquidation);
-        if (RateSource == FiscalDailyReportFxRateSource.BcuFiscalQuotation && RateSourceDate > FiscalDate)
-            throw Rule("fiscal.daily_report.fx.bcu_rate_date_invalid", "BCU fiscal quotation source date cannot be after the CFE fiscal date.");
+        if (RateSource == FiscalDailyReportFxRateSource.BcuFiscalQuotation && RateSourceDate >= FiscalDate)
+            throw Rule("fiscal.daily_report.fx.bcu_rate_date_invalid", "BCU fiscal quotation source date must be before the CFE fiscal date.");
 
         Fingerprint(SourceEvidenceFingerprint, "fiscal.daily_report.fx.source_fingerprint_invalid");
         Fingerprint(EvidenceFingerprint, "fiscal.daily_report.fx.evidence_fingerprint_invalid");
@@ -547,6 +562,7 @@ public static class FiscalDailyReportSourceFactComposer
             identity.SignedArtifactId,
             identity.SigningEvidenceId,
             identity.SigningTimestamp,
+            identity.FiscalContentFingerprint,
             identity.SignedContentHash);
         if (!string.Equals(recaptured.EvidenceFingerprint, identity.EvidenceFingerprint, StringComparison.Ordinal))
             throw Rule("fiscal.daily_report.source_facts.identity_input_mismatch", "Frozen source identity does not match the supplied fiscal document/snapshot inputs.");
