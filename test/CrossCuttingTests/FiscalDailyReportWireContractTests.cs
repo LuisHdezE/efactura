@@ -1,3 +1,4 @@
+using EFactura.Domain.Common;
 using EFactura.Domain.Fiscal;
 using Xunit;
 
@@ -27,6 +28,42 @@ public sealed class FiscalDailyReportWireContractTests
         Assert.Equal(1, FiscalDailyReportV13_2WireContract.ThirdPartyPaymentIndicator);
         Assert.Equal(0, FiscalDailyReportV13_2WireContract.HighValueTicketCounterMinimum);
         Assert.Equal("XML Digital Signature", FiscalDailyReportV13_2WireContract.XmlDigitalSignatureStandard);
+    }
+
+    [Fact]
+    public void Snapshot_rejects_more_than_1000_amount_rows_for_one_CFE_type()
+    {
+        var summaryDate = new DateOnly(2026, 9, 10);
+        var snapshot = FiscalDailyReportSnapshot.Create(
+            "org-wire-contract",
+            "219999830019",
+            summaryDate,
+            sequence: 1);
+        var bucket = new FiscalDailyReportSummaryBucket(
+            CfeFamily.ETicket,
+            summaryDate,
+            "0001",
+            false,
+            1,
+            0m,
+            0m,
+            0m,
+            0m,
+            0m,
+            0m,
+            0m,
+            0m,
+            0m);
+
+        var tampered = snapshot with
+        {
+            Summaries = Enumerable
+                .Repeat(bucket, FiscalDailyReportV13_2WireContract.MaximumAmountRowsPerSummary + 1)
+                .ToArray()
+        };
+
+        var exception = Assert.Throws<DomainRuleException>(tampered.EnsureIntegrity);
+        Assert.Equal("fiscal.daily_report.summary_repetition_limit_exceeded", exception.Code);
     }
 
     [Fact]
