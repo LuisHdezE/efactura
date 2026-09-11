@@ -1,0 +1,469 @@
+name: One-shot Daily Report monetary quantization
+
+on:
+  push:
+    branches:
+      - blueprint/fiscal-daily-report-monetary-quantization
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: [self-hosted, linux, x64, efactura-ci]
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: blueprint/fiscal-daily-report-monetary-quantization
+          fetch-depth: 0
+
+      - name: Apply governed quantization patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected exactly one match, got {count}")
+              return text.replace(old, new, 1)
+
+          wire_path = Path("src/Domain/Fiscal/FiscalDailyReportWireReadiness.cs")
+          wire = wire_path.read_text()
+
+          wire = replace_once(
+              wire,
+              "/// Produces a deterministic semantic projection only when no unresolved wire policy is needed.\n/// Foreign-currency rows that require two-decimal quantization remain fail-closed until DGI\n/// quantization semantics are authoritatively pinned.",
+              "/// Produces a deterministic semantic projection only when no unresolved wire policy is needed.\n/// Foreign-currency arithmetic remains exact through reconciliation; this wire boundary applies\n/// the DGI mathematical two-decimal rounding policy and then enforces v13.2 row algebra.",
+              "wire summary")
+
+          old_quantization = '''        var values = new[]
+        {
+            summary.NonTaxedAmount,
+            summary.ExportAmount,
+            summary.MinimumTaxableAmount,
+            summary.BasicTaxableAmount,
+            summary.MinimumVatAmount,
+            summary.BasicVatAmount,
+            summary.TotalAmount
+        };
+        if (values.Any(value => !FitsScale(value, FiscalDailyReportV13_2WireContract.MonetaryDecimalDigits)))
+        {
+            throw Rule(
+                "fiscal.daily_report.wire.quantization_required",
+                "Reporte Diario contains UYU monetary evidence that cannot be represented exactly with two decimals; no DGI quantization rule is pinned, so wire projection remains fail-closed.");
+        }
+
+        return new FiscalDailyReportWireAmountRow(
+            summary.CfeType,
+            summary.FiscalDate,
+            summary.DgiBranchCode,
+            summary.PaymentOnBehalfOfThirdParty,
+            summary.NonTaxedAmount,
+            summary.ExportAmount,
+            0m,
+            0m,
+            summary.MinimumTaxableAmount,
+            summary.BasicTaxableAmount,
+            0m,
+            summary.MinimumVatAmount,
+            summary.BasicVatAmount,
+            0m,
+            minimumRate,
+            basicRate,
+            summary.TotalAmount,
+            0m,
+            0m);'''
+
+          new_quantization = '''        var nonTaxedAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.NonTaxedAmount);
+        var exportAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.ExportAmount);
+        var minimumTaxableAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.MinimumTaxableAmount);
+        var basicTaxableAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.BasicTaxableAmount);
+        var minimumVatAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.MinimumVatAmount);
+        var basicVatAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.BasicVatAmount);
+
+        EnsureVatFormula(
+            minimumTaxableAmount,
+            minimumVatAmount,
+            minimumRate,
+            "fiscal.daily_report.wire.minimum_vat_quantization_mismatch");
+        EnsureVatFormula(
+            basicTaxableAmount,
+            basicVatAmount,
+            basicRate,
+            "fiscal.daily_report.wire.basic_vat_quantization_mismatch");
+
+        // DGI v13.2 defines C24 as the sum of C12..C21. Recompose from the already
+        // quantized wire concepts instead of independently rounding the source CFE total.
+        var totalAmount = nonTaxedAmount
+            + exportAmount
+            + minimumTaxableAmount
+            + basicTaxableAmount
+            + minimumVatAmount
+            + basicVatAmount;
+        FiscalDailyReportMonetaryQuantizer.EnsureFitsWire(totalAmount);
+
+        return new FiscalDailyReportWireAmountRow(
+            summary.CfeType,
+            summary.FiscalDate,
+            summary.DgiBranchCode,
+            summary.PaymentOnBehalfOfThirdParty,
+            nonTaxedAmount,
+            exportAmount,
+            0m,
+            0m,
+            minimumTaxableAmount,
+            basicTaxableAmount,
+            0m,
+            minimumVatAmount,
+            basicVatAmount,
+            0m,
+            minimumRate,
+            basicRate,
+            totalAmount,
+            0m,
+            0m);'''
+
+          wire = replace_once(wire, old_quantization, new_quantization, "wire quantization block")
+
+          old_tail = '''    private static bool FitsScale(decimal value, int scale) =>
+        value == decimal.Round(value, scale, MidpointRounding.ToEven);
+
+    private static string Decimal(decimal value) => value.ToString("G29", CultureInfo.InvariantCulture);
+    private static EFactura.Domain.Common.DomainRuleException Rule(string code, string message) =>
+        FiscalDailyReportCfeIdentityEvidence.Rule(code, message);
+}'''
+          new_tail = '''    private static void EnsureVatFormula(
+        decimal taxableAmount,
+        decimal vatAmount,
+        decimal? ratePercent,
+        string code)
+    {
+        if (taxableAmount == 0m)
+        {
+            if (vatAmount != 0m)
+                throw Rule(code, "Reporte Diario VAT amount cannot be positive when its taxable wire amount is zero.");
+            return;
+        }
+
+        if (!ratePercent.HasValue)
+            return;
+
+        var expected = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(
+            taxableAmount * ratePercent.Value / 100m);
+        if (vatAmount != expected)
+        {
+            throw Rule(
+                code,
+                "Reporte Diario quantized VAT amount does not satisfy the v13.2 taxable-amount/rate validation.");
+        }
+    }
+
+    private static string Decimal(decimal value) => value.ToString("G29", CultureInfo.InvariantCulture);
+    private static EFactura.Domain.Common.DomainRuleException Rule(string code, string message) =>
+        FiscalDailyReportCfeIdentityEvidence.Rule(code, message);
+}'''
+          idx = wire.rfind(old_tail)
+          if idx < 0:
+              raise SystemExit("wire tail: expected final FitsScale block")
+          wire = wire[:idx] + new_tail + wire[idx + len(old_tail):]
+          wire_path.write_text(wire)
+
+          quantizer = '''using EFactura.Domain.Common;
+
+namespace EFactura.Domain.Fiscal;
+
+/// <summary>
+/// Monetary wire quantization for Reporte Diario v13.2. Reconciliation and FX conversion retain
+/// full decimal precision; numerical modification happens only when materializing NUM 17 monetary
+/// concepts for the wire projection.
+/// </summary>
+public static class FiscalDailyReportMonetaryQuantizer
+{
+    public const int MonetaryScale = FiscalDailyReportV13_2WireContract.MonetaryDecimalDigits;
+    public const decimal MaximumWireAmount = 999_999_999_999_999.99m;
+
+    public static decimal QuantizeNonNegative(decimal value)
+    {
+        if (value < 0m)
+        {
+            throw new DomainRuleException(
+                "fiscal.daily_report.wire.monetary_negative",
+                "The accepted Reporte Diario Release-1 monetary concepts cannot be negative.");
+        }
+
+        var quantized = decimal.Round(value, MonetaryScale, MidpointRounding.AwayFromZero);
+        EnsureFitsWire(quantized);
+        return quantized;
+    }
+
+    public static void EnsureFitsWire(decimal value)
+    {
+        if (value < 0m
+            || value > MaximumWireAmount
+            || value != decimal.Round(value, MonetaryScale, MidpointRounding.ToEven))
+        {
+            throw new DomainRuleException(
+                "fiscal.daily_report.wire.monetary_out_of_range",
+                "Reporte Diario monetary value must fit NUM 17 with 15 integer and 2 decimal digits.");
+        }
+    }
+}
+'''
+          Path("src/Domain/Fiscal/FiscalDailyReportMonetaryQuantizer.cs").write_text(quantizer)
+
+          test_path = Path("test/CrossCuttingTests/FiscalDailyReportWireReadinessTests.cs")
+          tests = test_path.read_text()
+          old_test = '''    [Fact]
+    public void Foreign_currency_projection_fails_closed_when_exact_UYU_values_need_quantization()
+    {
+        var (document, snapshot) = Fixture(CfeFamily.EFactura, 10, currency: "USD");
+        var identity = Identity(document, snapshot);
+        var outcome = FiscalDailyReportDgiOutcomeEvidence.Capture(
+            identity,
+            FiscalDailyReportDgiCfeOutcome.Received,
+            SigningTimestamp.AddMinutes(2),
+            DgiResponseHash);
+        var thirdParty = FiscalDailyReportThirdPartyPaymentEvidence.Capture(
+            identity,
+            null,
+            ThirdPartySourceHash);
+        var fx = FiscalDailyReportCurrencyConversionEvidence.Capture(
+            identity,
+            FiscalDailyReportFxRateSource.BcuFiscalQuotation,
+            39.1234567m,
+            new DateOnly(2026, 9, 9),
+            FxSourceHash);
+        var reportDocument = FiscalDailyReportForeignCurrencyComposer.CaptureEmittedDocument(
+            document,
+            snapshot,
+            identity,
+            outcome,
+            thirdParty,
+            fx);
+        var report = FiscalDailyReportSnapshot.Create(
+            "company-1",
+            "214748364700",
+            ReportDate,
+            1,
+            [reportDocument]);
+        var rates = FiscalDailyReportVatRateEvidence.Capture(identity, snapshot);
+
+        var error = Assert.Throws<DomainRuleException>(() =>
+            FiscalDailyReportWireReadinessProjector.Project(report, [rates], []));
+
+        Assert.Equal("fiscal.daily_report.wire.quantization_required", error.Code);
+    }'''
+          new_test = '''    [Fact]
+    public void Foreign_currency_projection_quantizes_only_at_wire_boundary_with_DGI_mathematical_rounding()
+    {
+        var (document, snapshot) = Fixture(CfeFamily.EFactura, 10, currency: "USD");
+        var identity = Identity(document, snapshot);
+        var outcome = FiscalDailyReportDgiOutcomeEvidence.Capture(
+            identity,
+            FiscalDailyReportDgiCfeOutcome.Received,
+            SigningTimestamp.AddMinutes(2),
+            DgiResponseHash);
+        var thirdParty = FiscalDailyReportThirdPartyPaymentEvidence.Capture(
+            identity,
+            null,
+            ThirdPartySourceHash);
+        var fx = FiscalDailyReportCurrencyConversionEvidence.Capture(
+            identity,
+            FiscalDailyReportFxRateSource.BcuFiscalQuotation,
+            39.1234567m,
+            new DateOnly(2026, 9, 9),
+            FxSourceHash);
+        var reportDocument = FiscalDailyReportForeignCurrencyComposer.CaptureEmittedDocument(
+            document,
+            snapshot,
+            identity,
+            outcome,
+            thirdParty,
+            fx);
+        var report = FiscalDailyReportSnapshot.Create(
+            "company-1",
+            "214748364700",
+            ReportDate,
+            1,
+            [reportDocument]);
+        var rates = FiscalDailyReportVatRateEvidence.Capture(identity, snapshot);
+
+        var projected = FiscalDailyReportWireReadinessProjector.Project(report, [rates], []);
+
+        var source = Assert.Single(report.Summaries);
+        Assert.Equal(3912.3456700m, source.BasicTaxableAmount);
+        Assert.Equal(860.7160474m, source.BasicVatAmount);
+        Assert.Equal(4773.0617174m, source.TotalAmount);
+
+        var row = Assert.Single(projected.AmountRows);
+        Assert.Equal(3912.35m, row.BasicTaxableAmount);
+        Assert.Equal(860.72m, row.BasicVatAmount);
+        Assert.Equal(4773.07m, row.TotalAmount);
+    }
+
+    [Fact]
+    public void Wire_quantizer_uses_mathematical_half_up_instead_of_bankers_rounding()
+    {
+        Assert.Equal(1.01m, FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(1.005m));
+        Assert.Equal(1.00m, FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(1.004m));
+    }'''
+          tests = replace_once(tests, old_test, new_test, "cross-cutting quantization test")
+          test_path.write_text(tests)
+
+          arch_path = Path("test/ArchitectureTests/FiscalDailyReportWireReadinessArchitectureTests.cs")
+          arch = arch_path.read_text()
+          arch = replace_once(
+              arch,
+              '        Assert.DoesNotContain("HttpClient", source, StringComparison.Ordinal);\n        Assert.Contains("fiscal.daily_report.wire.quantization_required", source, StringComparison.Ordinal);\n        Assert.Contains("fiscal.daily_report.wire.high_value_evidence_required", source, StringComparison.Ordinal);',
+              '        Assert.DoesNotContain("HttpClient", source, StringComparison.Ordinal);\n        var quantizer = Read("src/Domain/Fiscal/FiscalDailyReportMonetaryQuantizer.cs");\n        Assert.DoesNotContain("fiscal.daily_report.wire.quantization_required", source, StringComparison.Ordinal);\n        Assert.Contains("FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative", source, StringComparison.Ordinal);\n        Assert.Contains("MidpointRounding.AwayFromZero", quantizer, StringComparison.Ordinal);\n        Assert.Contains("999_999_999_999_999.99m", quantizer, StringComparison.Ordinal);\n        Assert.Contains("fiscal.daily_report.wire.high_value_evidence_required", source, StringComparison.Ordinal);',
+              "architecture quantization assertions")
+          arch = replace_once(
+              arch,
+              '        var document = Read("documentation/blueprint-api-implementation/43_FISCAL_DAILY_REPORT_WIRE_READINESS.md");\n\n        Assert.Contains("does not generate XML", document, StringComparison.OrdinalIgnoreCase);\n        Assert.Contains("B-C27", document, StringComparison.Ordinal);\n        Assert.Contains("quantization", document, StringComparison.OrdinalIgnoreCase);\n        Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", document, StringComparison.Ordinal);\n        Assert.DoesNotContain("READY FOR DGI TESTING", document, StringComparison.OrdinalIgnoreCase);',
+              '        var document = Read("documentation/blueprint-api-implementation/43_FISCAL_DAILY_REPORT_WIRE_READINESS.md");\n        var quantization = Read("documentation/blueprint-api-implementation/45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md");\n\n        Assert.Contains("does not generate XML", document, StringComparison.OrdinalIgnoreCase);\n        Assert.Contains("B-C27", document, StringComparison.Ordinal);\n        Assert.Contains("redondeo matemático", quantization, StringComparison.OrdinalIgnoreCase);\n        Assert.Contains("C24", quantization, StringComparison.Ordinal);\n        Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", quantization, StringComparison.Ordinal);\n        Assert.DoesNotContain("READY FOR DGI TESTING", quantization, StringComparison.OrdinalIgnoreCase);',
+              "architecture documentation assertions")
+          arch_path.write_text(arch)
+
+          doc45 = '''# 45 — Reporte Diario v13.2 monetary quantization
+
+## Decision
+
+This increment closes the two-decimal monetary quantization gap at the Reporte Diario **wire projection** boundary without changing the lossless reconciliation evidence introduced in PR #65/#66.
+
+Formal DGI Testing readiness remains exactly:
+
+**BLOCKED BY MISSING PRODUCT CAPABILITIES**
+
+## Authority reviewed 2026-09-11
+
+### DGI — Formato Reporte CFE v13.2
+
+Official source:
+
+`https://www.efactura.dgi.gub.uy/files/formato_reporte_cfe_v13_2-pdf?es=`
+
+The amount-table monetary concepts use `NUM 17` with **15 integer digits and 2 decimal digits**. The functional validations also define, among others:
+
+- C19 from C16 and C22;
+- C20 from C17 and C23;
+- C24 as the sum of C12 through C21.
+
+### DGI — Instructivo de ingreso al régimen CFE
+
+Official index:
+
+`https://www.efactura.dgi.gub.uy/principal/factura-electronica-informacion-general-instructivos`
+
+The current DGI homologation instruction states that calculation results use **redondeo matemático con 2 decimales**.
+
+The project had already pinned that rule for CFE arithmetic in `UruguayCfe25_2ArithmeticCatalog` and implemented positive monetary midpoint behavior with `MidpointRounding.AwayFromZero`. This increment applies the same fiscal rounding semantics to Reporte Diario wire monetary values instead of introducing a second incompatible convention.
+
+## Precision boundary
+
+Foreign-currency source composition remains unchanged:
+
+1. the authoritative fiscal/BCU exchange rate is frozen with all available decimal digits;
+2. CFE monetary partitions are converted to UYU without intermediate rounding;
+3. reconciliation snapshots retain those exact converted decimal values;
+4. only the final Reporte Diario wire amount concepts are quantized to two decimals.
+
+Therefore source evidence is not rewritten merely to satisfy an XML numeric shape.
+
+## Wire quantizer
+
+`FiscalDailyReportMonetaryQuantizer`:
+
+- uses scale `2` from `FiscalDailyReportV13_2WireContract`;
+- uses `MidpointRounding.AwayFromZero` for the accepted non-negative monetary domain, implementing mathematical half-up midpoint behavior;
+- rejects negative Release-1 monetary concepts;
+- rejects values above `999999999999999.99`, the maximum non-negative value representable by NUM 17 with 15 integer digits and 2 decimals.
+
+## v13.2 algebra after quantization
+
+The wire-readiness projector quantizes C12/C13/C16/C17/C19/C20 only after reconciliation.
+
+It then:
+
+- verifies quantized C19 against quantized C16 and B-C22;
+- verifies quantized C20 against quantized C17 and B-C23;
+- recomposes C24 from the already quantized C12..C21 concepts rather than independently rounding the source CFE total.
+
+This is important because separately rounding a converted source total can differ by one cent from the sum of separately quantized report concepts. v13.2 defines C24 as the sum of C12..C21, so the wire projection follows that explicit invariant.
+
+If a converted source VAT partition cannot satisfy the v13.2 taxable-amount/rate relationship after the mandated wire quantization, the projector fails closed with a typed VAT-quantization mismatch instead of silently changing fiscal evidence.
+
+## What this unlocks
+
+Rows whose exact UYU reconciliation values carry more than two decimal places can now become deterministic wire rows when the resulting values satisfy the v13.2 algebraic validations.
+
+The previous blanket failure `fiscal.daily_report.wire.quantization_required` is removed from the projector.
+
+This does **not** yet add:
+
+- Reporte Diario XML serialization;
+- runtime validation against `ReporteDiarioCFE.xsd`;
+- XMLDSig generation or report signing orchestration;
+- report persistence/replay or sequence/reliquidation lifecycle;
+- live BCU acquisition;
+- foreign-currency B-C27 threshold policy;
+- DGI transport, ACK lifecycle or Sobre packaging.
+
+## Next bounded gate
+
+The next safe increment is the deterministic **unsigned Reporte Diario v13.2 XML serializer**, mapped only from the already validated semantic wire projection and validated locally against the pinned XSD closure before any signature or transport work.
+
+Formal traditional DGI Testing readiness remains exactly:
+
+**BLOCKED BY MISSING PRODUCT CAPABILITIES**
+'''
+          Path("documentation/blueprint-api-implementation/45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md").write_text(doc45)
+
+          note43 = '''\n> Supersession note (2026-09-11): the quantization gap described in this historical slice was closed by implementation record `45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md`. Lossless FX/reconciliation precision remains unchanged; mathematical two-decimal rounding is applied only at the wire projection boundary.\n'''
+          doc43_path = Path("documentation/blueprint-api-implementation/43_FISCAL_DAILY_REPORT_WIRE_READINESS.md")
+          doc43 = doc43_path.read_text()
+          marker43 = "# 43 — Reporte Diario v13.2 wire-source readiness\n"
+          if note43.strip() not in doc43:
+              doc43 = doc43.replace(marker43, marker43 + note43, 1)
+          doc43_path.write_text(doc43)
+
+          note44 = '''\n> Supersession note (2026-09-11): the monetary-quantization gap retained by this historical slice was closed by implementation record `45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md`. Foreign-currency B-C27 threshold semantics remain a separate fail-closed capability.\n'''
+          doc44_path = Path("documentation/blueprint-api-implementation/44_FISCAL_DAILY_REPORT_HIGH_VALUE_AUTOMATION.md")
+          doc44 = doc44_path.read_text()
+          marker44 = "# 44 — Fiscal Daily Report high-value automation\n"
+          if note44.strip() not in doc44:
+              doc44 = doc44.replace(marker44, marker44 + note44, 1)
+          doc44_path.write_text(doc44)
+          PY
+
+      - name: Restore solution
+        shell: bash
+        run: dotnet restore api-accounting.sln
+
+      - name: Run focused architecture tests
+        shell: bash
+        run: dotnet test test/ArchitectureTests/ArchitectureTests.csproj --no-restore --filter FullyQualifiedName~FiscalDailyReportWireReadinessArchitectureTests
+
+      - name: Run focused cross-cutting tests
+        shell: bash
+        run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --no-restore --filter FullyQualifiedName~FiscalDailyReportWireReadinessTests
+
+      - name: Commit candidate and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "eFactura governed runner"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/one-shot-daily-report-quantization.yml
+          git add src/Domain/Fiscal/FiscalDailyReportWireReadiness.cs \
+                  src/Domain/Fiscal/FiscalDailyReportMonetaryQuantizer.cs \
+                  test/CrossCuttingTests/FiscalDailyReportWireReadinessTests.cs \
+                  test/ArchitectureTests/FiscalDailyReportWireReadinessArchitectureTests.cs \
+                  documentation/blueprint-api-implementation/43_FISCAL_DAILY_REPORT_WIRE_READINESS.md \
+                  documentation/blueprint-api-implementation/44_FISCAL_DAILY_REPORT_HIGH_VALUE_AUTOMATION.md \
+                  documentation/blueprint-api-implementation/45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md
+          git commit -m "feat(fiscal): pin daily report monetary quantization"
+          git push origin HEAD:blueprint/fiscal-daily-report-monetary-quantization
