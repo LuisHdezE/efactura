@@ -23,6 +23,26 @@ public sealed class FiscalDailyReportWireReadinessArchitectureTests
     }
 
     [Fact]
+    public void Release1_zero_concepts_are_guarded_by_the_current_fiscal_capability_boundary()
+    {
+        var transaction = Read("src/Application/Sales/SaleConfirmationTransaction.cs");
+        var arithmetic = Read("src/Domain/Fiscal/CfeArithmetic.cs");
+        var source = Read("src/Domain/Fiscal/FiscalDailyReportWireReadiness.cs");
+
+        Assert.Contains("HasRetentionsOrPerceptions: false", transaction, StringComparison.Ordinal);
+        Assert.Contains("VatRateKind.Minimum or VatRateKind.Basic", arithmetic, StringComparison.Ordinal);
+        Assert.Contains("rate.RateKind == VatRateKind.Export", arithmetic, StringComparison.Ordinal);
+        Assert.Contains("fiscal.arithmetic.tax_treatment_not_supported", arithmetic, StringComparison.Ordinal);
+
+        Assert.Contains("PerceivedTaxAmount", source, StringComparison.Ordinal);
+        Assert.Contains("VatInSuspenseAmount", source, StringComparison.Ordinal);
+        Assert.Contains("OtherVatTaxableAmount", source, StringComparison.Ordinal);
+        Assert.Contains("OtherVatAmount", source, StringComparison.Ordinal);
+        Assert.Contains("RetainedOrPerceivedAmount", source, StringComparison.Ordinal);
+        Assert.Contains("FiscalCreditAmount", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Wire_readiness_documentation_preserves_serializer_and_DGI_readiness_gates()
     {
         var document = Read("documentation/blueprint-api-implementation/43_FISCAL_DAILY_REPORT_WIRE_READINESS.md");
