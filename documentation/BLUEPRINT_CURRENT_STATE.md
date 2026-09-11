@@ -4,8 +4,8 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-10
 
-Accepted functional baseline: `main@0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`
-(merge of PR #63, `feat(fiscal): add daily report reconciliation foundation`).
+Accepted functional baseline: `main@44225493c60ee313e849f0f0d7628f7415744e49`
+(merge of PR #66, `feat(fiscal): integrate daily report foreign-currency evidence`).
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization.
 It does not replace requirements, architecture, API-contract or numbered implementation records.
@@ -22,7 +22,7 @@ and must not be rewritten to make the original AS-IS observations look current.
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Deprecated/outdated package inventories remain advisory modernization evidence.
 
-The accepted lineage immediately after the former PR #60 checkpoint is:
+Accepted fiscal/reporting lineage since the former PR #60 checkpoint:
 
 - PR #61 `docs(fiscal): reconcile DGI Testing readiness gate`
   - merge commit: `808f0e70da6c2a39a3380bcb0068f5a66c6e754a`;
@@ -31,11 +31,22 @@ The accepted lineage immediately after the former PR #60 checkpoint is:
   - merge commit: `af3e9c6c031a3954d51f0ee76045e899c1c22826`;
   - post-merge Clean Architecture Guard #228 (`34461958084`): SUCCESS.
 - PR #63 `feat(fiscal): add daily report reconciliation foundation`
-  - approved feature head: `60106136c771b4178dafd0eb793ad9b9ec2ad2a3`;
-  - merge commit / accepted baseline: `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`;
+  - merge commit: `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`;
   - post-merge Clean Architecture Guard #230 (`34538620978`): SUCCESS.
+- PR #64 `docs(blueprint): reconcile current checkpoint after PR63`
+  - approved head: `800cd3867f029f866603668a5e07d0eaf942f7d7`;
+  - merge commit: `aa93257850d993b290bc6335104ef1844e3d1f08`;
+  - post-merge Clean Architecture Guard #232 (`34543392012`): SUCCESS.
+- PR #65 `feat(fiscal): add daily report source fact evidence`
+  - approved head: `41888c4c2b4c82d39e97555be3e8a64386cb51ff`;
+  - merge commit: `263fdbe6d1ec087529052113f59b15bd35313960`;
+  - post-merge Clean Architecture Guard #237 (`34547264026`): SUCCESS.
+- PR #66 `feat(fiscal): integrate daily report foreign-currency evidence`
+  - approved head: `18cb5879ea08c9ca6773d6ea234c6ba296e3164b`;
+  - merge commit / accepted baseline: `44225493c60ee313e849f0f0d7628f7415744e49`;
+  - post-merge Clean Architecture Guard #241 (`34549610197`): SUCCESS.
 
-The PR #63 post-merge guard passed:
+The PR #66 post-merge guard passed:
 
 - restore and dependency security gates: PASS;
 - Release build: PASS;
@@ -74,11 +85,13 @@ Accepted slices now include:
 21. Organization-scoped externally configured PFX certificate composition with SHA-256 identity pinning and ephemeral key loading.
 22. DGI Testing readiness reconciliation that distinguishes free technical Testing from the formal traditional `Prueba de Testing`.
 23. Domestic 102/103/112/113 credit/debit-note foundation with immutable referenced-CFE evidence, deterministic unsigned XML, signing mapping and signed-root DGI XSD v1.44.2 validation.
-24. Reporte Diario v13.2 internal reconciliation foundation with immutable document/annulment evidence, deterministic monetary grouping, explicit numbering consumption and fail-closed currency/status boundaries.
+24. Reporte Diario v13.2 internal reconciliation foundation with immutable document/annulment evidence, deterministic monetary grouping, explicit numbering consumption and fail-closed status/currency boundaries.
+25. Typed immutable Reporte Diario source-fact evidence for exact signed-CFE identity, DGI AE/BE outcome, A-C19 presence/absence and foreign-currency conversion provenance.
+26. Lossless foreign-currency integration into `FiscalDailyReportDocumentEvidence`, preserving original currency, UYU reporting currency, FX-evidence fingerprint and reliquidation marker while keeping deterministic reconciliation unchanged.
 
 Detailed bounded evidence remains under `documentation/blueprint-api-implementation/`.
 
-## Accepted fiscal boundary after PR #63
+## Accepted fiscal boundary after PR #66
 
 The accepted normal 101/111 sale flow reaches:
 
@@ -117,19 +130,48 @@ Replay never rebuilds a different signing timestamp or opportunistically resigns
 artifact. Persisted signed bytes, hashes, signing metadata and schema-validation evidence are checked
 again before a replay result is returned.
 
-PR #63 additionally accepts the internal Reporte Diario reconciliation foundation. It can freeze and
-validate same-issuer daily evidence for domestic 101/102/103/111/112/113, support zero-operation days,
-aggregate monetary evidence by CFE type + document date + DGI branch + `Pagos por cuenta de terceros`,
-reconstruct explicitly evidenced used/emitted/annulled numbering and produce a deterministic SHA-256
-reconciliation fingerprint.
+### Accepted Reporte Diario internal boundary
 
-The Reporte Diario foundation is deliberately not a sendable DGI report. It currently requires
-explicit external fingerprints for reporting-status and third-party-payment evidence, rejects
-non-UYU monetary evidence until authoritative fiscal exchange-rate evidence is frozen, never infers
-annulments from numbering gaps and does not serialize/sign/persist/submit the Reporte Diario XML.
+The Reporte Diario v13.2 foundation can freeze and validate same-issuer daily evidence for domestic
+101/102/103/111/112/113, support zero-operation days, aggregate monetary evidence by CFE type + document
+date + DGI branch + `Pagos por cuenta de terceros`, reconstruct explicitly evidenced
+used/emitted/annulled numbering and produce a deterministic SHA-256 reconciliation fingerprint.
+
+PR #65 replaces unstructured caller assertions with typed immutable source facts where the current
+model can preserve them losslessly:
+
+- `FiscalDailyReportCfeIdentityEvidence` binds later source facts to one exact signed CFE and validates
+  the signed artifact fiscal-content fingerprint against the immutable fiscal snapshot;
+- `FiscalDailyReportDgiOutcomeEvidence` freezes exact current AE/BE semantics plus response-artifact
+  fingerprint and supersession evidence, without pretending that a DGI transport/parser lifecycle
+  already exists;
+- `FiscalDailyReportThirdPartyPaymentEvidence` preserves A-C19 as exact field absence or exact value `1`,
+  never arbitrary boolean coercion;
+- `FiscalDailyReportCurrencyConversionEvidence` freezes source kind, exact decimal rate, source date,
+  source fingerprint and reliquidation marker for non-UYU reporting.
+
+PR #66 closes the lossless foreign-currency integration gap. `FiscalDailyReportDocumentEvidence` now
+preserves:
+
+- `OriginalCurrencyCode`;
+- `ReportingCurrencyCode`, pinned to `UYU`;
+- optional `CurrencyConversionEvidenceFingerprint`;
+- `CurrencyConversionRequiresReliquidation`;
+- all monetary partitions interpreted as reporting-currency amounts.
+
+The accepted legacy `Capture(...)` boundary remains UYU-only and fail-closed. Foreign-currency
+composition must pass through the typed conversion evidence. Converted monetary partitions are
+multiplied by the exact frozen rate with no intermediate rounding, and mixed UYU + converted foreign-
+currency CFE can be reconciled deterministically into the same UYU report bucket without losing FX
+provenance.
+
+The Reporte Diario foundation is still deliberately not a sendable DGI report. No accepted product
+slice yet serializes, signs, persists or submits the Reporte Diario XML, acquires BCU quotations,
+selects the applicable exchange-rate rule automatically, parses Mensaje de Respuesta v19, or maintains
+an authoritative DGI response lifecycle.
 
 No accepted product slice yet submits a CFE or Reporte Diario to DGI or interprets an authoritative
-DGI response.
+external DGI response end to end.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -150,6 +192,9 @@ Official current ingress/testing instructive endpoint:
 
 Official FAQ endpoint:
 `https://www.efactura.dgi.gub.uy/files/descargar-todas-las-preguntas-frecuentes?es=`
+
+Official Reporte Diario v13.2 endpoint:
+`https://www.efactura.dgi.gub.uy/files/formato_reporte_cfe_v13_2-pdf?es=`
 
 No XML element, namespace, mandatory-field rule, Testing threshold, signature/validation ordering or
 external status may be inferred from memory, legacy demo code or provider examples where current DGI
@@ -185,6 +230,10 @@ Current readiness classification:
 - deterministic local build/sign/XSD-validation foundation for 101/102/103/111/112/113: **IMPLEMENTED / LOCALLY VALIDATED**;
 - operational correction-note API/workflow for 102/103/112/113: **NOT YET IMPLEMENTED**;
 - internal Reporte Diario v13.2 reconciliation foundation: **IMPLEMENTED / LOCALLY VALIDATED**;
+- typed Reporte Diario source facts for signed identity, AE/BE, A-C19 and FX provenance: **IMPLEMENTED / LOCALLY VALIDATED**;
+- lossless non-UYU -> UYU Daily Report evidence composition: **IMPLEMENTED / LOCALLY VALIDATED**;
+- automatic BCU quotation acquisition / exchange-rate rule selection: **NOT YET IMPLEMENTED**;
+- authoritative DGI response parser/persistence/lifecycle: **NOT YET IMPLEMENTED**;
 - sendable/signed/persisted Reporte Diario v13.2 artifact: **NOT YET IMPLEMENTED**;
 - free external DGI Testing validation: **NOT YET EVIDENCED**;
 - formal traditional `Prueba de Testing`: **BLOCKED BY MISSING PRODUCT CAPABILITIES**;
@@ -199,6 +248,12 @@ The accepted domestic-note foundation is recorded in:
 The accepted Daily Report reconciliation foundation is recorded in:
 `documentation/blueprint-api-implementation/38_FISCAL_DAILY_REPORT_RECONCILIATION_FOUNDATION.md`.
 
+The accepted Daily Report source-fact evidence is recorded in:
+`documentation/blueprint-api-implementation/39_FISCAL_DAILY_REPORT_SOURCE_FACT_EVIDENCE.md`.
+
+The accepted foreign-currency integration is recorded in:
+`documentation/blueprint-api-implementation/40_FISCAL_DAILY_REPORT_FX_INTEGRATION.md`.
+
 ## Explicitly not complete
 
 The following remain outside the accepted current product baseline:
@@ -207,10 +262,13 @@ The following remain outside the accepted current product baseline:
 - note-level `IndGlobal` synthesis/global-reference workflow;
 - export CFE families and export-specific immutable evidence;
 - contingency/CFC lifecycle;
-- automatic capture/freeze of CFE A-C19 `Pagos por cuenta de terceros` evidence;
-- authoritative fiscal/BCU exchange-rate acquisition and immutable conversion evidence for Reporte Diario;
-- authoritative DGI reporting-status/rejection evidence lifecycle;
-- Reporte Diario v13.2 XML serializer and pinned report XSD/signature package;
+- automatic extraction/freeze of CFE A-C19 from the normal fiscal-content/build pipeline;
+- authoritative BCU exchange-rate acquisition and business-day quotation lookup;
+- automatic selection/arbitration of the applicable fiscal exchange-rate rule;
+- automatic A-C110/A-C111 extraction from CFE XML where required by future wire work;
+- authoritative DGI response persistence, supersession selection and lifecycle;
+- Reporte Diario v13.2 XML serializer and pinned authoritative report XSD/signature package;
+- wire-level Reporte Diario decimal formatting/rounding rules;
 - Reporte Diario advanced signature;
 - Reporte Diario persistence/replay/sequence lifecycle;
 - automatic Reporte Diario scheduling and next-business-day send orchestration;
@@ -253,30 +311,29 @@ merely to display the newer Master version.
 
 ## Reconciled next bounded implementation sequence
 
-The next sequence after accepted PR #63 is:
+The source-fact and foreign-currency evidence steps planned after PR #63 are now accepted through PR #66.
+The next bounded sequence is:
 
-1. **Freeze missing Reporte Diario source facts**
-   - connect the currently explicit reporting-status evidence boundary to authoritative durable DGI outcome evidence when that lifecycle exists;
-   - freeze A-C19 `Pagos por cuenta de terceros` source evidence instead of defaulting absence to false;
-   - freeze authoritative fiscal/BCU exchange-rate source/date/value evidence required for non-UYU report amounts;
-   - keep unsupported export/CFC paths fail-closed.
-2. **Pin the authoritative Reporte Diario v13.2 wire contract**
-   - preserve the official XML/XSD/signature package in-repository with provenance;
-   - document namespace, ordering, required fields and signature rules from authoritative material only.
-3. **Deterministic Reporte Diario artifact generation and validation**
-   - serialize from immutable reconciliation evidence;
+1. **Pin the authoritative Reporte Diario v13.2 wire contract**
+   - obtain the official current report-format package and any authoritative XSD/signature assets;
+   - preserve the authoritative assets in-repository with provenance and hashes where licensing/publication permits;
+   - document namespace, root/child ordering, cardinalities, decimal representation, required/conditional fields and signature requirements from authoritative material only;
+   - keep all uncertain or externally dependent rules fail-closed rather than inferred.
+2. **Deterministic Reporte Diario artifact generation and validation**
+   - serialize only from immutable reconciliation evidence;
+   - apply authoritative wire-level formatting/rounding;
    - sign and validate without rereading mutable fiscal masters.
-4. **Reporte Diario persistence/replay/sequence lifecycle**
+3. **Reporte Diario persistence/replay/sequence lifecycle**
    - persist immutable report bytes/hash/signing evidence;
-   - preserve correction sequence semantics and replay the same artifact rather than rebuilding it opportunistically.
-5. **Testing package/submission contract**
+   - preserve correction/reliquidation sequence semantics and replay the same artifact rather than rebuilding it opportunistically.
+4. **Testing package/submission contract**
    - evidence Sobre v05 and Mensaje de Respuesta v19;
    - choose an isolated Testing submission mechanism or operator-assisted export path;
    - keep Production transport separately gated.
-6. **External DGI Testing evidence**
+5. **External DGI Testing evidence**
    - execute only with legitimate credentials/certificate material supplied outside source control;
    - record authoritative DGI receipt/status evidence without manufacturing success.
-7. **Production transport and operational lifecycle**
+6. **Production transport and operational lifecycle**
    - only after the required external evidence and transport contract are separately reviewed and accepted.
 
 If the actual taxpayer uses the simplified onboarding path, the formal 50-per-type test may not be
@@ -297,10 +354,10 @@ without compatibility analysis.
 
 ## Repository governance at this checkpoint
 
-- PR #61 is merged at `808f0e70da6c2a39a3380bcb0068f5a66c6e754a`; post-merge Guard #221: SUCCESS.
-- PR #62 is merged at `af3e9c6c031a3954d51f0ee76045e899c1c22826`; post-merge Guard #228: SUCCESS.
-- PR #63 is merged at `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`; post-merge Guard #230: SUCCESS.
-- accepted `main`: `0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf`.
+- PR #64 is merged at `aa93257850d993b290bc6335104ef1844e3d1f08`; post-merge Guard #232: SUCCESS.
+- PR #65 is merged at `263fdbe6d1ec087529052113f59b15bd35313960`; post-merge Guard #237: SUCCESS.
+- PR #66 is merged at `44225493c60ee313e849f0f0d7628f7415744e49`; post-merge Guard #241: SUCCESS.
+- accepted `main`: `44225493c60ee313e849f0f0d7628f7415744e49`.
 - no open PRs existed immediately before the current checkpoint-reconciliation branch was created.
 - Blueprint 0.5.2 consumer adoption remains DEFER.
 - one atomic slice per PR remains required.
