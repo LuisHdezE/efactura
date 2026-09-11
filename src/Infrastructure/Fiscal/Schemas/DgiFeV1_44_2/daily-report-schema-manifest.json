@@ -1,0 +1,64 @@
+{
+  "artifactSetId": "dgi-daily-report-v13.2-byte-pin",
+  "functionalFormatVersion": "13.2",
+  "schemaArchiveVersion": "1.44.2",
+  "officialAuthority": "Dirección General Impositiva (DGI), Uruguay",
+  "officialRegistryUrl": "https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es=",
+  "officialFormatUrl": "https://www.efactura.dgi.gub.uy/files/formato_reporte_cfe_v13_2-pdf?es=",
+  "officialExampleUrl": "https://www.efactura.dgi.gub.uy/files/ejemplo-de-reporte?es=",
+  "officialSchemaArchiveUrl": "https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es=",
+  "byteRecoverySource": {
+    "repository": "olagopirez/factible",
+    "commit": "9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3",
+    "role": "immutable byte-recovery mirror only; DGI remains the regulatory authority for publication status and functional format"
+  },
+  "artifacts": {
+    "reportSchema": {
+      "path": "src/Infrastructure/Fiscal/Schemas/DgiFeV1_44_2/ReporteDiarioCFE.xsd",
+      "mirrorPath": "packages/cfe/spec/xsd/ReporteDiarioCFE.xsd",
+      "byteLength": 65284,
+      "gitBlobSha1": "eaa0d0b59f689af7c91e28f4c0882c9212e25ae9",
+      "sha256": "0c87a0d533025d48680da966bb007967c16ff44ab76ba65ac8089d7452fbb06b"
+    },
+    "officialExample": {
+      "path": "src/Infrastructure/Fiscal/Schemas/DgiFeV1_44_2/Examples/Rep_219000090011_20120511_01_Ej_Mod_27032014.xml",
+      "mirrorPath": "packages/cfe/spec/Rep_219000090011_20120511_01_Ej_Mod_27032014.xml",
+      "byteLength": 13630,
+      "gitBlobSha1": "0e92d35b2ee12fa6010275dc43ffcc9665d04e7a",
+      "sha256": "713f38f78fabb39c4559caae8aa89efdc251157d459782c652a8152fc59d7657"
+    },
+    "schemaClosure": [
+      {
+        "path": "src/Infrastructure/Fiscal/Schemas/DgiFeV1_44_2/DGITypes.xsd",
+        "mirrorPath": "packages/cfe/spec/xsd/DGITypes.xsd",
+        "byteLength": 56751,
+        "gitBlobSha1": "5ee48a1a1e727d7be71c5d8d14983ba576edf67e",
+        "sha256": "5bbc462de995acc26c572e5392c5604539b76b6645e4677d06aba84347205769"
+      },
+      {
+        "path": "src/Infrastructure/Fiscal/Schemas/DgiFeV1_44_2/xmldsig-core-schema.xsd",
+        "mirrorPath": "packages/cfe/spec/xsd/xmldsig-core-schema.xsd",
+        "byteLength": 10293,
+        "gitBlobSha1": "df126b30e684091b32a748cd2e408f5fb9d651a9",
+        "sha256": "35cf8197da812c85e40d57891b35c94187569ed474a2dac813ce5090dafcd35c"
+      }
+    ]
+  },
+  "schemaFacts": {
+    "targetNamespace": "http://cfe.dgi.gub.uy",
+    "rootElement": "Reporte",
+    "rootType": "ReporteDefType",
+    "caratulaElement": "Caratula",
+    "caratulaVersion": "1.0",
+    "xmlDsigNamespace": "http://www.w3.org/2000/09/xmldsig#",
+    "signatureElement": "Signature",
+    "signatureIsRequiredFinalChild": true,
+    "embeddedSchemaCommentVersion": "1.37.6i",
+    "exampleHistoricalSchemaLocation": "ReporteDiarioCFE_v1.15.xsd"
+  },
+  "safetyBoundary": {
+    "functionalFormatAndXsdAreIndependentGates": true,
+    "exampleSignatureAlgorithmsAreHistoricalEvidenceOnly": true,
+    "serializerImplementationIncluded": false
+  }
+}
