@@ -24,6 +24,10 @@ public sealed class FiscalDailyReportSchemaArchitectureTests
         Assert.Equal(
             "9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3",
             root.GetProperty("byteRecoverySource").GetProperty("commit").GetString());
+        Assert.False(root
+            .GetProperty("safetyBoundary")
+            .GetProperty("officialByteEqualityDirectlyObserved")
+            .GetBoolean());
 
         var artifacts = root.GetProperty("artifacts");
         AssertArtifact(artifacts.GetProperty("reportSchema"));
@@ -42,10 +46,10 @@ public sealed class FiscalDailyReportSchemaArchitectureTests
         Assert.Equal("http://cfe.dgi.gub.uy", schema.Attribute("targetNamespace")?.Value);
 
         Assert.Equal(
-            ["DGITypes.xsd"],
+            new[] { "DGITypes.xsd" },
             schema.Elements(xs + "include").Select(element => element.Attribute("schemaLocation")?.Value).ToArray());
         Assert.Equal(
-            ["xmldsig-core-schema.xsd"],
+            new[] { "xmldsig-core-schema.xsd" },
             schema.Elements(xs + "import").Select(element => element.Attribute("schemaLocation")?.Value).ToArray());
 
         Assert.DoesNotContain("schemaLocation=", Read($"{SchemaDirectory}/DGITypes.xsd"), StringComparison.Ordinal);
