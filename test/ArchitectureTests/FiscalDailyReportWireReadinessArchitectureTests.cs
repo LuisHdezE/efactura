@@ -17,7 +17,11 @@ public sealed class FiscalDailyReportWireReadinessArchitectureTests
         Assert.DoesNotContain("XmlDocument", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Infrastructure.", source, StringComparison.Ordinal);
         Assert.DoesNotContain("HttpClient", source, StringComparison.Ordinal);
-        Assert.Contains("fiscal.daily_report.wire.quantization_required", source, StringComparison.Ordinal);
+        var quantizer = Read("src/Domain/Fiscal/FiscalDailyReportMonetaryQuantizer.cs");
+        Assert.DoesNotContain("fiscal.daily_report.wire.quantization_required", source, StringComparison.Ordinal);
+        Assert.Contains("FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative", source, StringComparison.Ordinal);
+        Assert.Contains("MidpointRounding.AwayFromZero", quantizer, StringComparison.Ordinal);
+        Assert.Contains("999_999_999_999_999.99m", quantizer, StringComparison.Ordinal);
         Assert.Contains("fiscal.daily_report.wire.high_value_evidence_required", source, StringComparison.Ordinal);
         Assert.Contains("release1-minimum-basic-export-only", source, StringComparison.Ordinal);
     }
@@ -46,12 +50,14 @@ public sealed class FiscalDailyReportWireReadinessArchitectureTests
     public void Wire_readiness_documentation_preserves_serializer_and_DGI_readiness_gates()
     {
         var document = Read("documentation/blueprint-api-implementation/43_FISCAL_DAILY_REPORT_WIRE_READINESS.md");
+        var quantization = Read("documentation/blueprint-api-implementation/45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md");
 
         Assert.Contains("does not generate XML", document, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("B-C27", document, StringComparison.Ordinal);
-        Assert.Contains("quantization", document, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", document, StringComparison.Ordinal);
-        Assert.DoesNotContain("READY FOR DGI TESTING", document, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("redondeo matemático", quantization, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("C24", quantization, StringComparison.Ordinal);
+        Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", quantization, StringComparison.Ordinal);
+        Assert.DoesNotContain("READY FOR DGI TESTING", quantization, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Read(string relativePath) =>

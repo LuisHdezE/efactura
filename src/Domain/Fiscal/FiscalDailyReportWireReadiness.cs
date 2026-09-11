@@ -250,8 +250,8 @@ public sealed record FiscalDailyReportWireProjection(
 
 /// <summary>
 /// Produces a deterministic semantic projection only when no unresolved wire policy is needed.
-/// Foreign-currency rows that require two-decimal quantization remain fail-closed until DGI
-/// quantization semantics are authoritatively pinned.
+/// Foreign-currency arithmetic remains exact through reconciliation; this wire boundary applies
+/// the DGI mathematical two-decimal rounding policy and then enforces v13.2 row algebra.
 /// </summary>
 public static class FiscalDailyReportWireReadinessProjector
 {
@@ -364,41 +364,52 @@ public static class FiscalDailyReportWireReadinessProjector
             "fiscal.daily_report.wire.basic_vat_rate_required",
             "fiscal.daily_report.wire.basic_vat_rate_mismatch");
 
-        var values = new[]
-        {
-            summary.NonTaxedAmount,
-            summary.ExportAmount,
-            summary.MinimumTaxableAmount,
-            summary.BasicTaxableAmount,
-            summary.MinimumVatAmount,
-            summary.BasicVatAmount,
-            summary.TotalAmount
-        };
-        if (values.Any(value => !FitsScale(value, FiscalDailyReportV13_2WireContract.MonetaryDecimalDigits)))
-        {
-            throw Rule(
-                "fiscal.daily_report.wire.quantization_required",
-                "Reporte Diario contains UYU monetary evidence that cannot be represented exactly with two decimals; no DGI quantization rule is pinned, so wire projection remains fail-closed.");
-        }
+        var nonTaxedAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.NonTaxedAmount);
+        var exportAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.ExportAmount);
+        var minimumTaxableAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.MinimumTaxableAmount);
+        var basicTaxableAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.BasicTaxableAmount);
+        var minimumVatAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.MinimumVatAmount);
+        var basicVatAmount = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(summary.BasicVatAmount);
+
+        EnsureVatFormula(
+            minimumTaxableAmount,
+            minimumVatAmount,
+            minimumRate,
+            "fiscal.daily_report.wire.minimum_vat_quantization_mismatch");
+        EnsureVatFormula(
+            basicTaxableAmount,
+            basicVatAmount,
+            basicRate,
+            "fiscal.daily_report.wire.basic_vat_quantization_mismatch");
+
+        // DGI v13.2 defines C24 as the sum of C12..C21. Recompose from the already
+        // quantized wire concepts instead of independently rounding the source CFE total.
+        var totalAmount = nonTaxedAmount
+            + exportAmount
+            + minimumTaxableAmount
+            + basicTaxableAmount
+            + minimumVatAmount
+            + basicVatAmount;
+        FiscalDailyReportMonetaryQuantizer.EnsureFitsWire(totalAmount);
 
         return new FiscalDailyReportWireAmountRow(
             summary.CfeType,
             summary.FiscalDate,
             summary.DgiBranchCode,
             summary.PaymentOnBehalfOfThirdParty,
-            summary.NonTaxedAmount,
-            summary.ExportAmount,
+            nonTaxedAmount,
+            exportAmount,
             0m,
             0m,
-            summary.MinimumTaxableAmount,
-            summary.BasicTaxableAmount,
+            minimumTaxableAmount,
+            basicTaxableAmount,
             0m,
-            summary.MinimumVatAmount,
-            summary.BasicVatAmount,
+            minimumVatAmount,
+            basicVatAmount,
             0m,
             minimumRate,
             basicRate,
-            summary.TotalAmount,
+            totalAmount,
             0m,
             0m);
     }
@@ -485,8 +496,31 @@ public static class FiscalDailyReportWireReadinessProjector
         return FiscalDailyReportCfeIdentityEvidence.Hash(material.ToString());
     }
 
-    private static bool FitsScale(decimal value, int scale) =>
-        value == decimal.Round(value, scale, MidpointRounding.ToEven);
+    private static void EnsureVatFormula(
+        decimal taxableAmount,
+        decimal vatAmount,
+        decimal? ratePercent,
+        string code)
+    {
+        if (taxableAmount == 0m)
+        {
+            if (vatAmount != 0m)
+                throw Rule(code, "Reporte Diario VAT amount cannot be positive when its taxable wire amount is zero.");
+            return;
+        }
+
+        if (!ratePercent.HasValue)
+            return;
+
+        var expected = FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(
+            taxableAmount * ratePercent.Value / 100m);
+        if (vatAmount != expected)
+        {
+            throw Rule(
+                code,
+                "Reporte Diario quantized VAT amount does not satisfy the v13.2 taxable-amount/rate validation.");
+        }
+    }
 
     private static string Decimal(decimal value) => value.ToString("G29", CultureInfo.InvariantCulture);
     private static EFactura.Domain.Common.DomainRuleException Rule(string code, string message) =>

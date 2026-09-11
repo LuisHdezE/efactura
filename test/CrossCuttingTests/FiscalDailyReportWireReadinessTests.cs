@@ -123,7 +123,7 @@ public sealed class FiscalDailyReportWireReadinessTests
     }
 
     [Fact]
-    public void Foreign_currency_projection_fails_closed_when_exact_UYU_values_need_quantization()
+    public void Foreign_currency_projection_quantizes_only_at_wire_boundary_with_DGI_mathematical_rounding()
     {
         var (document, snapshot) = Fixture(CfeFamily.EFactura, 10, currency: "USD");
         var identity = Identity(document, snapshot);
@@ -157,10 +157,24 @@ public sealed class FiscalDailyReportWireReadinessTests
             [reportDocument]);
         var rates = FiscalDailyReportVatRateEvidence.Capture(identity, snapshot);
 
-        var error = Assert.Throws<DomainRuleException>(() =>
-            FiscalDailyReportWireReadinessProjector.Project(report, [rates], []));
+        var projected = FiscalDailyReportWireReadinessProjector.Project(report, [rates], []);
 
-        Assert.Equal("fiscal.daily_report.wire.quantization_required", error.Code);
+        var source = Assert.Single(report.Summaries);
+        Assert.Equal(3912.3456700m, source.BasicTaxableAmount);
+        Assert.Equal(860.7160474m, source.BasicVatAmount);
+        Assert.Equal(4773.0617174m, source.TotalAmount);
+
+        var row = Assert.Single(projected.AmountRows);
+        Assert.Equal(3912.35m, row.BasicTaxableAmount);
+        Assert.Equal(860.72m, row.BasicVatAmount);
+        Assert.Equal(4773.07m, row.TotalAmount);
+    }
+
+    [Fact]
+    public void Wire_quantizer_uses_mathematical_half_up_instead_of_bankers_rounding()
+    {
+        Assert.Equal(1.01m, FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(1.005m));
+        Assert.Equal(1.00m, FiscalDailyReportMonetaryQuantizer.QuantizeNonNegative(1.004m));
     }
 
     [Fact]
