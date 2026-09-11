@@ -34,9 +34,10 @@ public sealed class FiscalDailyReportUnsignedXmlArchitectureTests
 
         Assert.Contains("ReporteDiarioCFE.xsd", validator, StringComparison.Ordinal);
         Assert.Contains("daily-report-schema-manifest.json", validator, StringComparison.Ordinal);
-        Assert.Contains("<xs:element ref=\"ds:Signature\" minOccurs=\"1\"/>", validator, StringComparison.Ordinal);
-        Assert.Contains("<xs:element ref=\"ds:Signature\" minOccurs=\"0\"/>", validator, StringComparison.Ordinal);
+        Assert.Contains("SignatureDeclaration", validator, StringComparison.Ordinal);
+        Assert.Contains("UnsignedSignatureDeclaration", validator, StringComparison.Ordinal);
         Assert.Contains("Count(text, SignatureDeclaration) != 1", validator, StringComparison.Ordinal);
+        Assert.Contains("text.Replace(SignatureDeclaration, UnsignedSignatureDeclaration, StringComparison.Ordinal)", validator, StringComparison.Ordinal);
         Assert.Contains("DtdProcessing = DtdProcessing.Prohibit", validator, StringComparison.Ordinal);
         Assert.Contains("External schema resolution is forbidden", validator, StringComparison.Ordinal);
         Assert.Contains("officialByteEqualityDirectlyObserved\": false", manifest, StringComparison.Ordinal);
