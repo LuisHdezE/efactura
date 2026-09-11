@@ -18,7 +18,7 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@0b2110b8fe1b5ee3f92e917cb42c93146ddeeecf",
+            "main@44225493c60ee313e849f0f0d7628f7415744e49",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -34,7 +34,27 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
+            "Typed immutable Reporte Diario source-fact evidence",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Lossless foreign-currency integration",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "typed Reporte Diario source facts for signed identity, AE/BE, A-C19 and FX provenance: **IMPLEMENTED / LOCALLY VALIDATED**",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "lossless non-UYU -> UYU Daily Report evidence composition: **IMPLEMENTED / LOCALLY VALIDATED**",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "sendable/signed/persisted Reporte Diario v13.2 artifact: **NOT YET IMPLEMENTED**",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Pin the authoritative Reporte Diario v13.2 wire contract",
             currentState,
             StringComparison.Ordinal);
 
