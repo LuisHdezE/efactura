@@ -213,6 +213,13 @@ public sealed record FiscalDailyReportDocumentEvidence(
 
         var originalCurrency = Currency(OriginalCurrencyCode);
         var reportingCurrency = Currency(ReportingCurrencyCode);
+        if (!string.Equals(OriginalCurrencyCode, originalCurrency, StringComparison.Ordinal)
+            || !string.Equals(ReportingCurrencyCode, reportingCurrency, StringComparison.Ordinal))
+        {
+            throw Rule(
+                "fiscal.daily_report.currency_not_canonical",
+                "Daily-report currency codes must be stored in canonical uppercase form.");
+        }
         if (!string.Equals(reportingCurrency, DailyReportCurrencyCode, StringComparison.Ordinal))
         {
             throw Rule(
