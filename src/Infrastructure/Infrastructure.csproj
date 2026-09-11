@@ -16,6 +16,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\*.xsd" />
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\schema-manifest.json" />
+    <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\daily-report-schema-manifest.json" />
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\version.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -25,7 +26,7 @@
     <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.8" />
     <PackageReference Include="NodaTime" Version="3.2.0" />
     <PackageReference Include="Npgsql" Version="8.0.5" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.5" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.FuzzyStringMatch" Version="5.0.10" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="8.0.8" />
