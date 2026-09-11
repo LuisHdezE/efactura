@@ -34,11 +34,13 @@ public sealed class FiscalDailyReportUnsignedXmlTests
 
         var artifact = builder.Build(projection, SigningTimestamp);
         var document = XDocument.Parse(artifact.Xml);
-        var root = Assert.NotNull(document.Root);
+        var root = document.Root;
+        Assert.NotNull(root);
 
         Assert.Equal(Cfe + "Reporte", root.Name);
         Assert.Empty(root.Descendants(Dsig + "Signature"));
-        var caratula = Assert.NotNull(root.Element(Cfe + "Caratula"));
+        var caratula = root!.Element(Cfe + "Caratula");
+        Assert.NotNull(caratula);
         Assert.Equal("1.0", caratula.Attribute("version")?.Value);
         Assert.Equal("214748364700", caratula.Element(Cfe + "RUCEmisor")?.Value);
         Assert.Equal("2026-09-11", caratula.Element(Cfe + "FechaResumen")?.Value);
@@ -46,9 +48,11 @@ public sealed class FiscalDailyReportUnsignedXmlTests
         Assert.Equal("2026-09-11T18:30:45-03:00", caratula.Element(Cfe + "TmstFirmaEnv")?.Value);
         Assert.Equal("1", caratula.Element(Cfe + "CantComprobantes")?.Value);
 
-        var summary = Assert.NotNull(root.Element(Cfe + summaryElement));
+        var summary = root.Element(Cfe + summaryElement);
+        Assert.NotNull(summary);
         Assert.Equal(familyCode.ToString(), summary.Element(Cfe + "TipoComp")?.Value);
-        var data = Assert.NotNull(summary.Element(Cfe + "RsmnData"));
+        var data = summary!.Element(Cfe + "RsmnData");
+        Assert.NotNull(data);
         Assert.Equal("1", data.Element(Cfe + "CantDocsUtil")?.Value);
         Assert.Equal("0", data.Element(Cfe + "CantDocsAnulados")?.Value);
         Assert.Equal("1", data.Element(Cfe + "CantDocsEmi")?.Value);
@@ -57,7 +61,8 @@ public sealed class FiscalDailyReportUnsignedXmlTests
         else
             Assert.Null(data.Element(Cfe + "CantDocsMay_topeUI"));
 
-        var amount = Assert.NotNull(data.Descendants(Cfe + "Mnts_FyT_Item").SingleOrDefault());
+        var amount = data!.Descendants(Cfe + "Mnts_FyT_Item").SingleOrDefault();
+        Assert.NotNull(amount);
         Assert.Equal("100.00", amount.Element(Cfe + "TotMntIVATasaBas")?.Value);
         Assert.Equal("22.00", amount.Element(Cfe + "MntIVATasaBas")?.Value);
         Assert.Equal("22", amount.Element(Cfe + "IVATasaBas")?.Value);
@@ -103,7 +108,7 @@ public sealed class FiscalDailyReportUnsignedXmlTests
 
         var artifact = new DeterministicUnsignedDailyReportXmlBuilder().Build(projection, SigningTimestamp);
         var document = XDocument.Parse(artifact.Xml);
-        Assert.Equal(1, document.Root!.Elements().Count());
+        Assert.Single(document.Root!.Elements());
         Assert.Equal(Cfe + "Caratula", document.Root.Elements().Single().Name);
 
         var validation = new DgiFeV1_44_2UnsignedDailyReportSchemaValidator().Validate(artifact.Xml);
