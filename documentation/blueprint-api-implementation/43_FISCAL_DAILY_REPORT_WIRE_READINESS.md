@@ -1,5 +1,7 @@
 # 43 — Reporte Diario v13.2 wire-source readiness
 
+> Supersession note (2026-09-11): the quantization gap described in this historical slice was closed by implementation record `45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md`. Lossless FX/reconciliation precision remains unchanged; mathematical two-decimal rounding is applied only at the wire projection boundary.
+
 ## Decision
 
 This slice introduces the deterministic semantic boundary that must be satisfied **before** a Reporte Diario XML serializer may exist.

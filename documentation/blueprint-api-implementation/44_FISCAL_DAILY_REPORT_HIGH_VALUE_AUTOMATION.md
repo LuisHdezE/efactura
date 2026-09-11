@@ -1,5 +1,7 @@
 # 44 — Fiscal Daily Report high-value automation
 
+> Supersession note (2026-09-11): the monetary-quantization gap retained by this historical slice was closed by implementation record `45_FISCAL_DAILY_REPORT_MONETARY_QUANTIZATION.md`. Foreign-currency B-C27 threshold semantics remain a separate fail-closed capability.
+
 ## Scope
 
 This increment closes the manual-count gap for Reporte Diario v13.2 field B-C27 within the currently accepted Release-1 boundary.
