@@ -40,7 +40,7 @@ public sealed class FiscalDailyReportTransportArchitectureTests
     }
 
     [Fact]
-    public void Submission_persistence_is_separate_unique_and_repository_does_not_commit()
+    public void Submission_persistence_is_separate_unique_serialized_and_repository_does_not_commit()
     {
         var migration = Read("src/Infrastructure/Persistence/V1/Migrations/20260912061500_V1FiscalDailyReportTransport.cs");
         var repository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfFiscalDailyReportSubmissionRepository.cs");
@@ -50,6 +50,9 @@ public sealed class FiscalDailyReportTransportArchitectureTests
         Assert.Contains("UX_v1_fdr_submission_operation", migration, StringComparison.Ordinal);
         Assert.Contains("UX_v1_fdr_submission_artifact", migration, StringComparison.Ordinal);
         Assert.Contains("FK_v1_fdr_submission_artifact", migration, StringComparison.Ordinal);
+        Assert.Contains("CurrentTransaction", repository, StringComparison.Ordinal);
+        Assert.Contains("FOR UPDATE", repository, StringComparison.Ordinal);
+        Assert.Contains("FromSqlInterpolated", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("SaveChanges", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("BeginTransaction", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSqlRaw", repository, StringComparison.Ordinal);
