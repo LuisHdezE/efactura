@@ -22,6 +22,7 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
         ConfigureFiscalContentSnapshot(modelBuilder);
         ConfigureFiscalSigningEvidence(modelBuilder);
         ConfigureFiscalSignedArtifact(modelBuilder);
+        ConfigureFiscalDailyReportDurability(modelBuilder);
     }
 
     private static void ConfigureOrganization(ModelBuilder modelBuilder)
@@ -357,4 +358,59 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
                 .HasDatabaseName("UX_v1_fsa_evidence");
         });
     }
+
+private static void ConfigureFiscalDailyReportDurability(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<V1FiscalDailyReportSigningEvidenceRecord>(entity =>
+    {
+        entity.ToTable("v1_fiscal_daily_report_signing_evidence");
+        entity.HasKey(x => x.Id);
+        entity.Property(x => x.Id).ValueGeneratedNever();
+        entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+        entity.Property(x => x.IssuerRuc).HasMaxLength(12).IsRequired();
+        entity.Property(x => x.SummaryDate).HasColumnType("date");
+        entity.Property(x => x.FunctionalFormatVersion).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.ProjectionFingerprint).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.UnsignedContentHash).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.SigningTimestamp).HasPrecision(0);
+        entity.HasIndex(x => new { x.OrganizationId, x.IssuerRuc, x.SummaryDate, x.Sequence })
+            .IsUnique()
+            .HasDatabaseName("UX_v1_fdr_evidence_identity");
+    });
+
+    modelBuilder.Entity<V1FiscalDailyReportSignedArtifactRecord>(entity =>
+    {
+        entity.ToTable("v1_fiscal_daily_report_signed_artifacts");
+        entity.HasKey(x => x.Id);
+        entity.Property(x => x.Id).ValueGeneratedNever();
+        entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+        entity.Property(x => x.IssuerRuc).HasMaxLength(12).IsRequired();
+        entity.Property(x => x.SummaryDate).HasColumnType("date");
+        entity.Property(x => x.FunctionalFormatVersion).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.ProjectionFingerprint).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.UnsignedContentHash).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.SignedContentHash).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.SigningTimestamp).HasPrecision(0);
+        entity.Property(x => x.SignatureProfileId).HasMaxLength(120).IsRequired();
+        entity.Property(x => x.CertificateThumbprint).HasMaxLength(160).IsRequired();
+        entity.Property(x => x.CertificateSerialNumber).HasMaxLength(160).IsRequired();
+        entity.Property(x => x.SchemaSetId).HasMaxLength(120).IsRequired();
+        entity.Property(x => x.SchemaFunctionalFormatVersion).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.SchemaArchiveVersion).HasMaxLength(40).IsRequired();
+        entity.Property(x => x.SchemaSetFingerprint).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.SignedXml).IsRequired();
+        entity.HasOne<V1FiscalDailyReportSigningEvidenceRecord>()
+            .WithMany()
+            .HasForeignKey(x => x.SigningEvidenceId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("FK_v1_fdr_artifact_evidence");
+        entity.HasIndex(x => new { x.OrganizationId, x.IssuerRuc, x.SummaryDate, x.Sequence })
+            .IsUnique()
+            .HasDatabaseName("UX_v1_fdr_artifact_identity");
+        entity.HasIndex(x => x.SigningEvidenceId)
+            .IsUnique()
+            .HasDatabaseName("UX_v1_fdr_artifact_evidence");
+    });
+}
+
 }
