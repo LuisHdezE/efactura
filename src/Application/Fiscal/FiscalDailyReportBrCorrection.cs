@@ -439,7 +439,8 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
             }
 
             var parsed = _ackParser.Parse(sourceAckXml);
-            if (!parsed.IsValid || !FiscalDailyReportRejectionReasonEvidence.TryValidate(parsed.Reasons, out var reasonError))
+            string? reasonError = null;
+            if (!parsed.IsValid || !FiscalDailyReportRejectionReasonEvidence.TryValidate(parsed.Reasons, out reasonError))
             {
                 throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
                     parsed.FailureCode ?? "fiscal.daily_report.br_correction.rejection_reason_evidence_invalid",
@@ -522,7 +523,7 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
                 PrepareFiscalDailyReportSigningEvidenceUseCase.RequiredHash(schema.SchemaSetFingerprint,
                     "fiscal.daily_report.br_correction.schema_fingerprint_required"),
                 signature.SignedXml, now, new string('0', 64),
-                FiscalDailyReportSubmissionState.Prepared, 0, now, null, null, null, null, null, null, null, null);
+                FiscalDailyReportSubmissionState.Prepared, 0, now, null, null, null, null, null, null, null);
             var revision = provisional with { RevisionFingerprint = provisional.ComputeFingerprint() };
             revision.EnsureIntegrity();
 
