@@ -118,7 +118,7 @@ public sealed class V1FiscalDailyReportSubmissionRecord
         = new List<V1FiscalDailyReportBrCorrectionRevisionRecord>();
 }
 
-[Table("v1_fiscal_daily_report_br_revisions")]
+[Table("v1_fdr_br_revisions")]
 [Index(nameof(OrganizationId), nameof(OperationId), IsUnique = true, Name = "UX_v1_fdr_br_revision_operation")]
 [Index(nameof(OrganizationId), nameof(IssuerRuc), nameof(SummaryDate), nameof(Sequence), nameof(LocalRevision), IsUnique = true, Name = "UX_v1_fdr_br_revision_identity")]
 [Index(nameof(PreviousRevisionId), IsUnique = true, Name = "UX_v1_fdr_br_revision_previous")]
