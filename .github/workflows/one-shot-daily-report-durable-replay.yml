@@ -20,10 +20,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure persistent runner caches
+        shell: bash
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
+
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+          cache: false
 
       - name: Apply governed patch
         run: python3 .github/one-shot/implement-daily-report-durable-replay.py
