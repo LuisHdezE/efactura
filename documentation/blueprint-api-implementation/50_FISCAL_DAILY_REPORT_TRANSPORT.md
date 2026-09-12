@@ -56,20 +56,27 @@ The PostgreSQL lock parameter for `SummaryDate` is bound as `DateOnly`, preservi
 
 The signed Reporte Diario bytes contain `TmstFirmaEnv`, whose lexical value includes the Uruguay fiscal offset, for example `-03:00`. PostgreSQL `timestamp with time zone` requires a UTC instant and does not retain the original offset as independent evidence.
 
-To keep replay byte-identical across PostgreSQL and MySQL, durable Reporte signing evidence and signed-artifact persistence now store:
+To keep replay byte-identical across PostgreSQL and MySQL, durable Reporte signing evidence and signed-artifact persistence store:
 
 - the signing instant normalized to UTC in `SigningTimestamp`;
 - the original fiscal offset separately as `SigningOffsetMinutes`.
 
 Repository reads reconstruct the original `DateTimeOffset` before rebuilding or validating the deterministic Reporte. This preserves the exact fiscal signing offset used by `TmstFirmaEnv` without depending on provider-specific timestamp behavior.
 
-A provider-real regression test persists `2026-09-12T03:15:31-03:00`, verifies that the stored instant is UTC with offset evidence `-180`, and confirms that both PostgreSQL and MySQL rehydrate the exact original `DateTimeOffset`.
+Provider-real regression coverage verifies the same UTC-plus-offset persistence rule for the root signed report and for BR correction revisions.
 
 ## Ordering
 
-`SecEnvio N+1` cannot be prepared until the durable submission for `N` has immediate DGI state `AR`.
+`SecEnvio N+1` cannot be prepared until `N` has durable DGI `AR` evidence.
 
-This is deliberately stricter than merely requiring a locally signed previous artifact. It prevents a locally allocated correction sequence from being transmitted ahead of the report DGI actually received.
+That acceptance can now come from either:
+
+- the original submission for `N` in local `Received` state with `AckStateCode = AR`; or
+- an accepted same-`SecEnvio` BR correction revision for `N`.
+
+The original rejected submission is never rewritten into AR. Accepted correction evidence is read independently through `IFiscalDailyReportSameSequenceReceiptReader`.
+
+This remains deliberately stricter than merely requiring a locally signed previous artifact. It prevents a locally allocated next sequence from being transmitted ahead of the report DGI actually accepted.
 
 ## Immediate acknowledgement
 
@@ -80,33 +87,31 @@ The gateway parses only the immediate `ACKRepDiario` returned by `EFACRECEPCIONR
 
 `IDReceptor` and the raw `ACKRepDiario` XML are persisted as evidence.
 
-This increment does **not** yet implement later consultation/reconciliation states such as `DR`, `ER` or `FR`, and it does not independently validate the DGI XML signature inside the returned ACK. The raw ACK is therefore transport evidence, not the final certification evidence model.
+For BR correction authorization, typed rejection reasons are parsed behind an Infrastructure port and preserved separately without modifying the original ACK bytes. The bounded same-sequence correction lifecycle is documented in `51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md`.
+
+This transport foundation still does **not** implement later consultation/reconciliation states such as `DR`, `ER` or `FR`, and it does not independently validate the DGI XML signature inside the returned ACK. The raw ACK is therefore transport evidence, not the final certification evidence model.
 
 ## Ambiguous delivery and retries
 
 A timeout, connection loss, response-read failure, malformed successful response, HTTP error after dispatch, or cancellation after the durable `InFlight` transition is treated as `Unknown` when DGI may have received the message.
 
-`Unknown` is never retried automatically. A later reconciliation slice must query DGI using the durable receiver/report evidence before another send is allowed.
+`Unknown` is never retried automatically. A later reconciliation slice must query DGI using durable receiver/report evidence before another send is allowed.
 
 Failures known to occur before network dispatch, such as invalid external transport configuration, certificate resolution failure or SOAP construction failure, can return the submission to `Prepared`.
 
-## Important BR / same-SecEnvio gap
+## BR same-SecEnvio follow-up
 
-DGI documentation states that a Reporte Diario rejected as `BR` does not count as a received sequence and, except for the sequence-specific R05 condition, must be corrected and resent with the **same `SecEnvio`**.
+The former BR same-sequence gap is now addressed by the bounded lifecycle in:
 
-The current signed-report durability model created before transport has one immutable signing evidence/artifact per:
+`documentation/blueprint-api-implementation/51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md`
 
-`Organization + RUC + FechaResumen + SecEnvio`
+The follow-up preserves the rejected root submission/artifact and ACK, creates immutable local correction revisions beneath the stable DGI identity, signs each corrected artifact with new evidence, keeps the same `SecEnvio` only when durable BR evidence permits it, and blocks `R05` fail-closed for separate reconciliation.
 
-That model cannot yet create corrected signed bytes for the same `SecEnvio` after a `BR` without weakening its immutability guarantees.
-
-Therefore this increment deliberately persists `BR` and stops. It does **not** claim the same-sequence correction/resubmission capability is complete. A subsequent bounded increment must introduce a local artifact-attempt/revision identity beneath the stable DGI `SecEnvio`, preserve the rejected artifact and ACK, and allow a newly signed corrected artifact to reuse the same DGI sequence only when the rejection evidence authorizes that behavior.
+It does not redefine this root transport lifecycle and does not convert a rejected root row into a received row.
 
 ## Validation evidence
 
-Clean Architecture Guard **#284**, run `34693223351`, completed successfully on code candidate `319af13368f3c4c99aa18df2fa0e41f277d16ca1` before this documentation-only reconciliation commit.
-
-The successful run covered:
+The accepted transport foundation was previously validated through Clean Architecture Guard coverage including:
 
 - full solution build;
 - Clean Architecture guards;
@@ -117,16 +122,18 @@ The successful run covered:
 - AR submission persistence;
 - concurrent-dispatch serialization proving a single network-boundary call.
 
-Because this documentation update changes the Git head, the PR still requires one final full Clean Architecture Guard on the exact final candidate before it can leave draft status.
+The BR same-sequence follow-up adds cross-cutting and provider-real validation for revision lineage, replay, R05 fail-closed behavior, accepted-correction N+1 ordering, portable signing-offset persistence and uniqueness of a local revision for the same DGI identity.
+
+The exact final candidate must pass the complete Clean Architecture Guard before PR #78 can leave draft/review status.
 
 ## Deliberate non-scope
 
-This increment does not implement:
+This transport lineage still does not implement:
 
-- automatic corrected resend after `BR`;
-- R05-specific sequence recovery;
+- automatic R05 sequence recovery;
 - `EFACCONSULTARRESPUESTAREPORTE` reconciliation;
 - `DR` / `ER` / `FR` lifecycle;
+- automatic retry from `Unknown`;
 - independent cryptographic validation of DGI ACK signatures;
 - Sobre v05 packaging;
 - live BCU quotation acquisition;
