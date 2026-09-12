@@ -9,12 +9,13 @@ namespace Infrastructure.Fiscal;
 /// Production-oriented PKCS#12 certificate source. Configuration is external to source control and
 /// scoped by organization. Configured certificates are loaded with EphemeralKeySet, pinned by a
 /// SHA-256 certificate fingerprint, cached for the process lifetime, and disposed with the source.
-/// The same organization-scoped certificate may serve CFE and Reporte Diario signing through
-/// separate artifact contracts.
+/// The same organization-scoped certificate may serve CFE signing, Reporte Diario signing and the
+/// DGI Reporte Diario WS-Security transport through separate contracts.
 /// </summary>
 public sealed class PfxFiscalSigningCertificateSource :
     IFiscalSigningCertificateSource,
     IFiscalDailyReportSigningCertificateSource,
+    IFiscalDailyReportTransportCertificateSource,
     IDisposable
 {
     public const string ConfigurationSection = "FiscalSigning:Certificates";
@@ -43,6 +44,11 @@ public sealed class PfxFiscalSigningCertificateSource :
         ArgumentNullException.ThrowIfNull(request);
         return GetSigningCertificateAsync(request.OrganizationId, cancellationToken);
     }
+
+    public ValueTask<X509Certificate2> GetTransportCertificateAsync(
+        string organizationId,
+        CancellationToken cancellationToken = default) =>
+        GetSigningCertificateAsync(organizationId, cancellationToken);
 
     public void Dispose()
     {
