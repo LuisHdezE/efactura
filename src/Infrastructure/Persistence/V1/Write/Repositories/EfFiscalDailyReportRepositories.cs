@@ -4,6 +4,129 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.V1.Write.Repositories;
 
+public sealed class EfFiscalDailyReportVersionRepository : IFiscalDailyReportVersionRepository
+{
+    private readonly V1PersistenceDbContext _dbContext;
+
+    public EfFiscalDailyReportVersionRepository(V1PersistenceDbContext dbContext) => _dbContext = dbContext;
+
+    public async Task<bool> AcquireOrganizationSequenceLockAsync(
+        string organizationId,
+        CancellationToken cancellationToken = default)
+    {
+        if (_dbContext.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Daily Report sequence lock requires an active transaction.");
+
+        var provider = _dbContext.Database.ProviderName ?? string.Empty;
+        IQueryable<V1CompanyFiscalProfileRecord> query;
+        if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+        {
+            query = _dbContext.Set<V1CompanyFiscalProfileRecord>()
+                .FromSqlInterpolated($"SELECT * FROM \"v1_company_fiscal_profiles\" WHERE \"OrganizationId\" = {organizationId} FOR UPDATE");
+        }
+        else if (provider.Contains("MySql", StringComparison.OrdinalIgnoreCase))
+        {
+            query = _dbContext.Set<V1CompanyFiscalProfileRecord>()
+                .FromSqlInterpolated($"SELECT * FROM `v1_company_fiscal_profiles` WHERE `OrganizationId` = {organizationId} FOR UPDATE");
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unsupported provider for Daily Report sequence lock: {provider}");
+        }
+
+        var locked = await query
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+        return locked.Count == 1;
+    }
+
+    public async Task<StoredFiscalDailyReportVersion?> GetByOperationIdAsync(
+        string organizationId,
+        string operationId,
+        CancellationToken cancellationToken = default)
+    {
+        var record = await _dbContext.Set<V1FiscalDailyReportVersionRecord>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.OrganizationId == organizationId && x.OperationId == operationId,
+                cancellationToken);
+        return Map(record);
+    }
+
+    public async Task<StoredFiscalDailyReportVersion?> GetLatestAsync(
+        string organizationId,
+        string issuerRuc,
+        DateOnly summaryDate,
+        CancellationToken cancellationToken = default)
+    {
+        var date = summaryDate.ToDateTime(TimeOnly.MinValue);
+        var record = await _dbContext.Set<V1FiscalDailyReportVersionRecord>()
+            .AsNoTracking()
+            .Where(x => x.OrganizationId == organizationId && x.IssuerRuc == issuerRuc && x.SummaryDate == date)
+            .OrderByDescending(x => x.Sequence)
+            .FirstOrDefaultAsync(cancellationToken);
+        return Map(record);
+    }
+
+    public async Task<StoredFiscalDailyReportVersion?> GetByIdentityAsync(
+        string organizationId,
+        string issuerRuc,
+        DateOnly summaryDate,
+        int sequence,
+        CancellationToken cancellationToken = default)
+    {
+        var date = summaryDate.ToDateTime(TimeOnly.MinValue);
+        var record = await _dbContext.Set<V1FiscalDailyReportVersionRecord>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.OrganizationId == organizationId
+                    && x.IssuerRuc == issuerRuc
+                    && x.SummaryDate == date
+                    && x.Sequence == sequence,
+                cancellationToken);
+        return Map(record);
+    }
+
+    public Task AddAsync(StoredFiscalDailyReportVersion version, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(version);
+        version.EnsureIntegrity();
+        _dbContext.Set<V1FiscalDailyReportVersionRecord>().Add(new V1FiscalDailyReportVersionRecord
+        {
+            Id = version.Id,
+            OrganizationId = version.OrganizationId,
+            IssuerRuc = version.IssuerRuc,
+            SummaryDate = version.SummaryDate.ToDateTime(TimeOnly.MinValue),
+            Sequence = version.Sequence,
+            PreviousVersionId = version.PreviousVersionId,
+            OperationId = version.OperationId,
+            RevisionKind = (int)version.RevisionKind,
+            ReasonCode = version.ReasonCode,
+            ReconciliationFingerprint = version.ReconciliationFingerprint,
+            RequiresFxReliquidation = version.RequiresFxReliquidation,
+            CreatedAtUtc = version.CreatedAtUtc,
+            VersionFingerprint = version.VersionFingerprint
+        });
+        return Task.CompletedTask;
+    }
+
+    private static StoredFiscalDailyReportVersion? Map(V1FiscalDailyReportVersionRecord? record) =>
+        record is null ? null : new StoredFiscalDailyReportVersion(
+            record.Id,
+            record.OrganizationId,
+            record.IssuerRuc,
+            DateOnly.FromDateTime(record.SummaryDate),
+            record.Sequence,
+            record.PreviousVersionId,
+            record.OperationId,
+            (FiscalDailyReportRevisionKind)record.RevisionKind,
+            record.ReasonCode,
+            record.ReconciliationFingerprint,
+            record.RequiresFxReliquidation,
+            record.CreatedAtUtc,
+            record.VersionFingerprint);
+}
+
 public sealed class EfFiscalDailyReportSigningEvidenceRepository : IFiscalDailyReportSigningEvidenceRepository
 {
     private readonly V1PersistenceDbContext _dbContext;

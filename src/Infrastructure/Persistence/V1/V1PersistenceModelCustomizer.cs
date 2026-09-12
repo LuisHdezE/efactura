@@ -361,6 +361,34 @@ public sealed class V1PersistenceModelCustomizer : ModelCustomizer
 
 private static void ConfigureFiscalDailyReportDurability(ModelBuilder modelBuilder)
 {
+    modelBuilder.Entity<V1FiscalDailyReportVersionRecord>(entity =>
+    {
+        entity.ToTable("v1_fiscal_daily_report_versions");
+        entity.HasKey(x => x.Id);
+        entity.Property(x => x.Id).ValueGeneratedNever();
+        entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+        entity.Property(x => x.IssuerRuc).HasMaxLength(12).IsRequired();
+        entity.Property(x => x.SummaryDate).HasColumnType("date");
+        entity.Property(x => x.OperationId).HasMaxLength(120).IsRequired();
+        entity.Property(x => x.ReasonCode).HasMaxLength(120).IsRequired();
+        entity.Property(x => x.ReconciliationFingerprint).HasMaxLength(64).IsRequired();
+        entity.Property(x => x.CreatedAtUtc).HasPrecision(6);
+        entity.Property(x => x.VersionFingerprint).HasMaxLength(64).IsRequired();
+        entity.HasOne<V1FiscalDailyReportVersionRecord>()
+            .WithMany()
+            .HasForeignKey(x => x.PreviousVersionId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("FK_v1_fdr_version_previous");
+        entity.HasIndex(x => new { x.OrganizationId, x.IssuerRuc, x.SummaryDate, x.Sequence })
+            .IsUnique()
+            .HasDatabaseName("UX_v1_fdr_version_identity");
+        entity.HasIndex(x => new { x.OrganizationId, x.OperationId })
+            .IsUnique()
+            .HasDatabaseName("UX_v1_fdr_version_operation");
+        entity.HasIndex(x => x.PreviousVersionId)
+            .HasDatabaseName("IX_v1_fdr_version_previous");
+    });
+
     modelBuilder.Entity<V1FiscalDailyReportSigningEvidenceRecord>(entity =>
     {
         entity.ToTable("v1_fiscal_daily_report_signing_evidence");

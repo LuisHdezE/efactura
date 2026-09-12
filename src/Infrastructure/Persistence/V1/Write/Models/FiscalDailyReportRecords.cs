@@ -1,5 +1,22 @@
 namespace Infrastructure.Persistence.V1.Write.Models;
 
+public sealed class V1FiscalDailyReportVersionRecord
+{
+    public Guid Id { get; set; }
+    public string OrganizationId { get; set; } = string.Empty;
+    public string IssuerRuc { get; set; } = string.Empty;
+    public DateTime SummaryDate { get; set; }
+    public int Sequence { get; set; }
+    public Guid? PreviousVersionId { get; set; }
+    public string OperationId { get; set; } = string.Empty;
+    public int RevisionKind { get; set; }
+    public string ReasonCode { get; set; } = string.Empty;
+    public string ReconciliationFingerprint { get; set; } = string.Empty;
+    public bool RequiresFxReliquidation { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public string VersionFingerprint { get; set; } = string.Empty;
+}
+
 public sealed class V1FiscalDailyReportSigningEvidenceRecord
 {
     public Guid Id { get; set; }
