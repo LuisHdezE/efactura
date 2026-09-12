@@ -147,7 +147,8 @@ public sealed record FiscalDailyReportSubmissionCompletedIntegrationEvent(
 /// <summary>
 /// Creates durable intent to send one already-signed Reporte Diario. The wire call is deliberately
 /// separated from preparation so process failure cannot erase the fact that a submission was planned.
-/// SecEnvio N+1 cannot be prepared until N has durable AR (Reporte Recibido) evidence.
+/// SecEnvio N+1 cannot be prepared until N has durable AR (Reporte Recibido) evidence, either from
+/// the original submission or from an accepted same-SecEnvio BR correction revision.
 /// </summary>
 public sealed class PrepareFiscalDailyReportSubmissionUseCase
 {
@@ -160,6 +161,7 @@ public sealed class PrepareFiscalDailyReportSubmissionUseCase
     private readonly IOutboxWriter _outbox;
     private readonly IActorContextAccessor _actors;
     private readonly ICorrelationContextAccessor _correlations;
+    private readonly IFiscalDailyReportSameSequenceReceiptReader? _sameSequenceReceipts;
 
     public PrepareFiscalDailyReportSubmissionUseCase(
         IFiscalDailyReportSignedArtifactRepository artifacts,
@@ -170,7 +172,8 @@ public sealed class PrepareFiscalDailyReportSubmissionUseCase
         IAuditWriter audit,
         IOutboxWriter outbox,
         IActorContextAccessor actors,
-        ICorrelationContextAccessor correlations)
+        ICorrelationContextAccessor correlations,
+        IFiscalDailyReportSameSequenceReceiptReader? sameSequenceReceipts = null)
     {
         _artifacts = artifacts;
         _submissions = submissions;
@@ -181,6 +184,7 @@ public sealed class PrepareFiscalDailyReportSubmissionUseCase
         _outbox = outbox;
         _actors = actors;
         _correlations = correlations;
+        _sameSequenceReceipts = sameSequenceReceipts;
     }
 
     public Task<FiscalDailyReportSubmissionResult> ExecuteAsync(
@@ -234,8 +238,21 @@ public sealed class PrepareFiscalDailyReportSubmissionUseCase
                     command.SummaryDate,
                     command.Sequence - 1,
                     ct);
-                if (previous is null || previous.State != FiscalDailyReportSubmissionState.Received
-                    || !string.Equals(previous.AckStateCode, "AR", StringComparison.Ordinal))
+                var previousReceived = previous is not null
+                    && previous.State == FiscalDailyReportSubmissionState.Received
+                    && string.Equals(previous.AckStateCode, "AR", StringComparison.Ordinal);
+
+                if (!previousReceived && _sameSequenceReceipts is not null)
+                {
+                    previousReceived = await _sameSequenceReceipts.HasReceivedCorrectionAsync(
+                        command.OrganizationId,
+                        command.IssuerRuc,
+                        command.SummaryDate,
+                        command.Sequence - 1,
+                        ct);
+                }
+
+                if (!previousReceived)
                 {
                     throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
                         "fiscal.daily_report.transport.previous_sequence_not_received",
