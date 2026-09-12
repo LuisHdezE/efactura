@@ -52,3 +52,24 @@ public sealed class V1FiscalDailyReportSignedArtifactRecord
     public string SchemaSetFingerprint { get; set; } = string.Empty;
     public string SignedXml { get; set; } = string.Empty;
 }
+
+public sealed class V1FiscalDailyReportSubmissionRecord
+{
+    public Guid Id { get; set; }
+    public Guid SignedArtifactId { get; set; }
+    public string OrganizationId { get; set; } = string.Empty;
+    public string IssuerRuc { get; set; } = string.Empty;
+    public DateTime SummaryDate { get; set; }
+    public int Sequence { get; set; }
+    public string OperationId { get; set; } = string.Empty;
+    public string SignedContentHash { get; set; } = string.Empty;
+    public int State { get; set; }
+    public int AttemptCount { get; set; }
+    public DateTimeOffset PreparedAtUtc { get; set; }
+    public DateTimeOffset? LastAttemptAtUtc { get; set; }
+    public DateTimeOffset? CompletedAtUtc { get; set; }
+    public string? DgiReceiverId { get; set; }
+    public string? AckStateCode { get; set; }
+    public string? AckXml { get; set; }
+    public string? FailureCode { get; set; }
+}
