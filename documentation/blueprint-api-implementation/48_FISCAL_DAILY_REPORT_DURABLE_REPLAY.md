@@ -43,6 +43,18 @@ Two provider-neutral V1 tables are introduced:
 
 Both enforce unique report identity by organization, issuer RUC, summary date and sequence. The signed artifact also has a one-to-one unique reference to its signing evidence.
 
+## Pre-PR validation
+
+The governed one-shot implementation run completed successfully before opening the PR:
+
+- full solution restore: PASS;
+- full solution build: PASS;
+- focused `FiscalDailyReportDurableReplayArchitectureTests`: PASS;
+- focused `FiscalDailyReportDurableReplayTests`: PASS;
+- temporary one-shot script/workflow removed from the candidate tree.
+
+The full Clean Architecture Guard, including PostgreSQL/MySQL migration and transactional persistence coverage, remains a required PR gate before human merge approval.
+
 ## Deliberate non-scope
 
 This increment still does **not** implement:
