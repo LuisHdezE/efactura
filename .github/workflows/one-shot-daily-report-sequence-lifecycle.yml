@@ -1,0 +1,102 @@
+name: One-shot Daily Report Sequence Lifecycle
+
+on:
+  push:
+    branches:
+      - blueprint/fiscal-daily-report-sequence-lifecycle
+    paths:
+      - .github/one-shot/implement-daily-report-sequence-lifecycle.py
+      - .github/workflows/one-shot-daily-report-sequence-lifecycle.yml
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: [self-hosted, linux, x64, efactura-ci]
+    timeout-minutes: 60
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: efactura_ci
+        ports:
+          - 5432
+        options: >-
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1g
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: efactura_ci
+        ports:
+          - 3306
+        options: >-
+          --tmpfs /var/lib/mysql:rw,noexec,nosuid,size=1g
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -prootpass --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure persistent runner caches
+        shell: bash
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TOOL_CACHE}/dotnet" >> "$GITHUB_ENV"
+          echo "NUGET_PACKAGES=${RUNNER_TOOL_CACHE}/nuget-packages" >> "$GITHUB_ENV"
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Apply governed patch
+        run: python3 .github/one-shot/implement-daily-report-sequence-lifecycle.py
+
+      - name: Restore
+        run: dotnet restore api-accounting.sln --disable-build-servers
+
+      - name: Build
+        run: dotnet build api-accounting.sln --configuration Release --no-restore --disable-build-servers
+
+      - name: Focused architecture tests
+        run: dotnet test test/ArchitectureTests/ArchitectureTests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~FiscalDailyReportSequenceLifecycleArchitectureTests --logger "console;verbosity=normal"
+
+      - name: Focused cross-cutting tests
+        run: dotnet test test/CrossCuttingTests/CrossCuttingTests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~FiscalDailyReportSequenceLifecycleTests --logger "console;verbosity=normal"
+
+      - name: Focused PostgreSQL/MySQL persistence tests
+        env:
+          PERSISTENCE_INTEGRATION_REQUIRED: 'true'
+          POSTGRES_TEST_CONNECTION: 'Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Username=postgres;Password=postgres;Database=efactura_ci'
+          MYSQL_TEST_CONNECTION: 'Server=127.0.0.1;Port=${{ job.services.mysql.ports[3306] }};User ID=root;Password=rootpass;Database=efactura_ci;SslMode=None;AllowPublicKeyRetrieval=True'
+        run: dotnet test test/PersistenceIntegrationTests/PersistenceIntegrationTests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~FiscalDailyReportSequenceLifecyclePersistenceTests --logger "console;verbosity=normal"
+
+      - name: Commit implementation and remove one-shot files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/one-shot/implement-daily-report-sequence-lifecycle.py
+          rm -f .github/workflows/one-shot-daily-report-sequence-lifecycle.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No implementation changes to commit."
+            exit 1
+          fi
+          git commit -m "feat(fiscal): govern daily report sequence lifecycle"
+          git push origin HEAD:blueprint/fiscal-daily-report-sequence-lifecycle
