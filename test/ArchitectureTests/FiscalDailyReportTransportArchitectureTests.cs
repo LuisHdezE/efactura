@@ -59,13 +59,16 @@ public sealed class FiscalDailyReportTransportArchitectureTests
     }
 
     [Fact]
-    public void Documentation_keeps_BR_same_sequence_and_later_reconciliation_as_explicit_gates()
+    public void Documentation_recognizes_BR_same_sequence_follow_up_and_keeps_later_reconciliation_gated()
     {
         var docs = Read("documentation/blueprint-api-implementation/50_FISCAL_DAILY_REPORT_TRANSPORT.md");
         Assert.Contains("same `SecEnvio`", docs, StringComparison.Ordinal);
-        Assert.Contains("does **not** claim", docs, StringComparison.Ordinal);
+        Assert.Contains("former BR same-sequence gap is now addressed", docs, StringComparison.Ordinal);
+        Assert.Contains("51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md", docs, StringComparison.Ordinal);
+        Assert.Contains("blocks `R05` fail-closed", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARRESPUESTAREPORTE", docs, StringComparison.Ordinal);
         Assert.Contains("DR` / `ER` / `FR", docs, StringComparison.Ordinal);
+        Assert.Contains("automatic retry from `Unknown`", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
     }
 
