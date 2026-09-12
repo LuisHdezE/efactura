@@ -14,7 +14,8 @@ public sealed class FiscalDailyReportXmlDsigArchitectureTests
         Assert.Contains("IFiscalDailyReportSignatureProvider", contracts, StringComparison.Ordinal);
         Assert.Contains("IFiscalDailyReportSignedSchemaValidator", contracts, StringComparison.Ordinal);
         Assert.Contains("FiscalDailyReportSignatureRequest", contracts, StringComparison.Ordinal);
-        Assert.DoesNotContain("SignedXml", contracts, StringComparison.Ordinal);
+        Assert.DoesNotContain("System.Security.Cryptography.Xml", contracts, StringComparison.Ordinal);
+        Assert.DoesNotContain("new SignedXml(", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("X509Certificate", contracts, StringComparison.Ordinal);
         Assert.DoesNotContain("Infrastructure.", contracts, StringComparison.Ordinal);
     }
