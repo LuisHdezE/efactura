@@ -9,8 +9,13 @@ namespace Infrastructure.Fiscal;
 /// Production-oriented PKCS#12 certificate source. Configuration is external to source control and
 /// scoped by organization. Configured certificates are loaded with EphemeralKeySet, pinned by a
 /// SHA-256 certificate fingerprint, cached for the process lifetime, and disposed with the source.
+/// The same organization-scoped certificate may serve CFE and Reporte Diario signing through
+/// separate artifact contracts.
 /// </summary>
-public sealed class PfxFiscalSigningCertificateSource : IFiscalSigningCertificateSource, IDisposable
+public sealed class PfxFiscalSigningCertificateSource :
+    IFiscalSigningCertificateSource,
+    IFiscalDailyReportSigningCertificateSource,
+    IDisposable
 {
     public const string ConfigurationSection = "FiscalSigning:Certificates";
 
@@ -27,26 +32,16 @@ public sealed class PfxFiscalSigningCertificateSource : IFiscalSigningCertificat
         FiscalSignatureRequest request,
         CancellationToken cancellationToken = default)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(request);
-        cancellationToken.ThrowIfCancellationRequested();
+        return GetSigningCertificateAsync(request.OrganizationId, cancellationToken);
+    }
 
-        var organizationId = request.OrganizationId?.Trim();
-        if (string.IsNullOrWhiteSpace(organizationId))
-        {
-            throw Error(
-                "fiscal.signature.organization_required",
-                "Organization id is required to resolve a fiscal signing certificate.");
-        }
-
-        if (!_certificates.TryGetValue(organizationId, out var certificate))
-        {
-            throw Error(
-                "fiscal.signature.certificate_not_configured",
-                $"No fiscal signing certificate is configured for organization '{organizationId}'.");
-        }
-
-        return ValueTask.FromResult(certificate);
+    public ValueTask<X509Certificate2> GetSigningCertificateAsync(
+        FiscalDailyReportSignatureRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return GetSigningCertificateAsync(request.OrganizationId, cancellationToken);
     }
 
     public void Dispose()
@@ -58,6 +53,31 @@ public sealed class PfxFiscalSigningCertificateSource : IFiscalSigningCertificat
             certificate.Dispose();
 
         _disposed = true;
+    }
+
+    private ValueTask<X509Certificate2> GetSigningCertificateAsync(
+        string? organizationId,
+        CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var normalizedOrganizationId = organizationId?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedOrganizationId))
+        {
+            throw Error(
+                "fiscal.signature.organization_required",
+                "Organization id is required to resolve a fiscal signing certificate.");
+        }
+
+        if (!_certificates.TryGetValue(normalizedOrganizationId, out var certificate))
+        {
+            throw Error(
+                "fiscal.signature.certificate_not_configured",
+                $"No fiscal signing certificate is configured for organization '{normalizedOrganizationId}'.");
+        }
+
+        return ValueTask.FromResult(certificate);
     }
 
     private static IReadOnlyDictionary<string, X509Certificate2> LoadConfiguredCertificates(

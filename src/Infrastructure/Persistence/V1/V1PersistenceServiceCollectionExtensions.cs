@@ -95,9 +95,15 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalXmlBuilder, DeterministicUnsignedCfeBuilder>();
         services.AddSingleton<IFiscalSigningPayloadBuilder, DeterministicFiscalSigningPayloadBuilder>();
         services.AddSingleton<IFiscalSignedCfeSchemaValidator, DgiFeV1_44_2SignedCfeSchemaValidator>();
+        services.AddSingleton<IFiscalDailyReportXmlBuilder, DeterministicUnsignedDailyReportXmlBuilder>();
+        services.AddSingleton<IFiscalDailyReportUnsignedSchemaValidator, DgiFeV1_44_2UnsignedDailyReportSchemaValidator>();
+        services.AddSingleton<IFiscalDailyReportSignedSchemaValidator, DgiFeV1_44_2SignedDailyReportSchemaValidator>();
         services.AddSingleton<IFiscalSigningTimeSource, UruguayFiscalSigningTimeSource>();
         services.AddSingleton<IFiscalSigningCertificateSource, PfxFiscalSigningCertificateSource>();
+        services.AddSingleton<IFiscalDailyReportSigningCertificateSource>(sp =>
+            (PfxFiscalSigningCertificateSource)sp.GetRequiredService<IFiscalSigningCertificateSource>());
         services.AddSingleton<IFiscalSignatureProvider, XmlDsigFiscalSignatureProvider>();
+        services.AddSingleton<IFiscalDailyReportSignatureProvider, XmlDsigFiscalDailyReportSignatureProvider>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
