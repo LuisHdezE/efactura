@@ -108,6 +108,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalDailyReportSignatureProvider, XmlDsigFiscalDailyReportSignatureProvider>();
         services.AddSingleton<IFiscalDailyReportTransportClock, SystemFiscalDailyReportTransportClock>();
         services.AddSingleton<IFiscalDailyReportTransportGateway, DgiWsSecurityFiscalDailyReportTransportGateway>();
+        services.AddSingleton<IFiscalDailyReportResponseConsultationGateway, DgiWsSecurityFiscalDailyReportResponseConsultationGateway>();
         services.AddSingleton<IFiscalDailyReportBrAckEvidenceParser, DgiFiscalDailyReportBrAckEvidenceParser>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
@@ -120,6 +121,11 @@ public static class V1PersistenceServiceCollectionExtensions
             sp.GetRequiredService<EfFiscalDailyReportBrCorrectionRepository>());
         services.AddScoped<IFiscalDailyReportSameSequenceReceiptReader>(sp =>
             sp.GetRequiredService<EfFiscalDailyReportBrCorrectionRepository>());
+        services.AddScoped<EfFiscalDailyReportResponseConsultationRepository>();
+        services.AddScoped<IFiscalDailyReportResponseConsultationRepository>(sp =>
+            sp.GetRequiredService<EfFiscalDailyReportResponseConsultationRepository>());
+        services.AddScoped<IFiscalDailyReportConsultationTargetReader>(sp =>
+            sp.GetRequiredService<EfFiscalDailyReportResponseConsultationRepository>());
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
         services.AddScoped<CreateFiscalContentSnapshotUseCase>();
         services.AddScoped<PrepareFiscalSigningEvidenceUseCase>();
@@ -131,6 +137,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<DispatchFiscalDailyReportSubmissionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportBrCorrectionUseCase>();
         services.AddScoped<DispatchFiscalDailyReportBrCorrectionUseCase>();
+        services.AddScoped<ConsultFiscalDailyReportResponseUseCase>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
         services.AddScoped<GetCaeAuthorizationUseCase>();
         services.AddScoped<ImportCaeAuthorizationUseCase>();
