@@ -11,7 +11,7 @@ public sealed class V1FiscalDailyReportBrSameSequence : Migration
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(
-            name: "v1_fiscal_daily_report_br_revisions",
+            name: "v1_fdr_br_revisions",
             columns: table => new
             {
                 Id = table.Column<Guid>(nullable: false),
@@ -74,52 +74,52 @@ public sealed class V1FiscalDailyReportBrSameSequence : Migration
                 table.ForeignKey(
                     name: "FK_v1_fdr_br_revision_previous",
                     column: x => x.PreviousRevisionId,
-                    principalTable: "v1_fiscal_daily_report_br_revisions",
+                    principalTable: "v1_fdr_br_revisions",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
             });
 
         migrationBuilder.CreateIndex(
             name: "UX_v1_fdr_br_revision_operation",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             columns: new[] { "OrganizationId", "OperationId" },
             unique: true);
 
         migrationBuilder.CreateIndex(
             name: "UX_v1_fdr_br_revision_identity",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             columns: new[] { "OrganizationId", "IssuerRuc", "SummaryDate", "Sequence", "LocalRevision" },
             unique: true);
 
         migrationBuilder.CreateIndex(
             name: "UX_v1_fdr_br_revision_previous",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             column: "PreviousRevisionId",
             unique: true);
 
         migrationBuilder.CreateIndex(
             name: "IX_v1_fdr_br_revision_root_submission",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             column: "RootSubmissionId");
 
         migrationBuilder.CreateIndex(
             name: "IX_v1_fdr_br_revision_root_artifact",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             column: "RootSignedArtifactId");
 
         migrationBuilder.CreateIndex(
             name: "UX_v1_fdr_br_revision_signed_artifact",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             column: "SignedArtifactId",
             unique: true);
 
         migrationBuilder.CreateIndex(
             name: "UX_v1_fdr_br_revision_signing_evidence",
-            table: "v1_fiscal_daily_report_br_revisions",
+            table: "v1_fdr_br_revisions",
             column: "SigningEvidenceId",
             unique: true);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder) =>
-        migrationBuilder.DropTable(name: "v1_fiscal_daily_report_br_revisions");
+        migrationBuilder.DropTable(name: "v1_fdr_br_revisions");
 }
