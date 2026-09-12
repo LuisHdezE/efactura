@@ -159,7 +159,7 @@ public sealed class EfFiscalDailyReportSigningEvidenceRepository : IFiscalDailyR
             record.FunctionalFormatVersion,
             record.ProjectionFingerprint,
             record.UnsignedContentHash,
-            record.SigningTimestamp);
+            FiscalDailyReportSigningTimestampPersistence.Rehydrate(record.SigningTimestamp, record.SigningOffsetMinutes));
     }
 
     public Task AddAsync(
@@ -177,7 +177,8 @@ public sealed class EfFiscalDailyReportSigningEvidenceRepository : IFiscalDailyR
             FunctionalFormatVersion = evidence.FunctionalFormatVersion,
             ProjectionFingerprint = evidence.ProjectionFingerprint,
             UnsignedContentHash = evidence.UnsignedContentHash,
-            SigningTimestamp = evidence.SigningTimestamp
+            SigningTimestamp = evidence.SigningTimestamp.ToUniversalTime(),
+            SigningOffsetMinutes = FiscalDailyReportSigningTimestampPersistence.OffsetMinutes(evidence.SigningTimestamp)
         });
         return Task.CompletedTask;
     }
@@ -217,7 +218,7 @@ public sealed class EfFiscalDailyReportSignedArtifactRepository : IFiscalDailyRe
             record.ProjectionFingerprint,
             record.UnsignedContentHash,
             record.SignedContentHash,
-            record.SigningTimestamp,
+            FiscalDailyReportSigningTimestampPersistence.Rehydrate(record.SigningTimestamp, record.SigningOffsetMinutes),
             record.SignatureProfileId,
             record.CertificateThumbprint,
             record.CertificateSerialNumber,
@@ -245,7 +246,8 @@ public sealed class EfFiscalDailyReportSignedArtifactRepository : IFiscalDailyRe
             ProjectionFingerprint = artifact.ProjectionFingerprint,
             UnsignedContentHash = artifact.UnsignedContentHash,
             SignedContentHash = artifact.SignedContentHash,
-            SigningTimestamp = artifact.SigningTimestamp,
+            SigningTimestamp = artifact.SigningTimestamp.ToUniversalTime(),
+            SigningOffsetMinutes = FiscalDailyReportSigningTimestampPersistence.OffsetMinutes(artifact.SigningTimestamp),
             SignatureProfileId = artifact.SignatureProfileId,
             CertificateThumbprint = artifact.CertificateThumbprint,
             CertificateSerialNumber = artifact.CertificateSerialNumber,
@@ -256,5 +258,27 @@ public sealed class EfFiscalDailyReportSignedArtifactRepository : IFiscalDailyRe
             SignedXml = artifact.SignedXml
         });
         return Task.CompletedTask;
+    }
+}
+
+internal static class FiscalDailyReportSigningTimestampPersistence
+{
+    private const int MinimumOffsetMinutes = -14 * 60;
+    private const int MaximumOffsetMinutes = 14 * 60;
+
+    public static int OffsetMinutes(DateTimeOffset value)
+    {
+        var minutes = checked((int)value.Offset.TotalMinutes);
+        if (minutes is < MinimumOffsetMinutes or > MaximumOffsetMinutes)
+            throw new InvalidOperationException("Fiscal Daily Report signing offset is outside DateTimeOffset bounds.");
+        return minutes;
+    }
+
+    public static DateTimeOffset Rehydrate(DateTimeOffset persistedUtc, int offsetMinutes)
+    {
+        if (offsetMinutes is < MinimumOffsetMinutes or > MaximumOffsetMinutes)
+            throw new InvalidOperationException("Persisted Fiscal Daily Report signing offset is invalid.");
+
+        return persistedUtc.ToUniversalTime().ToOffset(TimeSpan.FromMinutes(offsetMinutes));
     }
 }
