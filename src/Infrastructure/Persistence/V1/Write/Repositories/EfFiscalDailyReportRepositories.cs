@@ -18,22 +18,23 @@ public sealed class EfFiscalDailyReportVersionRepository : IFiscalDailyReportVer
             throw new InvalidOperationException("Daily Report sequence lock requires an active transaction.");
 
         var provider = _dbContext.Database.ProviderName ?? string.Empty;
-        string sql;
+        IQueryable<V1CompanyFiscalProfileRecord> query;
         if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
         {
-            sql = "SELECT * FROM \"v1_company_fiscal_profiles\" WHERE \"OrganizationId\" = {0} FOR UPDATE";
+            query = _dbContext.Set<V1CompanyFiscalProfileRecord>()
+                .FromSqlInterpolated($"SELECT * FROM \"v1_company_fiscal_profiles\" WHERE \"OrganizationId\" = {organizationId} FOR UPDATE");
         }
         else if (provider.Contains("MySql", StringComparison.OrdinalIgnoreCase))
         {
-            sql = "SELECT * FROM `v1_company_fiscal_profiles` WHERE `OrganizationId` = {0} FOR UPDATE";
+            query = _dbContext.Set<V1CompanyFiscalProfileRecord>()
+                .FromSqlInterpolated($"SELECT * FROM `v1_company_fiscal_profiles` WHERE `OrganizationId` = {organizationId} FOR UPDATE");
         }
         else
         {
             throw new InvalidOperationException($"Unsupported provider for Daily Report sequence lock: {provider}");
         }
 
-        var locked = await _dbContext.Set<V1CompanyFiscalProfileRecord>()
-            .FromSqlRaw(sql, organizationId)
+        var locked = await query
             .AsNoTracking()
             .ToListAsync(cancellationToken);
         return locked.Count == 1;
