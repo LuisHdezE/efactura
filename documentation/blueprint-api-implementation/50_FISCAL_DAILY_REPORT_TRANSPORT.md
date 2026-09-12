@@ -44,6 +44,27 @@ States in this increment are:
 
 `OperationId` makes preparation idempotent. An existing identity cannot silently be rebound to different signed bytes.
 
+## Concurrency boundary
+
+The durable `Prepared -> InFlight` transition is serialized at the submission row before the network boundary. PostgreSQL and MySQL use an EF Core `FromSqlInterpolated` `SELECT ... FOR UPDATE` path while a transaction is active; normal reads remain no-tracking queries.
+
+This prevents two independent dispatch workers from reading the same durable `Prepared` submission and both sending the same signed Reporte Diario. Provider-real tests deliberately hold the first dispatcher inside the gateway while a second dispatcher attempts the same identity. The second worker observes the already committed `InFlight` state and fails closed with `fiscal.daily_report.transport.reconciliation_required`; only one gateway call occurs and the persisted attempt count remains one.
+
+The PostgreSQL lock parameter for `SummaryDate` is bound as `DateOnly`, preserving the database `date` semantics and avoiding accidental `timestamp with time zone` inference.
+
+## Portable signing timestamp evidence
+
+The signed Reporte Diario bytes contain `TmstFirmaEnv`, whose lexical value includes the Uruguay fiscal offset, for example `-03:00`. PostgreSQL `timestamp with time zone` requires a UTC instant and does not retain the original offset as independent evidence.
+
+To keep replay byte-identical across PostgreSQL and MySQL, durable Reporte signing evidence and signed-artifact persistence now store:
+
+- the signing instant normalized to UTC in `SigningTimestamp`;
+- the original fiscal offset separately as `SigningOffsetMinutes`.
+
+Repository reads reconstruct the original `DateTimeOffset` before rebuilding or validating the deterministic Reporte. This preserves the exact fiscal signing offset used by `TmstFirmaEnv` without depending on provider-specific timestamp behavior.
+
+A provider-real regression test persists `2026-09-12T03:15:31-03:00`, verifies that the stored instant is UTC with offset evidence `-180`, and confirms that both PostgreSQL and MySQL rehydrate the exact original `DateTimeOffset`.
+
 ## Ordering
 
 `SecEnvio N+1` cannot be prepared until the durable submission for `N` has immediate DGI state `AR`.
@@ -80,6 +101,23 @@ The current signed-report durability model created before transport has one immu
 That model cannot yet create corrected signed bytes for the same `SecEnvio` after a `BR` without weakening its immutability guarantees.
 
 Therefore this increment deliberately persists `BR` and stops. It does **not** claim the same-sequence correction/resubmission capability is complete. A subsequent bounded increment must introduce a local artifact-attempt/revision identity beneath the stable DGI `SecEnvio`, preserve the rejected artifact and ACK, and allow a newly signed corrected artifact to reuse the same DGI sequence only when the rejection evidence authorizes that behavior.
+
+## Validation evidence
+
+Clean Architecture Guard **#284**, run `34693223351`, completed successfully on code candidate `319af13368f3c4c99aa18df2fa0e41f277d16ca1` before this documentation-only reconciliation commit.
+
+The successful run covered:
+
+- full solution build;
+- Clean Architecture guards;
+- API v1 cross-cutting tests;
+- legacy unit tests;
+- PostgreSQL and MySQL transactional persistence tests;
+- portable Reporte signing timestamp round-trip with Uruguay `-03:00` evidence;
+- AR submission persistence;
+- concurrent-dispatch serialization proving a single network-boundary call.
+
+Because this documentation update changes the Git head, the PR still requires one final full Clean Architecture Guard on the exact final candidate before it can leave draft status.
 
 ## Deliberate non-scope
 
