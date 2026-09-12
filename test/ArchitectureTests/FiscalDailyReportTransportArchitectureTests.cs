@@ -33,9 +33,10 @@ public sealed class FiscalDailyReportTransportArchitectureTests
         Assert.Contains("MUST NOT be", gateway, StringComparison.Ordinal);
         Assert.Contains("SHA1", gateway, StringComparison.Ordinal);
 
-        Assert.Contains("SHA1", reportSigner, StringComparison.Ordinal);
-        Assert.Contains("not permitted", reportSigner, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("XmlDsigRSASHA256Url", reportSigner, StringComparison.Ordinal);
+        Assert.Contains("profile_sha1_forbidden", reportSigner, StringComparison.Ordinal);
+        Assert.Contains("FiscalXmlSignatureProfile.RsaSha256", reportSigner, StringComparison.Ordinal);
+        Assert.Contains("FiscalXmlSignatureProfile.Sha256", reportSigner, StringComparison.Ordinal);
+        Assert.DoesNotContain("EFACRECEPCIONREPORTE", reportSigner, StringComparison.Ordinal);
     }
 
     [Fact]
