@@ -18,43 +18,35 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@44225493c60ee313e849f0f0d7628f7415744e49",
+            "main@44478944bff3dbfee1e269347b48954015d8b3b9",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "formal traditional `Prueba de Testing`: **BLOCKED BY MISSING PRODUCT CAPABILITIES**",
+            "merge of PR #77",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Domestic 102/103/112/113 credit/debit-note foundation",
+            "Current pending governed increment: PR #78",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Reporte Diario v13.2 internal reconciliation foundation",
+            "PR #78 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Typed immutable Reporte Diario source-fact evidence",
+            "Durable DGI `EFACRECEPCIONREPORTE` transport with immediate `ACKRepDiario` AR/BR persistence.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Lossless foreign-currency integration",
+            "The accepted PR #77 baseline intentionally stops at `BR`; it does not contain accepted same-`SecEnvio` corrected resubmission.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "typed Reporte Diario source facts for signed identity, AE/BE, A-C19 and FX provenance: **IMPLEMENTED / LOCALLY VALIDATED**",
+            "**BLOCKED BY MISSING PRODUCT CAPABILITIES**",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "lossless non-UYU -> UYU Daily Report evidence composition: **IMPLEMENTED / LOCALLY VALIDATED**",
-            currentState,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "sendable/signed/persisted Reporte Diario v13.2 artifact: **NOT YET IMPLEMENTED**",
-            currentState,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "Pin the authoritative Reporte Diario v13.2 wire contract",
+            "PR #78 remains pending until exact-head CI is green and human review is complete",
             currentState,
             StringComparison.Ordinal);
 
