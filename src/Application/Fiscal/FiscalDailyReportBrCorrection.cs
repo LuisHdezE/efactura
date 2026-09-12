@@ -1,9 +1,8 @@
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using EFactura.Application.Common.Auditing;
 using EFactura.Application.Common.Context;
+using EFactura.Application.Common.Errors;
 using EFactura.Application.Common.Messaging;
 using EFactura.Application.Common.Persistence;
 using EFactura.Domain.Common;
@@ -15,6 +14,19 @@ public sealed record FiscalDailyReportRejectionReason(
     string Code,
     string Glosa,
     string? Detail);
+
+public sealed record FiscalDailyReportBrAckParseResult(
+    bool IsValid,
+    IReadOnlyList<FiscalDailyReportRejectionReason> Reasons,
+    string? FailureCode);
+
+/// <summary>
+/// DGI wire parsing remains an Infrastructure concern. Application consumes only typed BR evidence.
+/// </summary>
+public interface IFiscalDailyReportBrAckEvidenceParser
+{
+    FiscalDailyReportBrAckParseResult Parse(string ackXml);
+}
 
 public static class FiscalDailyReportRejectionReasonEvidence
 {
@@ -58,8 +70,7 @@ public static class FiscalDailyReportRejectionReasonEvidence
     {
         if (!TryValidate(reasons, out var error))
             throw PrepareFiscalDailyReportSigningEvidenceUseCase.Validation(
-                "fiscal.daily_report.br_reason.invalid",
-                error!);
+                "fiscal.daily_report.br_reason.invalid", error!);
         return JsonSerializer.Serialize(reasons);
     }
 
@@ -85,14 +96,12 @@ public static class FiscalDailyReportRejectionReasonEvidence
             }
             return reasons!;
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
-            throw new Application.Common.Errors.ApplicationProblemException(
-                Application.Common.Errors.ApplicationProblemKind.Conflict,
+            throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
                 "fiscal.daily_report.br_correction.rejection_reason_evidence_invalid",
                 "Persisted DGI BR rejection-reason evidence is not valid JSON.",
-                conflictType: "invalid_persisted_evidence",
-                innerException: ex);
+                "invalid_persisted_evidence");
         }
     }
 
@@ -146,18 +155,18 @@ public sealed record StoredFiscalDailyReportBrCorrectionRevision(
     {
         if (Id == Guid.Empty || RootSubmissionId == Guid.Empty || RootSignedArtifactId == Guid.Empty
             || SigningEvidenceId == Guid.Empty || SignedArtifactId == Guid.Empty)
-            throw Conflict("fiscal.daily_report.br_correction.identity_invalid", "BR correction durable identities are invalid.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.identity_invalid", "BR correction durable identities are invalid.");
         if (LocalRevision < 2)
-            throw Conflict("fiscal.daily_report.br_correction.local_revision_invalid", "BR correction local revision must start at 2.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.local_revision_invalid", "BR correction local revision must start at 2.");
         if (LocalRevision == 2 && PreviousRevisionId is not null)
-            throw Conflict("fiscal.daily_report.br_correction.first_previous_forbidden", "First BR correction cannot reference another correction revision.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.first_previous_forbidden", "First BR correction cannot reference another correction revision.");
         if (LocalRevision > 2 && PreviousRevisionId is null)
-            throw Conflict("fiscal.daily_report.br_correction.previous_required", "Later BR corrections require explicit previous-revision lineage.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.previous_required", "Later BR corrections require explicit previous-revision lineage.");
         Required(OrganizationId, 200, "fiscal.daily_report.br_correction.organization_invalid");
         if (IssuerRuc.Length != 12 || IssuerRuc.Any(c => !char.IsDigit(c)))
-            throw Conflict("fiscal.daily_report.br_correction.ruc_invalid", "BR correction issuer RUC is invalid.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.ruc_invalid", "BR correction issuer RUC is invalid.");
         if (SummaryDate == default || Sequence is < 1 or > 99)
-            throw Conflict("fiscal.daily_report.br_correction.dgi_identity_invalid", "BR correction DGI identity is invalid.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.dgi_identity_invalid", "BR correction DGI identity is invalid.");
         Required(OperationId, 120, "fiscal.daily_report.br_correction.operation_invalid");
         Required(CorrectionReasonCode, 120, "fiscal.daily_report.br_correction.reason_invalid");
         Hash(SourceAckXmlHash, "fiscal.daily_report.br_correction.source_ack_hash_invalid");
@@ -175,12 +184,12 @@ public sealed record StoredFiscalDailyReportBrCorrectionRevision(
         Hash(SchemaSetFingerprint, "fiscal.daily_report.br_correction.schema_fingerprint_invalid");
         if (string.IsNullOrWhiteSpace(SignedXml)
             || !string.Equals(SignedContentHash, PrepareFiscalDailyReportSigningEvidenceUseCase.Sha256(SignedXml), StringComparison.Ordinal))
-            throw Conflict("fiscal.daily_report.br_correction.signed_xml_invalid", "BR correction signed XML does not match its durable SHA-256 hash.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.signed_xml_invalid", "BR correction signed XML does not match its durable SHA-256 hash.");
         Hash(RevisionFingerprint, "fiscal.daily_report.br_correction.revision_fingerprint_invalid");
         if (!string.Equals(RevisionFingerprint, ComputeFingerprint(), StringComparison.Ordinal))
-            throw Conflict("fiscal.daily_report.br_correction.revision_fingerprint_mismatch", "BR correction revision fingerprint does not match immutable evidence.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.revision_fingerprint_mismatch", "BR correction revision fingerprint does not match immutable evidence.");
         if (!Enum.IsDefined(State) || AttemptCount < 0)
-            throw Conflict("fiscal.daily_report.br_correction.transport_state_invalid", "BR correction transport state is invalid.");
+            throw PersistedConflict("fiscal.daily_report.br_correction.transport_state_invalid", "BR correction transport state is invalid.");
     }
 
     public string ComputeFingerprint() => PrepareFiscalDailyReportSigningEvidenceUseCase.Sha256(string.Join(
@@ -199,16 +208,16 @@ public sealed record StoredFiscalDailyReportBrCorrectionRevision(
     private static void Required(string? value, int max, string code)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length > max)
-            throw Conflict(code, "Persisted BR correction evidence contains a missing or oversized required value.");
+            throw PersistedConflict(code, "Persisted BR correction evidence contains a missing or oversized required value.");
     }
 
     private static void Hash(string? value, string code)
     {
         if (value is null || value.Length != 64 || value.Any(c => !Uri.IsHexDigit(c)))
-            throw Conflict(code, "Persisted BR correction evidence contains an invalid SHA-256 fingerprint.");
+            throw PersistedConflict(code, "Persisted BR correction evidence contains an invalid SHA-256 fingerprint.");
     }
 
-    private static Application.Common.Errors.ApplicationProblemException Conflict(string code, string message) =>
+    private static ApplicationProblemException PersistedConflict(string code, string message) =>
         PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(code, message, "invalid_persisted_evidence");
 }
 
@@ -234,13 +243,8 @@ public interface IFiscalDailyReportBrCorrectionRepository
         int localRevision,
         CancellationToken cancellationToken = default);
 
-    Task AddAsync(
-        StoredFiscalDailyReportBrCorrectionRevision revision,
-        CancellationToken cancellationToken = default);
-
-    Task UpdateAsync(
-        StoredFiscalDailyReportBrCorrectionRevision revision,
-        CancellationToken cancellationToken = default);
+    Task AddAsync(StoredFiscalDailyReportBrCorrectionRevision revision, CancellationToken cancellationToken = default);
+    Task UpdateAsync(StoredFiscalDailyReportBrCorrectionRevision revision, CancellationToken cancellationToken = default);
 }
 
 public interface IFiscalDailyReportSameSequenceReceiptReader
@@ -320,6 +324,7 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
 {
     private readonly IFiscalDailyReportSubmissionRepository _submissions;
     private readonly IFiscalDailyReportBrCorrectionRepository _revisions;
+    private readonly IFiscalDailyReportBrAckEvidenceParser _ackParser;
     private readonly IFiscalDailyReportXmlBuilder _builder;
     private readonly IFiscalDailyReportSignatureProvider _signer;
     private readonly IFiscalDailyReportSignedSchemaValidator _schemaValidator;
@@ -335,6 +340,7 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
     public PrepareFiscalDailyReportBrCorrectionUseCase(
         IFiscalDailyReportSubmissionRepository submissions,
         IFiscalDailyReportBrCorrectionRepository revisions,
+        IFiscalDailyReportBrAckEvidenceParser ackParser,
         IFiscalDailyReportXmlBuilder builder,
         IFiscalDailyReportSignatureProvider signer,
         IFiscalDailyReportSignedSchemaValidator schemaValidator,
@@ -349,6 +355,7 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
     {
         _submissions = submissions;
         _revisions = revisions;
+        _ackParser = ackParser;
         _builder = builder;
         _signer = signer;
         _schemaValidator = schemaValidator;
@@ -382,6 +389,8 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
                 return Result(replay, true);
             }
 
+            // This SELECT ... FOR UPDATE path on the stable original submission serializes all local
+            // corrections for the same DGI identity on both PostgreSQL and MySQL.
             var root = await _submissions.GetByIdentityAsync(
                 projection.OrganizationId, projection.IssuerRuc, projection.SummaryDate, projection.Sequence, ct)
                 ?? throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
@@ -411,7 +420,6 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
             var sourceState = latest?.State ?? root.State;
             var sourceAckCode = latest?.AckStateCode ?? root.AckStateCode;
             var sourceAckXml = latest?.AckXml ?? root.AckXml;
-            var sourceReasonsJson = latest?.AckReasonsJson ?? root.AckReasonsJson;
 
             if (sourceState is FiscalDailyReportSubmissionState.InFlight or FiscalDailyReportSubmissionState.Unknown)
             {
@@ -430,8 +438,15 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
                     "missing_prerequisite");
             }
 
-            var rejectionReasons = FiscalDailyReportRejectionReasonEvidence.DeserializeRequired(sourceReasonsJson);
-            if (FiscalDailyReportRejectionReasonEvidence.ContainsR05(rejectionReasons))
+            var parsed = _ackParser.Parse(sourceAckXml);
+            if (!parsed.IsValid || !FiscalDailyReportRejectionReasonEvidence.TryValidate(parsed.Reasons, out var reasonError))
+            {
+                throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
+                    parsed.FailureCode ?? "fiscal.daily_report.br_correction.rejection_reason_evidence_invalid",
+                    reasonError ?? "Durable DGI BR acknowledgement does not contain trustworthy typed rejection-reason evidence.",
+                    "invalid_persisted_evidence");
+            }
+            if (FiscalDailyReportRejectionReasonEvidence.ContainsR05(parsed.Reasons))
             {
                 throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
                     "fiscal.daily_report.br_correction.r05_reconciliation_required",
@@ -490,12 +505,12 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
             var schema = RequireValidSchema(signature.SignedXml);
             var now = PrepareFiscalDailyReportSubmissionUseCase.WholeSecond(_clock.UtcNow);
             var sourceAckHash = PrepareFiscalDailyReportSigningEvidenceUseCase.Sha256(sourceAckXml);
-            var normalizedReasons = FiscalDailyReportRejectionReasonEvidence.Serialize(rejectionReasons);
+            var sourceReasonsJson = FiscalDailyReportRejectionReasonEvidence.Serialize(parsed.Reasons);
             var provisional = new StoredFiscalDailyReportBrCorrectionRevision(
                 Guid.NewGuid(), root.Id, root.SignedArtifactId, latest?.Id,
                 Guid.NewGuid(), Guid.NewGuid(),
                 projection.OrganizationId, projection.IssuerRuc, projection.SummaryDate, projection.Sequence,
-                localRevision, operationId, command.CorrectionReasonCode.Trim(), sourceAckHash, normalizedReasons,
+                localRevision, operationId, command.CorrectionReasonCode.Trim(), sourceAckHash, sourceReasonsJson,
                 unsigned.FormatVersion, projection.ProjectionFingerprint, unsigned.ContentHash, signedHash,
                 signingTimestamp,
                 Required(signature.SignatureProfileId, 120, "fiscal.daily_report.br_correction.signature_profile_required"),
@@ -512,7 +527,7 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
             revision.EnsureIntegrity();
 
             await _revisions.AddAsync(revision, ct);
-            await AppendPreparedEvidence(revision, rejectionReasons, now, ct);
+            await AppendPreparedEvidence(revision, parsed.Reasons, now, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             return Result(revision, false);
         }, cancellationToken);
@@ -622,7 +637,7 @@ public sealed class PrepareFiscalDailyReportBrCorrectionUseCase
                 ["summaryDate"] = revision.SummaryDate.ToString("yyyy-MM-dd"),
                 ["sequence"] = revision.Sequence.ToString(CultureInfo.InvariantCulture),
                 ["localRevision"] = revision.LocalRevision.ToString(CultureInfo.InvariantCulture),
-                ["sourceDgiReasons"] = string.Join(',', sourceReasons.Select(x => x.Code)),
+                ["sourceDgiReasons"] = string.Join(",", sourceReasons.Select(x => x.Code)),
                 ["projectionFingerprint"] = revision.ProjectionFingerprint,
                 ["signedContentHash"] = revision.SignedContentHash
             }), cancellationToken);
@@ -658,6 +673,7 @@ public sealed class DispatchFiscalDailyReportBrCorrectionUseCase
 {
     private readonly IFiscalDailyReportSubmissionRepository _submissions;
     private readonly IFiscalDailyReportBrCorrectionRepository _revisions;
+    private readonly IFiscalDailyReportBrAckEvidenceParser _ackParser;
     private readonly IFiscalDailyReportTransportGateway _gateway;
     private readonly IFiscalDailyReportTransportClock _clock;
     private readonly ITransactionManager _transactions;
@@ -670,6 +686,7 @@ public sealed class DispatchFiscalDailyReportBrCorrectionUseCase
     public DispatchFiscalDailyReportBrCorrectionUseCase(
         IFiscalDailyReportSubmissionRepository submissions,
         IFiscalDailyReportBrCorrectionRepository revisions,
+        IFiscalDailyReportBrAckEvidenceParser ackParser,
         IFiscalDailyReportTransportGateway gateway,
         IFiscalDailyReportTransportClock clock,
         ITransactionManager transactions,
@@ -681,6 +698,7 @@ public sealed class DispatchFiscalDailyReportBrCorrectionUseCase
     {
         _submissions = submissions;
         _revisions = revisions;
+        _ackParser = ackParser;
         _gateway = gateway;
         _clock = clock;
         _transactions = transactions;
@@ -796,11 +814,16 @@ public sealed class DispatchFiscalDailyReportBrCorrectionUseCase
 
             var now = PrepareFiscalDailyReportSubmissionUseCase.WholeSecond(_clock.UtcNow);
             string? reasonsJson = null;
-            if (response.AckStateCode == "BR" && response.RejectionReasons.Count > 0
-                && FiscalDailyReportRejectionReasonEvidence.TryValidate(response.RejectionReasons, out _))
+            string? evidenceFailure = null;
+            if (response.AckStateCode == "BR")
             {
-                reasonsJson = FiscalDailyReportRejectionReasonEvidence.Serialize(response.RejectionReasons);
+                var parsed = _ackParser.Parse(response.AckXml);
+                if (parsed.IsValid && FiscalDailyReportRejectionReasonEvidence.TryValidate(parsed.Reasons, out _))
+                    reasonsJson = FiscalDailyReportRejectionReasonEvidence.Serialize(parsed.Reasons);
+                else
+                    evidenceFailure = parsed.FailureCode ?? "fiscal.daily_report.br_correction.rejection_reason_evidence_missing";
             }
+
             var completed = current with
             {
                 State = response.AckStateCode == "AR" ? FiscalDailyReportSubmissionState.Received : FiscalDailyReportSubmissionState.Rejected,
@@ -809,9 +832,7 @@ public sealed class DispatchFiscalDailyReportBrCorrectionUseCase
                 AckStateCode = response.AckStateCode,
                 AckXml = response.AckXml,
                 AckReasonsJson = reasonsJson,
-                FailureCode = response.AckStateCode == "BR" && reasonsJson is null
-                    ? "fiscal.daily_report.br_correction.rejection_reason_evidence_missing"
-                    : null
+                FailureCode = evidenceFailure
             };
             await _revisions.UpdateAsync(completed, ct);
             await AppendCompletionEvidence(completed, now, ct);
@@ -888,7 +909,7 @@ public sealed class DispatchFiscalDailyReportBrCorrectionUseCase
             new OutboxContext(correlation.CorrelationId, null, revision.OrganizationId, actor.ActorId), cancellationToken);
     }
 
-    private static Application.Common.Errors.ApplicationProblemException MissingAfterSend() =>
+    private static ApplicationProblemException MissingAfterSend() =>
         PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
             "fiscal.daily_report.br_correction.revision_missing_after_send",
             "Durable corrected Reporte Diario revision disappeared during transport.",
