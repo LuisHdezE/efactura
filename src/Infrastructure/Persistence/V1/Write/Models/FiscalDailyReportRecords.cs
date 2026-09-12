@@ -32,6 +32,7 @@ public sealed class V1FiscalDailyReportSigningEvidenceRecord
     public string ProjectionFingerprint { get; set; } = string.Empty;
     public string UnsignedContentHash { get; set; } = string.Empty;
     public DateTimeOffset SigningTimestamp { get; set; }
+    public int SigningOffsetMinutes { get; set; }
 }
 
 public sealed class V1FiscalDailyReportSignedArtifactRecord
@@ -47,6 +48,7 @@ public sealed class V1FiscalDailyReportSignedArtifactRecord
     public string UnsignedContentHash { get; set; } = string.Empty;
     public string SignedContentHash { get; set; } = string.Empty;
     public DateTimeOffset SigningTimestamp { get; set; }
+    public int SigningOffsetMinutes { get; set; }
     public string SignatureProfileId { get; set; } = string.Empty;
     public string CertificateThumbprint { get; set; } = string.Empty;
     public string CertificateSerialNumber { get; set; } = string.Empty;
