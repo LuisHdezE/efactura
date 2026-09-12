@@ -66,6 +66,20 @@ jobs:
       - name: Apply governed patch
         run: python3 .github/one-shot/implement-daily-report-sequence-lifecycle.py
 
+      - name: Canonicalize durable version timestamp
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/Application/Fiscal/FiscalDailyReportVersionLifecycle.cs')
+          text = path.read_text(encoding='utf-8')
+          old = '            var now = DateTimeOffset.UtcNow;\n            var provisional = new StoredFiscalDailyReportVersion('
+          new = '            var rawNow = DateTimeOffset.UtcNow;\n            var now = new DateTimeOffset(\n                rawNow.Ticks - rawNow.Ticks % TimeSpan.TicksPerSecond,\n                rawNow.Offset);\n            var provisional = new StoredFiscalDailyReportVersion('
+          if old not in text:
+              raise SystemExit('timestamp marker not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Restore
         run: dotnet restore api-accounting.sln --disable-build-servers
 
