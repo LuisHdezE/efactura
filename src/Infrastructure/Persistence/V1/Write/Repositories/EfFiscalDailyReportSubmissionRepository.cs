@@ -40,7 +40,7 @@ public sealed class EfFiscalDailyReportSubmissionRepository : IFiscalDailyReport
             if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
             {
                 record = await records
-                    .FromSqlInterpolated($"SELECT * FROM \"v1_fiscal_daily_report_submissions\" WHERE \"OrganizationId\" = {organizationId} AND \"IssuerRuc\" = {issuerRuc} AND \"SummaryDate\" = {date} AND \"Sequence\" = {sequence} FOR UPDATE")
+                    .FromSqlInterpolated($"SELECT * FROM \"v1_fiscal_daily_report_submissions\" WHERE \"OrganizationId\" = {organizationId} AND \"IssuerRuc\" = {issuerRuc} AND \"SummaryDate\" = {summaryDate} AND \"Sequence\" = {sequence} FOR UPDATE")
                     .AsNoTracking()
                     .SingleOrDefaultAsync(cancellationToken);
             }
