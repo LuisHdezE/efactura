@@ -73,6 +73,58 @@ public sealed class FiscalDailyReportTransportTests
     }
 
     [Fact]
+    public async Task Sequence_two_is_allowed_when_sequence_one_BR_correction_has_durable_AR()
+    {
+        var artifacts = new ArtifactRepository(Artifact(2));
+        var submissions = new SubmissionRepository();
+        var clock = new FixedClock(DateTimeOffset.UtcNow);
+        var receipts = new SameSequenceReceiptReader(received: true);
+        var originalAck = Ack("BR", "receiver-br");
+
+        var original = new StoredFiscalDailyReportSubmission(
+            Guid.NewGuid(), Guid.NewGuid(), "company-1", "214748364700", SummaryDate, 1,
+            "prior-br-op", Hash('1'), FiscalDailyReportSubmissionState.Rejected, 1,
+            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow,
+            "receiver-br", "BR", originalAck, null);
+        await submissions.AddAsync(original);
+
+        var prepared = await Prepare(artifacts, submissions, clock, receipts)
+            .ExecuteAsync(Command(2, "op-2-corrected"));
+
+        Assert.Equal(FiscalDailyReportSubmissionState.Prepared, prepared.State);
+        Assert.Equal(1, receipts.Calls);
+        Assert.Equal(1, receipts.LastSequence);
+
+        var unchanged = await submissions.GetByIdentityAsync("company-1", "214748364700", SummaryDate, 1);
+        Assert.NotNull(unchanged);
+        Assert.Equal(FiscalDailyReportSubmissionState.Rejected, unchanged!.State);
+        Assert.Equal("BR", unchanged.AckStateCode);
+        Assert.Equal(originalAck, unchanged.AckXml);
+    }
+
+    [Fact]
+    public async Task Sequence_two_remains_blocked_when_BR_correction_has_no_durable_AR()
+    {
+        var artifacts = new ArtifactRepository(Artifact(2));
+        var submissions = new SubmissionRepository();
+        var clock = new FixedClock(DateTimeOffset.UtcNow);
+        var receipts = new SameSequenceReceiptReader(received: false);
+
+        await submissions.AddAsync(new StoredFiscalDailyReportSubmission(
+            Guid.NewGuid(), Guid.NewGuid(), "company-1", "214748364700", SummaryDate, 1,
+            "prior-br-op", Hash('1'), FiscalDailyReportSubmissionState.Rejected, 1,
+            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow,
+            "receiver-br", "BR", Ack("BR", "receiver-br"), null));
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+            Prepare(artifacts, submissions, clock, receipts).ExecuteAsync(Command(2, "op-2-blocked")));
+
+        Assert.Equal("fiscal.daily_report.transport.previous_sequence_not_received", error.Code);
+        Assert.Equal(1, receipts.Calls);
+        Assert.Equal(1, receipts.LastSequence);
+    }
+
+    [Fact]
     public async Task Ambiguous_delivery_becomes_Unknown_and_requires_reconciliation_before_retry()
     {
         var artifacts = new ArtifactRepository(Artifact(1));
@@ -115,7 +167,8 @@ public sealed class FiscalDailyReportTransportTests
     private static PrepareFiscalDailyReportSubmissionUseCase Prepare(
         IFiscalDailyReportSignedArtifactRepository artifacts,
         IFiscalDailyReportSubmissionRepository submissions,
-        IFiscalDailyReportTransportClock clock) =>
+        IFiscalDailyReportTransportClock clock,
+        IFiscalDailyReportSameSequenceReceiptReader? sameSequenceReceipts = null) =>
         new(
             artifacts,
             submissions,
@@ -125,7 +178,8 @@ public sealed class FiscalDailyReportTransportTests
             new NoOpAuditWriter(),
             new NoOpOutboxWriter(),
             new FixedActorContextAccessor(),
-            new FixedCorrelationContextAccessor());
+            new FixedCorrelationContextAccessor(),
+            sameSequenceReceipts);
 
     private static DispatchFiscalDailyReportSubmissionUseCase Dispatch(
         IFiscalDailyReportSignedArtifactRepository artifacts,
@@ -222,6 +276,24 @@ public sealed class FiscalDailyReportTransportTests
             if (index < 0) throw new InvalidOperationException("missing submission");
             _values[index] = submission;
             return Task.CompletedTask;
+        }
+    }
+
+    private sealed class SameSequenceReceiptReader(bool received) : IFiscalDailyReportSameSequenceReceiptReader
+    {
+        public int Calls { get; private set; }
+        public int? LastSequence { get; private set; }
+
+        public Task<bool> HasReceivedCorrectionAsync(
+            string organizationId,
+            string issuerRuc,
+            DateOnly summaryDate,
+            int sequence,
+            CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            LastSequence = sequence;
+            return Task.FromResult(received);
         }
     }
 
