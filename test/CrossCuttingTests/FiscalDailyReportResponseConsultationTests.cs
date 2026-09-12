@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
@@ -157,9 +158,7 @@ public sealed class FiscalDailyReportResponseConsultationTests
     public void SOAP_envelope_uses_published_consultation_operation_and_IdReceptor()
     {
         using var certificate = Certificate();
-        var envelope = DgiWsSecurityFiscalDailyReportResponseConsultationGateway.BuildSoapEnvelope(
-            "receiver-soap",
-            certificate);
+        var envelope = BuildEnvelope("receiver-soap", certificate);
 
         var operation = envelope.SelectSingleNode(
             "//*[local-name()='WS_eFactura_Consultas.EFACCONSULTARRESPUESTAREPORTE']");
@@ -177,7 +176,7 @@ public sealed class FiscalDailyReportResponseConsultationTests
     [InlineData("BR")]
     public void Consultation_parser_accepts_original_ACKRepDiario_AR_or_BR(string state)
     {
-        var parsed = DgiWsSecurityFiscalDailyReportResponseConsultationGateway.ParseResponse(
+        var parsed = ParseResponse(
             SoapResponse("receiver-parse", state),
             "receiver-parse");
 
@@ -193,24 +192,52 @@ public sealed class FiscalDailyReportResponseConsultationTests
     public void Consultation_parser_rejects_later_processing_states_as_original_ACK(string state)
     {
         Assert.Throws<FiscalDailyReportResponseConsultationException>(() =>
-            DgiWsSecurityFiscalDailyReportResponseConsultationGateway.ParseResponse(
-                SoapResponse("receiver-later", state),
-                "receiver-later"));
+            ParseResponse(SoapResponse("receiver-later", state), "receiver-later"));
     }
 
     [Fact]
     public void Consultation_parser_rejects_receiver_mismatch_and_DTD()
     {
         Assert.Throws<FiscalDailyReportResponseConsultationException>(() =>
-            DgiWsSecurityFiscalDailyReportResponseConsultationGateway.ParseResponse(
-                SoapResponse("receiver-returned", "AR"),
-                "receiver-requested"));
+            ParseResponse(SoapResponse("receiver-returned", "AR"), "receiver-requested"));
 
         const string unsafeXml = "<!DOCTYPE x [<!ENTITY boom 'x'>]><x>&boom;</x>";
         Assert.Throws<FiscalDailyReportResponseConsultationException>(() =>
-            DgiWsSecurityFiscalDailyReportResponseConsultationGateway.ParseResponse(
-                unsafeXml,
-                "receiver"));
+            ParseResponse(unsafeXml, "receiver"));
+    }
+
+    private static XmlDocument BuildEnvelope(string receiver, X509Certificate2 certificate)
+    {
+        var method = typeof(DgiWsSecurityFiscalDailyReportResponseConsultationGateway).GetMethod(
+            "BuildSoapEnvelope",
+            BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("BuildSoapEnvelope was not found.");
+
+        return (XmlDocument)(method.Invoke(null, new object[] { receiver, certificate })
+            ?? throw new InvalidOperationException("SOAP envelope was not returned."));
+    }
+
+    private static FiscalDailyReportResponseConsultationResponse ParseResponse(
+        string soapResponse,
+        string expectedReceiverId)
+    {
+        var method = typeof(DgiWsSecurityFiscalDailyReportResponseConsultationGateway).GetMethod(
+            "ParseResponse",
+            BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("ParseResponse was not found.");
+
+        try
+        {
+            return (FiscalDailyReportResponseConsultationResponse)(method.Invoke(
+                null,
+                new object[] { soapResponse, expectedReceiverId })
+                ?? throw new InvalidOperationException("Consultation response was not returned."));
+        }
+        catch (TargetInvocationException ex)
+            when (ex.InnerException is FiscalDailyReportResponseConsultationException inner)
+        {
+            throw inner;
+        }
     }
 
     private static ConsultFiscalDailyReportResponseUseCase UseCase(
