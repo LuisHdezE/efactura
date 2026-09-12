@@ -31,14 +31,43 @@ public sealed class EfFiscalDailyReportSubmissionRepository : IFiscalDailyReport
         CancellationToken cancellationToken = default)
     {
         var date = summaryDate.ToDateTime(TimeOnly.MinValue);
-        var record = await _dbContext.Set<V1FiscalDailyReportSubmissionRecord>()
-            .AsNoTracking()
-            .SingleOrDefaultAsync(
-                x => x.OrganizationId == organizationId
-                    && x.IssuerRuc == issuerRuc
-                    && x.SummaryDate == date
-                    && x.Sequence == sequence,
-                cancellationToken);
+        var records = _dbContext.Set<V1FiscalDailyReportSubmissionRecord>();
+
+        V1FiscalDailyReportSubmissionRecord? record;
+        if (_dbContext.Database.CurrentTransaction is not null)
+        {
+            var provider = _dbContext.Database.ProviderName ?? string.Empty;
+            if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+            {
+                record = await records
+                    .FromSqlInterpolated($"SELECT * FROM \"v1_fiscal_daily_report_submissions\" WHERE \"OrganizationId\" = {organizationId} AND \"IssuerRuc\" = {issuerRuc} AND \"SummaryDate\" = {date} AND \"Sequence\" = {sequence} FOR UPDATE")
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(cancellationToken);
+            }
+            else if (provider.Contains("MySql", StringComparison.OrdinalIgnoreCase))
+            {
+                record = await records
+                    .FromSqlInterpolated($"SELECT * FROM `v1_fiscal_daily_report_submissions` WHERE `OrganizationId` = {organizationId} AND `IssuerRuc` = {issuerRuc} AND `SummaryDate` = {date} AND `Sequence` = {sequence} FOR UPDATE")
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(cancellationToken);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported provider for Daily Report submission lock: {provider}");
+            }
+        }
+        else
+        {
+            record = await records
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    x => x.OrganizationId == organizationId
+                        && x.IssuerRuc == issuerRuc
+                        && x.SummaryDate == date
+                        && x.Sequence == sequence,
+                    cancellationToken);
+        }
+
         return Map(record);
     }
 
