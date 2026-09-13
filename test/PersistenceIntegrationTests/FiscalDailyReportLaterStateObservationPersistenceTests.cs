@@ -1,4 +1,3 @@
-using System.Data.Common;
 using EFactura.Application.Fiscal;
 using Infrastructure.Persistence.V1;
 using Infrastructure.Persistence.V1.Write.Models;
@@ -46,6 +45,7 @@ public sealed class FiscalDailyReportLaterStateObservationPersistenceTests
             var repository = new EfFiscalDailyReportLaterStateObservationRepository(context);
             await repository.AddAsync(first);
             await repository.AddAsync(second);
+            await context.SaveChangesAsync();
         }
 
         await using var verify = database.CreateContext();
@@ -62,6 +62,15 @@ public sealed class FiscalDailyReportLaterStateObservationPersistenceTests
         Assert.Equal(root.SubmissionId, storedFirst.RootSubmissionId);
         Assert.Equal(root.SubmissionId, storedSecond.RootSubmissionId);
         Assert.Equal(64, storedSecond.EvidenceXmlHash.Length);
+
+        var rows = await verify.Set<V1FiscalDailyReportLaterStateObservationRecord>()
+            .AsNoTracking()
+            .Where(x => x.OrganizationId == "company-later-provider" && x.DgiReceiverId == "receiver-later-root")
+            .OrderBy(x => x.ObservedAtUtc)
+            .ToListAsync();
+        Assert.Equal(2, rows.Count);
+        Assert.Equal("DR", rows[0].DgiStateCode);
+        Assert.Equal("FR", rows[1].DgiStateCode);
 
         var rootRow = await verify.Set<V1FiscalDailyReportSubmissionRecord>()
             .AsNoTracking()
@@ -96,6 +105,7 @@ public sealed class FiscalDailyReportLaterStateObservationPersistenceTests
         {
             var repository = new EfFiscalDailyReportLaterStateObservationRepository(context);
             await repository.AddAsync(observation);
+            await context.SaveChangesAsync();
         }
 
         await using var verify = database.CreateContext();
@@ -149,12 +159,14 @@ public sealed class FiscalDailyReportLaterStateObservationPersistenceTests
         {
             var repository = new EfFiscalDailyReportLaterStateObservationRepository(firstContext);
             await repository.AddAsync(first);
+            await firstContext.SaveChangesAsync();
         }
 
         await using (var competingContext = database.CreateContext())
         {
             var repository = new EfFiscalDailyReportLaterStateObservationRepository(competingContext);
-            await Assert.ThrowsAnyAsync<DbException>(() => repository.AddAsync(competing));
+            await repository.AddAsync(competing);
+            await Assert.ThrowsAsync<DbUpdateException>(() => competingContext.SaveChangesAsync());
         }
 
         await using var verify = database.CreateContext();
