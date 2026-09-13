@@ -9,7 +9,7 @@ public enum FiscalDailyReportReconciliationDisposition
 
 public interface IFiscalDailyReportLatestObservationReader
 {
-    Task<StoredFiscalDailyReportLaterStateObservation?> GetLatestByReceiverIdAsync(
+    Task<IReadOnlyList<StoredFiscalDailyReportLaterStateObservation>> GetLatestCandidatesByReceiverIdAsync(
         string organizationId,
         string dgiReceiverId,
         CancellationToken cancellationToken = default);
@@ -63,16 +63,25 @@ public sealed class AssessFiscalDailyReportReconciliationUseCase
         var organizationId = command.OrganizationId.Trim();
         var receiverId = command.DgiReceiverId.Trim();
 
-        var observation = await _observations.GetLatestByReceiverIdAsync(
+        var candidates = await _observations.GetLatestCandidatesByReceiverIdAsync(
             organizationId,
             receiverId,
             cancellationToken);
-        if (observation is null)
+        if (candidates.Count == 0)
         {
             throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
                 "fiscal.daily_report.reconciliation.observation_required",
                 "Daily Report reconciliation requires durable DR, ER or FR observation evidence for the requested DGI IdReceptor.",
                 "missing_prerequisite");
+        }
+
+        var observation = candidates[0];
+        if (candidates.Count > 1 && candidates[1].ObservedAtUtc == observation.ObservedAtUtc)
+        {
+            throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
+                "fiscal.daily_report.reconciliation.latest_observation_ambiguous",
+                "More than one Daily Report later-state observation shares the latest durable observation timestamp.",
+                "ambiguous_persisted_evidence");
         }
 
         EnsureObservationIntegrity(observation, organizationId, receiverId);
