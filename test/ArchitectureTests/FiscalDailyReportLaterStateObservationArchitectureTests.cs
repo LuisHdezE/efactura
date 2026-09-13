@@ -63,7 +63,7 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
     }
 
     [Fact]
-    public void Documentation_records_later_state_history_with_PR84_accepted_and_PR85_pending()
+    public void Documentation_records_later_state_history_with_PR85_accepted_and_PR86_pending()
     {
         var docs = Read("documentation/blueprint-api-implementation/54_FISCAL_DAILY_REPORT_LATER_STATE_OBSERVATION.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -80,10 +80,10 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.Contains("IUnitOfWork", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("Current pending governed increment: PR #85", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@e920ee0dea945c60b3fd72f76794cca40857519f", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #86", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@356249ed93938561bed22abbf21f3f87090b9a53", checkpoint, StringComparison.Ordinal);
         Assert.Contains("AutomaticReliquidationAuthorized = false", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("PR #85 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("PR #86 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
