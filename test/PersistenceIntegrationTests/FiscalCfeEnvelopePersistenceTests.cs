@@ -58,7 +58,7 @@ public sealed class FiscalCfeEnvelopePersistenceTests
         Assert.Equal("sobre-persist-op-1", identityReplay.OperationId);
         Assert.Equal(CreatedAt.Offset, identityReplay.CreatedAt.Offset);
         Assert.Equal(CreatedAt, identityReplay.CreatedAt);
-        Assert.Equal([firstId, secondId], identityReplay.FiscalDocumentIds);
+        Assert.Equal(new[] { firstId, secondId }, identityReplay.FiscalDocumentIds);
         Assert.Equal(2, identityReplay.CfeCount);
         Assert.Matches("^[0-9a-f]{64}$", identityReplay.EnvelopeSha256);
         Assert.Equal(2, artifacts.ReadCount);
@@ -81,7 +81,7 @@ public sealed class FiscalCfeEnvelopePersistenceTests
             3001);
         Assert.NotNull(stored);
         Assert.Equal(CreatedAt.Offset, stored!.CreatedAt.Offset);
-        Assert.Equal([firstId, secondId], stored.FiscalDocumentIds);
+        Assert.Equal(new[] { firstId, secondId }, stored.FiscalDocumentIds);
     }
 
     [Theory]
