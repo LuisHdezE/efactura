@@ -61,7 +61,7 @@ public sealed class FiscalDailyReportResponseConsultationArchitectureTests
     }
 
     [Fact]
-    public void Documentation_preserves_accepted_chain_through_PR81_with_separate_PR82_policy_candidate()
+    public void Documentation_preserves_accepted_chain_through_PR82_with_separate_PR83_packaging_candidate()
     {
         var docs = Read("documentation/blueprint-api-implementation/52_FISCAL_DAILY_REPORT_RESPONSE_CONSULTATION.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -75,11 +75,12 @@ public sealed class FiscalDailyReportResponseConsultationArchitectureTests
         Assert.Contains("`DR`, `ER` and `FR`", docs, StringComparison.Ordinal);
         Assert.Contains("Automatic retry from `Unknown` remains forbidden", docs, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #81 / document 54", docs, StringComparison.Ordinal);
-        Assert.Contains("Pending PR #82 / document 55", docs, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #82 / document 55", docs, StringComparison.Ordinal);
+        Assert.Contains("Pending PR #83 / document 56", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #82", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@700d0a424d6a79b52844b5fa99446d49623c758f", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #81", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #83", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@6fd1ae6927bf3789015d3bb659bf094283ec7095", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #82", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
