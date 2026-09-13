@@ -32,7 +32,7 @@ DGI also publishes a Production communiqué stating that a duplicate Sobre is an
 
 `https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/-25044`
 
-The reviewed authoritative material establishes issuer assignment and response correlation, but it does **not** establish an authoritative allocation algorithm for choosing the next `Idemisor`. This increment therefore does not infer a counter, sequence reset, range reservation, timestamp encoding, database identity rule, or other automatic allocator.
+The reviewed authoritative material establishes issuer assignment and response correlation. There is **no authoritative allocation algorithm** in that reviewed material for choosing the next `Idemisor`. This increment therefore does not infer a counter, sequence reset, range reservation, timestamp encoding, database identity rule, or other automatic allocator.
 
 `S08` is preserved only as evidence that duplicate Sobre handling exists at DGI. This slice does not interpret which exact field combination DGI uses to decide that a Sobre is duplicate and does not claim that the local identity defined below is DGI's duplicate-detection key.
 
