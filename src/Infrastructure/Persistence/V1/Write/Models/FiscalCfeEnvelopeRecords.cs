@@ -99,3 +99,26 @@ public sealed class V1FiscalCfeEnvelopeAckSignatureVerificationRecord
     public bool CertificateTrustValidated { get; set; }
     [Precision(0)] public DateTimeOffset VerifiedAtUtc { get; set; }
 }
+
+[Table("v1_fiscal_cfe_envelope_ack_certificate_trust_validations")]
+[Index(nameof(OrganizationId), nameof(OperationId), IsUnique = true, Name = "UX_v1_fceactv_operation")]
+[Index(nameof(SignatureVerificationId), Name = "IX_v1_fceactv_signature_verification")]
+public sealed class V1FiscalCfeEnvelopeAckCertificateTrustValidationRecord
+{
+    [Key] public Guid Id { get; set; }
+    public Guid SignatureVerificationId { get; set; }
+    public Guid AckObservationId { get; set; }
+    public Guid SubmissionId { get; set; }
+    public Guid EnvelopeId { get; set; }
+    [MaxLength(200)] public string OrganizationId { get; set; } = string.Empty;
+    [MaxLength(120)] public string OperationId { get; set; } = string.Empty;
+    [MaxLength(64)] public string ResponseSha256 { get; set; } = string.Empty;
+    [MaxLength(120)] public string ValidationProfileId { get; set; } = string.Empty;
+    [MaxLength(64)] public string CertificateSha256 { get; set; } = string.Empty;
+    [MaxLength(64)] public string TrustedRootSha256 { get; set; } = string.Empty;
+    public string ChainCertificateSha256Json { get; set; } = "[]";
+    [MaxLength(40)] public string RevocationMode { get; set; } = string.Empty;
+    public bool PkiUruguayTrustValidated { get; set; }
+    public bool DgiIdentityValidated { get; set; }
+    [Precision(0)] public DateTimeOffset ValidatedAtUtc { get; set; }
+}
