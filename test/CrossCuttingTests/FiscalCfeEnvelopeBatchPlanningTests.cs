@@ -24,10 +24,10 @@ public sealed class FiscalCfeEnvelopeBatchPlanningTests
         Assert.Equal(2, result.Batches.Count);
         Assert.Equal(1, result.Batches[0].BatchOrdinal);
         Assert.Equal("thumb-a", result.Batches[0].CertificateThumbprint);
-        Assert.Equal([a1.FiscalDocumentId, a2.FiscalDocumentId], result.Batches[0].FiscalDocumentIds);
+        Assert.Equal(new[] { a1.FiscalDocumentId, a2.FiscalDocumentId }, result.Batches[0].FiscalDocumentIds);
         Assert.Equal(2, result.Batches[1].BatchOrdinal);
         Assert.Equal("thumb-b", result.Batches[1].CertificateThumbprint);
-        Assert.Equal([b1.FiscalDocumentId, b2.FiscalDocumentId], result.Batches[1].FiscalDocumentIds);
+        Assert.Equal(new[] { b1.FiscalDocumentId, b2.FiscalDocumentId }, result.Batches[1].FiscalDocumentIds);
         Assert.Equal(4, repository.ReadCount);
         Assert.Equal(0, repository.AddCount);
     }
