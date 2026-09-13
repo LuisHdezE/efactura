@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using EFactura.Application.Common.Errors;
 using EFactura.Application.Common.Persistence;
 
@@ -108,6 +110,7 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
                 ct);
             if (existingOperation is not null)
             {
+                EnsureStoredIntegrity(existingOperation);
                 EnsureSameCommand(existingOperation, normalized, "fiscal.envelope.persistence.operation_replay_mismatch");
                 return Result(existingOperation, true);
             }
@@ -120,6 +123,7 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
                 ct);
             if (existingIdentity is not null)
             {
+                EnsureStoredIntegrity(existingIdentity);
                 EnsureSameCommand(existingIdentity, normalized, "fiscal.envelope.persistence.identity_payload_conflict");
                 return Result(existingIdentity, true);
             }
@@ -151,6 +155,7 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
                 package.SchemaVersion,
                 package.SchemaSetFingerprint);
 
+            EnsureStoredIntegrity(stored);
             await _envelopes.AddAsync(stored, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             return Result(stored, false);
@@ -190,6 +195,38 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
             throw Validation("fiscal.envelope.persistence.operation_id_invalid", "Operation id is required and must not exceed 120 characters.");
     }
 
+    private static void EnsureStoredIntegrity(StoredFiscalCfeEnvelope stored)
+    {
+        if (stored.Id == Guid.Empty
+            || string.IsNullOrWhiteSpace(stored.OrganizationId)
+            || stored.OrganizationId.Length > 200
+            || !TwelveDigits(stored.ReceiverRut)
+            || !TwelveDigits(stored.IssuerRuc)
+            || stored.SenderEnvelopeId is < 0 or > 9_999_999_999L
+            || stored.CreatedAt == default
+            || string.IsNullOrWhiteSpace(stored.OperationId)
+            || stored.OperationId.Length > 120
+            || stored.FiscalDocumentIds is null
+            || stored.FiscalDocumentIds.Count is < 1 or > 250
+            || stored.FiscalDocumentIds.Any(id => id == Guid.Empty)
+            || stored.FiscalDocumentIds.Distinct().Count() != stored.FiscalDocumentIds.Count
+            || stored.CfeCount != stored.FiscalDocumentIds.Count
+            || string.IsNullOrWhiteSpace(stored.CertificateThumbprint)
+            || string.IsNullOrWhiteSpace(stored.CertificateSerialNumber)
+            || string.IsNullOrWhiteSpace(stored.EnvelopeXml)
+            || string.IsNullOrWhiteSpace(stored.SchemaSetId)
+            || string.IsNullOrWhiteSpace(stored.SchemaVersion)
+            || !Sha256Value(stored.EnvelopeSha256)
+            || !Sha256Value(stored.SchemaSetFingerprint)
+            || !string.Equals(stored.EnvelopeSha256, Sha256(stored.EnvelopeXml), StringComparison.Ordinal))
+        {
+            throw Conflict(
+                "fiscal.envelope.persistence.persisted_evidence_invalid",
+                "Persisted Sobre evidence is incomplete or internally inconsistent.",
+                "invalid_persisted_evidence");
+        }
+    }
+
     private static void EnsureSameCommand(
         StoredFiscalCfeEnvelope stored,
         PersistFiscalCfeEnvelopeCommand command,
@@ -199,7 +236,8 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
             || !string.Equals(stored.ReceiverRut, command.ReceiverRut, StringComparison.Ordinal)
             || !string.Equals(stored.IssuerRuc, command.IssuerRuc, StringComparison.Ordinal)
             || stored.SenderEnvelopeId != command.SenderEnvelopeId
-            || stored.CreatedAt != command.CreatedAt
+            || stored.CreatedAt.UtcDateTime != command.CreatedAt.UtcDateTime
+            || stored.CreatedAt.Offset != command.CreatedAt.Offset
             || !stored.FiscalDocumentIds.SequenceEqual(command.FiscalDocumentIds))
         {
             throw Conflict(
@@ -208,6 +246,15 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
                 "inconsistent_replay");
         }
     }
+
+    private static bool TwelveDigits(string value) =>
+        value.Length == 12 && value.All(char.IsDigit);
+
+    private static bool Sha256Value(string value) =>
+        value.Length == 64 && value.All(Uri.IsHexDigit);
+
+    private static string Sha256(string value) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
     private static FiscalCfeEnvelopePersistenceResult Result(StoredFiscalCfeEnvelope stored, bool replayed) =>
         new(
