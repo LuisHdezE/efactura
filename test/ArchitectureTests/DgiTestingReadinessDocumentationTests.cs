@@ -18,19 +18,19 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@0846d63b02db2cff65bc3c86c4eca4cffa20b409",
+            "main@85fe095449f7b4e9bfb97b45e01ae283b8071913",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #78",
+            "merge of PR #79",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Current pending governed increment: PR #79",
+            "Current pending governed increment: PR #80",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #79 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
+            "PR #80 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -46,7 +46,11 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "does not claim that this method alone can reconcile an `Unknown` attempt with no known `IdReceptor`",
+            "Authoritative original-response consultation for a known durable DGI `IdReceptor`",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "PR #79 alone cannot locate its original response; authoritative receiver discovery is required first",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -54,7 +58,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #79 remains pending until exact-head CI is green and human review is complete",
+            "PR #80 remains pending until exact-head CI is green and human review is complete",
             currentState,
             StringComparison.Ordinal);
 

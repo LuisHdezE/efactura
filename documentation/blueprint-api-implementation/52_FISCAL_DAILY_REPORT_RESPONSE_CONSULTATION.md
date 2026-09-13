@@ -1,5 +1,11 @@
 # Fiscal Daily Report response consultation foundation
 
+Status: ACCEPTED
+
+Accepted baseline: `main@85fe095449f7b4e9bfb97b45e01ae283b8071913` (merge of PR #79).
+
+Post-merge validation: Clean Architecture Guard #312, run `34727894835`, SUCCESS for Build/Architecture and PostgreSQL/MySQL transaction jobs.
+
 ## Scope
 
 This increment adds the first authoritative Reporte Diario consultation capability for a **known durable DGI `IdReceptor`**. It queries DGI for the original response associated with that report receiver id and stores the returned `ACKRepDiario` as new append-only evidence.
@@ -53,16 +59,18 @@ No PFX, password or private key is stored by this capability.
 
 ## Local target resolution
 
-Consultation begins from a DGI `IdReceptor` already stored as durable local evidence.
+Consultation begins from a DGI `IdReceptor` stored as durable local evidence.
 
 The target reader can resolve either:
 
 1. the root Reporte Diario submission; or
 2. a same-`SecEnvio` BR correction revision.
 
+On the accepted PR #79 baseline, the receiver id may be present directly on the root/revision transport evidence. PR #80 proposes a separately governed append-only discovery record that can also resolve a receiver id back to exactly one root/revision target without rewriting that target.
+
 The target must resolve to exactly one durable local artifact. Missing or ambiguous receiver ids fail closed before crossing the network boundary.
 
-This is intentionally not a discovery service.
+This method is not itself a discovery operation.
 
 ## Original ACK boundary
 
@@ -116,15 +124,15 @@ Any state-changing interpretation belongs to a later governed reconciliation cap
 
 A local transport state of `Unknown` means DGI may have received bytes but the application did not durably obtain a trustworthy immediate response.
 
-`EFACCONSULTARRESPUESTAREPORTE` requires `IdReceptor`. Therefore it can reconcile only cases where that receiver id is already known durably from trustworthy evidence.
+`EFACCONSULTARRESPUESTAREPORTE` requires `IdReceptor`. Therefore it can retrieve the original response only when that receiver id is known durably from trustworthy evidence.
 
-An `Unknown` attempt that has no `IdReceptor` cannot be discovered by this method alone. Discovery through other authoritative DGI consultation capabilities, including the separately documented `EFACCONSULTARENVIOSREPORTE`, is outside this slice and must be evidenced before implementation.
+An `Unknown` attempt that has no `IdReceptor` cannot be discovered by this method alone. PR #80 separately proposes authoritative discovery through `EFACCONSULTARENVIOSREPORTE`, documented in `53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md`. That candidate remains outside this accepted PR #79 boundary until separately validated and approved.
 
 Automatic retry from `Unknown` remains forbidden.
 
 ## Validation boundary
 
-The candidate validation covers:
+Accepted validation covers:
 
 - root consultation and operation replay without a second DGI call;
 - BR correction-revision consultation;
@@ -138,13 +146,13 @@ The candidate validation covers:
 - PostgreSQL and MySQL round-trip of append-only consultation evidence;
 - PostgreSQL and MySQL operation-id uniqueness.
 
-The exact final PR head must pass the complete Clean Architecture Guard before review or merge.
+PR #79 exact head `2a6d8cc3d8b1e8836fa74e8f00350029311cb18a` passed Clean Architecture Guard #311 before merge. Accepted `main@85fe095449f7b4e9bfb97b45e01ae283b8071913` then passed post-merge Guard #312.
 
 ## Deliberate non-scope
 
-This increment does not implement:
+This accepted increment does not itself implement:
 
-- `EFACCONSULTARENVIOSREPORTE` receiver-id discovery;
+- `EFACCONSULTARENVIOSREPORTE` receiver-id discovery; PR #80 is a separate pending slice;
 - automatic state mutation or retry recovery for `Unknown`;
 - `DR` / `ER` / `FR` reconciliation lifecycle;
 - automatic `R05` sequence recovery;

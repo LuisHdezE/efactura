@@ -63,7 +63,7 @@ public sealed class EfFiscalDailyReportResponseConsultationRepository :
         string dgiReceiverId,
         CancellationToken cancellationToken = default)
     {
-        var result = new List<FiscalDailyReportConsultationTarget>(2);
+        var result = new List<FiscalDailyReportConsultationTarget>(3);
 
         var root = await _dbContext.Set<V1FiscalDailyReportSubmissionRecord>()
             .AsNoTracking()
@@ -101,6 +101,31 @@ public sealed class EfFiscalDailyReportResponseConsultationRepository :
                 revision.LocalRevision,
                 revision.DgiReceiverId!,
                 revision.AckStateCode));
+        }
+
+        var discovered = await _dbContext.Set<V1FiscalDailyReportReceiverDiscoveryRecord>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.OrganizationId == organizationId && x.DgiReceiverId == dgiReceiverId,
+                cancellationToken);
+        if (discovered is not null)
+        {
+            var kind = discovered.RootSubmissionId.HasValue
+                ? FiscalDailyReportConsultationTargetKind.RootSubmission
+                : FiscalDailyReportConsultationTargetKind.BrCorrectionRevision;
+            var targetId = discovered.RootSubmissionId ?? discovered.BrCorrectionRevisionId
+                ?? throw new InvalidOperationException("Receiver discovery evidence has no local target.");
+
+            result.Add(new FiscalDailyReportConsultationTarget(
+                kind,
+                targetId,
+                discovered.OrganizationId,
+                discovered.IssuerRuc,
+                DateOnly.FromDateTime(discovered.SummaryDate),
+                discovered.Sequence,
+                discovered.LocalRevision,
+                discovered.DgiReceiverId,
+                null));
         }
 
         return result;
