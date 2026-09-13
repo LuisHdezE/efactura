@@ -57,17 +57,26 @@ A future increment may introduce an explicit command after the required evidence
 
 ## Evidence selection
 
-The policy reads the latest append-only observation for an exact:
+The policy reads append-only observations for an exact:
 
 `OrganizationId + DgiReceiverId`
 
-The infrastructure reader orders by `ObservedAtUtc` descending and uses observation id descending only as a deterministic tie-breaker.
+The accepted document-54 observation timestamp has whole-second precision. Therefore the infrastructure reader does not return a single row selected by an arbitrary identifier when two observations share the latest second. It returns at most the two newest candidates, ordered by `ObservedAtUtc` descending; observation id is used only to make the SQL result order deterministic.
 
-No network call is performed. No DGI state is inferred from timestamps, transport state or local sequence position.
+If the two newest candidates share the same `ObservedAtUtc`, the Application policy **fails closed** with `latest_observation_ambiguous`. It never treats a GUID ordering as evidence that `DR`, `ER` or `FR` happened later.
+
+No network call is performed. No DGI state is inferred from timestamps, transport state, GUID order or local sequence position.
 
 If no durable `DR`/`ER`/`FR` observation exists for the requested receiver, the policy fails closed with a missing-prerequisite conflict.
 
-If persisted evidence contains a later-state enum outside the governed set, the policy fails closed as invalid persisted evidence.
+Persisted evidence is also revalidated before interpretation:
+
+- organization and DGI receiver must match the requested identity;
+- exactly one local target must be present;
+- `Processed` must retain original DGI code `DR`;
+- `InManagement` must retain original DGI code `ER`;
+- `Reliquidated` must retain original DGI code `FR`;
+- a later-state enum outside the governed set fails closed.
 
 ## Architecture boundary
 
@@ -82,7 +91,7 @@ It does not depend on:
 - signing or dispatch services;
 - persistence-specific types.
 
-The EF Core repository that already owns later-state observation persistence also implements the read-only latest-observation port using `AsNoTracking`.
+The EF Core repository that already owns later-state observation persistence also implements the read-only latest-candidate port using `AsNoTracking` and `Take(2)`.
 
 No migration is required because this slice does not add mutable state or a new persistence table.
 
@@ -96,9 +105,12 @@ The increment requires tests proving:
 - ER never authorizes automatic reliquidation;
 - no disposition authorizes automatic local mutation;
 - missing observation evidence fails closed;
+- two latest observations with the same `ObservedAtUtc` fail closed instead of being ordered semantically by id;
 - invalid persisted state fails closed;
+- typed state / original DGI code mismatch fails closed;
+- invalid local-target shape fails closed;
 - root submission and same-`SecEnvio` BR correction targets remain identifiable;
-- the infrastructure reader selects the latest observation deterministically without update/delete behavior;
+- the infrastructure reader surfaces at most two latest observation candidates without update/delete behavior;
 - architecture guards prevent the policy from reaching transport, Unit of Work or version-allocation boundaries.
 
 ## Deliberate non-scope
