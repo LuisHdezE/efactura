@@ -18,11 +18,11 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@f37077b4e85de94d7bd1f63b8b9303239edeb4a0",
+            "main@c5d0c1220ca1c707417092aa905ee8f279056cc6",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #89",
+            "merge of PR #91",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -30,7 +30,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #89 is part of the accepted baseline",
+            "PR #91 is part of the accepted baseline",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -87,6 +87,22 @@ public sealed class DgiTestingReadinessDocumentationTests
             StringComparison.Ordinal);
         Assert.Contains(
             "61_FISCAL_CFE_STATE_CONSULTATION.md",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Append-only PKI Uruguay certificate-trust validation",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "62_FISCAL_SOBRE_ACK_CERTIFICATE_TRUST.md",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "PkiUruguayTrustValidated = true",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "DgiIdentityValidated = false",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(

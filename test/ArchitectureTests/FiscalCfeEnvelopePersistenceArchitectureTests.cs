@@ -106,13 +106,14 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
         Assert.Contains("S08", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@f37077b4e85de94d7bd1f63b8b9303239edeb4a0", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #89", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@c5d0c1220ca1c707417092aa905ee8f279056cc6", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #91", checkpoint, StringComparison.Ordinal);
         Assert.Contains("There is no pending governed increment currently open", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Durable local Sobre identity and replay persistence", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Durable Sobre transport through `EFACRECEPCIONSOBRE`", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Append-only immediate `ACKSobre` observation", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #87 ACKSobre signature-verification boundary", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #91 ACKSobre PKI Uruguay certificate-trust boundary", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);
