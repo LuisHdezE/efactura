@@ -1,11 +1,12 @@
 # 58 — Fiscal Sobre Transport
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
 
-Candidate PR: #85 `feat(fiscal): add durable Sobre transport`
+Accepted baseline: `main@356249ed93938561bed22abbf21f3f87090b9a53`
+(merge of PR #85, `feat(fiscal): add durable Sobre transport`).
 
-Base accepted baseline: `main@e920ee0dea945c60b3fd72f76794cca40857519f`
-(merge of PR #84, `feat(fiscal): add durable Sobre identity`).
+Approved PR #85 head: `12ef57df698ddb08f0f2a035b11991380e5bf613`.
+Post-merge Clean Architecture Guard #398 (`34742965004`) completed successfully for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction tests.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -109,7 +110,7 @@ States are deliberately transport-only:
 
 `ResponseReceived` means only that a structurally trustworthy SOAP response supplied non-empty `Dataout/xmlData`. It does **not** mean DGI accepted the Sobre.
 
-This slice deliberately does not define `Accepted`, `Rejected`, `AS`, `BS`, `S08` or any other ACK business state.
+This accepted slice deliberately does not define `Accepted`, `Rejected`, `AS`, `BS`, `S08` or any other ACK business state inside transport.
 
 ## Prepare and replay identity
 
@@ -154,7 +155,7 @@ A trustworthy response with non-empty `Dataout/xmlData` is persisted as:
 - SHA-256 in `ResponseSha256`;
 - completion timestamp.
 
-The response payload remains opaque. Its root, state, receiver id and rejection reasons are not interpreted here.
+The response payload remains opaque at this accepted transport boundary. Its root, state, receiver id and rejection reasons are not interpreted here.
 
 A pre-network request-build/configuration error marked non-ambiguous may return the intent to `Prepared` with a failure code.
 
@@ -182,7 +183,7 @@ It does not inspect or require:
 - `S01..Sxx` reasons;
 - `S08` duplicate semantics.
 
-That separation is deliberate. A later ACK slice must use current authoritative `Formato Mensajes Respuesta` evidence and must preserve the immutable transport evidence introduced here.
+That separation remains deliberate. Pending PR #86 / document 59 proposes append-only semantic observation of the already durable response while preserving this transport evidence unchanged.
 
 ## Persistence model
 
@@ -205,11 +206,13 @@ Unique provider constraints:
 - `UX_v1_fces_operation` on `OrganizationId + OperationId`;
 - `UX_v1_fces_envelope` on `EnvelopeId`.
 
+The transport row also has a `Restrict` FK to the durable Sobre so accepted transport evidence cannot become orphaned.
+
 The repository owns no transaction and no `SaveChanges`; Application owns transaction/UoW policy.
 
 ## Validation coverage
 
-This candidate requires green proof that:
+Accepted validation proves that:
 
 - the SOAP operation is exactly `WS_eFactura.EFACRECEPCIONSOBRE`;
 - the exact durable `EnvioCFE` is present as one CDATA payload;
@@ -221,18 +224,21 @@ This candidate requires green proof that:
 - a second dispatch from `Unknown` is refused before network;
 - concurrent PostgreSQL/MySQL dispatchers cross the network boundary only once;
 - provider repository locking is implemented for both Npgsql and MySQL;
+- the submission-to-envelope FK works provider-real with `Restrict`;
 - Application imports no HTTP, private-key, gzip or provider-specific dependencies;
 - DI exposes the transport clock, gateway, repository and prepare/dispatch use cases.
 
+Exact-head Guard #397 (`34742474493`) passed before merge. Accepted `main@356249ed93938561bed22abbf21f3f87090b9a53` then passed post-merge Guard #398 (`34742965004`) for both jobs.
+
 ## Deliberate non-scope
 
-PR #85 does not implement:
+This accepted transport increment does not itself implement:
 
 - semantic `ACKSobre` parsing;
-- accepted/rejected CFE/Sobre business state;
+- accepted/rejected CFE/Sobre business state inside the transport row;
 - `AS` / `BS` interpretation;
 - `S08` interpretation or recovery;
-- DGI receiver-id semantic persistence;
+- DGI receiver-id semantic interpretation;
 - automatic reconciliation query after `Unknown`;
 - automatic retry of ambiguous delivery;
 - automatic `Idemisor` allocation;
@@ -241,5 +247,7 @@ PR #85 does not implement:
 - Reporte Diario `R05` recovery;
 - external DGI Testing acceptance;
 - Production enablement.
+
+Pending PR #86 / document 59 is a separate append-only ACK observation capability. It does not rewrite this accepted transport lifecycle.
 
 Local successful transport is not evidence of DGI certification or Production readiness.
