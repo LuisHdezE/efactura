@@ -34,8 +34,10 @@ public sealed class DgiFiscalCfeEnvelopeAckCertificateTrustValidator :
         _trustedRoots = LoadCertificates(section.GetSection("RootCertificates"), required: true, "root");
         _intermediates = LoadCertificates(section.GetSection("IntermediateCertificates"), required: false, "intermediate");
 
-        var timeoutSeconds = section.GetValue<int?>("UrlRetrievalTimeoutSeconds") ?? 15;
-        if (timeoutSeconds is < 1 or > 60)
+        var timeoutText = section["UrlRetrievalTimeoutSeconds"];
+        var timeoutSeconds = 15;
+        if (!string.IsNullOrWhiteSpace(timeoutText)
+            && (!int.TryParse(timeoutText, out timeoutSeconds) || timeoutSeconds is < 1 or > 60))
         {
             DisposeCertificates(_trustedRoots);
             DisposeCertificates(_intermediates);
@@ -105,7 +107,7 @@ public sealed class DgiFiscalCfeEnvelopeAckCertificateTrustValidator :
                 return Invalid(failure, certificateSha256, chainHashes);
             }
 
-            var rootCertificate = chain.ChainElements[^1].Certificate;
+            var rootCertificate = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
             var rootSha256 = Sha256(rootCertificate);
             var configuredRoot = _trustedRoots.Cast<X509Certificate2>()
                 .Any(root => string.Equals(Sha256(root), rootSha256, StringComparison.OrdinalIgnoreCase));
@@ -239,6 +241,13 @@ public sealed class DgiFiscalCfeEnvelopeAckCertificateTrustValidator :
                         throw Error(
                             "fiscal.envelope.ack.trust.ca_certificate_required",
                             $"Configured ACK {role} certificate must be a CA certificate.");
+                    }
+                    if (string.Equals(role, "root", StringComparison.Ordinal)
+                        && !certificate.SubjectName.RawData.AsSpan().SequenceEqual(certificate.IssuerName.RawData))
+                    {
+                        throw Error(
+                            "fiscal.envelope.ack.trust.root_self_signed_required",
+                            "Configured ACK trust root must be self-issued.");
                     }
 
                     certificates.Add(certificate);
