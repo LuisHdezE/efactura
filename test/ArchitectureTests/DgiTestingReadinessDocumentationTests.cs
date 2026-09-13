@@ -18,19 +18,19 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63",
+            "main@68b2b79772230d858ac3c2dde573542b3caaef97",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #86",
+            "merge of PR #87",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Current pending governed increment: PR #87",
+            "There is no pending governed increment currently open",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #87 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
+            "PR #87 is part of the accepted baseline",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -78,7 +78,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Pending PR #87 boundary, not yet accepted",
+            "Accepted PR #87 ACKSobre signature-verification boundary",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -86,7 +86,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #87 remains pending until exact-head CI is green and human review is complete",
+            "CertificateTrustValidated = false",
             currentState,
             StringComparison.Ordinal);
 
