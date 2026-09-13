@@ -116,6 +116,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalCfeEnvelopeAckSignatureVerifier, DgiFiscalCfeEnvelopeAckSignatureVerifier>();
         services.AddSingleton<IFiscalCfeEnvelopeAckCertificateTrustValidator, DgiFiscalCfeEnvelopeAckCertificateTrustValidator>();
         services.AddSingleton<IFiscalCfeStateConsultationGateway, DgiWsSecurityFiscalCfeStateConsultationGateway>();
+        services.AddSingleton<IFiscalCfeEnvelopeDocumentResponseConsultationGateway, DgiWsSecurityFiscalCfeEnvelopeDocumentResponseConsultationGateway>();
         services.AddSingleton<IFiscalDailyReportResponseConsultationGateway, DgiWsSecurityFiscalDailyReportResponseConsultationGateway>();
         services.AddSingleton<IFiscalDailyReportReceiverDiscoveryGateway, DgiWsSecurityFiscalDailyReportReceiverDiscoveryGateway>();
         services.AddSingleton<IFiscalDailyReportBrAckEvidenceParser, DgiFiscalDailyReportBrAckEvidenceParser>();
@@ -127,6 +128,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalCfeEnvelopeAckSignatureVerificationRepository, EfFiscalCfeEnvelopeAckSignatureVerificationRepository>();
         services.AddScoped<IFiscalCfeEnvelopeAckCertificateTrustValidationRepository, EfFiscalCfeEnvelopeAckCertificateTrustValidationRepository>();
         services.AddScoped<IFiscalCfeStateConsultationRepository, EfFiscalCfeStateConsultationRepository>();
+        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseConsultationRepository, EfFiscalCfeEnvelopeDocumentResponseConsultationRepository>();
         services.AddSingleton<IFiscalCfeEnvelopePersistenceConflictClassifier, EfFiscalCfeEnvelopePersistenceConflictClassifier>();
         services.AddScoped<IFiscalDailyReportVersionRepository, EfFiscalDailyReportVersionRepository>();
         services.AddScoped<IFiscalDailyReportSigningEvidenceRepository, EfFiscalDailyReportSigningEvidenceRepository>();
@@ -165,6 +167,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<VerifyFiscalCfeEnvelopeAckSignatureUseCase>();
         services.AddScoped<ValidateFiscalCfeEnvelopeAckCertificateTrustUseCase>();
         services.AddScoped<ConsultFiscalCfeStateUseCase>();
+        services.AddScoped<ConsultFiscalCfeEnvelopeDocumentResponseUseCase>();
         services.AddScoped<AllocateFiscalDailyReportVersionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDailyReportUseCase>();
