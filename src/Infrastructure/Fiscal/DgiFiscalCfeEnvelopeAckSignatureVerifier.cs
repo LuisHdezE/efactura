@@ -93,6 +93,14 @@ public sealed class DgiFiscalCfeEnvelopeAckSignatureVerifier : IFiscalCfeEnvelop
             if (signatures.Length != 1)
                 return Invalid("fiscal.envelope.ack.signature.structure_invalid");
 
+            var certificateNodes = signatures[0].GetElementsByTagName("X509Certificate", XmlDsigNamespace);
+            if (certificateNodes.Count != 1 || certificateNodes[0] is not XmlElement certificateElement)
+                return Invalid("fiscal.envelope.ack.signature.certificate_required");
+
+            var certificateText = new string(certificateElement.InnerText.Where(c => !char.IsWhiteSpace(c)).ToArray());
+            if (string.IsNullOrWhiteSpace(certificateText))
+                return Invalid("fiscal.envelope.ack.signature.certificate_required");
+
             var signedXml = new SignedXml(document);
             signedXml.LoadXml(signatures[0]);
 
@@ -130,14 +138,6 @@ public sealed class DgiFiscalCfeEnvelopeAckSignatureVerifier : IFiscalCfeEnvelop
             {
                 return Invalid("fiscal.envelope.ack.signature.enveloped_transform_required");
             }
-
-            var certificateNodes = signatures[0].GetElementsByTagName("X509Certificate", XmlDsigNamespace);
-            if (certificateNodes.Count != 1 || certificateNodes[0] is not XmlElement certificateElement)
-                return Invalid("fiscal.envelope.ack.signature.certificate_required");
-
-            var certificateText = new string(certificateElement.InnerText.Where(c => !char.IsWhiteSpace(c)).ToArray());
-            if (string.IsNullOrWhiteSpace(certificateText))
-                return Invalid("fiscal.envelope.ack.signature.certificate_required");
 
             var rawCertificate = Convert.FromBase64String(certificateText);
             using var certificate = X509CertificateLoader.LoadCertificate(rawCertificate);
