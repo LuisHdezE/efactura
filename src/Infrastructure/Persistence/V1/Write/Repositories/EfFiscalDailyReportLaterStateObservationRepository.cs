@@ -9,7 +9,8 @@ namespace Infrastructure.Persistence.V1.Write.Repositories;
 /// SaveChanges and transaction boundaries remain owned by the application Unit of Work.
 /// </summary>
 public sealed class EfFiscalDailyReportLaterStateObservationRepository :
-    IFiscalDailyReportLaterStateObservationRepository
+    IFiscalDailyReportLaterStateObservationRepository,
+    IFiscalDailyReportLatestObservationReader
 {
     private readonly V1PersistenceDbContext _dbContext;
 
@@ -28,6 +29,21 @@ public sealed class EfFiscalDailyReportLaterStateObservationRepository :
             .SingleOrDefaultAsync(
                 x => x.OrganizationId == organizationId && x.OperationId == operationId,
                 cancellationToken);
+
+        return record is null ? null : Map(record);
+    }
+
+    public async Task<StoredFiscalDailyReportLaterStateObservation?> GetLatestByReceiverIdAsync(
+        string organizationId,
+        string dgiReceiverId,
+        CancellationToken cancellationToken = default)
+    {
+        var record = await _dbContext.Set<V1FiscalDailyReportLaterStateObservationRecord>()
+            .AsNoTracking()
+            .Where(x => x.OrganizationId == organizationId && x.DgiReceiverId == dgiReceiverId)
+            .OrderByDescending(x => x.ObservedAtUtc)
+            .ThenByDescending(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
         return record is null ? null : Map(record);
     }
