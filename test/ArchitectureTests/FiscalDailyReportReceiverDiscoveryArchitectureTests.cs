@@ -72,11 +72,13 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
     }
 
     [Fact]
-    public void Documentation_preserves_fail_closed_association_and_later_reconciliation_gates()
+    public void Documentation_preserves_accepted_fail_closed_association_and_separate_later_state_gate()
     {
         var docs = Read("documentation/blueprint-api-implementation/53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
 
+        Assert.Contains("Status: ACCEPTED IMPLEMENTATION", docs, StringComparison.Ordinal);
+        Assert.Contains("main@7e930d8ffe1978da24ea8365b9661f74162d51b5", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARENVIOSREPORTE", docs, StringComparison.Ordinal);
         Assert.Contains("FechaResumen + Secuencia", docs, StringComparison.Ordinal);
         Assert.Contains("deliberately omits optional `IdEmisor`", docs, StringComparison.Ordinal);
@@ -84,11 +86,11 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
         Assert.Contains("zero unaccounted receiver ids", docs, StringComparison.Ordinal);
         Assert.Contains("more than one unaccounted receiver id", docs, StringComparison.Ordinal);
         Assert.Contains("does not update the root submission or correction revision", docs, StringComparison.Ordinal);
-        Assert.Contains("`DR`, `ER` or `FR`", docs, StringComparison.Ordinal);
+        Assert.Contains("Document 54", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #80", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@85fe095449f7b4e9bfb97b45e01ae283b8071913", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("never guesses association by timestamp or collection order", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #81", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@7e930d8ffe1978da24ea8365b9661f74162d51b5", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("never selects by timestamp or returned collection order", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)

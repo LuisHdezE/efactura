@@ -18,19 +18,19 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@85fe095449f7b4e9bfb97b45e01ae283b8071913",
+            "main@7e930d8ffe1978da24ea8365b9661f74162d51b5",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #79",
+            "merge of PR #80",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Current pending governed increment: PR #80",
+            "Current pending governed increment: PR #81",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #80 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
+            "PR #81 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -50,7 +50,11 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #79 alone cannot locate its original response; authoritative receiver discovery is required first",
+            "Authoritative `EFACCONSULTARENVIOSREPORTE` receiver-id discovery",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Pending PR #81 boundary, not yet accepted",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -58,7 +62,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #80 remains pending until exact-head CI is green and human review is complete",
+            "PR #81 remains pending until exact-head CI is green and human review is complete",
             currentState,
             StringComparison.Ordinal);
 

@@ -66,7 +66,7 @@ The target reader can resolve either:
 1. the root Reporte Diario submission; or
 2. a same-`SecEnvio` BR correction revision.
 
-On the accepted PR #79 baseline, the receiver id may be present directly on the root/revision transport evidence. PR #80 proposes a separately governed append-only discovery record that can also resolve a receiver id back to exactly one root/revision target without rewriting that target.
+On the original PR #79 baseline, the receiver id could be present directly on root/revision transport evidence. Accepted PR #80 added a separately governed append-only discovery record that can also resolve a receiver id back to exactly one root/revision target without rewriting that target.
 
 The target must resolve to exactly one durable local artifact. Missing or ambiguous receiver ids fail closed before crossing the network boundary.
 
@@ -126,7 +126,7 @@ A local transport state of `Unknown` means DGI may have received bytes but the a
 
 `EFACCONSULTARRESPUESTAREPORTE` requires `IdReceptor`. Therefore it can retrieve the original response only when that receiver id is known durably from trustworthy evidence.
 
-An `Unknown` attempt that has no `IdReceptor` cannot be discovered by this method alone. PR #80 separately proposes authoritative discovery through `EFACCONSULTARENVIOSREPORTE`, documented in `53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md`. That candidate remains outside this accepted PR #79 boundary until separately validated and approved.
+An `Unknown` attempt that has no `IdReceptor` cannot be discovered by this method alone. Accepted PR #80 now supplies authoritative discovery through `EFACCONSULTARENVIOSREPORTE`, documented in `53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md`. The discovered receiver remains append-only evidence and is resolved back to the original local root/revision target without rewriting that target.
 
 Automatic retry from `Unknown` remains forbidden.
 
@@ -148,17 +148,21 @@ Accepted validation covers:
 
 PR #79 exact head `2a6d8cc3d8b1e8836fa74e8f00350029311cb18a` passed Clean Architecture Guard #311 before merge. Accepted `main@85fe095449f7b4e9bfb97b45e01ae283b8071913` then passed post-merge Guard #312.
 
+Accepted PR #80 subsequently extended target resolution through durable receiver-discovery evidence at `main@7e930d8ffe1978da24ea8365b9661f74162d51b5`; post-merge Guard #320 passed.
+
 ## Deliberate non-scope
 
 This accepted increment does not itself implement:
 
-- `EFACCONSULTARENVIOSREPORTE` receiver-id discovery; PR #80 is a separate pending slice;
+- receiver discovery logic; that is the accepted separate PR #80 / document 53 capability;
 - automatic state mutation or retry recovery for `Unknown`;
-- `DR` / `ER` / `FR` reconciliation lifecycle;
+- state-changing `DR` / `ER` / `FR` reconciliation semantics;
 - automatic `R05` sequence recovery;
 - independent cryptographic validation of DGI ACK signatures;
 - Sobre v05 packaging/submission;
 - Production enablement.
+
+PR #81 / document 54 separately proposes append-only observation of DGI `DR`, `ER` and `FR` without local state mutation.
 
 Formal traditional DGI Testing readiness remains exactly:
 

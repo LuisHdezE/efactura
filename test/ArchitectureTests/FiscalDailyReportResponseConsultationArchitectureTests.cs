@@ -61,7 +61,7 @@ public sealed class FiscalDailyReportResponseConsultationArchitectureTests
     }
 
     [Fact]
-    public void Documentation_preserves_accepted_known_receiver_boundary_and_pending_discovery_gate()
+    public void Documentation_preserves_accepted_known_receiver_and_discovery_chain_with_separate_later_state_candidate()
     {
         var docs = Read("documentation/blueprint-api-implementation/52_FISCAL_DAILY_REPORT_RESPONSE_CONSULTATION.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -71,13 +71,14 @@ public sealed class FiscalDailyReportResponseConsultationArchitectureTests
         Assert.Contains("original response", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARRESPUESTAREPORTE", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARENVIOSREPORTE", docs, StringComparison.Ordinal);
-        Assert.Contains("PR #80 separately proposes authoritative discovery", docs, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #80 now supplies authoritative discovery", docs, StringComparison.Ordinal);
         Assert.Contains("`DR`, `ER` and `FR`", docs, StringComparison.Ordinal);
         Assert.Contains("Automatic retry from `Unknown` remains forbidden", docs, StringComparison.Ordinal);
+        Assert.Contains("PR #81 / document 54", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #80", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@85fe095449f7b4e9bfb97b45e01ae283b8071913", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #79", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #81", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@7e930d8ffe1978da24ea8365b9661f74162d51b5", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #80", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
