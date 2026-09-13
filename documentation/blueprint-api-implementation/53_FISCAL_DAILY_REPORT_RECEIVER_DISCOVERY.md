@@ -1,6 +1,11 @@
 # 53 — Fiscal Daily Report Receiver Discovery
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
+
+Accepted baseline: `main@7e930d8ffe1978da24ea8365b9661f74162d51b5`
+(merge of PR #80, `feat(fiscal): add daily report receiver discovery`).
+
+Post-merge Clean Architecture Guard #320 (`34729383022`) completed successfully.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -150,7 +155,7 @@ The chain still does not auto-retry or auto-rewrite fiscal state.
 
 ## Validation coverage
 
-The increment requires:
+The accepted increment includes:
 
 - Application tests for root and BR-revision targets;
 - operation replay without repeated DGI query;
@@ -163,17 +168,19 @@ The increment requires:
 - provider-real PostgreSQL/MySQL persistence, target uniqueness and consultation lookup through discovery evidence;
 - architecture guards keeping HTTP/X509/SignedXml outside Application.
 
+Exact-head Guard #319 and post-merge Guard #320 both completed successfully.
+
 ## Deliberate non-scope
 
-This increment does not implement:
+This accepted increment does not itself implement:
 
 - automatic transition of `Unknown` to `Received` or `Rejected`;
 - automatic resend/retry of an ambiguous delivery;
-- semantic reconciliation of `DR`, `ER` or `FR`;
+- state-changing reconciliation semantics for `DR`, `ER` or `FR`;
 - sequence repair for DGI rejection `R05`;
 - independent cryptographic validation of DGI ACK signatures;
 - Sobre v05 packaging/submission;
 - external DGI Testing acceptance;
 - Production enablement.
 
-Those remain separately governed capabilities.
+Document 54 defines the separately governed candidate for append-only DR/ER/FR observation. State-changing interpretation remains outside both increments.
