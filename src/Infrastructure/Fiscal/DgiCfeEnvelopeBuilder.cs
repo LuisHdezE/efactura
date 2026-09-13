@@ -133,7 +133,7 @@ public sealed class DgiCfeEnvelopeBuilder : IFiscalCfeEnvelopeBuilder
             throw new InvalidDataException("Signed CFE contains an invalid base64 X509 certificate.", ex);
         }
 
-        using var certificate = new X509Certificate2(certificateBytes);
+        using var certificate = X509CertificateLoader.LoadCertificate(certificateBytes);
         var thumbprint = NormalizeIdentifier(certificate.Thumbprint);
         var serial = NormalizeIdentifier(certificate.SerialNumber);
         if (!string.Equals(thumbprint, source.CertificateThumbprint, StringComparison.Ordinal)
