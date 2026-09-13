@@ -115,6 +115,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalDailyReportBrAckEvidenceParser, DgiFiscalDailyReportBrAckEvidenceParser>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
+        services.AddScoped<IFiscalCfeEnvelopeRepository, EfFiscalCfeEnvelopeRepository>();
         services.AddScoped<IFiscalDailyReportVersionRepository, EfFiscalDailyReportVersionRepository>();
         services.AddScoped<IFiscalDailyReportSigningEvidenceRepository, EfFiscalDailyReportSigningEvidenceRepository>();
         services.AddScoped<IFiscalDailyReportSignedArtifactRepository, EfFiscalDailyReportSignedArtifactRepository>();
@@ -144,6 +145,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<PrepareFiscalSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDocumentUseCase>();
         services.AddScoped<PackageFiscalCfeEnvelopeUseCase>();
+        services.AddScoped<PersistFiscalCfeEnvelopeUseCase>();
         services.AddScoped<AllocateFiscalDailyReportVersionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDailyReportUseCase>();
