@@ -152,6 +152,8 @@ Accepted PR #80 subsequently extended target resolution through durable receiver
 
 Accepted PR #81 / document 54 subsequently added append-only observation of DGI `DR`, `ER` and `FR` at `main@700d0a424d6a79b52844b5fa99446d49623c758f`; post-merge Guard #339 passed.
 
+Accepted PR #82 / document 55 subsequently added the non-mutating DR/ER/FR reconciliation policy at `main@6fd1ae6927bf3789015d3bb659bf094283ec7095`; post-merge Guard #357 passed.
+
 ## Deliberate non-scope
 
 This accepted increment does not itself implement:
@@ -161,10 +163,10 @@ This accepted increment does not itself implement:
 - action-producing `DR` / `ER` / `FR` remediation or reliquidation semantics;
 - automatic `R05` sequence recovery;
 - independent cryptographic validation of DGI ACK signatures;
-- Sobre v05 packaging/submission;
+- Sobre v05 transport/submission;
 - Production enablement.
 
-Pending PR #82 / document 55 separately proposes a non-mutating local reconciliation policy over accepted DR/ER/FR observation evidence.
+Pending PR #83 / document 56 separately proposes local Sobre v05 packaging without persistence or transport.
 
 Formal traditional DGI Testing readiness remains exactly:
 
