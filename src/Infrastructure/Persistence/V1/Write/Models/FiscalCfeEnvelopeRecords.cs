@@ -50,3 +50,27 @@ public sealed class V1FiscalCfeEnvelopeSubmissionRecord
     [MaxLength(64)] public string? ResponseSha256 { get; set; }
     [MaxLength(160)] public string? FailureCode { get; set; }
 }
+
+[Table("v1_fiscal_cfe_envelope_ack_observations")]
+[Index(nameof(SubmissionId), IsUnique = true, Name = "UX_v1_fceao_submission")]
+public sealed class V1FiscalCfeEnvelopeAckObservationRecord
+{
+    [Key] public Guid Id { get; set; }
+    public Guid SubmissionId { get; set; }
+    public Guid EnvelopeId { get; set; }
+    [MaxLength(200)] public string OrganizationId { get; set; } = string.Empty;
+    [MaxLength(12)] public string IssuerRuc { get; set; } = string.Empty;
+    [MaxLength(12)] public string ReceiverRut { get; set; } = string.Empty;
+    public long SenderEnvelopeId { get; set; }
+    [MaxLength(64)] public string ResponseSha256 { get; set; } = string.Empty;
+    public long DgiResponseId { get; set; }
+    public long DgiReceiverId { get; set; }
+    public int CfeCount { get; set; }
+    public int State { get; set; }
+    [MaxLength(80)] public string ReceptionTimestampText { get; set; } = string.Empty;
+    [MaxLength(80)] public string SigningTimestampText { get; set; } = string.Empty;
+    public string? ConsultationToken { get; set; }
+    [MaxLength(80)] public string? ConsultationAvailableAtText { get; set; }
+    public string RejectionReasonsJson { get; set; } = "[]";
+    [Precision(0)] public DateTimeOffset ObservedAtUtc { get; set; }
+}
