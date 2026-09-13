@@ -106,10 +106,11 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
         Assert.Contains("S08", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@e920ee0dea945c60b3fd72f76794cca40857519f", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #85", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("PR #85 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@356249ed93938561bed22abbf21f3f87090b9a53", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #86", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("PR #86 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Durable local Sobre identity and replay persistence", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Durable Sobre transport through `EFACRECEPCIONSOBRE`", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);
