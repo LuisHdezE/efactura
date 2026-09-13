@@ -34,8 +34,8 @@ public sealed record FiscalCfeEnvelopeAckParseResult(
     string? FailureCode);
 
 /// <summary>
-/// DGI ACKSobre XML parsing stays in Infrastructure. Application consumes typed, non-mutating
-/// observation evidence only.
+/// DGI ACKSobre XML parsing stays outside Application behind an adapter. Application consumes
+/// typed, non-mutating observation evidence only.
 /// </summary>
 public interface IFiscalCfeEnvelopeAckParser
 {
