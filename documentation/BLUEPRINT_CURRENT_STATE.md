@@ -4,11 +4,11 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-13
 
-Accepted functional baseline: `main@356249ed93938561bed22abbf21f3f87090b9a53`
-(merge of PR #85, `feat(fiscal): add durable Sobre transport`).
+Accepted functional baseline: `main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63`
+(merge of PR #86, `feat(fiscal): add ACKSobre observation`).
 
-Current pending governed increment: PR #86 `feat(fiscal): add ACKSobre observation`.
-PR #86 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
+Current pending governed increment: PR #87 `feat(fiscal): verify ACKSobre XMLDSig`.
+PR #87 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -22,7 +22,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #85. Its post-merge Clean Architecture Guard #398, run `34742965004`, completed successfully for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction jobs.
+The accepted `main` commit is the GitHub-verified merge of PR #86. Its post-merge Clean Architecture Guard #401, run `34755766824`, completed successfully for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction jobs.
 
 ## Accepted major v1 boundaries
 
@@ -68,8 +68,9 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 38. Deterministic local Sobre v05 packaging for 1..250 already-signed CFE, same-certificate verification, signed-subtree preservation and byte-pinned `EnvioCFE.xsd` validation without persistence or transport.
 39. Durable local Sobre identity and replay persistence with explicit caller-supplied `Idemisor`, exact envelope/hash/schema/certificate evidence and provider-real PostgreSQL/MySQL concurrent replay convergence.
 40. Durable Sobre transport through `EFACRECEPCIONSOBRE`, with exact direct-CDATA `EnvioCFE`, WS-Security X509, `Prepared -> InFlight -> ResponseReceived|Unknown`, provider-real dispatch serialization and no automatic retry from `Unknown`.
+41. Append-only immediate `ACKSobre` observation mapping `AS -> Received` and `BS -> Rejected`, preserving DGI correlation ids, optional consultation parameters and S01..S08 evidence without CFE mutation or S08 recovery.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `58_FISCAL_SOBRE_TRANSPORT.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `59_FISCAL_SOBRE_ACK_OBSERVATION.md`.
 
 ## Accepted Reporte Diario boundary after PR #82
 
@@ -117,7 +118,7 @@ The accepted reconciliation safety flags remain explicit: `AutomaticReliquidatio
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Accepted Sobre boundary after PR #85
+## Accepted Sobre boundary after PR #86
 
 The accepted CFE Sobre path now reaches:
 
@@ -142,38 +143,44 @@ durable signed CFE artifacts
 -> exact EnvioCFE in Datain/xmlData CDATA
 -> opaque Dataout/xmlData + SHA-256
 -> ResponseReceived | Unknown
+-> when ResponseReceived: structural ACKSobre observation
+-> AS -> Received | BS -> Rejected
+-> exact RUC / IdEmisor / CantCFE correlation
+-> DGI IDRespuesta + IDReceptor evidence
+-> optional Token + FechaHora evidence
+-> S01..S08 rejection evidence
+-> append-only provider-real replay/convergence
 ```
 
 The accepted byte-pinned `EnvioCFE.xsd` evidence is tied to the DGI-published `XSDs_FE_V1.44.2` registry identity and the governed immutable byte-recovery procedure recorded in document 56.
 
 `Idemisor` remains explicit caller input because the reviewed authoritative DGI material establishes issuer assignment but no authoritative next-value allocation algorithm. The local identity is a consumer replay/correlation invariant and is not represented as DGI's duplicate-detection key for `S08`.
 
-`ResponseReceived` remains transport evidence only. It means the accepted SOAP boundary durably obtained non-empty `Dataout/xmlData`; it does not by itself mean that DGI accepted the Sobre or any CFE inside it.
+`ResponseReceived` remains transport evidence only. The accepted PR #86 observation adds typed immediate Sobre evidence, but neither `AS` nor `BS` is interpreted as individual CFE acceptance/rejection and S08 authorizes no automatic recovery.
 
-## Pending PR #86 boundary, not yet accepted
+## Pending PR #87 boundary, not yet accepted
 
-PR #86 introduces bounded **append-only ACKSobre observation** over an already durable `ResponseReceived` transport result.
+PR #87 introduces bounded **append-only ACKSobre XMLDSig cryptographic verification** over the already durable PR #86 observation.
 
 The candidate:
 
 - performs no new DGI network call;
-- requires exact durable response XML and SHA-256 from the accepted PR #85 transport boundary;
-- parses `ACKSobre` only behind an Infrastructure port;
-- maps DGI `AS` to local evidence `Received` and `BS` to `Rejected`;
-- preserves DGI `IDRespuesta`, `IDReceptor`, `IdEmisor`, CFE count and exact timestamp text;
-- preserves optional `ParamConsulta` token plus availability timestamp as a pair;
-- accepts DGI-specific rejection evidence S01..S08 and rejects receiver-only S20 at this DGI boundary;
-- stores S08 as evidence only and authorizes no automatic recovery or retransmission;
-- correlates issuer, receiver, `IdEmisor` and CFE count exactly to the durable Sobre;
-- requires structural XMLDSig `Signature` presence but does not claim cryptographic ACK signature validation;
-- persists one append-only observation per source submission with `Restrict` FKs to submission and envelope;
-- replays/converges provider-real without rewriting transport or Sobre evidence;
-- does not mutate individual CFE business state because immediate Sobre ACK is not individual CFE acceptance.
+- revalidates exact response SHA-256 and durable envelope/submission/ACK lineage;
+- verifies XMLDSig only behind an Infrastructure port;
+- prohibits DTD/external XML resolution and external signature references;
+- requires exactly one whole-document `Reference URI=""` and enveloped-signature transform;
+- allows only a bounded local set of canonicalization/RSA/digest algorithms, including legacy RSA-SHA1/SHA1 solely because the official DGI ACKSobre example uses that external signature tuple;
+- requires exactly one embedded X.509 certificate and an RSA public key;
+- calls `SignedXml.CheckSignature(certificate, verifySignatureOnly: true)`;
+- persists certificate/signature algorithm evidence plus exact source response SHA-256;
+- records `CertificateTrustValidated = false` explicitly;
+- uses `Restrict` FKs to ACK observation, submission and Sobre;
+- replays/converges provider-real without rewriting any accepted source evidence.
 
 The detailed pending evidence is recorded in:
-`documentation/blueprint-api-implementation/59_FISCAL_SOBRE_ACK_OBSERVATION.md`.
+`documentation/blueprint-api-implementation/60_FISCAL_SOBRE_ACK_SIGNATURE_VERIFICATION.md`.
 
-This section describes the open candidate only. It does not promote PR #86 into the accepted baseline.
+This section describes the open candidate only. It does not promote PR #87 into the accepted baseline or claim X.509 trust-chain validation.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -188,10 +195,13 @@ The governed fiscal lineage uses official DGI artifacts already pinned/reviewed 
 - DGI Production communiqué documenting duplicate-Sobre response code `S08` without establishing the exact duplicate key or recovery policy;
 - current DGI `Documentos de interés` registry continuing to link **Web Services Externos Recepción** for `EFACRECEPCIONSOBRE` framing;
 - DGI reception evidence defining `Datain/xmlData` with `EnvioCFE` directly in CDATA and `Dataout/xmlData` for the response;
-- current response-format evidence defining `ACKSobre`, `AS`, `BS`, correlation identifiers, optional `ParamConsulta` and rejection-reason structure;
+- current response-format evidence defining `ACKSobre`, `AS`, `BS`, correlation identifiers, optional `ParamConsulta`, rejection-reason structure, public certificate evidence and advanced electronic signature over the response;
+- official reception example showing a whole-document enveloped XMLDSig with embedded X.509 certificate;
 - current DGI applicability evidence supporting S01..S08 at the DGI Sobre reception boundary;
-- `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for Reporte Diario consultation, receiver discovery and later-state observation;
+- `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for current consultation methods;
 - DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the accepted reconciliation-policy boundary.
+
+The current Consultas v1.9 contract exposes methods that return Sobre consultation parameters, but the reviewed authoritative material does not establish a web-service operation whose input is the ACKSobre `Token` and whose output is the second/document-level CFE response. That capability remains fail-closed rather than invented.
 
 The gzip+Base64 routine reviewed in current Web Services Externos Consultas is consultation-specific evidence. It is not used to invent compression for `EFACRECEPCIONSOBRE` when the DGI reception document explicitly shows direct CDATA framing.
 
@@ -209,7 +219,7 @@ External DGI Testing acceptance has not been established in this repository, and
 
 ## Explicitly not complete
 
-The accepted baseline and pending PR #86 do not complete:
+The accepted baseline and pending PR #87 do not complete:
 
 - operational correction-note command/API integration into the normal sale workflow;
 - export CFE families and export-specific immutable evidence;
@@ -220,11 +230,11 @@ The accepted baseline and pending PR #86 do not complete:
 - governed human/operational approval and command creation for a reliquidating `SecEnvio + 1` report;
 - local supersession/accounting mutation after observed `FR`;
 - automatic retry from ambiguous Reporte Diario `Unknown` state;
-- independent cryptographic validation of DGI ACK signatures;
+- X.509 trust-chain/trust-anchor validation for DGI ACK certificates;
 - automatic `Idemisor` allocation/reservation;
 - business grouping/batching policy for CFE into Sobre;
-- cryptographic verification of the Sobre ACK XMLDSig;
-- document-level CFE response consultation/interpretation after an AS token;
+- accepted ACKSobre XMLDSig cryptographic verification while PR #87 remains pending;
+- document-level CFE response consultation/interpretation after an AS token because no governed token-input operation has been proven;
 - `S08` interpretation/recovery semantics beyond preserving the reason;
 - automatic reconciliation of ambiguous Sobre `Unknown` delivery;
 - authoritative external DGI Testing evidence;
@@ -245,18 +255,20 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #86 must close before document-level Sobre/CFE response work advances.
+PR #87 must close before later ACK trust/reconciliation work advances.
 
-The authoritative revalidation for this slice establishes immediate Sobre states `AS`/`BS`, DGI response correlation identifiers, optional consultation parameters and DGI rejection reasons S01..S08. It does not establish automatic S08 recovery and it does not make the immediate Sobre ACK equivalent to individual CFE acceptance.
+The authoritative revalidation after PR #86 found that the ACKSobre token is documented as consultation evidence, while the current WS Consultas v1.9 contract does not prove a token-input operation for obtaining the second CFE response. That path therefore remains fail-closed.
+
+The same revalidation does provide sufficient evidence to verify XMLDSig signature mathematics separately from certificate-chain trust, which is the bounded purpose of PR #87.
 
 The earlier revalidation established that DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed material does not provide an authoritative algorithm for choosing the next value. Automatic allocation therefore remains out of scope instead of being guessed.
 
 The earlier Reporte Diario revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
 
-After PR #86 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+After PR #87 is accepted, candidate boundaries include:
 
-1. consultation of the second CFE response using the durable ACKSobre `Token`, only if the current authoritative service contract and correlation semantics are sufficient;
-2. cryptographic validation of the DGI ACK signature as a separately governed trust boundary;
+1. X.509 chain/trust-anchor validation for DGI ACK certificates only if authoritative trust-anchor and certificate-policy evidence is sufficient;
+2. document-level CFE response consultation only if DGI publishes a sufficient authoritative operation/input/correlation contract;
 3. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
 4. S08 recovery only if authoritative evidence proves a safe action rather than merely the rejection reason;
 5. grouping/batching policy only when product requirements are governed independently of DGI wire semantics;
@@ -274,13 +286,13 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `356249ed93938561bed22abbf21f3f87090b9a53`;
-- accepted merge: PR #85 `feat(fiscal): add durable Sobre transport`;
-- approved PR #85 head: `12ef57df698ddb08f0f2a035b11991380e5bf613`;
-- exact-head PR #85 Clean Architecture Guard #397 (`34742474493`): SUCCESS;
-- post-merge Clean Architecture Guard #398 (`34742965004`): SUCCESS;
-- open governed increment: PR #86 `feat(fiscal): add ACKSobre observation`;
-- PR #86 remains pending until exact-head CI is green and human review is complete;
+- accepted `main`: `63c63f44b91d6fea6fb073af8c3e3d7841aa4c63`;
+- accepted merge: PR #86 `feat(fiscal): add ACKSobre observation`;
+- approved PR #86 head: `1401fb392d2baa348b6ae20946915636875e9342`;
+- exact-head PR #86 Clean Architecture Guard #400 (`34744587630`): SUCCESS;
+- post-merge Clean Architecture Guard #401 (`34755766824`): SUCCESS;
+- open governed increment: PR #87 `feat(fiscal): verify ACKSobre XMLDSig`;
+- PR #87 remains pending until exact-head CI is green and human review is complete;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;
 - merge requires final exact-head green CI and explicit human approval.

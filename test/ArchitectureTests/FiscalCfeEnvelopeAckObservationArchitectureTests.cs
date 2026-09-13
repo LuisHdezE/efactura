@@ -84,19 +84,25 @@ public sealed class FiscalCfeEnvelopeAckObservationArchitectureTests
     }
 
     [Fact]
-    public void Documentation_keeps_ACK_observation_non_mutating_and_S08_fail_closed()
+    public void Documentation_keeps_accepted_ACK_observation_non_mutating_and_S08_fail_closed()
     {
         var docs = Read("documentation/blueprint-api-implementation/59_FISCAL_SOBRE_ACK_OBSERVATION.md");
+        var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
 
-        Assert.Contains("Status: GOVERNED IMPLEMENTATION CANDIDATE", docs, StringComparison.Ordinal);
+        Assert.Contains("Status: ACCEPTED IMPLEMENTATION", docs, StringComparison.Ordinal);
+        Assert.Contains("main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63", docs, StringComparison.Ordinal);
         Assert.Contains("AS", docs, StringComparison.Ordinal);
         Assert.Contains("BS", docs, StringComparison.Ordinal);
         Assert.Contains("S01..S08", docs, StringComparison.Ordinal);
         Assert.Contains("S08", docs, StringComparison.Ordinal);
         Assert.Contains("no automatic recovery", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("does not mutate", docs, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("cryptographic", docs, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Pending PR #87 / document 60", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
+
+        Assert.Contains("Current pending governed increment: PR #87", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Append-only immediate `ACKSobre` observation", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Pending PR #87 boundary, not yet accepted", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);

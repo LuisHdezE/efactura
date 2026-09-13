@@ -18,19 +18,19 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@356249ed93938561bed22abbf21f3f87090b9a53",
+            "main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #85",
+            "merge of PR #86",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Current pending governed increment: PR #86",
+            "Current pending governed increment: PR #87",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #86 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
+            "PR #87 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -74,7 +74,11 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Pending PR #86 boundary, not yet accepted",
+            "Append-only immediate `ACKSobre` observation",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Pending PR #87 boundary, not yet accepted",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -82,7 +86,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #86 remains pending until exact-head CI is green and human review is complete",
+            "PR #87 remains pending until exact-head CI is green and human review is complete",
             currentState,
             StringComparison.Ordinal);
 
