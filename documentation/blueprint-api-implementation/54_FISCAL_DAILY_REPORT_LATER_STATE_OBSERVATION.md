@@ -1,6 +1,11 @@
 # 54 — Fiscal Daily Report Later-State Observation
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
+
+Accepted baseline: `main@700d0a424d6a79b52844b5fa99446d49623c758f`
+(merge of PR #81, `feat(fiscal): add daily report later-state observation`).
+
+Post-merge Clean Architecture Guard #339 (`34731471587`) completed successfully.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -153,7 +158,7 @@ The increment requires:
 - proof that source root/revision state and ACK remain unchanged;
 - architecture guards preventing Application HTTP/X509 dependencies, raw-SQL persistence drift and update/delete semantics in the observation repository.
 
-The exact final PR head must pass the complete Clean Architecture Guard before review or merge.
+The exact final PR head passed the complete Clean Architecture Guard #338 before review and the post-merge Clean Architecture Guard #339 on the accepted merge commit.
 
 ## Deliberate non-scope
 
