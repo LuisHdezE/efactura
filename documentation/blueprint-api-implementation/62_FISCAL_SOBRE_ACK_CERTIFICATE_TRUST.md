@@ -12,7 +12,7 @@ The capability answers only this narrower question:
 
 > At the validation instant, does the exact certificate embedded in the durable ACKSobre build a valid PKI Uruguay chain to an explicitly configured and SHA-256-pinned trust root while the platform performs online revocation checking for the entire chain?
 
-A positive answer does **not** prove DGI legal identity, DGI-specific certificate habilitation, a particular DGI organizational unit, or Production acceptance. This increment therefore records `DgiIdentityValidated = false` even when PKI Uruguay trust succeeds.
+A positive answer does not prove DGI legal identity. It also does not prove DGI-specific certificate habilitation, a particular DGI organizational unit, or Production acceptance. This increment therefore records `DgiIdentityValidated = false` even when PKI Uruguay trust succeeds.
 
 ## Authoritative basis rechecked 2026-09-13
 
