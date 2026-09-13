@@ -39,7 +39,8 @@ public sealed class DgiCfeEnvelopeBuilder : IFiscalCfeEnvelopeBuilder
         }
 
         var builder = new StringBuilder();
-        using (var writer = XmlWriter.Create(builder, new XmlWriterSettings
+        using (var textWriter = new Utf8StringWriter(builder))
+        using (var writer = XmlWriter.Create(textWriter, new XmlWriterSettings
         {
             Encoding = Encoding.UTF8,
             OmitXmlDeclaration = false,
@@ -188,7 +189,7 @@ public sealed class DgiCfeEnvelopeBuilder : IFiscalCfeEnvelopeBuilder
         string CertificateSerialNumber,
         string CfeRootFragment);
 
-    private sealed class Utf8StringWriter : StringWriter
+    private sealed class Utf8StringWriter(StringBuilder builder) : StringWriter(builder, CultureInfo.InvariantCulture)
     {
         public override Encoding Encoding => Encoding.UTF8;
     }
