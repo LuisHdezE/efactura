@@ -89,9 +89,9 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
         Assert.Contains("Document 54", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #86", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #87", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@68b2b79772230d858ac3c2dde573542b3caaef97", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #87", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("There is no pending governed increment currently open", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Append-only observation of DGI Reporte Diario later states `DR`, `ER` and `FR`", checkpoint, StringComparison.Ordinal);
         Assert.Contains("never selects by timestamp or returned collection order", checkpoint, StringComparison.Ordinal);
         Assert.Contains("AutomaticReliquidationAuthorized = false", checkpoint, StringComparison.Ordinal);
