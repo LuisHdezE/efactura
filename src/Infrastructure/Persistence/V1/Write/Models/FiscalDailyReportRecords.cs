@@ -120,6 +120,10 @@ public sealed class V1FiscalDailyReportSubmissionRecord
     [InverseProperty(nameof(V1FiscalDailyReportResponseConsultationRecord.RootSubmission))]
     public ICollection<V1FiscalDailyReportResponseConsultationRecord> ResponseConsultations { get; set; }
         = new List<V1FiscalDailyReportResponseConsultationRecord>();
+
+    [InverseProperty(nameof(V1FiscalDailyReportReceiverDiscoveryRecord.RootSubmission))]
+    public ICollection<V1FiscalDailyReportReceiverDiscoveryRecord> ReceiverDiscoveries { get; set; }
+        = new List<V1FiscalDailyReportReceiverDiscoveryRecord>();
 }
 
 [Table("v1_fdr_br_revisions")]
@@ -250,6 +254,10 @@ public sealed class V1FiscalDailyReportBrCorrectionRevisionRecord
     [InverseProperty(nameof(V1FiscalDailyReportResponseConsultationRecord.BrCorrectionRevision))]
     public ICollection<V1FiscalDailyReportResponseConsultationRecord> ResponseConsultations { get; set; }
         = new List<V1FiscalDailyReportResponseConsultationRecord>();
+
+    [InverseProperty(nameof(V1FiscalDailyReportReceiverDiscoveryRecord.BrCorrectionRevision))]
+    public ICollection<V1FiscalDailyReportReceiverDiscoveryRecord> ReceiverDiscoveries { get; set; }
+        = new List<V1FiscalDailyReportReceiverDiscoveryRecord>();
 }
 
 [Table("v1_fdr_response_consultations")]
@@ -304,5 +312,65 @@ public sealed class V1FiscalDailyReportResponseConsultationRecord
     [ForeignKey(nameof(BrCorrectionRevisionId))]
     [DeleteBehavior(DeleteBehavior.Restrict)]
     [InverseProperty(nameof(V1FiscalDailyReportBrCorrectionRevisionRecord.ResponseConsultations))]
+    public V1FiscalDailyReportBrCorrectionRevisionRecord? BrCorrectionRevision { get; set; }
+}
+
+[Table("v1_fdr_receiver_discoveries")]
+[Index(nameof(OrganizationId), nameof(OperationId), IsUnique = true, Name = "UX_v1_fdr_disc_operation")]
+[Index(nameof(OrganizationId), nameof(DgiReceiverId), IsUnique = true, Name = "UX_v1_fdr_disc_receiver")]
+[Index(nameof(RootSubmissionId), IsUnique = true, Name = "UX_v1_fdr_disc_root")]
+[Index(nameof(BrCorrectionRevisionId), IsUnique = true, Name = "UX_v1_fdr_disc_br")]
+[Index(nameof(OrganizationId), nameof(IssuerRuc), nameof(SummaryDate), nameof(Sequence), Name = "IX_v1_fdr_disc_identity")]
+public sealed class V1FiscalDailyReportReceiverDiscoveryRecord
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    public Guid? RootSubmissionId { get; set; }
+    public Guid? BrCorrectionRevisionId { get; set; }
+
+    [MaxLength(200)]
+    public string OrganizationId { get; set; } = string.Empty;
+
+    [MaxLength(12)]
+    public string IssuerRuc { get; set; } = string.Empty;
+
+    [Column(TypeName = "date")]
+    public DateTime SummaryDate { get; set; }
+
+    public int Sequence { get; set; }
+    public int? LocalRevision { get; set; }
+
+    [MaxLength(120)]
+    public string OperationId { get; set; } = string.Empty;
+
+    [MaxLength(120)]
+    public string DgiEmitterId { get; set; } = string.Empty;
+
+    [MaxLength(120)]
+    public string DgiReceiverId { get; set; } = string.Empty;
+
+    [MaxLength(8)]
+    public string DgiStateCode { get; set; } = string.Empty;
+
+    [MaxLength(80)]
+    public string DgiReceptionTimestampText { get; set; } = string.Empty;
+
+    public string EvidenceXml { get; set; } = string.Empty;
+
+    [MaxLength(64)]
+    public string EvidenceXmlHash { get; set; } = string.Empty;
+
+    [Precision(0)]
+    public DateTimeOffset DiscoveredAtUtc { get; set; }
+
+    [ForeignKey(nameof(RootSubmissionId))]
+    [DeleteBehavior(DeleteBehavior.Restrict)]
+    [InverseProperty(nameof(V1FiscalDailyReportSubmissionRecord.ReceiverDiscoveries))]
+    public V1FiscalDailyReportSubmissionRecord? RootSubmission { get; set; }
+
+    [ForeignKey(nameof(BrCorrectionRevisionId))]
+    [DeleteBehavior(DeleteBehavior.Restrict)]
+    [InverseProperty(nameof(V1FiscalDailyReportBrCorrectionRevisionRecord.ReceiverDiscoveries))]
     public V1FiscalDailyReportBrCorrectionRevisionRecord? BrCorrectionRevision { get; set; }
 }
