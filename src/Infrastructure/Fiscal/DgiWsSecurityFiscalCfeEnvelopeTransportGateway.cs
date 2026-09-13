@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Text;
@@ -252,17 +253,26 @@ public sealed class DgiWsSecurityFiscalCfeEnvelopeTransportGateway : IFiscalCfeE
     private static void ValidateRequest(FiscalCfeEnvelopeTransportRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.OrganizationId)
-            || request.IssuerRuc.Length != 12 || request.IssuerRuc.Any(c => !char.IsDigit(c))
-            || request.ReceiverRut.Length != 12 || request.ReceiverRut.Any(c => !char.IsDigit(c))
+            || !TwelveDigits(request.IssuerRuc)
+            || !TwelveDigits(request.ReceiverRut)
             || request.SenderEnvelopeId is < 0 or > 9_999_999_999L
-            || !PrepareFiscalCfeEnvelopeSubmissionUseCase.Sha256Value(request.EnvelopeSha256)
+            || !Sha256Value(request.EnvelopeSha256)
             || string.IsNullOrWhiteSpace(request.EnvelopeXml)
-            || !string.Equals(request.EnvelopeSha256, PrepareFiscalCfeEnvelopeSubmissionUseCase.Sha256(request.EnvelopeXml), StringComparison.Ordinal))
+            || !string.Equals(request.EnvelopeSha256, Sha256(request.EnvelopeXml), StringComparison.Ordinal))
             throw new FiscalCfeEnvelopeTransportException(
                 "fiscal.envelope.transport.request_invalid",
                 "Sobre transport request is invalid or no longer matches its durable SHA-256 identity.",
                 deliveryAmbiguous: false);
     }
+
+    private static bool TwelveDigits(string? value) =>
+        value is not null && value.Length == 12 && value.All(char.IsDigit);
+
+    private static bool Sha256Value(string? value) =>
+        value is not null && value.Length == 64 && value.All(Uri.IsHexDigit);
+
+    private static string Sha256(string value) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
     private static FiscalCfeEnvelopeTransportException InvalidResponse(string message, Exception? inner = null) =>
         new("fiscal.envelope.transport.response_invalid", message, deliveryAmbiguous: true, inner);
