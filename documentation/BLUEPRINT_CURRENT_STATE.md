@@ -262,3 +262,40 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 PR #87 is closed and accepted. Later ACK trust/reconciliation work may advance only through separately governed, evidence-backed increments.
 
 The authoritative revalidation after PR #86 found that the ACKSobre token is documented as consultation evidence, while the current WS Consultas v1.9 contract does not prove a token-input operation for obtaining the second CFE response. That path therefore remains fail-closed.
+
+The same revalidation provided sufficient evidence to verify XMLDSig signature mathematics separately from certificate-chain trust, which is now part of the accepted baseline through PR #87.
+
+The earlier revalidation established that DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed material does not provide an authoritative algorithm for choosing the next value. Automatic allocation therefore remains out of scope instead of being guessed.
+
+The earlier Reporte Diario revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
+
+Candidate boundaries after PR #87 include:
+
+1. X.509 chain/trust-anchor validation for DGI ACK certificates only if authoritative trust-anchor and certificate-policy evidence is sufficient;
+2. document-level CFE response consultation only if DGI publishes a sufficient authoritative operation/input/correlation contract;
+3. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
+4. S08 recovery only if authoritative evidence proves a safe action rather than merely the rejection reason;
+5. grouping/batching policy only when product requirements are governed independently of DGI wire semantics;
+6. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
+7. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
+8. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
+9. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
+10. Production transport only after explicit technical and operational review.
+
+## Known non-blocking modernization debt
+
+Green builds may still report advisory legacy debt including deprecated/outdated dependencies, Application Insights legacy APIs, old ASP.NET abstractions, provider/design packages, xUnit deprecation notices, nullable/analyzer warnings, obsolete cryptography APIs and Windows-only `System.Drawing` usage.
+
+These items remain inventory for later bounded modernization slices and must not be upgraded wholesale without compatibility analysis.
+
+## Repository governance at this checkpoint
+
+- accepted `main`: `68b2b79772230d858ac3c2dde573542b3caaef97`;
+- accepted merge: PR #87 `feat(fiscal): verify ACKSobre XMLDSig`;
+- approved PR #87 head: `9cad4a0913396520baaf1a40ca8b0595d2afc67c`;
+- exact-head PR #87 Clean Architecture Guard #414 (`34757553987`): SUCCESS;
+- post-merge Clean Architecture Guard #415 (`34758431307`): SUCCESS;
+- no governed increment is currently open;
+- one atomic slice per PR remains required;
+- Blueprint 0.5.2 consumer adoption remains DEFER;
+- merge requires final exact-head green CI and explicit human approval.
