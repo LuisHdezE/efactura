@@ -108,7 +108,8 @@ public sealed class DgiFiscalCfeEnvelopeAckParser : IFiscalCfeEnvelopeAckParser
         {
             var code = RequiredText(node, "Motivo");
             var glosa = RequiredText(node, "Glosa");
-            var rawDetail = OptionalText(node, "Detalle");
+            if (!TryOptionalText(node, "Detalle", out var rawDetail))
+                return Invalid("fiscal.envelope.ack.reason_structure_invalid");
             reasons.Add(new(
                 code ?? string.Empty,
                 glosa ?? string.Empty,
@@ -153,15 +154,16 @@ public sealed class DgiFiscalCfeEnvelopeAckParser : IFiscalCfeEnvelopeAckParser
         return nodes.Count == 1 ? nodes[0].InnerText.Trim() : null;
     }
 
-    private static string? OptionalText(XmlElement parent, string localName)
+    private static bool TryOptionalText(XmlElement parent, string localName, out string? value)
     {
         var nodes = DirectChildren(parent, localName, DgiNamespace);
-        return nodes.Count switch
+        if (nodes.Count > 1)
         {
-            0 => null,
-            1 => nodes[0].InnerText.Trim(),
-            _ => null
-        };
+            value = null;
+            return false;
+        }
+        value = nodes.Count == 0 ? null : nodes[0].InnerText.Trim();
+        return true;
     }
 
     private static bool TryRequiredLong(XmlElement parent, string localName, out long value)
