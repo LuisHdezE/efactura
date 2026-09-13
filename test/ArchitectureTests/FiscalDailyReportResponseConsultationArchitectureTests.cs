@@ -24,7 +24,7 @@ public sealed class FiscalDailyReportResponseConsultationArchitectureTests
     }
 
     [Fact]
-    public void DGI_gateway_is_infrastructure_only_uses_published_operation_and_keeps_discovery_out_of_scope()
+    public void DGI_gateway_is_infrastructure_only_and_uses_published_original_response_operation()
     {
         var gateway = Read("src/Infrastructure/Fiscal/DgiWsSecurityFiscalDailyReportResponseConsultationGateway.cs");
 
@@ -54,27 +54,30 @@ public sealed class FiscalDailyReportResponseConsultationArchitectureTests
         Assert.Contains("FK_v1_fdr_cons_root", migration, StringComparison.Ordinal);
         Assert.Contains("FK_v1_fdr_cons_br", migration, StringComparison.Ordinal);
         Assert.Contains("AsNoTracking()", repository, StringComparison.Ordinal);
+        Assert.Contains("V1FiscalDailyReportReceiverDiscoveryRecord", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("SaveChanges", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("BeginTransaction", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("Update(", repository, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Documentation_preserves_known_receiver_only_and_later_reconciliation_gates()
+    public void Documentation_preserves_accepted_known_receiver_boundary_and_pending_discovery_gate()
     {
         var docs = Read("documentation/blueprint-api-implementation/52_FISCAL_DAILY_REPORT_RESPONSE_CONSULTATION.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
 
+        Assert.Contains("Status: ACCEPTED", docs, StringComparison.Ordinal);
         Assert.Contains("known durable DGI `IdReceptor`", docs, StringComparison.Ordinal);
         Assert.Contains("original response", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARRESPUESTAREPORTE", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARENVIOSREPORTE", docs, StringComparison.Ordinal);
-        Assert.Contains("does not solve every `Unknown`", docs, StringComparison.Ordinal);
-        Assert.Contains("`DR` / `ER` / `FR`", docs, StringComparison.Ordinal);
+        Assert.Contains("PR #80 separately proposes authoritative discovery", docs, StringComparison.Ordinal);
+        Assert.Contains("`DR`, `ER` and `FR`", docs, StringComparison.Ordinal);
         Assert.Contains("Automatic retry from `Unknown` remains forbidden", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #79", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@0846d63b02db2cff65bc3c86c4eca4cffa20b409", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #80", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@85fe095449f7b4e9bfb97b45e01ae283b8071913", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #79", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
