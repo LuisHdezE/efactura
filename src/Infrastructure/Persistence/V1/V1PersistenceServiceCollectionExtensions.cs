@@ -95,6 +95,8 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalXmlBuilder, DeterministicUnsignedCfeBuilder>();
         services.AddSingleton<IFiscalSigningPayloadBuilder, DeterministicFiscalSigningPayloadBuilder>();
         services.AddSingleton<IFiscalSignedCfeSchemaValidator, DgiFeV1_44_2SignedCfeSchemaValidator>();
+        services.AddSingleton<IFiscalCfeEnvelopeBuilder, DgiCfeEnvelopeBuilder>();
+        services.AddSingleton<IFiscalCfeEnvelopeSchemaValidator, DgiFeV1_44_2CfeEnvelopeSchemaValidator>();
         services.AddSingleton<IFiscalDailyReportXmlBuilder, DeterministicUnsignedDailyReportXmlBuilder>();
         services.AddSingleton<IFiscalDailyReportUnsignedSchemaValidator, DgiFeV1_44_2UnsignedDailyReportSchemaValidator>();
         services.AddSingleton<IFiscalDailyReportSignedSchemaValidator, DgiFeV1_44_2SignedDailyReportSchemaValidator>();
@@ -141,6 +143,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<CreateFiscalContentSnapshotUseCase>();
         services.AddScoped<PrepareFiscalSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDocumentUseCase>();
+        services.AddScoped<PackageFiscalCfeEnvelopeUseCase>();
         services.AddScoped<AllocateFiscalDailyReportVersionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDailyReportUseCase>();
