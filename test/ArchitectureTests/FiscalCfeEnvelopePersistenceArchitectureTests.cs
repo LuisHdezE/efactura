@@ -106,8 +106,8 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
         Assert.Contains("S08", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@68b2b79772230d858ac3c2dde573542b3caaef97", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #87", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@f37077b4e85de94d7bd1f63b8b9303239edeb4a0", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #89", checkpoint, StringComparison.Ordinal);
         Assert.Contains("There is no pending governed increment currently open", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Durable local Sobre identity and replay persistence", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Durable Sobre transport through `EFACRECEPCIONSOBRE`", checkpoint, StringComparison.Ordinal);
