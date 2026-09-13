@@ -4,11 +4,10 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-13
 
-Accepted functional baseline: `main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63`
-(merge of PR #86, `feat(fiscal): add ACKSobre observation`).
+Accepted functional baseline: `main@68b2b79772230d858ac3c2dde573542b3caaef97`
+(merge of PR #87, `feat(fiscal): verify ACKSobre XMLDSig`).
 
-Current pending governed increment: PR #87 `feat(fiscal): verify ACKSobre XMLDSig`.
-PR #87 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
+There is no pending governed increment currently open. PR #87 is part of the accepted baseline after exact-head validation, explicit human merge approval and successful post-merge validation on `main`.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -22,7 +21,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #86. Its post-merge Clean Architecture Guard #401, run `34755766824`, completed successfully for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction jobs.
+The accepted `main` commit is the GitHub-verified merge of PR #87. Its post-merge Clean Architecture Guard #415, run `34758431307`, completed successfully on exact `main@68b2b79772230d858ac3c2dde573542b3caaef97` for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction jobs.
 
 ## Accepted major v1 boundaries
 
@@ -69,8 +68,9 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 39. Durable local Sobre identity and replay persistence with explicit caller-supplied `Idemisor`, exact envelope/hash/schema/certificate evidence and provider-real PostgreSQL/MySQL concurrent replay convergence.
 40. Durable Sobre transport through `EFACRECEPCIONSOBRE`, with exact direct-CDATA `EnvioCFE`, WS-Security X509, `Prepared -> InFlight -> ResponseReceived|Unknown`, provider-real dispatch serialization and no automatic retry from `Unknown`.
 41. Append-only immediate `ACKSobre` observation mapping `AS -> Received` and `BS -> Rejected`, preserving DGI correlation ids, optional consultation parameters and S01..S08 evidence without CFE mutation or S08 recovery.
+42. Append-only ACKSobre XMLDSig cryptographic verification with exact source-response SHA-256 lineage, bounded whole-document signature policy, embedded X.509 evidence, provider-real replay/concurrency convergence and explicit `CertificateTrustValidated = false` trust boundary.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `59_FISCAL_SOBRE_ACK_OBSERVATION.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `60_FISCAL_SOBRE_ACK_SIGNATURE_VERIFICATION.md`.
 
 ## Accepted Reporte Diario boundary after PR #82
 
@@ -118,7 +118,7 @@ The accepted reconciliation safety flags remain explicit: `AutomaticReliquidatio
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Accepted Sobre boundary after PR #86
+## Accepted Sobre boundary after PR #87
 
 The accepted CFE Sobre path now reaches:
 
@@ -150,19 +150,24 @@ durable signed CFE artifacts
 -> optional Token + FechaHora evidence
 -> S01..S08 rejection evidence
 -> append-only provider-real replay/convergence
+-> exact response SHA-256 and lineage revalidation
+-> bounded whole-document ACKSobre XMLDSig verification
+-> embedded X.509 certificate/signature algorithm evidence
+-> CertificateTrustValidated = false
+-> append-only provider-real verification replay/convergence
 ```
 
 The accepted byte-pinned `EnvioCFE.xsd` evidence is tied to the DGI-published `XSDs_FE_V1.44.2` registry identity and the governed immutable byte-recovery procedure recorded in document 56.
 
 `Idemisor` remains explicit caller input because the reviewed authoritative DGI material establishes issuer assignment but no authoritative next-value allocation algorithm. The local identity is a consumer replay/correlation invariant and is not represented as DGI's duplicate-detection key for `S08`.
 
-`ResponseReceived` remains transport evidence only. The accepted PR #86 observation adds typed immediate Sobre evidence, but neither `AS` nor `BS` is interpreted as individual CFE acceptance/rejection and S08 authorizes no automatic recovery.
+`ResponseReceived` remains transport evidence only. The accepted ACK observation adds typed immediate Sobre evidence, but neither `AS` nor `BS` is interpreted as individual CFE acceptance/rejection and S08 authorizes no automatic recovery.
 
-## Pending PR #87 boundary, not yet accepted
+## Accepted PR #87 ACKSobre signature-verification boundary
 
-PR #87 introduces bounded **append-only ACKSobre XMLDSig cryptographic verification** over the already durable PR #86 observation.
+PR #87 adds bounded **append-only ACKSobre XMLDSig cryptographic verification** over the already durable ACK observation.
 
-The candidate:
+The accepted capability:
 
 - performs no new DGI network call;
 - revalidates exact response SHA-256 and durable envelope/submission/ACK lineage;
@@ -177,10 +182,10 @@ The candidate:
 - uses `Restrict` FKs to ACK observation, submission and Sobre;
 - replays/converges provider-real without rewriting any accepted source evidence.
 
-The detailed pending evidence is recorded in:
+The detailed accepted evidence is recorded in:
 `documentation/blueprint-api-implementation/60_FISCAL_SOBRE_ACK_SIGNATURE_VERIFICATION.md`.
 
-This section describes the open candidate only. It does not promote PR #87 into the accepted baseline or claim X.509 trust-chain validation.
+This accepted boundary validates signature mathematics and whole-document coverage only. It does not claim X.509 trust-chain validation, DGI legal identity, OCSP/CRL status or certificate habilitation.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -219,7 +224,7 @@ External DGI Testing acceptance has not been established in this repository, and
 
 ## Explicitly not complete
 
-The accepted baseline and pending PR #87 do not complete:
+The accepted baseline does not complete:
 
 - operational correction-note command/API integration into the normal sale workflow;
 - export CFE families and export-specific immutable evidence;
@@ -233,7 +238,6 @@ The accepted baseline and pending PR #87 do not complete:
 - X.509 trust-chain/trust-anchor validation for DGI ACK certificates;
 - automatic `Idemisor` allocation/reservation;
 - business grouping/batching policy for CFE into Sobre;
-- accepted ACKSobre XMLDSig cryptographic verification while PR #87 remains pending;
 - document-level CFE response consultation/interpretation after an AS token because no governed token-input operation has been proven;
 - `S08` interpretation/recovery semantics beyond preserving the reason;
 - automatic reconciliation of ambiguous Sobre `Unknown` delivery;
@@ -255,44 +259,6 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #87 must close before later ACK trust/reconciliation work advances.
+PR #87 is closed and accepted. Later ACK trust/reconciliation work may advance only through separately governed, evidence-backed increments.
 
 The authoritative revalidation after PR #86 found that the ACKSobre token is documented as consultation evidence, while the current WS Consultas v1.9 contract does not prove a token-input operation for obtaining the second CFE response. That path therefore remains fail-closed.
-
-The same revalidation does provide sufficient evidence to verify XMLDSig signature mathematics separately from certificate-chain trust, which is the bounded purpose of PR #87.
-
-The earlier revalidation established that DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed material does not provide an authoritative algorithm for choosing the next value. Automatic allocation therefore remains out of scope instead of being guessed.
-
-The earlier Reporte Diario revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
-
-After PR #87 is accepted, candidate boundaries include:
-
-1. X.509 chain/trust-anchor validation for DGI ACK certificates only if authoritative trust-anchor and certificate-policy evidence is sufficient;
-2. document-level CFE response consultation only if DGI publishes a sufficient authoritative operation/input/correlation contract;
-3. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
-4. S08 recovery only if authoritative evidence proves a safe action rather than merely the rejection reason;
-5. grouping/batching policy only when product requirements are governed independently of DGI wire semantics;
-6. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
-7. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
-8. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
-9. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
-10. Production transport only after explicit technical and operational review.
-
-## Known non-blocking modernization debt
-
-Green builds may still report advisory legacy debt including deprecated/outdated dependencies, Application Insights legacy APIs, old ASP.NET abstractions, provider/design packages, xUnit deprecation notices, nullable/analyzer warnings, obsolete cryptography APIs and Windows-only `System.Drawing` usage.
-
-These items remain inventory for later bounded modernization slices and must not be upgraded wholesale without compatibility analysis.
-
-## Repository governance at this checkpoint
-
-- accepted `main`: `63c63f44b91d6fea6fb073af8c3e3d7841aa4c63`;
-- accepted merge: PR #86 `feat(fiscal): add ACKSobre observation`;
-- approved PR #86 head: `1401fb392d2baa348b6ae20946915636875e9342`;
-- exact-head PR #86 Clean Architecture Guard #400 (`34744587630`): SUCCESS;
-- post-merge Clean Architecture Guard #401 (`34755766824`): SUCCESS;
-- open governed increment: PR #87 `feat(fiscal): verify ACKSobre XMLDSig`;
-- PR #87 remains pending until exact-head CI is green and human review is complete;
-- one atomic slice per PR remains required;
-- Blueprint 0.5.2 consumer adoption remains DEFER;
-- merge requires final exact-head green CI and explicit human approval.
