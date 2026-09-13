@@ -22,6 +22,7 @@ public sealed record FiscalCfeEnvelopeBatchPlanResult(
 
 /// <summary>
 /// Plans deterministic local product batches from an explicit caller-supplied CFE candidate set.
+/// Certificate groups use first-seen certificate order and preserve caller order inside each group.
 /// This boundary does not discover pending documents, allocate Idemisor values, package XML,
 /// persist envelopes, dispatch to DGI or interpret DGI responses. It only respects the already
 /// governed Sobre constraints that one batch contains at most 250 CFE and never mixes signing certificates.
