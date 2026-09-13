@@ -34,7 +34,7 @@ public sealed class FiscalCfeEnvelopeBatchPlanningArchitectureTests
     }
 
     [Fact]
-    public void Documentation_marks_grouping_as_product_policy_and_keeps_DGI_readiness_blocked()
+    public void Documentation_marks_grouping_as_accepted_product_policy_and_keeps_DGI_readiness_blocked()
     {
         var docs = Read("documentation/blueprint-api-implementation/63_FISCAL_SOBRE_BATCH_PLANNING.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -45,7 +45,19 @@ public sealed class FiscalCfeEnvelopeBatchPlanningArchitectureTests
         Assert.Contains("does not allocate `Idemisor`", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("does not discover pending", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
-        Assert.Contains("business grouping/batching policy for CFE into Sobre", checkpoint, StringComparison.Ordinal);
+
+        Assert.Contains("main@5fcc1ea45cfa91e069eba62bcb887813646364af", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #93", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Deterministic local Sobre batch planning", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #93 deterministic Sobre batch-planning boundary", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("caller-selected CFE only", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("first-seen certificate-group ordering", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("caller order preserved inside each certificate group", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("max 250 CFE per batch", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("does not discover pending CFE", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("does not allocate `Idemisor`", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("63_FISCAL_SOBRE_BATCH_PLANNING.md", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);

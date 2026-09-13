@@ -4,10 +4,10 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-13
 
-Accepted functional baseline: `main@c5d0c1220ca1c707417092aa905ee8f279056cc6`
-(merge of PR #91, `feat(fiscal): validate ACK certificate against PKI Uruguay trust`).
+Accepted functional baseline: `main@5fcc1ea45cfa91e069eba62bcb887813646364af`
+(merge of PR #93, `feat(fiscal): plan deterministic Sobre batches`).
 
-There is no pending governed increment currently open. PR #91 is part of the accepted baseline after exact-head validation, explicit human merge approval and successful post-merge validation on `main`.
+There is no pending governed increment currently open. PR #93 is part of the accepted baseline after exact-head validation, explicit human merge approval and successful post-merge validation on `main`.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -21,7 +21,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #91. Its post-merge Clean Architecture Guard #434, run `34775853267`, completed successfully on exact `main@c5d0c1220ca1c707417092aa905ee8f279056cc6` for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction jobs. Build completed with 0 errors; ArchitectureTests completed **182/182 passed**, CrossCuttingTests **316/316 passed**, legacy UnitTest **21/21 passed**, and the provider-real suite completed **221/221 passed**.
+The accepted `main` commit is the GitHub-verified merge of PR #93. Its post-merge Clean Architecture Guard #439, run `34782977033`, completed successfully on exact `main@5fcc1ea45cfa91e069eba62bcb887813646364af`, push event, attempt 1, with no rerun. NuGet vulnerability gating passed; Build completed with **0 errors**; ArchitectureTests completed **185/185 passed**, CrossCuttingTests **321/321 passed**, legacy UnitTest **21/21 passed**, and the PostgreSQL/MySQL provider-real suite completed **221/221 passed**. The provider-real run used PostgreSQL 16.15 and MySQL 8.4.11; container setup and teardown passed.
 
 ## Accepted major v1 boundaries
 
@@ -71,8 +71,9 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 42. Append-only ACKSobre XMLDSig cryptographic verification with exact source-response SHA-256 lineage, bounded whole-document signature policy, embedded X.509 evidence, provider-real replay/concurrency convergence and explicit `CertificateTrustValidated = false` trust boundary on the signature-math record.
 43. Read-only authoritative DGI CFE-state consultation through `ws_consultas / EFACCONSULTARESTADOCFE` using the already durable `TipoCFE + Serie + Nro` identity, append-only exact response XML/SHA-256 evidence, provider-real replay protection and no mutation or invented `EstadoCFE` semantics.
 44. Append-only PKI Uruguay certificate-trust validation for an already verified ACKSobre signature, with exact embedded-certificate SHA-256 continuity, externally configured and SHA-256-pinned CA material, .NET `CustomRootTrust`, online `EntireChain` revocation checking, provider-real replay/concurrency convergence, `PkiUruguayTrustValidated = true` and explicit `DgiIdentityValidated = false`.
+45. Deterministic local Sobre batch planning for explicitly caller-selected, already-signed CFE: exact certificate thumbprint + serial-number grouping, first-seen certificate-group ordering, caller order preserved inside each certificate group, max 250 CFE per batch and local-only `BatchOrdinal`, without pending-document discovery, `Idemisor` allocation, XML packaging, persistence, transport or DGI-state interpretation.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted implementation record `62_FISCAL_SOBRE_ACK_CERTIFICATE_TRUST.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted implementation record `63_FISCAL_SOBRE_BATCH_PLANNING.md`.
 
 ## Accepted Reporte Diario boundary after PR #82
 
@@ -120,12 +121,20 @@ The accepted reconciliation safety flags remain explicit: `AutomaticReliquidatio
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Accepted Sobre boundary after PR #91
+## Accepted Sobre boundary after PR #93
 
 The accepted CFE Sobre path now reaches:
 
 ```text
 durable signed CFE artifacts
+-> explicit caller-selected CFE candidate sequence
+-> deterministic local Sobre batch planning
+-> exact certificate thumbprint + serial-number grouping
+-> first-seen certificate-group ordering
+-> caller order preserved inside each certificate group
+-> max 250 CFE per batch
+-> local BatchOrdinal only
+-> each planned batch enters the existing packaging boundary
 -> signed CFE hash/XSD revalidation
 -> explicit ordered 1..250 CFE selection
 -> same-certificate guard
@@ -244,6 +253,35 @@ The implementation evidence introduced by PR #91 is recorded in:
 
 Its historical document status remains `GOVERNED IMPLEMENTATION CANDIDATE`; this checkpoint reconciliation does not rewrite numbered historical evidence. A valid PKI Uruguay chain plus online revocation does not by itself prove DGI legal signer identity, DGI-specific end-entity habilitation, or a DGI-specific OCSP/CRL endpoint policy.
 
+## Accepted PR #93 deterministic Sobre batch-planning boundary
+
+PR #93 adds a bounded local **product policy** before the existing Sobre packaging boundary.
+
+The accepted capability is deliberately constrained to **caller-selected CFE only**:
+
+- the caller supplies an explicit ordered set of `FiscalDocumentId` values;
+- every selected CFE must already have a durable signed artifact;
+- duplicate fiscal-document ids are rejected before repository reads;
+- candidates are grouped by the exact durable certificate thumbprint + serial-number pair;
+- certificate groups use first-seen certificate-group ordering from the caller input;
+- caller order preserved inside each certificate group;
+- each certificate group is split deterministically with max 250 CFE per batch;
+- returned `BatchOrdinal` values are local-only and have no DGI meaning;
+- the same input and unchanged durable certificate evidence produce the same ordered plan.
+
+The accepted planner explicitly **does not discover pending CFE**, does not choose business/fiscal eligibility, does not allocate `Idemisor`, does not create or reserve a DGI Sobre identity, does not generate `EnvioCFE` XML, does not persist a Sobre or batch plan, does not call DGI, does not retry transport, does not interpret ACKSobre, `EstadoCFE` or S08, and does not mutate sale, accounting, inventory or fiscal-document state.
+
+Each returned batch must still pass through the previously accepted packaging, durable identity and transport boundaries. DGI constraints already accepted by the repository remain unchanged: one Sobre contains `1..250` CFE/CFC and all CFE in the same Sobre use the same certificate. No additional DGI batching algorithm is inferred from those constraints.
+
+The implementation evidence introduced by PR #93 is recorded in:
+`documentation/blueprint-api-implementation/63_FISCAL_SOBRE_BATCH_PLANNING.md`.
+
+Its historical document status remains `GOVERNED IMPLEMENTATION CANDIDATE`; this checkpoint reconciliation records the accepted post-merge state without rewriting that historical implementation record.
+
+Formal traditional DGI Testing readiness remains exactly:
+
+**BLOCKED BY MISSING PRODUCT CAPABILITIES**
+
 ## DGI technical baseline currently used by the consumer
 
 The governed fiscal lineage uses official DGI artifacts already pinned/reviewed in the numbered implementation records, including:
@@ -263,11 +301,14 @@ The governed fiscal lineage uses official DGI artifacts already pinned/reviewed 
 - `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for current consultation methods, including the accepted `EFACCONSULTARESTADOCFE` request identity `TipoCFE + Serie + Nro`;
 - DGI material tying recognized eFactura certificates to certification providers accredited before UCE;
 - UCE evidence defining ACRN as the PKI Uruguay root of trust, publishing the national trust-list boundary and requiring relying parties to validate certificate validity/revocation;
-- DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the accepted reconciliation-policy boundary.
+- DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the accepted reconciliation-policy boundary;
+- accepted DGI Sobre constraints that one Sobre contains `1..250` CFE/CFC and all CFE in one Sobre use the same certificate.
 
 The accepted PKI Uruguay trust boundary proves chain/revocation validation against explicitly pinned external trust material. It does not prove that the ACK end-entity certificate is legally authorized by DGI for a particular identity or role, so `DgiIdentityValidated = false` remains mandatory.
 
 The accepted `EFACCONSULTARESTADOCFE` boundary can return Sobre consultation parameters as evidence for the first Sobre received by DGI for the queried CFE. The reviewed authoritative material still does not establish a web-service operation whose input is the ACKSobre `Token` and whose output is the second/document-level CFE response. That capability remains fail-closed rather than invented.
+
+The accepted local batch planner is a consumer product policy only. The DGI 1..250 and same-certificate constraints do not establish automatic candidate discovery, fiscal eligibility selection, `Idemisor` allocation, pending ordering, retry behavior or any additional wire semantics.
 
 The gzip+Base64 routine reviewed in current Web Services Externos Consultas is consultation-specific evidence. It is not used to invent compression for `EFACRECEPCIONSOBRE` when the DGI reception document explicitly shows direct CDATA framing.
 
@@ -298,7 +339,8 @@ The accepted baseline does not complete:
 - automatic retry from ambiguous Reporte Diario `Unknown` state;
 - DGI-specific legal signer identity/certificate habilitation policy beyond accepted PKI Uruguay chain and online revocation validation;
 - automatic `Idemisor` allocation/reservation;
-- business grouping/batching policy for CFE into Sobre;
+- automatic pending-CFE discovery or business/fiscal eligibility selection for Sobre batch planning;
+- persisted batch-plan lifecycle or automatic conversion of the local batching policy into a pending-work selector;
 - authoritative semantic interpretation of the returned `EstadoCFE` taxonomy and any resulting local lifecycle transition;
 - document-level CFE response consultation/interpretation after an AS token because no governed token-input operation has been proven;
 - `S08` interpretation/recovery semantics beyond preserving the reason;
@@ -320,9 +362,11 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #91 is closed and accepted. Later CFE response interpretation, DGI-specific identity, recovery and product-policy work may advance only through separately governed, evidence-backed increments.
+PR #93 is closed and accepted. Later CFE response interpretation, DGI-specific identity, recovery and product-capability work may advance only through separately governed, evidence-backed increments.
 
-The accepted PR #91 boundary now validates the already verified ACKSobre certificate against explicitly pinned external PKI Uruguay trust material with online entire-chain revocation checking. It deliberately stops at `PkiUruguayTrustValidated = true` and `DgiIdentityValidated = false`; no DGI-specific end-entity identity or habilitation rule is inferred.
+The accepted PR #93 boundary now provides deterministic local batching of explicitly caller-selected, already-signed CFE. It respects the accepted same-certificate and 250-CFE envelope constraints while deliberately stopping before candidate discovery, `Idemisor`, XML packaging, persistence, transport and response semantics.
+
+The accepted PR #91 boundary continues to validate the already verified ACKSobre certificate against explicitly pinned external PKI Uruguay trust material with online entire-chain revocation checking. It deliberately stops at `PkiUruguayTrustValidated = true` and `DgiIdentityValidated = false`; no DGI-specific end-entity identity or habilitation rule is inferred.
 
 The authoritative revalidation accepted `EFACCONSULTARESTADOCFE` as a read-only query by durable `TipoCFE + Serie + Nro`, including raw `EstadoCFE`, `IdEmisor`, `IdReceptor` and optional Sobre consultation parameters. It did not establish an authoritative taxonomy that permits local lifecycle transitions from `EstadoCFE`.
 
@@ -332,19 +376,18 @@ DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed mate
 
 The Reporte Diario revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
 
-Candidate boundaries after PR #91 include:
+Candidate boundaries after PR #93 include:
 
 1. DGI-specific legal signer identity/certificate habilitation only if authoritative end-entity policy evidence is sufficient;
 2. token-input document-level CFE response consultation only if DGI publishes a sufficient authoritative operation/input/output/correlation contract;
 3. semantic interpretation of `EstadoCFE` only if an authoritative state taxonomy and safe local transition policy are proven;
 4. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
 5. S08 recovery only if authoritative evidence proves a safe action rather than merely the rejection reason;
-6. grouping/batching policy only when product requirements are governed independently of DGI wire semantics;
-7. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
-8. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
-9. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
-10. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
-11. Production transport only after explicit technical and operational review.
+6. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
+7. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
+8. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
+9. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
+10. Production transport only after explicit technical and operational review.
 
 ## Known non-blocking modernization debt
 
@@ -354,11 +397,11 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `c5d0c1220ca1c707417092aa905ee8f279056cc6`;
-- accepted merge: PR #91 `feat(fiscal): validate ACK certificate against PKI Uruguay trust`;
-- approved PR #91 head: `f8be6812b94dcf06403c7d5d05956a328d8b0970`;
-- exact-head PR #91 Clean Architecture Guard #433 (`34774177975`): SUCCESS;
-- post-merge Clean Architecture Guard #434 (`34775853267`): SUCCESS;
+- accepted `main`: `5fcc1ea45cfa91e069eba62bcb887813646364af`;
+- accepted merge: PR #93 `feat(fiscal): plan deterministic Sobre batches`;
+- approved PR #93 head: `1f8d901bf2acfd74536189b2517ef7992cebf38e`;
+- exact-head PR #93 Clean Architecture Guard #438 (`34780560192`): SUCCESS;
+- post-merge Clean Architecture Guard #439 (`34782977033`): SUCCESS, push on exact accepted merge SHA, attempt 1, no rerun;
 - no governed increment is currently open;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;

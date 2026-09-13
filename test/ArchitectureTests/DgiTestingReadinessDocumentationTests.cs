@@ -18,11 +18,11 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@c5d0c1220ca1c707417092aa905ee8f279056cc6",
+            "main@5fcc1ea45cfa91e069eba62bcb887813646364af",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #91",
+            "merge of PR #93",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -30,7 +30,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #91 is part of the accepted baseline",
+            "PR #93 is part of the accepted baseline",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -103,6 +103,14 @@ public sealed class DgiTestingReadinessDocumentationTests
             StringComparison.Ordinal);
         Assert.Contains(
             "DgiIdentityValidated = false",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Deterministic local Sobre batch planning",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "63_FISCAL_SOBRE_BATCH_PLANNING.md",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
