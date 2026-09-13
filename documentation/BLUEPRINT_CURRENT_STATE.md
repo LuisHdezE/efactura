@@ -4,11 +4,11 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-12
 
-Accepted functional baseline: `main@700d0a424d6a79b52844b5fa99446d49623c758f`
-(merge of PR #81, `feat(fiscal): add daily report later-state observation`).
+Accepted functional baseline: `main@6fd1ae6927bf3789015d3bb659bf094283ec7095`
+(merge of PR #82, `feat(fiscal): add daily report reconciliation policy`).
 
-Current pending governed increment: PR #82 `feat(fiscal): add daily report reconciliation policy`.
-PR #82 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
+Current pending governed increment: PR #83 `feat(fiscal): add Sobre v05 packaging`.
+PR #83 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -22,7 +22,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #81. Its post-merge Clean Architecture Guard #339, run `34731471587`, completed successfully for both Build/Architecture and PostgreSQL/MySQL transaction jobs.
+The accepted `main` commit is the GitHub-verified merge of PR #82. Its post-merge Clean Architecture Guard #357, run `34733390905`, completed successfully for both Build/Architecture and PostgreSQL/MySQL transaction jobs.
 
 ## Accepted major v1 boundaries
 
@@ -64,10 +64,11 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 34. Chaining of discovered receiver evidence back into the accepted original-response consultation target reader without rewriting the source transport row.
 35. Append-only observation of DGI Reporte Diario later states `DR`, `ER` and `FR` for an exact durable `IdReceptor`.
 36. Provider-real PostgreSQL/MySQL later-state persistence with raw `Ackconsultaenviosreporte`, SHA-256 evidence, operation replay and proof that root/revision transport evidence remains unchanged.
+37. Read-only reconciliation policy mapping `DR -> Consistent`, `ER -> ManualReviewRequired`, `FR -> ReliquidatedExternally`, always with automatic reliquidation and local mutation disabled and fail-closed timestamp ambiguity handling.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `54_FISCAL_DAILY_REPORT_LATER_STATE_OBSERVATION.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `55_FISCAL_DAILY_REPORT_RECONCILIATION_POLICY.md`.
 
-## Accepted Reporte Diario boundary after PR #81
+## Accepted Reporte Diario boundary after PR #82
 
 The accepted Reporte Diario path now reaches:
 
@@ -97,6 +98,8 @@ immutable daily reconciliation evidence
 -> append-only original ACKRepDiario consultation evidence
 -> EFACCONSULTARENVIOSREPORTE for exact known IdReceptor
 -> append-only DR | ER | FR later-state observation
+-> read-only reconciliation assessment
+-> Consistent | ManualReviewRequired | ReliquidatedExternally
 ```
 
 For an ordinary BR, corrected resubmission preserves the DGI `SecEnvio` while creating new immutable local correction evidence. `R05` cannot authorize this path and remains fail-closed.
@@ -105,30 +108,31 @@ A known durable `IdReceptor` can be used to obtain the original `ACKRepDiario` t
 
 For an ambiguous `Unknown` delivery with no receiver id, the accepted receiver-discovery boundary queries DGI by authoritative `FechaResumen + Secuencia`, subtracts receiver ids already accounted for under the same local fiscal identity, and persists only when exactly one unaccounted receiver remains. It never selects by timestamp or returned collection order.
 
-For an exact known receiver, the accepted later-state boundary can persist `DR` (Processed), `ER` (InManagement) and `FR` (Reliquidated) observations with raw DGI evidence. It does not convert those observations into automatic local mutation, reliquidation commands or accounting side effects.
+For an exact known receiver, the accepted later-state boundary can persist `DR` (Processed), `ER` (InManagement) and `FR` (Reliquidated) observations with raw DGI evidence. The accepted reconciliation policy interprets them locally without authorizing automatic reliquidation or local mutation. `ER` remains a manual-review boundary because current evidence does not expose authoritative inconsistency-detail retrieval through the governed consultation contract.
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Pending PR #82 boundary, not yet accepted
+## Pending PR #83 boundary, not yet accepted
 
-PR #82 introduces a bounded local reconciliation policy over the accepted append-only DR/ER/FR observation evidence.
+PR #83 introduces bounded local **Sobre v05 packaging** for already-signed CFE artifacts.
 
 The candidate:
 
-- reads the latest durable observation for an exact `OrganizationId + DgiReceiverId`;
-- maps `DR` to `Consistent` because DGI states that no inconsistencies were identified;
-- maps `ER` to `ManualReviewRequired` because DGI requires the issuer to analyze inconsistencies and only reliquidate if appropriate;
-- maps `FR` to `ReliquidatedExternally`, recording the external meaning without mutating local lineage or accounting;
-- always returns `AutomaticReliquidationAuthorized = false`;
-- always returns `AutomaticLocalMutationAuthorized = false`;
-- performs no network call, write transaction, version allocation, signing or dispatch;
-- preserves root submission or same-`SecEnvio` BR correction target identity in the assessment;
-- fails closed when no durable DR/ER/FR observation exists or persisted later-state evidence is outside the governed set.
+- revalidates durable signed CFE hash and pinned signed-CFE XSD evidence;
+- accepts an explicit ordered set of 1..250 unique fiscal document ids;
+- requires all included CFE to use the same certificate;
+- verifies the actual embedded public `ds:X509Certificate` against durable thumbprint/serial evidence;
+- requires every included CFE issuer RUC to match the Sobre `RUCEmisor`;
+- builds deterministic `EnvioCFE version="1.0"` / `Caratula version="1.0"` with explicit `RutReceptor`, `RUCEmisor`, `Idemisor`, `CantCFE`, `Fecha` and `X509Certificate`;
+- removes only the standalone XML declaration before embedding each signed CFE and does not reserialize the signed root fragment;
+- validates the final envelope against a local byte-pinned `EnvioCFE.xsd` closure;
+- returns XML, SHA-256, certificate identity and schema evidence;
+- performs no persistence, network submission, ACK parsing, retry, state mutation or private-key access.
 
 The detailed pending evidence is recorded in:
-`documentation/blueprint-api-implementation/55_FISCAL_DAILY_REPORT_RECONCILIATION_POLICY.md`.
+`documentation/blueprint-api-implementation/56_FISCAL_SOBRE_V05_PACKAGING.md`.
 
-This section describes the open candidate only. It does not promote PR #82 into the accepted baseline.
+This section describes the open candidate only. It does not promote PR #83 into the accepted baseline.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -139,8 +143,9 @@ The governed fiscal lineage uses official DGI artifacts already pinned/reviewed 
 - `Formato Reporte CFE v13.2`;
 - `Formato Mensajes Respuesta v19`;
 - `XSDs_FE_V1.44.2`;
+- byte-pinned `EnvioCFE.xsd` evidence for pending PR #83, recovered from the same immutable mirror procedure already used for governed schema bytes;
 - `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for original-response consultation, receiver discovery and later-state observation;
-- DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the pending reconciliation-policy boundary.
+- DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the accepted reconciliation-policy boundary.
 
 No XML element, namespace, mandatory-field rule, sequence rule, response state, Testing threshold, signature requirement, endpoint or SOAPAction may be inferred from memory, legacy demo code or provider examples when authoritative DGI evidence is required.
 
@@ -156,7 +161,7 @@ External DGI Testing acceptance has not been established in this repository, and
 
 ## Explicitly not complete
 
-The accepted baseline and pending PR #82 do not complete:
+The accepted baseline and pending PR #83 do not complete:
 
 - operational correction-note command/API integration into the normal sale workflow;
 - export CFE families and export-specific immutable evidence;
@@ -168,7 +173,8 @@ The accepted baseline and pending PR #82 do not complete:
 - local supersession/accounting mutation after observed `FR`;
 - automatic retry from ambiguous Reporte Diario `Unknown` state;
 - independent cryptographic validation of DGI ACK signatures;
-- Sobre v05 packaging/submission;
+- durable Sobre persistence and `Idemisor` allocation/replay semantics;
+- Sobre v05 compression/transport/submission and ACK lifecycle;
 - authoritative external DGI Testing evidence;
 - Production DGI/provider transport enablement;
 - OCSP/CRL and DGI-specific certificate habilitation verification;
@@ -187,16 +193,19 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #82 must close before any action-producing Reporte Diario reconciliation work advances.
+PR #83 must close before Sobre transport/persistence work advances.
 
-After PR #82 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+The attempted next-slice revalidation after PR #82 found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities therefore remain fail-closed rather than inferred.
 
-1. authoritative ER inconsistency-detail retrieval/interpretation if DGI exposes sufficient evidence;
-2. a separately governed human/operational decision boundary before any `SecEnvio + 1` reliquidation command;
-3. separately evidenced `R05` sequence recovery;
-4. Sobre v05 packaging/submission;
-5. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
-6. Production transport only after explicit technical and operational review.
+After PR #83 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+
+1. durable Sobre identity/persistence and replay semantics, including an evidence-backed `Idemisor` allocation rule;
+2. authoritative Sobre v05 transport framing/submission if current DGI service evidence is sufficient;
+3. DGI Sobre response/ACK persistence and state model as a separate transport slice;
+4. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
+5. separately evidenced `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
+6. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
+7. Production transport only after explicit technical and operational review.
 
 ## Known non-blocking modernization debt
 
@@ -206,13 +215,13 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `700d0a424d6a79b52844b5fa99446d49623c758f`;
-- accepted merge: PR #81 `feat(fiscal): add daily report later-state observation`;
-- approved PR #81 head: `1ee48f490acc5f5af904edcf02c59c67aa3348dd`;
-- exact-head PR #81 Clean Architecture Guard #338 (`34730955225`): SUCCESS;
-- post-merge Clean Architecture Guard #339 (`34731471587`): SUCCESS;
-- open governed increment: PR #82 `feat(fiscal): add daily report reconciliation policy`;
-- PR #82 remains pending until exact-head CI is green and human review is complete;
+- accepted `main`: `6fd1ae6927bf3789015d3bb659bf094283ec7095`;
+- accepted merge: PR #82 `feat(fiscal): add daily report reconciliation policy`;
+- approved PR #82 head: `dffb00b8ddc0b969e843a15ee89271cfe4a19855`;
+- exact-head PR #82 Clean Architecture Guard #356 (`34732631497`): SUCCESS;
+- post-merge Clean Architecture Guard #357 (`34733390905`): SUCCESS;
+- open governed increment: PR #83 `feat(fiscal): add Sobre v05 packaging`;
+- PR #83 remains pending until exact-head CI is green and human review is complete;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;
 - merge requires final exact-head green CI and explicit human approval.
