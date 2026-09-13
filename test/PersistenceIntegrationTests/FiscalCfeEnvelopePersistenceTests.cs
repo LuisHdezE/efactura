@@ -4,6 +4,7 @@ using EFactura.Application.Common.Errors;
 using EFactura.Application.Fiscal;
 using Infrastructure.Persistence.V1;
 using Infrastructure.Persistence.V1.Transactions;
+using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Models;
 using Infrastructure.Persistence.V1.Write.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -155,18 +156,65 @@ public sealed class FiscalCfeEnvelopePersistenceTests
         Assert.Equal(0, stored.CreatedAt.Millisecond);
     }
 
+    [Theory]
+    [InlineData(V1DatabaseProvider.PostgreSql)]
+    [InlineData(V1DatabaseProvider.MySql)]
+    public async Task Provider_recovers_concurrent_same_identity_as_single_durable_replay(V1DatabaseProvider provider)
+    {
+        await using var database = await TestDatabase.CreateAsync(provider);
+        if (database is null) return;
+
+        var documentId = Guid.Parse("94000000-0000-0000-0000-000000000001");
+        using var barrier = new Barrier(2);
+        var builder = new CoordinatedEnvelopeBuilder(barrier);
+
+        await using var firstContext = database.CreateContext();
+        await using var secondContext = database.CreateContext();
+        var firstUseCase = UseCase(
+            firstContext,
+            new FakeSignedArtifactRepository(Artifact(documentId)),
+            builder);
+        var secondUseCase = UseCase(
+            secondContext,
+            new FakeSignedArtifactRepository(Artifact(documentId)),
+            builder);
+
+        var command = new PersistFiscalCfeEnvelopeCommand(
+            OrganizationId,
+            ReceiverRut,
+            IssuerRuc,
+            3004,
+            CreatedAt,
+            [documentId],
+            "sobre-concurrent-op-a");
+
+        var results = await Task.WhenAll(
+            firstUseCase.ExecuteAsync(command),
+            secondUseCase.ExecuteAsync(command with { OperationId = "sobre-concurrent-op-b" }));
+
+        Assert.Single(results.Where(x => !x.Replayed));
+        Assert.Single(results.Where(x => x.Replayed));
+        Assert.Single(results.Select(x => x.EnvelopeId).Distinct());
+        Assert.Equal(results[0].EnvelopeSha256, results[1].EnvelopeSha256);
+
+        await using var verify = database.CreateContext();
+        Assert.Equal(1, await verify.Set<V1FiscalCfeEnvelopeRecord>().CountAsync());
+    }
+
     private static PersistFiscalCfeEnvelopeUseCase UseCase(
-        Infrastructure.Persistence.V1.Write.V1PersistenceDbContext context,
-        FakeSignedArtifactRepository artifacts)
+        V1PersistenceDbContext context,
+        FakeSignedArtifactRepository artifacts,
+        IFiscalCfeEnvelopeBuilder? builder = null)
     {
         var packager = new PackageFiscalCfeEnvelopeUseCase(
             artifacts,
             new FakeSignedCfeValidator(),
-            new FakeEnvelopeBuilder(),
+            builder ?? new FakeEnvelopeBuilder(),
             new FakeEnvelopeValidator());
         return new PersistFiscalCfeEnvelopeUseCase(
             packager,
             new EfFiscalCfeEnvelopeRepository(context),
+            new EfFiscalCfeEnvelopePersistenceConflictClassifier(),
             new EfTransactionManager(context),
             new EfUnitOfWork(context));
     }
@@ -235,6 +283,19 @@ public sealed class FiscalCfeEnvelopePersistenceTests
             var ids = string.Join(",", request.Sources.Select(x => x.FiscalDocumentId));
             var xml = $"<EnvioCFE idemisor=\"{request.SenderEnvelopeId}\" fecha=\"{request.CreatedAt:O}\" ids=\"{ids}\" />";
             return new(xml, "thumb-envelope-persist", "serial-envelope-persist");
+        }
+    }
+
+    private sealed class CoordinatedEnvelopeBuilder(Barrier barrier) : IFiscalCfeEnvelopeBuilder
+    {
+        private readonly FakeEnvelopeBuilder _inner = new();
+
+        public FiscalCfeEnvelopeBuildArtifact Build(FiscalCfeEnvelopeBuildRequest request)
+        {
+            if (!barrier.SignalAndWait(TimeSpan.FromSeconds(30)))
+                throw new TimeoutException("Concurrent Sobre persistence test did not reach the serialization barrier.");
+
+            return _inner.Build(request);
         }
     }
 
