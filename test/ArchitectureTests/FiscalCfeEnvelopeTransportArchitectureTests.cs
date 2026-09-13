@@ -49,6 +49,7 @@ public sealed class FiscalCfeEnvelopeTransportArchitectureTests
     {
         var repository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfFiscalCfeEnvelopeSubmissionRepository.cs");
         var model = Read("src/Infrastructure/Persistence/V1/Write/Models/FiscalCfeEnvelopeRecords.cs");
+        var customizer = Read("src/Infrastructure/Persistence/V1/V1PersistenceEnvelopeModelCustomizer.cs");
         var migration = Read("src/Infrastructure/Persistence/V1/Migrations/20260913052000_V1FiscalCfeEnvelopeTransport.cs");
 
         Assert.Contains("FOR UPDATE", repository, StringComparison.Ordinal);
@@ -62,9 +63,14 @@ public sealed class FiscalCfeEnvelopeTransportArchitectureTests
         Assert.Contains("UX_v1_fces_envelope", model, StringComparison.Ordinal);
         Assert.Contains("ResponseSha256", model, StringComparison.Ordinal);
 
+        Assert.Contains("FK_v1_fces_envelope", customizer, StringComparison.Ordinal);
+        Assert.Contains("DeleteBehavior.Restrict", customizer, StringComparison.Ordinal);
+
         Assert.Contains("v1_fiscal_cfe_envelope_submissions", migration, StringComparison.Ordinal);
         Assert.Contains("UX_v1_fces_operation", migration, StringComparison.Ordinal);
         Assert.Contains("UX_v1_fces_envelope", migration, StringComparison.Ordinal);
+        Assert.Contains("FK_v1_fces_envelope", migration, StringComparison.Ordinal);
+        Assert.Contains("ReferentialAction.Restrict", migration, StringComparison.Ordinal);
     }
 
     [Fact]
