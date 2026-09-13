@@ -57,7 +57,8 @@ public sealed class EfFiscalCfeEnvelopeRepository : IFiscalCfeEnvelopeRepository
             ReceiverRut = envelope.ReceiverRut,
             IssuerRuc = envelope.IssuerRuc,
             SenderEnvelopeId = envelope.SenderEnvelopeId,
-            CreatedAt = envelope.CreatedAt,
+            CreatedAtUtc = envelope.CreatedAt.ToUniversalTime(),
+            CreatedAtOffsetMinutes = checked((int)envelope.CreatedAt.Offset.TotalMinutes),
             FiscalDocumentIdsJson = JsonSerializer.Serialize(envelope.FiscalDocumentIds),
             OperationId = envelope.OperationId,
             CfeCount = envelope.CfeCount,
@@ -85,8 +86,17 @@ public sealed class EfFiscalCfeEnvelopeRepository : IFiscalCfeEnvelopeRepository
             throw new InvalidDataException("Persisted Sobre CFE identity list is invalid JSON.", ex);
         }
 
-        if (ids.Length != record.CfeCount || ids.Length is < 1 or > 250 || ids.Any(x => x == Guid.Empty))
-            throw new InvalidDataException("Persisted Sobre CFE identity evidence is inconsistent.");
+        if (ids.Length != record.CfeCount
+            || ids.Length is < 1 or > 250
+            || ids.Any(x => x == Guid.Empty)
+            || ids.Distinct().Count() != ids.Length
+            || record.CreatedAtOffsetMinutes is < -840 or > 840)
+        {
+            throw new InvalidDataException("Persisted Sobre identity evidence is inconsistent.");
+        }
+
+        var createdAt = record.CreatedAtUtc.ToUniversalTime()
+            .ToOffset(TimeSpan.FromMinutes(record.CreatedAtOffsetMinutes));
 
         return new StoredFiscalCfeEnvelope(
             record.Id,
@@ -94,7 +104,7 @@ public sealed class EfFiscalCfeEnvelopeRepository : IFiscalCfeEnvelopeRepository
             record.ReceiverRut,
             record.IssuerRuc,
             record.SenderEnvelopeId,
-            record.CreatedAt,
+            createdAt,
             ids,
             record.OperationId,
             record.CfeCount,
