@@ -1,0 +1,192 @@
+namespace EFactura.Application.Fiscal;
+
+public enum FiscalDailyReportReconciliationDisposition
+{
+    Consistent = 1,
+    ManualReviewRequired = 2,
+    ReliquidatedExternally = 3
+}
+
+public interface IFiscalDailyReportLatestObservationReader
+{
+    Task<IReadOnlyList<StoredFiscalDailyReportLaterStateObservation>> GetLatestCandidatesByReceiverIdAsync(
+        string organizationId,
+        string dgiReceiverId,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed record AssessFiscalDailyReportReconciliationCommand(
+    string OrganizationId,
+    string DgiReceiverId);
+
+public sealed record FiscalDailyReportReconciliationAssessment(
+    Guid ObservationId,
+    FiscalDailyReportConsultationTargetKind TargetKind,
+    Guid TargetId,
+    string OrganizationId,
+    string IssuerRuc,
+    DateOnly SummaryDate,
+    int Sequence,
+    int? LocalRevision,
+    string DgiReceiverId,
+    FiscalDailyReportLaterState ObservedState,
+    string DgiStateCode,
+    FiscalDailyReportReconciliationDisposition Disposition,
+    string InterpretationCode,
+    bool RequiresManualReview,
+    bool AutomaticReliquidationAuthorized,
+    bool AutomaticLocalMutationAuthorized,
+    DateTimeOffset ObservedAtUtc);
+
+/// <summary>
+/// Interprets the latest durable DGI Reporte Diario later-state observation without mutating fiscal
+/// evidence or authorizing an automatic sequence transition. DGI DR means no inconsistencies were
+/// identified, ER requires issuer analysis and FR proves only that DGI reliquidated the prior report.
+/// ER does not by itself authorize a new report because DGI explicitly conditions reliquidation on
+/// the issuer's analysis ("si corresponde").
+/// </summary>
+public sealed class AssessFiscalDailyReportReconciliationUseCase
+{
+    private readonly IFiscalDailyReportLatestObservationReader _observations;
+
+    public AssessFiscalDailyReportReconciliationUseCase(
+        IFiscalDailyReportLatestObservationReader observations)
+    {
+        _observations = observations;
+    }
+
+    public async Task<FiscalDailyReportReconciliationAssessment> ExecuteAsync(
+        AssessFiscalDailyReportReconciliationCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        Validate(command);
+        var organizationId = command.OrganizationId.Trim();
+        var receiverId = command.DgiReceiverId.Trim();
+
+        var candidates = await _observations.GetLatestCandidatesByReceiverIdAsync(
+            organizationId,
+            receiverId,
+            cancellationToken);
+        if (candidates.Count == 0)
+        {
+            throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
+                "fiscal.daily_report.reconciliation.observation_required",
+                "Daily Report reconciliation requires durable DR, ER or FR observation evidence for the requested DGI IdReceptor.",
+                "missing_prerequisite");
+        }
+
+        var observation = candidates[0];
+        if (candidates.Count > 1 && candidates[1].ObservedAtUtc == observation.ObservedAtUtc)
+        {
+            throw PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
+                "fiscal.daily_report.reconciliation.latest_observation_ambiguous",
+                "More than one Daily Report later-state observation shares the latest durable observation timestamp.",
+                "ambiguous_persisted_evidence");
+        }
+
+        EnsureObservationIntegrity(observation, organizationId, receiverId);
+
+        var (disposition, interpretationCode, requiresManualReview) = observation.State switch
+        {
+            FiscalDailyReportLaterState.Processed => (
+                FiscalDailyReportReconciliationDisposition.Consistent,
+                "dgi_processed_no_inconsistencies",
+                false),
+            FiscalDailyReportLaterState.InManagement => (
+                FiscalDailyReportReconciliationDisposition.ManualReviewRequired,
+                "dgi_inconsistencies_require_analysis",
+                true),
+            FiscalDailyReportLaterState.Reliquidated => (
+                FiscalDailyReportReconciliationDisposition.ReliquidatedExternally,
+                "dgi_prior_report_reliquidated",
+                false),
+            _ => throw InvalidEvidence(
+                "fiscal.daily_report.reconciliation.unsupported_observation",
+                "Persisted Daily Report later-state evidence is outside the governed DR, ER or FR set.")
+        };
+
+        var targetKind = observation.RootSubmissionId.HasValue
+            ? FiscalDailyReportConsultationTargetKind.RootSubmission
+            : FiscalDailyReportConsultationTargetKind.BrCorrectionRevision;
+        var targetId = observation.RootSubmissionId ?? observation.BrCorrectionRevisionId!.Value;
+
+        return new FiscalDailyReportReconciliationAssessment(
+            observation.Id,
+            targetKind,
+            targetId,
+            observation.OrganizationId,
+            observation.IssuerRuc,
+            observation.SummaryDate,
+            observation.Sequence,
+            observation.LocalRevision,
+            observation.DgiReceiverId,
+            observation.State,
+            observation.DgiStateCode,
+            disposition,
+            interpretationCode,
+            requiresManualReview,
+            AutomaticReliquidationAuthorized: false,
+            AutomaticLocalMutationAuthorized: false,
+            observation.ObservedAtUtc);
+    }
+
+    private static void EnsureObservationIntegrity(
+        StoredFiscalDailyReportLaterStateObservation observation,
+        string organizationId,
+        string receiverId)
+    {
+        if (!string.Equals(observation.OrganizationId, organizationId, StringComparison.Ordinal) ||
+            !string.Equals(observation.DgiReceiverId, receiverId, StringComparison.Ordinal))
+        {
+            throw InvalidEvidence(
+                "fiscal.daily_report.reconciliation.observation_identity_mismatch",
+                "Persisted Daily Report later-state evidence does not match the requested organization and DGI IdReceptor.");
+        }
+
+        if (observation.RootSubmissionId.HasValue == observation.BrCorrectionRevisionId.HasValue)
+        {
+            throw InvalidEvidence(
+                "fiscal.daily_report.reconciliation.target_invalid",
+                "Persisted Daily Report later-state evidence must reference exactly one local target.");
+        }
+
+        var expectedStateCode = observation.State switch
+        {
+            FiscalDailyReportLaterState.Processed => "DR",
+            FiscalDailyReportLaterState.InManagement => "ER",
+            FiscalDailyReportLaterState.Reliquidated => "FR",
+            _ => null
+        };
+
+        if (expectedStateCode is not null &&
+            !string.Equals(observation.DgiStateCode, expectedStateCode, StringComparison.Ordinal))
+        {
+            throw InvalidEvidence(
+                "fiscal.daily_report.reconciliation.state_code_mismatch",
+                "Persisted Daily Report later-state enum and original DGI state code do not agree.");
+        }
+    }
+
+    private static void Validate(AssessFiscalDailyReportReconciliationCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        if (string.IsNullOrWhiteSpace(command.OrganizationId) || command.OrganizationId.Trim().Length > 200)
+        {
+            throw PrepareFiscalDailyReportSigningEvidenceUseCase.Validation(
+                "fiscal.daily_report.reconciliation.organization_invalid",
+                "Organization id is required and must not exceed 200 characters.");
+        }
+        if (string.IsNullOrWhiteSpace(command.DgiReceiverId) || command.DgiReceiverId.Trim().Length > 120)
+        {
+            throw PrepareFiscalDailyReportSigningEvidenceUseCase.Validation(
+                "fiscal.daily_report.reconciliation.receiver_invalid",
+                "DGI IdReceptor is required and must not exceed 120 characters.");
+        }
+    }
+
+    private static Exception InvalidEvidence(string code, string message) =>
+        PrepareFiscalDailyReportSigningEvidenceUseCase.Conflict(
+            code,
+            message,
+            "invalid_persisted_evidence");
+}

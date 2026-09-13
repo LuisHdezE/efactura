@@ -61,12 +61,13 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
     }
 
     [Fact]
-    public void Documentation_keeps_observation_separate_from_state_changing_reconciliation()
+    public void Documentation_records_PR81_as_accepted_and_keeps_PR82_policy_non_mutating()
     {
         var docs = Read("documentation/blueprint-api-implementation/54_FISCAL_DAILY_REPORT_LATER_STATE_OBSERVATION.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
 
-        Assert.Contains("Status: GOVERNED IMPLEMENTATION CANDIDATE", docs, StringComparison.Ordinal);
+        Assert.Contains("Status: ACCEPTED IMPLEMENTATION", docs, StringComparison.Ordinal);
+        Assert.Contains("main@700d0a424d6a79b52844b5fa99446d49623c758f", docs, StringComparison.Ordinal);
         Assert.Contains("`DR` -> `Processed`", docs, StringComparison.Ordinal);
         Assert.Contains("`ER` -> `InManagement`", docs, StringComparison.Ordinal);
         Assert.Contains("`FR` -> `Reliquidated`", docs, StringComparison.Ordinal);
@@ -77,10 +78,10 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.Contains("IUnitOfWork", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("Current pending governed increment: PR #81", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@7e930d8ffe1978da24ea8365b9661f74162d51b5", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("state-changing local reconciliation semantics", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("PR #81 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #82", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@700d0a424d6a79b52844b5fa99446d49623c758f", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("AutomaticReliquidationAuthorized = false", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("PR #82 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
