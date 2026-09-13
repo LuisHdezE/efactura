@@ -15,7 +15,7 @@ This increment introduces a bounded local **product policy** for planning alread
 The DGI envelope constraints already accepted by this repository remain unchanged:
 
 - one Sobre contains `1..250` CFE/CFC;
-- all CFE included in the same Sobre use the same electronic signing certificate.
+- all CFE included in the same Sobre use the same certificate.
 
 Current DGI functional material and the current FAQ continue to state those two constraints. This increment does not infer any additional DGI batching algorithm from them.
 
