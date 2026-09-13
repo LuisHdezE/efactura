@@ -31,6 +31,7 @@ public sealed class V1PersistenceEnvelopeModelCustomizer : ModelCustomizer
             entity.Property(x => x.ReceiverRut).HasMaxLength(12).IsRequired();
             entity.Property(x => x.IssuerRuc).HasMaxLength(12).IsRequired();
             entity.Property(x => x.CreatedAtUtc).HasPrecision(0);
+            entity.Property(x => x.CreatedAtOffsetMinutes).IsRequired();
             entity.Property(x => x.FiscalDocumentIdsJson).IsRequired();
             entity.Property(x => x.OperationId).HasMaxLength(120).IsRequired();
             entity.Property(x => x.CertificateThumbprint).HasMaxLength(160).IsRequired();
