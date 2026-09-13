@@ -1,6 +1,11 @@
 # 55 — Fiscal Daily Report Reconciliation Policy
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
+
+Accepted baseline: `main@6fd1ae6927bf3789015d3bb659bf094283ec7095`
+(merge of PR #82, `feat(fiscal): add daily report reconciliation policy`).
+
+Exact-head Clean Architecture Guard #356 (`34732631497`) and post-merge Clean Architecture Guard #357 (`34733390905`) completed successfully.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -97,7 +102,7 @@ No migration is required because this slice does not add mutable state or a new 
 
 ## Validation coverage
 
-The increment requires tests proving:
+The accepted increment proves:
 
 - `DR` -> `Consistent`;
 - `ER` -> `ManualReviewRequired`;
@@ -115,7 +120,7 @@ The increment requires tests proving:
 
 ## Deliberate non-scope
 
-This increment does not implement:
+This accepted increment does not implement:
 
 - retrieval or interpretation of ER inconsistency details;
 - a human approval workflow for ER remediation;
@@ -124,6 +129,8 @@ This increment does not implement:
 - R05 sequence recovery;
 - automatic retry from ambiguous `Unknown` delivery;
 - independent cryptographic validation of DGI ACK/signature evidence;
-- Sobre v05 packaging/submission;
+- Sobre v05 submission;
 - external DGI Testing acceptance;
 - Production enablement.
+
+Pending PR #83 / document 56 separately proposes local Sobre v05 packaging without persistence or transport.
