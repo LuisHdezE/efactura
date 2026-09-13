@@ -28,20 +28,29 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
     }
 
     [Fact]
-    public void Persistence_is_append_only_migration_owned_and_joins_ambient_transaction()
+    public void Persistence_is_append_only_and_uses_the_canonical_EF_unit_of_work_boundary()
     {
         var repository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfFiscalDailyReportLaterStateObservationRepository.cs");
+        var customizer = Read("src/Infrastructure/Persistence/V1/V1PersistenceLaterStateModelCustomizer.cs");
+        var configurator = Read("src/Infrastructure/Persistence/V1/V1PersistenceDatabaseConfigurator.cs");
         var migration = Read("src/Infrastructure/Persistence/V1/Migrations/20260913012000_V1FiscalDailyReportLaterStateObservation.cs");
 
-        Assert.Contains("v1_fdr_later_state_observations", repository, StringComparison.Ordinal);
-        Assert.Contains("INSERT INTO", repository, StringComparison.Ordinal);
-        Assert.Contains("SELECT", repository, StringComparison.Ordinal);
-        Assert.Contains("CurrentTransaction", repository, StringComparison.Ordinal);
-        Assert.Contains("GetDbTransaction", repository, StringComparison.Ordinal);
-        Assert.Contains("Npgsql", repository, StringComparison.Ordinal);
-        Assert.Contains("MySql", repository, StringComparison.Ordinal);
+        Assert.Contains("V1FiscalDailyReportLaterStateObservationRecord", repository, StringComparison.Ordinal);
+        Assert.Contains("AsNoTracking()", repository, StringComparison.Ordinal);
+        Assert.Contains("AddAsync", repository, StringComparison.Ordinal);
+        Assert.DoesNotContain("DbCommand", repository, StringComparison.Ordinal);
+        Assert.DoesNotContain("INSERT INTO", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("UPDATE ", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("DELETE ", repository, StringComparison.Ordinal);
+        Assert.DoesNotContain("SaveChanges", repository, StringComparison.Ordinal);
+        Assert.DoesNotContain("BeginTransaction", repository, StringComparison.Ordinal);
+
+        Assert.Contains("_baseline.Customize(modelBuilder, context)", customizer, StringComparison.Ordinal);
+        Assert.Contains("v1_fdr_later_state_observations", customizer, StringComparison.Ordinal);
+        Assert.Contains("UX_v1_fdr_later_operation", customizer, StringComparison.Ordinal);
+        Assert.Contains("IX_v1_fdr_later_receiver", customizer, StringComparison.Ordinal);
+        Assert.Contains("DeleteBehavior.Restrict", customizer, StringComparison.Ordinal);
+        Assert.Contains("V1PersistenceLaterStateModelCustomizer", configurator, StringComparison.Ordinal);
 
         Assert.Contains("v1_fdr_later_state_observations", migration, StringComparison.Ordinal);
         Assert.Contains("UX_v1_fdr_later_operation", migration, StringComparison.Ordinal);
@@ -49,7 +58,6 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.Contains("FK_v1_fdr_later_root", migration, StringComparison.Ordinal);
         Assert.Contains("FK_v1_fdr_later_br", migration, StringComparison.Ordinal);
         Assert.Contains("ReferentialAction.Restrict", migration, StringComparison.Ordinal);
-        Assert.DoesNotContain("unique: true);\n\n        migrationBuilder.CreateIndex(\n            name: \"IX_v1_fdr_later_receiver\"", migration, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -65,6 +73,8 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.Contains("`AR` and `BR` are not persisted as later-state observations", docs, StringComparison.Ordinal);
         Assert.Contains("does **not** rewrite", docs, StringComparison.Ordinal);
         Assert.Contains("Multiple observations of the same receiver are allowed", docs, StringComparison.Ordinal);
+        Assert.Contains("EF Core", docs, StringComparison.Ordinal);
+        Assert.Contains("IUnitOfWork", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
         Assert.Contains("Current pending governed increment: PR #81", checkpoint, StringComparison.Ordinal);
