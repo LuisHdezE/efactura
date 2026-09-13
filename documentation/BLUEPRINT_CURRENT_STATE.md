@@ -4,11 +4,11 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-13
 
-Accepted functional baseline: `main@b2ea590779d229d8a2eab51111562a0447c6b52e`
-(merge of PR #83, `feat(fiscal): add Sobre v05 packaging`).
+Accepted functional baseline: `main@e920ee0dea945c60b3fd72f76794cca40857519f`
+(merge of PR #84, `feat(fiscal): add durable Sobre identity`).
 
-Current pending governed increment: PR #84 `feat(fiscal): add durable Sobre identity`.
-PR #84 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
+Current pending governed increment: PR #85 `feat(fiscal): add durable Sobre transport`.
+PR #85 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -22,7 +22,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #83. Its post-merge Clean Architecture Guard #373, run `34735981187`, completed successfully for both Build/Architecture and PostgreSQL/MySQL transaction jobs.
+The accepted `main` commit is the GitHub-verified merge of PR #84. Its post-merge Clean Architecture Guard #385, run `34738935341`, completed successfully for both Build/Architecture and PostgreSQL/MySQL transaction jobs, including 193/193 provider-real tests.
 
 ## Accepted major v1 boundaries
 
@@ -66,8 +66,9 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 36. Provider-real PostgreSQL/MySQL later-state persistence with raw `Ackconsultaenviosreporte`, SHA-256 evidence, operation replay and proof that root/revision transport evidence remains unchanged.
 37. Read-only reconciliation policy mapping `DR -> Consistent`, `ER -> ManualReviewRequired`, `FR -> ReliquidatedExternally`, always with automatic reliquidation and local mutation disabled and fail-closed timestamp ambiguity handling.
 38. Deterministic local Sobre v05 packaging for 1..250 already-signed CFE, same-certificate verification, signed-subtree preservation and byte-pinned `EnvioCFE.xsd` validation without persistence or transport.
+39. Durable local Sobre identity and replay persistence with explicit caller-supplied `Idemisor`, exact envelope/hash/schema/certificate evidence and provider-real PostgreSQL/MySQL concurrent replay convergence, without DGI transport or ACK semantics.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `56_FISCAL_SOBRE_V05_PACKAGING.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `57_FISCAL_SOBRE_DURABLE_IDENTITY.md`.
 
 ## Accepted Reporte Diario boundary after PR #82
 
@@ -115,7 +116,7 @@ The accepted reconciliation safety flags remain explicit: `AutomaticReliquidatio
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Accepted Sobre packaging boundary after PR #83
+## Accepted Sobre boundary after PR #84
 
 The accepted CFE Sobre path now reaches:
 
@@ -129,37 +130,39 @@ durable signed CFE artifacts
 -> deterministic EnvioCFE / Caratula v1.0
 -> signed CFE root fragments preserved without reserialization
 -> byte-pinned EnvioCFE.xsd validation
--> local Sobre XML + SHA-256 + certificate/schema evidence result
+-> local Sobre XML + SHA-256 + certificate/schema evidence
+-> durable local Sobre identity
+-> unique OrganizationId + OperationId replay guard
+-> provider-real concurrent replay convergence
 ```
-
-This accepted boundary remains local and read-only. It does not persist the Sobre, allocate `Idemisor`, submit to DGI, parse an ACK or mutate fiscal state.
 
 The accepted byte-pinned `EnvioCFE.xsd` evidence is tied to the DGI-published `XSDs_FE_V1.44.2` registry identity and the governed immutable byte-recovery procedure recorded in document 56.
 
-## Pending PR #84 boundary, not yet accepted
+PR #84 accepts durable local identity only. `Idemisor` remains explicit caller input because the reviewed authoritative DGI material establishes issuer assignment but no authoritative next-value allocation algorithm. The local identity is a consumer replay/correlation invariant and is not represented as DGI's duplicate-detection key for `S08`.
 
-PR #84 introduces bounded **durable local Sobre identity and replay persistence** over the accepted packaging capability.
+## Pending PR #85 boundary, not yet accepted
+
+PR #85 introduces bounded **durable Sobre transport** over the accepted packaging and persistence capabilities.
 
 The candidate:
 
-- receives `Idemisor` explicitly rather than inventing an allocator;
-- treats DGI evidence only as proving that `Idemisor` is a NUM10 assigned by the issuer and echoed for response correlation;
-- persists one immutable local identity `OrganizationId + IssuerRuc + ReceiverRut + SenderEnvelopeId`;
-- separately persists unique `OrganizationId + OperationId` replay identity;
-- replays the existing durable envelope for the same immutable input rather than rebuilding a second durable row;
-- fails closed if either replay identity is reused for different immutable packaging input;
-- persists complete Sobre XML, SHA-256, ordered CFE ids, certificate identity and XSD evidence;
-- preserves the Sobre creation UTC instant plus original offset minutes across PostgreSQL/MySQL;
-- normalizes `Fecha` to the whole-second precision emitted by the accepted packaging builder;
-- revalidates persisted envelope/hash/count/certificate/schema self-consistency before replay;
-- performs no network submission, ACK parsing, retry, CFE state mutation or `Idemisor` allocation.
+- requires an already persisted Sobre and revalidates its exact XML SHA-256 before dispatch;
+- persists a separate `Prepared -> InFlight -> ResponseReceived|Unknown` transport lifecycle;
+- serializes dispatch by durable `EnvelopeId` with provider-real PostgreSQL/MySQL `FOR UPDATE` locking;
+- persists `InFlight` before crossing the network;
+- calls DGI `WS_eFactura.EFACRECEPCIONSOBRE` through SOAP 1.1 and WS-Security X509;
+- places the exact durable `EnvioCFE` directly in `Datain/xmlData` CDATA;
+- stores returned `Dataout/xmlData` as opaque response evidence plus SHA-256;
+- replays `ResponseReceived` without a second network call;
+- marks ambiguous delivery `Unknown` and forbids automatic retry;
+- does not interpret `ACKSobre`, `AS`, `BS`, `S08`, receiver semantics or CFE business state.
 
 The detailed pending evidence is recorded in:
-`documentation/blueprint-api-implementation/57_FISCAL_SOBRE_DURABLE_IDENTITY.md`.
+`documentation/blueprint-api-implementation/58_FISCAL_SOBRE_TRANSPORT.md`.
 
-The local identity is explicitly a consumer replay/correlation invariant. It is not represented as DGI's duplicate-detection key for `S08` or as a DGI-mandated allocation algorithm.
+`ResponseReceived` in PR #85 means only that a structurally trustworthy SOAP response supplied non-empty `Dataout/xmlData`; it is not evidence that DGI accepted the Sobre.
 
-This section describes the open candidate only. It does not promote PR #84 into the accepted baseline.
+This section describes the open candidate only. It does not promote PR #85 into the accepted baseline.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -172,8 +175,12 @@ The governed fiscal lineage uses official DGI artifacts already pinned/reviewed 
 - `XSDs_FE_V1.44.2`;
 - accepted byte-pinned `EnvioCFE.xsd` evidence from PR #83 / document 56;
 - DGI Production communiqué documenting duplicate-Sobre response code `S08` without establishing the exact duplicate key;
+- current DGI `Documentos de interés` registry continuing to link **Web Services Externos Recepción** for `EFACRECEPCIONSOBRE` framing;
+- DGI reception evidence defining `Datain/xmlData` with `EnvioCFE` directly in CDATA and `Dataout/xmlData` for the response;
 - `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for Reporte Diario consultation, receiver discovery and later-state observation;
 - DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the accepted reconciliation-policy boundary.
+
+The gzip+Base64 routine reviewed in current Web Services Externos Consultas is consultation-specific evidence. It is not used to invent compression for `EFACRECEPCIONSOBRE` when the DGI reception document explicitly shows direct CDATA framing.
 
 No XML element, namespace, mandatory-field rule, sequence/allocation rule, response state, Testing threshold, signature requirement, endpoint or SOAPAction may be inferred from memory, legacy demo code or provider examples when authoritative DGI evidence is required.
 
@@ -189,7 +196,7 @@ External DGI Testing acceptance has not been established in this repository, and
 
 ## Explicitly not complete
 
-The accepted baseline and pending PR #84 do not complete:
+The accepted baseline and pending PR #85 do not complete:
 
 - operational correction-note command/API integration into the normal sale workflow;
 - export CFE families and export-specific immutable evidence;
@@ -203,8 +210,10 @@ The accepted baseline and pending PR #84 do not complete:
 - independent cryptographic validation of DGI ACK signatures;
 - automatic `Idemisor` allocation/reservation;
 - business grouping/batching policy for CFE into Sobre;
-- Sobre v05 compression/transport/submission and ACK lifecycle;
+- accepted Sobre transport/submission baseline while PR #85 is pending;
+- semantic `ACKSobre` parsing and accepted/rejected state model;
 - `S08` interpretation/recovery semantics;
+- automatic reconciliation of ambiguous Sobre `Unknown` delivery;
 - authoritative external DGI Testing evidence;
 - Production DGI/provider transport enablement;
 - OCSP/CRL and DGI-specific certificate habilitation verification;
@@ -223,16 +232,18 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #84 must close before Sobre transport work advances.
+PR #85 must close before Sobre ACK semantics work advances.
 
-The authoritative revalidation after PR #83 established that DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed material does not provide an authoritative algorithm for choosing the next value. Automatic allocation therefore remains out of scope instead of being guessed.
+The authoritative revalidation for this slice established that DGI reception framing for `EFACRECEPCIONSOBRE` is direct `EnvioCFE` in `Datain/xmlData` CDATA. It also confirmed that the gzip+Base64 routine in the current Consultas document is not authority for changing that reception framing.
 
-The earlier revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative Reporte Diario R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
+The earlier revalidation established that DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed material does not provide an authoritative algorithm for choosing the next value. Automatic allocation therefore remains out of scope instead of being guessed.
 
-After PR #84 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+The earlier Reporte Diario revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
 
-1. authoritative Sobre v05 transport framing/submission if current DGI service evidence is sufficient;
-2. DGI Sobre response/ACK persistence and state model as a separate transport slice;
+After PR #85 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+
+1. DGI Sobre response/ACK persistence and state interpretation using current `Formato Mensajes Respuesta` evidence, while preserving PR #85 transport evidence;
+2. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
 3. grouping/batching policy only when product requirements are governed independently of DGI wire semantics;
 4. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
 5. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
@@ -248,13 +259,13 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `b2ea590779d229d8a2eab51111562a0447c6b52e`;
-- accepted merge: PR #83 `feat(fiscal): add Sobre v05 packaging`;
-- approved PR #83 head: `bb0fcdbf3f42b00452456d3da0b724c047b2e82a`;
-- exact-head PR #83 Clean Architecture Guard #372 (`34735518140`): SUCCESS;
-- post-merge Clean Architecture Guard #373 (`34735981187`): SUCCESS;
-- open governed increment: PR #84 `feat(fiscal): add durable Sobre identity`;
-- PR #84 remains pending until exact-head CI is green and human review is complete;
+- accepted `main`: `e920ee0dea945c60b3fd72f76794cca40857519f`;
+- accepted merge: PR #84 `feat(fiscal): add durable Sobre identity`;
+- approved PR #84 head: `e136ab5a6743dd2ef770bac4f7fb96352a73dd03`;
+- post-merge Clean Architecture Guard #385 (`34738935341`): SUCCESS;
+- provider-real post-merge suite: 193/193 PASS on PostgreSQL/MySQL;
+- open governed increment: PR #85 `feat(fiscal): add durable Sobre transport`;
+- PR #85 remains pending until exact-head CI is green and human review is complete;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;
 - merge requires final exact-head green CI and explicit human approval.

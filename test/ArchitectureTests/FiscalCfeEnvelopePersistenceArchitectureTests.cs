@@ -91,23 +91,25 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
     }
 
     [Fact]
-    public void Documentation_keeps_Idemisor_allocation_and_transport_outside_candidate()
+    public void Documentation_keeps_Idemisor_allocation_outside_accepted_identity_and_transport_separate()
     {
         var docs = Read("documentation/blueprint-api-implementation/57_FISCAL_SOBRE_DURABLE_IDENTITY.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
 
+        Assert.Contains("Status: ACCEPTED IMPLEMENTATION", docs, StringComparison.Ordinal);
+        Assert.Contains("main@e920ee0dea945c60b3fd72f76794cca40857519f", docs, StringComparison.Ordinal);
         Assert.Contains("assigned by the issuer", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("no authoritative allocation algorithm", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("local replay/correlation invariant", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("concurrent", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("does not allocate", docs, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("does not submit", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("S08", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@b2ea590779d229d8a2eab51111562a0447c6b52e", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #84", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("PR #84 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@e920ee0dea945c60b3fd72f76794cca40857519f", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #85", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("PR #85 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Durable local Sobre identity and replay persistence", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);
