@@ -72,7 +72,7 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
     }
 
     [Fact]
-    public void Documentation_preserves_accepted_fail_closed_discovery_with_PR81_observation_and_separate_PR82_policy()
+    public void Documentation_preserves_accepted_fail_closed_discovery_with_later_state_and_reconciliation_accepted()
     {
         var docs = Read("documentation/blueprint-api-implementation/53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -89,9 +89,9 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
         Assert.Contains("Document 54", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@700d0a424d6a79b52844b5fa99446d49623c758f", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #81", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("Current pending governed increment: PR #82", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@6fd1ae6927bf3789015d3bb659bf094283ec7095", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #82", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #83", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Append-only observation of DGI Reporte Diario later states `DR`, `ER` and `FR`", checkpoint, StringComparison.Ordinal);
         Assert.Contains("never selects by timestamp or returned collection order", checkpoint, StringComparison.Ordinal);
         Assert.Contains("AutomaticReliquidationAuthorized = false", checkpoint, StringComparison.Ordinal);
