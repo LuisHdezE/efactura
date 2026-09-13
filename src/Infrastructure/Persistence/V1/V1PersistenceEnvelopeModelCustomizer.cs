@@ -5,8 +5,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 namespace Infrastructure.Persistence.V1;
 
 /// <summary>
-/// Extends the accepted v1 EF Core model with durable CFE Sobre identity, transport, ACK observation
-/// and append-only ACK signature-verification evidence while preserving all Reporte Diario mappings.
+/// Extends the accepted v1 EF Core model with durable CFE Sobre identity, transport, ACK observation,
+/// ACK signature verification and append-only CFE state consultation evidence while preserving all
+/// Reporte Diario mappings.
 /// </summary>
 public sealed class V1PersistenceEnvelopeModelCustomizer : ModelCustomizer
 {
@@ -142,6 +143,35 @@ public sealed class V1PersistenceEnvelopeModelCustomizer : ModelCustomizer
             entity.HasIndex(x => x.AckObservationId).IsUnique().HasDatabaseName("UX_v1_fceasv_ack_observation");
             entity.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_v1_fceasv_submission");
             entity.HasIndex(x => x.EnvelopeId).HasDatabaseName("IX_v1_fceasv_envelope");
+        });
+
+        modelBuilder.Entity<V1FiscalCfeStateConsultationRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_cfe_state_consultations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.FiscalDocumentId).IsRequired();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Series).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.OperationId).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.StateCode).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.DgiSenderId).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.DgiReceiverId).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.ConsultationToken);
+            entity.Property(x => x.ConsultationAvailableAtText).HasMaxLength(80);
+            entity.Property(x => x.ResponseXml).IsRequired();
+            entity.Property(x => x.ResponseSha256).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ConsultedAtUtc).HasPrecision(0);
+            entity.HasOne<V1FiscalDocumentRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.FiscalDocumentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fcsc_document");
+            entity.HasIndex(x => new { x.OrganizationId, x.OperationId })
+                .IsUnique()
+                .HasDatabaseName("UX_v1_fcsc_operation");
+            entity.HasIndex(x => x.FiscalDocumentId)
+                .HasDatabaseName("IX_v1_fcsc_document");
         });
     }
 }
