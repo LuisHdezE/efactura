@@ -31,7 +31,16 @@ public sealed class V1FiscalCfeEnvelopeTransport : Migration
                 ResponseSha256 = table.Column<string>(maxLength: 64, nullable: true),
                 FailureCode = table.Column<string>(maxLength: 160, nullable: true)
             },
-            constraints: table => table.PrimaryKey("PK_v1_fiscal_cfe_envelope_submissions", x => x.Id));
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_v1_fiscal_cfe_envelope_submissions", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_v1_fces_envelope",
+                    column: x => x.EnvelopeId,
+                    principalTable: "v1_fiscal_cfe_envelopes",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+            });
 
         migrationBuilder.CreateIndex(
             name: "UX_v1_fces_operation",
