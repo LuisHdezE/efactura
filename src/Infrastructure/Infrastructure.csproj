@@ -17,6 +17,7 @@
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\*.xsd" />
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\schema-manifest.json" />
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\daily-report-schema-manifest.json" />
+    <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\envelope-schema-manifest.json" />
     <EmbeddedResource Include="Fiscal\Schemas\DgiFeV1_44_2\version.txt" />
   </ItemGroup>
   <ItemGroup>
