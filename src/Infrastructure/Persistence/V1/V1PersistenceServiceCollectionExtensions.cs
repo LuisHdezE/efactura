@@ -132,6 +132,7 @@ public static class V1PersistenceServiceCollectionExtensions
             sp.GetRequiredService<EfFiscalDailyReportReceiverDiscoveryRepository>());
         services.AddScoped<IFiscalDailyReportReceiverDiscoveryTargetReader>(sp =>
             sp.GetRequiredService<EfFiscalDailyReportReceiverDiscoveryRepository>());
+        services.AddScoped<IFiscalDailyReportLaterStateObservationRepository, EfFiscalDailyReportLaterStateObservationRepository>();
         services.AddScoped<PrepareFiscalDocumentIdentityUseCase>();
         services.AddScoped<CreateFiscalContentSnapshotUseCase>();
         services.AddScoped<PrepareFiscalSigningEvidenceUseCase>();
@@ -145,6 +146,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<DispatchFiscalDailyReportBrCorrectionUseCase>();
         services.AddScoped<ConsultFiscalDailyReportResponseUseCase>();
         services.AddScoped<DiscoverFiscalDailyReportReceiverUseCase>();
+        services.AddScoped<ObserveFiscalDailyReportLaterStateUseCase>();
         services.AddScoped<ListCaeAuthorizationsUseCase>();
         services.AddScoped<GetCaeAuthorizationUseCase>();
         services.AddScoped<ImportCaeAuthorizationUseCase>();
