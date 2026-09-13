@@ -40,7 +40,7 @@ The reviewed authoritative material establishes issuer assignment and response c
 
 `PersistFiscalCfeEnvelopeCommand` receives `SenderEnvelopeId` explicitly and validates only the governed wire range `0..9999999999`.
 
-There is no `Idemisor` allocator in this increment.
+This increment **does not allocate** `Idemisor`; there is no `Idemisor` allocator in this boundary.
 
 If a later authoritative DGI source establishes a required allocation algorithm, it must be introduced as a separate governed capability rather than retrofitted into this persistence boundary by assumption.
 
