@@ -1,6 +1,12 @@
 # 57 — Fiscal Sobre Durable Identity
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
+
+Accepted baseline: `main@e920ee0dea945c60b3fd72f76794cca40857519f`
+(merge of PR #84, `feat(fiscal): add durable Sobre identity`).
+
+Approved PR #84 head: `e136ab5a6743dd2ef770bac4f7fb96352a73dd03`.
+Post-merge Clean Architecture Guard #385 (`34738935341`) completed successfully, including 193/193 PostgreSQL/MySQL provider-real tests.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -125,7 +131,7 @@ Replay matching compares both the UTC instant and the original offset, so two ti
 
 The real EF repository is read/add-only and owns no transaction or `SaveChanges` call. The Application use case owns the atomic transaction and unit-of-work boundary.
 
-The provider model enforces unique indexes for both operation replay and local envelope identity. PostgreSQL and MySQL provider-real tests must prove the same durable behavior.
+The provider model enforces unique indexes for both operation replay and local envelope identity. PostgreSQL and MySQL provider-real tests prove the same durable behavior.
 
 ## Concurrent replay boundary
 
@@ -147,7 +153,7 @@ Application never imports PostgreSQL/MySQL exception types and does not parse pr
 
 ## Architecture boundary
 
-This candidate has no dependency on:
+This accepted boundary has no dependency on:
 
 - HTTP/SOAP transport gateways;
 - DGI credentials or transport certificates;
@@ -161,7 +167,7 @@ Packaging remains the accepted document-56 responsibility. This increment only m
 
 ## Validation coverage
 
-This increment requires proof that:
+Accepted proof includes:
 
 - PostgreSQL and MySQL persist exactly one durable envelope for an exact command;
 - exact operation replay returns the same durable envelope without rebuilding it;
@@ -178,12 +184,11 @@ This increment requires proof that:
 
 ## Deliberate non-scope
 
-This increment does not implement:
+This accepted increment does not implement:
 
 - automatic `Idemisor` allocation or reservation;
 - claims about DGI's exact duplicate-detection key for `S08`;
 - grouping/batching policy deciding which signed CFE enter a Sobre;
-- gzip/base64 transport framing;
 - HTTP/SOAP submission to DGI;
 - transport certificate policy;
 - DGI Sobre ACK parsing;
@@ -197,3 +202,5 @@ This increment does not implement:
 - Production enablement.
 
 Those remain separate governed capabilities. A durable local Sobre is not evidence that DGI received or accepted it.
+
+PR #85 / document 58 is the separate pending transport candidate. It does not change this accepted persistence boundary or retroactively add transport semantics to PR #84.
