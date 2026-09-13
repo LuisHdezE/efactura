@@ -119,12 +119,31 @@ Replay matching compares both the UTC instant and the original offset, so two ti
 
 - accepted `PackageFiscalCfeEnvelopeUseCase`;
 - `IFiscalCfeEnvelopeRepository`;
+- `IFiscalCfeEnvelopePersistenceConflictClassifier`;
 - `ITransactionManager`;
 - `IUnitOfWork`.
 
 The real EF repository is read/add-only and owns no transaction or `SaveChanges` call. The Application use case owns the atomic transaction and unit-of-work boundary.
 
 The provider model enforces unique indexes for both operation replay and local envelope identity. PostgreSQL and MySQL provider-real tests must prove the same durable behavior.
+
+## Concurrent replay boundary
+
+The shared v1 transaction manager intentionally remains `ReadCommitted`; this slice does not widen the isolation level for unrelated application use cases.
+
+That means two concurrent requests can both complete their initial replay lookup before either one has committed the new Sobre. The unique database indexes are therefore the final serialization guard.
+
+When persistence loses that race:
+
+1. the transaction rolls back and clears tracked state through the accepted transaction manager;
+2. Application reacts only when `IFiscalCfeEnvelopePersistenceConflictClassifier` identifies a database unique-constraint conflict;
+3. provider-specific recognition remains in Infrastructure (`23505` for PostgreSQL and `1062` for MySQL);
+4. Application rereads durable evidence by operation id and then by local Sobre identity;
+5. matching immutable input returns the winning durable row as `Replayed = true`;
+6. conflicting immutable input fails closed through the existing replay-conflict policy;
+7. an unresolvable uniqueness conflict fails closed as `concurrent_conflict_unresolved`.
+
+Application never imports PostgreSQL/MySQL exception types and does not parse provider error-message text.
 
 ## Architecture boundary
 
@@ -147,11 +166,13 @@ This increment requires proof that:
 - PostgreSQL and MySQL persist exactly one durable envelope for an exact command;
 - exact operation replay returns the same durable envelope without rebuilding it;
 - a new operation id targeting the same local identity and immutable input replays the existing envelope;
+- concurrent same-identity requests on PostgreSQL and MySQL converge to one durable row, with the loser recovered as replay;
 - the original operation id remains the durable one on identity replay;
 - a local envelope identity cannot be reused for different ordered CFE input;
 - creation offset survives provider round-trip;
 - sub-second command precision is normalized to the second precision used by the wire builder;
 - persisted envelope XML/hash/count/certificate/schema evidence remains self-consistent before replay;
+- provider-specific unique-conflict recognition remains outside Application;
 - repository code remains read/add-only;
 - no transport or `Idemisor` allocator enters the slice.
 
