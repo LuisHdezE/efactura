@@ -62,6 +62,11 @@ public sealed class V1PersistenceEnvelopeModelCustomizer : ModelCustomizer
             entity.Property(x => x.ResponseXml);
             entity.Property(x => x.ResponseSha256).HasMaxLength(64);
             entity.Property(x => x.FailureCode).HasMaxLength(160);
+            entity.HasOne<V1FiscalCfeEnvelopeRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.EnvelopeId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fces_envelope");
             entity.HasIndex(x => new { x.OrganizationId, x.OperationId }).IsUnique().HasDatabaseName("UX_v1_fces_operation");
             entity.HasIndex(x => x.EnvelopeId).IsUnique().HasDatabaseName("UX_v1_fces_envelope");
         });
