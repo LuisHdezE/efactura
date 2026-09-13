@@ -51,6 +51,11 @@ public interface IFiscalCfeEnvelopeRepository
         CancellationToken cancellationToken = default);
 }
 
+public interface IFiscalCfeEnvelopePersistenceConflictClassifier
+{
+    bool IsUniqueConstraintConflict(Exception exception);
+}
+
 public sealed record FiscalCfeEnvelopePersistenceResult(
     Guid EnvelopeId,
     string OrganizationId,
@@ -80,86 +85,130 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
 {
     private readonly PackageFiscalCfeEnvelopeUseCase _packager;
     private readonly IFiscalCfeEnvelopeRepository _envelopes;
+    private readonly IFiscalCfeEnvelopePersistenceConflictClassifier _conflicts;
     private readonly ITransactionManager _transactions;
     private readonly IUnitOfWork _unitOfWork;
 
     public PersistFiscalCfeEnvelopeUseCase(
         PackageFiscalCfeEnvelopeUseCase packager,
         IFiscalCfeEnvelopeRepository envelopes,
+        IFiscalCfeEnvelopePersistenceConflictClassifier conflicts,
         ITransactionManager transactions,
         IUnitOfWork unitOfWork)
     {
         _packager = packager;
         _envelopes = envelopes;
+        _conflicts = conflicts;
         _transactions = transactions;
         _unitOfWork = unitOfWork;
     }
 
-    public Task<FiscalCfeEnvelopePersistenceResult> ExecuteAsync(
+    public async Task<FiscalCfeEnvelopePersistenceResult> ExecuteAsync(
         PersistFiscalCfeEnvelopeCommand command,
         CancellationToken cancellationToken = default)
     {
         Validate(command);
         var normalized = Normalize(command);
 
-        return _transactions.ExecuteAsync(async ct =>
+        try
         {
-            var existingOperation = await _envelopes.GetByOperationIdAsync(
-                normalized.OrganizationId,
-                normalized.OperationId,
-                ct);
-            if (existingOperation is not null)
+            return await _transactions.ExecuteAsync(async ct =>
             {
-                EnsureStoredIntegrity(existingOperation);
-                EnsureSameCommand(existingOperation, normalized, "fiscal.envelope.persistence.operation_replay_mismatch");
-                return Result(existingOperation, true);
-            }
+                var existingOperation = await _envelopes.GetByOperationIdAsync(
+                    normalized.OrganizationId,
+                    normalized.OperationId,
+                    ct);
+                if (existingOperation is not null)
+                {
+                    EnsureStoredIntegrity(existingOperation);
+                    EnsureSameCommand(existingOperation, normalized, "fiscal.envelope.persistence.operation_replay_mismatch");
+                    return Result(existingOperation, true);
+                }
 
-            var existingIdentity = await _envelopes.GetByIdentityAsync(
-                normalized.OrganizationId,
-                normalized.IssuerRuc,
-                normalized.ReceiverRut,
-                normalized.SenderEnvelopeId,
-                ct);
-            if (existingIdentity is not null)
-            {
-                EnsureStoredIntegrity(existingIdentity);
-                EnsureSameCommand(existingIdentity, normalized, "fiscal.envelope.persistence.identity_payload_conflict");
-                return Result(existingIdentity, true);
-            }
+                var existingIdentity = await _envelopes.GetByIdentityAsync(
+                    normalized.OrganizationId,
+                    normalized.IssuerRuc,
+                    normalized.ReceiverRut,
+                    normalized.SenderEnvelopeId,
+                    ct);
+                if (existingIdentity is not null)
+                {
+                    EnsureStoredIntegrity(existingIdentity);
+                    EnsureSameCommand(existingIdentity, normalized, "fiscal.envelope.persistence.identity_payload_conflict");
+                    return Result(existingIdentity, true);
+                }
 
-            var package = await _packager.ExecuteAsync(new PackageFiscalCfeEnvelopeCommand(
-                normalized.OrganizationId,
-                normalized.ReceiverRut,
-                normalized.IssuerRuc,
-                normalized.SenderEnvelopeId,
-                normalized.CreatedAt,
-                normalized.FiscalDocumentIds),
-                ct);
+                var package = await _packager.ExecuteAsync(new PackageFiscalCfeEnvelopeCommand(
+                    normalized.OrganizationId,
+                    normalized.ReceiverRut,
+                    normalized.IssuerRuc,
+                    normalized.SenderEnvelopeId,
+                    normalized.CreatedAt,
+                    normalized.FiscalDocumentIds),
+                    ct);
 
-            var stored = new StoredFiscalCfeEnvelope(
-                Guid.NewGuid(),
-                package.OrganizationId,
-                package.ReceiverRut,
-                package.IssuerRuc,
-                package.SenderEnvelopeId,
-                package.CreatedAt,
-                package.FiscalDocumentIds.ToArray(),
-                normalized.OperationId,
-                package.CfeCount,
-                package.CertificateThumbprint,
-                package.CertificateSerialNumber,
-                package.EnvelopeXml,
-                package.EnvelopeSha256,
-                package.SchemaSetId,
-                package.SchemaVersion,
-                package.SchemaSetFingerprint);
+                var stored = new StoredFiscalCfeEnvelope(
+                    Guid.NewGuid(),
+                    package.OrganizationId,
+                    package.ReceiverRut,
+                    package.IssuerRuc,
+                    package.SenderEnvelopeId,
+                    package.CreatedAt,
+                    package.FiscalDocumentIds.ToArray(),
+                    normalized.OperationId,
+                    package.CfeCount,
+                    package.CertificateThumbprint,
+                    package.CertificateSerialNumber,
+                    package.EnvelopeXml,
+                    package.EnvelopeSha256,
+                    package.SchemaSetId,
+                    package.SchemaVersion,
+                    package.SchemaSetFingerprint);
 
-            EnsureStoredIntegrity(stored);
-            await _envelopes.AddAsync(stored, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
-            return Result(stored, false);
-        }, cancellationToken);
+                EnsureStoredIntegrity(stored);
+                await _envelopes.AddAsync(stored, ct);
+                await _unitOfWork.SaveChangesAsync(ct);
+                return Result(stored, false);
+            }, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException && _conflicts.IsUniqueConstraintConflict(ex))
+        {
+            return await RecoverConcurrentReplayAsync(normalized, cancellationToken);
+        }
+    }
+
+    private async Task<FiscalCfeEnvelopePersistenceResult> RecoverConcurrentReplayAsync(
+        PersistFiscalCfeEnvelopeCommand command,
+        CancellationToken cancellationToken)
+    {
+        var existingOperation = await _envelopes.GetByOperationIdAsync(
+            command.OrganizationId,
+            command.OperationId,
+            cancellationToken);
+        if (existingOperation is not null)
+        {
+            EnsureStoredIntegrity(existingOperation);
+            EnsureSameCommand(existingOperation, command, "fiscal.envelope.persistence.operation_replay_mismatch");
+            return Result(existingOperation, true);
+        }
+
+        var existingIdentity = await _envelopes.GetByIdentityAsync(
+            command.OrganizationId,
+            command.IssuerRuc,
+            command.ReceiverRut,
+            command.SenderEnvelopeId,
+            cancellationToken);
+        if (existingIdentity is not null)
+        {
+            EnsureStoredIntegrity(existingIdentity);
+            EnsureSameCommand(existingIdentity, command, "fiscal.envelope.persistence.identity_payload_conflict");
+            return Result(existingIdentity, true);
+        }
+
+        throw Conflict(
+            "fiscal.envelope.persistence.concurrent_conflict_unresolved",
+            "A concurrent durable Sobre uniqueness conflict could not be reconciled to persisted evidence.",
+            "concurrent_uniqueness_conflict");
     }
 
     private static PersistFiscalCfeEnvelopeCommand Normalize(PersistFiscalCfeEnvelopeCommand command) =>
