@@ -27,6 +27,6 @@ public static class V1PersistenceDatabaseConfigurator
                 throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unsupported v1 database provider.");
         }
 
-        options.ReplaceService<IModelCustomizer, V1PersistenceLaterStateModelCustomizer>();
+        options.ReplaceService<IModelCustomizer, V1PersistenceEnvelopeModelCustomizer>();
     }
 }

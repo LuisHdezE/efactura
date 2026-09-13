@@ -4,11 +4,11 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-13
 
-Accepted functional baseline: `main@6fd1ae6927bf3789015d3bb659bf094283ec7095`
-(merge of PR #82, `feat(fiscal): add daily report reconciliation policy`).
+Accepted functional baseline: `main@b2ea590779d229d8a2eab51111562a0447c6b52e`
+(merge of PR #83, `feat(fiscal): add Sobre v05 packaging`).
 
-Current pending governed increment: PR #83 `feat(fiscal): add Sobre v05 packaging`.
-PR #83 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
+Current pending governed increment: PR #84 `feat(fiscal): add durable Sobre identity`.
+PR #84 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -22,7 +22,7 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #82. Its post-merge Clean Architecture Guard #357, run `34733390905`, completed successfully for both Build/Architecture and PostgreSQL/MySQL transaction jobs.
+The accepted `main` commit is the GitHub-verified merge of PR #83. Its post-merge Clean Architecture Guard #373, run `34735981187`, completed successfully for both Build/Architecture and PostgreSQL/MySQL transaction jobs.
 
 ## Accepted major v1 boundaries
 
@@ -65,12 +65,13 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 35. Append-only observation of DGI Reporte Diario later states `DR`, `ER` and `FR` for an exact durable `IdReceptor`.
 36. Provider-real PostgreSQL/MySQL later-state persistence with raw `Ackconsultaenviosreporte`, SHA-256 evidence, operation replay and proof that root/revision transport evidence remains unchanged.
 37. Read-only reconciliation policy mapping `DR -> Consistent`, `ER -> ManualReviewRequired`, `FR -> ReliquidatedExternally`, always with automatic reliquidation and local mutation disabled and fail-closed timestamp ambiguity handling.
+38. Deterministic local Sobre v05 packaging for 1..250 already-signed CFE, same-certificate verification, signed-subtree preservation and byte-pinned `EnvioCFE.xsd` validation without persistence or transport.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `55_FISCAL_DAILY_REPORT_RECONCILIATION_POLICY.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted document `56_FISCAL_SOBRE_V05_PACKAGING.md`.
 
 ## Accepted Reporte Diario boundary after PR #82
 
-The accepted Reporte Diario path now reaches:
+The accepted Reporte Diario path remains:
 
 ```text
 immutable daily reconciliation evidence
@@ -114,27 +115,51 @@ The accepted reconciliation safety flags remain explicit: `AutomaticReliquidatio
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Pending PR #83 boundary, not yet accepted
+## Accepted Sobre packaging boundary after PR #83
 
-PR #83 introduces bounded local **Sobre v05 packaging** for already-signed CFE artifacts.
+The accepted CFE Sobre path now reaches:
+
+```text
+durable signed CFE artifacts
+-> signed CFE hash/XSD revalidation
+-> explicit ordered 1..250 CFE selection
+-> same-certificate guard
+-> embedded ds:X509Certificate verification
+-> issuer RUC consistency guard
+-> deterministic EnvioCFE / Caratula v1.0
+-> signed CFE root fragments preserved without reserialization
+-> byte-pinned EnvioCFE.xsd validation
+-> local Sobre XML + SHA-256 + certificate/schema evidence result
+```
+
+This accepted boundary remains local and read-only. It does not persist the Sobre, allocate `Idemisor`, submit to DGI, parse an ACK or mutate fiscal state.
+
+The accepted byte-pinned `EnvioCFE.xsd` evidence is tied to the DGI-published `XSDs_FE_V1.44.2` registry identity and the governed immutable byte-recovery procedure recorded in document 56.
+
+## Pending PR #84 boundary, not yet accepted
+
+PR #84 introduces bounded **durable local Sobre identity and replay persistence** over the accepted packaging capability.
 
 The candidate:
 
-- revalidates durable signed CFE hash and pinned signed-CFE XSD evidence;
-- accepts an explicit ordered set of 1..250 unique fiscal document ids;
-- requires all included CFE to use the same certificate;
-- verifies the actual embedded public `ds:X509Certificate` against durable thumbprint/serial evidence;
-- requires every included CFE issuer RUC to match the Sobre `RUCEmisor`;
-- builds deterministic `EnvioCFE version="1.0"` / `Caratula version="1.0"` with explicit `RutReceptor`, `RUCEmisor`, `Idemisor`, `CantCFE`, `Fecha` and `X509Certificate`;
-- removes only the standalone XML declaration before embedding each signed CFE and does not reserialize the signed root fragment;
-- validates the final envelope against a local byte-pinned `EnvioCFE.xsd` closure;
-- returns XML, SHA-256, certificate identity and schema evidence;
-- performs no persistence, network submission, ACK parsing, retry, state mutation or private-key access.
+- receives `Idemisor` explicitly rather than inventing an allocator;
+- treats DGI evidence only as proving that `Idemisor` is a NUM10 assigned by the issuer and echoed for response correlation;
+- persists one immutable local identity `OrganizationId + IssuerRuc + ReceiverRut + SenderEnvelopeId`;
+- separately persists unique `OrganizationId + OperationId` replay identity;
+- replays the existing durable envelope for the same immutable input rather than rebuilding a second durable row;
+- fails closed if either replay identity is reused for different immutable packaging input;
+- persists complete Sobre XML, SHA-256, ordered CFE ids, certificate identity and XSD evidence;
+- preserves the Sobre creation UTC instant plus original offset minutes across PostgreSQL/MySQL;
+- normalizes `Fecha` to the whole-second precision emitted by the accepted packaging builder;
+- revalidates persisted envelope/hash/count/certificate/schema self-consistency before replay;
+- performs no network submission, ACK parsing, retry, CFE state mutation or `Idemisor` allocation.
 
 The detailed pending evidence is recorded in:
-`documentation/blueprint-api-implementation/56_FISCAL_SOBRE_V05_PACKAGING.md`.
+`documentation/blueprint-api-implementation/57_FISCAL_SOBRE_DURABLE_IDENTITY.md`.
 
-This section describes the open candidate only. It does not promote PR #83 into the accepted baseline.
+The local identity is explicitly a consumer replay/correlation invariant. It is not represented as DGI's duplicate-detection key for `S08` or as a DGI-mandated allocation algorithm.
+
+This section describes the open candidate only. It does not promote PR #84 into the accepted baseline.
 
 ## DGI technical baseline currently used by the consumer
 
@@ -145,11 +170,12 @@ The governed fiscal lineage uses official DGI artifacts already pinned/reviewed 
 - `Formato Reporte CFE v13.2`;
 - `Formato Mensajes Respuesta v19`;
 - `XSDs_FE_V1.44.2`;
-- byte-pinned `EnvioCFE.xsd` evidence for pending PR #83, recovered from the same immutable mirror procedure already used for governed schema bytes;
-- `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for original-response consultation, receiver discovery and later-state observation;
+- accepted byte-pinned `EnvioCFE.xsd` evidence from PR #83 / document 56;
+- DGI Production communiqué documenting duplicate-Sobre response code `S08` without establishing the exact duplicate key;
+- `Servicios Web Externos DGI`, code `T-5.020.00.001-000005`, version `1.9`, dated `13/05/2024`, for Reporte Diario consultation, receiver discovery and later-state observation;
 - DGI FAQ v22 section 9.7 for the explicit Reporte Diario AR/BR/DR/ER/FR meanings and the accepted reconciliation-policy boundary.
 
-No XML element, namespace, mandatory-field rule, sequence rule, response state, Testing threshold, signature requirement, endpoint or SOAPAction may be inferred from memory, legacy demo code or provider examples when authoritative DGI evidence is required.
+No XML element, namespace, mandatory-field rule, sequence/allocation rule, response state, Testing threshold, signature requirement, endpoint or SOAPAction may be inferred from memory, legacy demo code or provider examples when authoritative DGI evidence is required.
 
 ## DGI Testing readiness
 
@@ -163,7 +189,7 @@ External DGI Testing acceptance has not been established in this repository, and
 
 ## Explicitly not complete
 
-The accepted baseline and pending PR #83 do not complete:
+The accepted baseline and pending PR #84 do not complete:
 
 - operational correction-note command/API integration into the normal sale workflow;
 - export CFE families and export-specific immutable evidence;
@@ -175,8 +201,10 @@ The accepted baseline and pending PR #83 do not complete:
 - local supersession/accounting mutation after observed `FR`;
 - automatic retry from ambiguous Reporte Diario `Unknown` state;
 - independent cryptographic validation of DGI ACK signatures;
-- durable Sobre persistence and `Idemisor` allocation/replay semantics;
+- automatic `Idemisor` allocation/reservation;
+- business grouping/batching policy for CFE into Sobre;
 - Sobre v05 compression/transport/submission and ACK lifecycle;
+- `S08` interpretation/recovery semantics;
 - authoritative external DGI Testing evidence;
 - Production DGI/provider transport enablement;
 - OCSP/CRL and DGI-specific certificate habilitation verification;
@@ -195,19 +223,22 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #83 must close before Sobre transport/persistence work advances.
+PR #84 must close before Sobre transport work advances.
 
-The attempted next-slice revalidation after PR #82 found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative R05 mechanism that returns the correct next sequence. Those capabilities therefore remain fail-closed rather than inferred.
+The authoritative revalidation after PR #83 established that DGI defines `Idemisor` as a number assigned by the issuer, but the reviewed material does not provide an authoritative algorithm for choosing the next value. Automatic allocation therefore remains out of scope instead of being guessed.
 
-After PR #83 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+The earlier revalidation also found no governed WS Consultas v1.9 method that authoritatively retrieves ER inconsistency details and no authoritative Reporte Diario R05 mechanism that returns the correct next sequence. Those capabilities remain fail-closed.
 
-1. durable Sobre identity/persistence and replay semantics, including an evidence-backed `Idemisor` allocation rule;
-2. authoritative Sobre v05 transport framing/submission if current DGI service evidence is sufficient;
-3. DGI Sobre response/ACK persistence and state model as a separate transport slice;
-4. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
-5. separately evidenced `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
-6. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
-7. Production transport only after explicit technical and operational review.
+After PR #84 is accepted, the next exact slice must again be revalidated against current authoritative DGI material. Candidate boundaries include:
+
+1. authoritative Sobre v05 transport framing/submission if current DGI service evidence is sufficient;
+2. DGI Sobre response/ACK persistence and state model as a separate transport slice;
+3. grouping/batching policy only when product requirements are governed independently of DGI wire semantics;
+4. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
+5. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
+6. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
+7. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
+8. Production transport only after explicit technical and operational review.
 
 ## Known non-blocking modernization debt
 
@@ -217,13 +248,13 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `6fd1ae6927bf3789015d3bb659bf094283ec7095`;
-- accepted merge: PR #82 `feat(fiscal): add daily report reconciliation policy`;
-- approved PR #82 head: `dffb00b8ddc0b969e843a15ee89271cfe4a19855`;
-- exact-head PR #82 Clean Architecture Guard #356 (`34732631497`): SUCCESS;
-- post-merge Clean Architecture Guard #357 (`34733390905`): SUCCESS;
-- open governed increment: PR #83 `feat(fiscal): add Sobre v05 packaging`;
-- PR #83 remains pending until exact-head CI is green and human review is complete;
+- accepted `main`: `b2ea590779d229d8a2eab51111562a0447c6b52e`;
+- accepted merge: PR #83 `feat(fiscal): add Sobre v05 packaging`;
+- approved PR #83 head: `bb0fcdbf3f42b00452456d3da0b724c047b2e82a`;
+- exact-head PR #83 Clean Architecture Guard #372 (`34735518140`): SUCCESS;
+- post-merge Clean Architecture Guard #373 (`34735981187`): SUCCESS;
+- open governed increment: PR #84 `feat(fiscal): add durable Sobre identity`;
+- PR #84 remains pending until exact-head CI is green and human review is complete;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;
 - merge requires final exact-head green CI and explicit human approval.
