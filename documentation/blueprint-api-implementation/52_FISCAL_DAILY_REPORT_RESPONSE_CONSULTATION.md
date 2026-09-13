@@ -150,19 +150,21 @@ PR #79 exact head `2a6d8cc3d8b1e8836fa74e8f00350029311cb18a` passed Clean Archit
 
 Accepted PR #80 subsequently extended target resolution through durable receiver-discovery evidence at `main@7e930d8ffe1978da24ea8365b9661f74162d51b5`; post-merge Guard #320 passed.
 
+Accepted PR #81 / document 54 subsequently added append-only observation of DGI `DR`, `ER` and `FR` at `main@700d0a424d6a79b52844b5fa99446d49623c758f`; post-merge Guard #339 passed.
+
 ## Deliberate non-scope
 
 This accepted increment does not itself implement:
 
 - receiver discovery logic; that is the accepted separate PR #80 / document 53 capability;
 - automatic state mutation or retry recovery for `Unknown`;
-- state-changing `DR` / `ER` / `FR` reconciliation semantics;
+- action-producing `DR` / `ER` / `FR` remediation or reliquidation semantics;
 - automatic `R05` sequence recovery;
 - independent cryptographic validation of DGI ACK signatures;
 - Sobre v05 packaging/submission;
 - Production enablement.
 
-PR #81 / document 54 separately proposes append-only observation of DGI `DR`, `ER` and `FR` without local state mutation.
+Pending PR #82 / document 55 separately proposes a non-mutating local reconciliation policy over accepted DR/ER/FR observation evidence.
 
 Formal traditional DGI Testing readiness remains exactly:
 
