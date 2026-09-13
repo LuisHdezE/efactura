@@ -1,6 +1,12 @@
 # 59 — Fiscal Sobre ACK Observation
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
+
+Accepted baseline: `main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63`
+(merge of PR #86, `feat(fiscal): add ACKSobre observation`).
+
+Approved PR #86 head: `1401fb392d2baa348b6ae20946915636875e9342`.
+Post-merge Clean Architecture Guard #401 (`34755766824`) completed successfully for Build/Architecture/CrossCutting/Legacy and PostgreSQL/MySQL provider-real transaction tests.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -105,7 +111,7 @@ The parser:
 - validates rejection-reason multiplicity and DGI S01..S08 applicability;
 - rejects duplicated mandatory or optional detail fields rather than guessing which value to keep.
 
-Structural signature presence is **not cryptographic signature validation**. Independent verification of the DGI XMLDSig remains explicitly outside this increment.
+Structural signature presence at this accepted boundary is **not cryptographic signature validation**. Pending PR #87 / document 60 proposes that cryptographic integrity proof as a separate append-only capability.
 
 ## Correlation policy
 
@@ -179,9 +185,9 @@ Concurrent observers converge to the single durable row. Provider-specific uniqu
 
 The observation boundary never triggers a second DGI request.
 
-## Validation coverage
+## Accepted validation coverage
 
-This candidate requires proof that:
+Accepted exact-head and post-merge CI prove that:
 
 - AS parses and persists DGI ids plus consultation parameters;
 - BS persists S08 as evidence without recovery behavior;
@@ -195,13 +201,15 @@ This candidate requires proof that:
 - the original transport submission remains `ResponseReceived` and byte/hash evidence remains unchanged;
 - the durable Sobre remains unchanged.
 
+Exact-head Guard #400 (`34744587630`) passed before merge. Accepted `main@63c63f44b91d6fea6fb073af8c3e3d7841aa4c63` then passed post-merge Guard #401 (`34755766824`) for both jobs.
+
 ## Deliberate non-scope
 
-This increment does not implement:
+This accepted increment does not itself implement:
 
-- cryptographic verification of the DGI ACK XMLDSig;
+- cryptographic verification of the DGI ACK XMLDSig inside the semantic observation row;
 - document-level CFE acceptance/rejection;
-- consultation of the second CFE response using `Token`;
+- consultation of the second CFE response using `Token` without an authoritative token-input service contract;
 - automatic recovery or retransmission for S08;
 - automatic reconciliation of ambiguous Sobre `Unknown` delivery;
 - automatic `Idemisor` allocation;
@@ -209,4 +217,4 @@ This increment does not implement:
 - DGI Testing acceptance;
 - Production enablement.
 
-Those remain separate governed capabilities.
+Pending PR #87 / document 60 is a separate append-only XMLDSig cryptographic verification capability. It does not rewrite this accepted ACK observation.
