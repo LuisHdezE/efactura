@@ -2,7 +2,7 @@
 
 Status: CURRENT HUMAN CHECKPOINT
 
-Checkpoint date: 2026-09-12
+Checkpoint date: 2026-09-13
 
 Accepted functional baseline: `main@6fd1ae6927bf3789015d3bb659bf094283ec7095`
 (merge of PR #82, `feat(fiscal): add daily report reconciliation policy`).
@@ -109,6 +109,8 @@ A known durable `IdReceptor` can be used to obtain the original `ACKRepDiario` t
 For an ambiguous `Unknown` delivery with no receiver id, the accepted receiver-discovery boundary queries DGI by authoritative `FechaResumen + Secuencia`, subtracts receiver ids already accounted for under the same local fiscal identity, and persists only when exactly one unaccounted receiver remains. It never selects by timestamp or returned collection order.
 
 For an exact known receiver, the accepted later-state boundary can persist `DR` (Processed), `ER` (InManagement) and `FR` (Reliquidated) observations with raw DGI evidence. The accepted reconciliation policy interprets them locally without authorizing automatic reliquidation or local mutation. `ER` remains a manual-review boundary because current evidence does not expose authoritative inconsistency-detail retrieval through the governed consultation contract.
+
+The accepted reconciliation safety flags remain explicit: `AutomaticReliquidationAuthorized = false` and `AutomaticLocalMutationAuthorized = false`.
 
 `Unknown` is never automatically retried because DGI may already have received the bytes.
 
