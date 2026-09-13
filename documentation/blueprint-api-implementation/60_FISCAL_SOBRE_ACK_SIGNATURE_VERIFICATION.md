@@ -102,7 +102,7 @@ The official historical DGI `ACKSobre` reception example uses RSA-SHA1/SHA1. Cur
 
 For external verification only, the local safety profile accepts a bounded set of RSA signature and SHA digest algorithms supported by the platform, including the legacy RSA-SHA1/SHA1 tuple shown by DGI and SHA-2 variants.
 
-This does **not** weaken the consumer's own fiscal signer. The accepted outbound signer continues to forbid SHA-1 and keeps its separately governed SHA-2 policy.
+This does not weaken the consumer's own fiscal signer. The accepted outbound signer continues to forbid SHA-1 and keeps its separately governed SHA-2 policy.
 
 Algorithm acceptance here is a local compatibility/safety rule for verifying external DGI evidence, not a claim that DGI mandates every allowed tuple.
 
