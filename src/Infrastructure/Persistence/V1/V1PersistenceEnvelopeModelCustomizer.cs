@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 namespace Infrastructure.Persistence.V1;
 
 /// <summary>
-/// Extends the accepted v1 EF Core model with durable CFE Sobre identity, transport and append-only
-/// ACKSobre observation evidence while preserving all previously accepted Reporte Diario mappings.
+/// Extends the accepted v1 EF Core model with durable CFE Sobre identity, transport, ACK observation
+/// and append-only ACK signature-verification evidence while preserving all Reporte Diario mappings.
 /// </summary>
 public sealed class V1PersistenceEnvelopeModelCustomizer : ModelCustomizer
 {
@@ -99,6 +99,49 @@ public sealed class V1PersistenceEnvelopeModelCustomizer : ModelCustomizer
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_v1_fceao_envelope");
             entity.HasIndex(x => x.SubmissionId).IsUnique().HasDatabaseName("UX_v1_fceao_submission");
+        });
+
+        modelBuilder.Entity<V1FiscalCfeEnvelopeAckSignatureVerificationRecord>(entity =>
+        {
+            entity.ToTable("v1_fiscal_cfe_envelope_ack_signature_verifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.AckObservationId).IsRequired();
+            entity.Property(x => x.SubmissionId).IsRequired();
+            entity.Property(x => x.EnvelopeId).IsRequired();
+            entity.Property(x => x.OrganizationId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.ResponseSha256).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.VerificationProfileId).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.CertificateSha256).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CertificateThumbprint).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.CertificateSerialNumber).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.CertificateSubject).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.CertificateIssuer).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.CanonicalizationMethod).HasMaxLength(300).IsRequired();
+            entity.Property(x => x.SignatureMethod).HasMaxLength(300).IsRequired();
+            entity.Property(x => x.DigestMethod).HasMaxLength(300).IsRequired();
+            entity.Property(x => x.ReferenceUri).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.ReferenceTransformsJson).IsRequired();
+            entity.Property(x => x.CertificateTrustValidated).IsRequired();
+            entity.Property(x => x.VerifiedAtUtc).HasPrecision(0);
+            entity.HasOne<V1FiscalCfeEnvelopeAckObservationRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.AckObservationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fceasv_ack_observation");
+            entity.HasOne<V1FiscalCfeEnvelopeSubmissionRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.SubmissionId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fceasv_submission");
+            entity.HasOne<V1FiscalCfeEnvelopeRecord>()
+                .WithMany()
+                .HasForeignKey(x => x.EnvelopeId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_v1_fceasv_envelope");
+            entity.HasIndex(x => x.AckObservationId).IsUnique().HasDatabaseName("UX_v1_fceasv_ack_observation");
+            entity.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_v1_fceasv_submission");
+            entity.HasIndex(x => x.EnvelopeId).HasDatabaseName("IX_v1_fceasv_envelope");
         });
     }
 }
