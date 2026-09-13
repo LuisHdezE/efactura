@@ -87,31 +87,35 @@ The gateway parses only the immediate `ACKRepDiario` returned by `EFACRECEPCIONR
 
 `IDReceptor` and the raw `ACKRepDiario` XML are persisted as evidence.
 
-For BR correction authorization, typed rejection reasons are parsed behind an Infrastructure port and preserved separately without modifying the original ACK bytes. The bounded same-sequence correction lifecycle is documented in `51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md`.
+For BR correction authorization, typed rejection reasons are parsed behind an Infrastructure port and preserved separately without modifying the original ACK bytes. The accepted same-sequence correction lifecycle is documented in `51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md`.
 
-This transport foundation still does **not** implement later consultation/reconciliation states such as `DR`, `ER` or `FR`, and it does not independently validate the DGI XML signature inside the returned ACK. The raw ACK is therefore transport evidence, not the final certification evidence model.
+The pending bounded consultation capability for a **known durable `IdReceptor`** is documented separately in `52_FISCAL_DAILY_REPORT_RESPONSE_CONSULTATION.md`. It retrieves the original ACK without redefining this root transport lifecycle.
+
+This transport foundation still does not implement later reconciliation states such as `DR`, `ER` or `FR`, and it does not independently validate the DGI XML signature inside the returned ACK. Raw ACK material therefore remains evidence whose state-changing interpretation is separately governed.
 
 ## Ambiguous delivery and retries
 
 A timeout, connection loss, response-read failure, malformed successful response, HTTP error after dispatch, or cancellation after the durable `InFlight` transition is treated as `Unknown` when DGI may have received the message.
 
-`Unknown` is never retried automatically. A later reconciliation slice must query DGI using durable receiver/report evidence before another send is allowed.
+`Unknown` is never retried automatically.
+
+If a trustworthy durable `IdReceptor` is available, the pending consultation slice in document 52 can retrieve the original response as append-only evidence. If no receiver id is known, `EFACCONSULTARRESPUESTAREPORTE` alone cannot discover the submission; receiver-id discovery and later reconciliation remain separate governed capabilities.
 
 Failures known to occur before network dispatch, such as invalid external transport configuration, certificate resolution failure or SOAP construction failure, can return the submission to `Prepared`.
 
 ## BR same-SecEnvio follow-up
 
-The former BR same-sequence gap is now addressed by the bounded lifecycle in:
+The former BR same-sequence gap is addressed by the accepted lifecycle in:
 
 `documentation/blueprint-api-implementation/51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md`
 
-The follow-up preserves the rejected root submission/artifact and ACK, creates immutable local correction revisions beneath the stable DGI identity, signs each corrected artifact with new evidence, keeps the same `SecEnvio` only when durable BR evidence permits it, and blocks `R05` fail-closed for separate reconciliation.
+That lifecycle preserves the rejected root submission/artifact and ACK, creates immutable local correction revisions beneath the stable DGI identity, signs each corrected artifact with new evidence, keeps the same `SecEnvio` only when durable BR evidence permits it, and blocks `R05` fail-closed for separate reconciliation.
 
 It does not redefine this root transport lifecycle and does not convert a rejected root row into a received row.
 
 ## Validation evidence
 
-The accepted transport foundation was previously validated through Clean Architecture Guard coverage including:
+The accepted transport/correction lineage has Clean Architecture Guard coverage including:
 
 - full solution build;
 - Clean Architecture guards;
@@ -119,20 +123,23 @@ The accepted transport foundation was previously validated through Clean Archite
 - legacy unit tests;
 - PostgreSQL and MySQL transactional persistence tests;
 - portable Reporte signing timestamp round-trip with Uruguay `-03:00` evidence;
-- AR submission persistence;
-- concurrent-dispatch serialization proving a single network-boundary call.
+- AR/BR submission persistence;
+- concurrent-dispatch serialization proving a single network-boundary call;
+- BR correction revision lineage, replay and R05 fail-closed behavior;
+- accepted-correction N+1 ordering;
+- provider-real local-revision uniqueness.
 
-The BR same-sequence follow-up adds cross-cutting and provider-real validation for revision lineage, replay, R05 fail-closed behavior, accepted-correction N+1 ordering, portable signing-offset persistence and uniqueness of a local revision for the same DGI identity.
+PR #78 was accepted at `main@0846d63b02db2cff65bc3c86c4eca4cffa20b409`, with post-merge Clean Architecture Guard #301 successful.
 
-The exact final candidate must pass the complete Clean Architecture Guard before PR #78 can leave draft/review status.
+The consultation candidate in PR #79 must pass its own exact-final-head Clean Architecture Guard before review or merge.
 
 ## Deliberate non-scope
 
 This transport lineage still does not implement:
 
 - automatic R05 sequence recovery;
-- `EFACCONSULTARRESPUESTAREPORTE` reconciliation;
-- `DR` / `ER` / `FR` lifecycle;
+- receiver-id discovery through `EFACCONSULTARENVIOSREPORTE` when no durable `IdReceptor` exists;
+- `DR` / `ER` / `FR` reconciliation lifecycle;
 - automatic retry from `Unknown`;
 - independent cryptographic validation of DGI ACK signatures;
 - Sobre v05 packaging;

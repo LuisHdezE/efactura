@@ -18,27 +18,35 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@44478944bff3dbfee1e269347b48954015d8b3b9",
+            "main@0846d63b02db2cff65bc3c86c4eca4cffa20b409",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #77",
+            "merge of PR #78",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Current pending governed increment: PR #78",
+            "Current pending governed increment: PR #79",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #78 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
+            "PR #79 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Durable DGI `EFACRECEPCIONREPORTE` transport with immediate `ACKRepDiario` AR/BR persistence.",
+            "Same-`SecEnvio` BR correction lineage with immutable local revisions",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "The accepted PR #77 baseline intentionally stops at `BR`; it does not contain accepted same-`SecEnvio` corrected resubmission.",
+            "`R05` fail-closed",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "`SecEnvio N+1` authorization after durable AR",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "does not claim that this method alone can reconcile an `Unknown` attempt with no known `IdReceptor`",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -46,7 +54,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #78 remains pending until exact-head CI is green and human review is complete",
+            "PR #79 remains pending until exact-head CI is green and human review is complete",
             currentState,
             StringComparison.Ordinal);
 

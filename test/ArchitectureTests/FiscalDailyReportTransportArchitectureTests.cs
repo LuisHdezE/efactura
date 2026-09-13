@@ -63,7 +63,7 @@ public sealed class FiscalDailyReportTransportArchitectureTests
     {
         var docs = Read("documentation/blueprint-api-implementation/50_FISCAL_DAILY_REPORT_TRANSPORT.md");
         Assert.Contains("same `SecEnvio`", docs, StringComparison.Ordinal);
-        Assert.Contains("former BR same-sequence gap is now addressed", docs, StringComparison.Ordinal);
+        Assert.Contains("former BR same-sequence gap is addressed by the accepted lifecycle", docs, StringComparison.Ordinal);
         Assert.Contains("51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md", docs, StringComparison.Ordinal);
         Assert.Contains("blocks `R05` fail-closed", docs, StringComparison.Ordinal);
         Assert.Contains("EFACCONSULTARRESPUESTAREPORTE", docs, StringComparison.Ordinal);

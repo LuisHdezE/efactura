@@ -116,6 +116,10 @@ public sealed class V1FiscalDailyReportSubmissionRecord
     [InverseProperty(nameof(V1FiscalDailyReportBrCorrectionRevisionRecord.RootSubmission))]
     public ICollection<V1FiscalDailyReportBrCorrectionRevisionRecord> BrCorrectionRevisions { get; set; }
         = new List<V1FiscalDailyReportBrCorrectionRevisionRecord>();
+
+    [InverseProperty(nameof(V1FiscalDailyReportResponseConsultationRecord.RootSubmission))]
+    public ICollection<V1FiscalDailyReportResponseConsultationRecord> ResponseConsultations { get; set; }
+        = new List<V1FiscalDailyReportResponseConsultationRecord>();
 }
 
 [Table("v1_fdr_br_revisions")]
@@ -242,4 +246,63 @@ public sealed class V1FiscalDailyReportBrCorrectionRevisionRecord
     [ForeignKey(nameof(PreviousRevisionId))]
     [DeleteBehavior(DeleteBehavior.Restrict)]
     public V1FiscalDailyReportBrCorrectionRevisionRecord? PreviousRevision { get; set; }
+
+    [InverseProperty(nameof(V1FiscalDailyReportResponseConsultationRecord.BrCorrectionRevision))]
+    public ICollection<V1FiscalDailyReportResponseConsultationRecord> ResponseConsultations { get; set; }
+        = new List<V1FiscalDailyReportResponseConsultationRecord>();
+}
+
+[Table("v1_fdr_response_consultations")]
+[Index(nameof(OrganizationId), nameof(OperationId), IsUnique = true, Name = "UX_v1_fdr_cons_operation")]
+[Index(nameof(OrganizationId), nameof(DgiReceiverId), Name = "IX_v1_fdr_cons_receiver")]
+[Index(nameof(RootSubmissionId), Name = "IX_v1_fdr_cons_root")]
+[Index(nameof(BrCorrectionRevisionId), Name = "IX_v1_fdr_cons_br")]
+public sealed class V1FiscalDailyReportResponseConsultationRecord
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    public Guid? RootSubmissionId { get; set; }
+    public Guid? BrCorrectionRevisionId { get; set; }
+
+    [MaxLength(200)]
+    public string OrganizationId { get; set; } = string.Empty;
+
+    [MaxLength(12)]
+    public string IssuerRuc { get; set; } = string.Empty;
+
+    [Column(TypeName = "date")]
+    public DateTime SummaryDate { get; set; }
+
+    public int Sequence { get; set; }
+    public int? LocalRevision { get; set; }
+
+    [MaxLength(120)]
+    public string OperationId { get; set; } = string.Empty;
+
+    [MaxLength(120)]
+    public string DgiReceiverId { get; set; } = string.Empty;
+
+    [MaxLength(8)]
+    public string AckStateCode { get; set; } = string.Empty;
+
+    public string AckXml { get; set; } = string.Empty;
+
+    [MaxLength(64)]
+    public string AckXmlHash { get; set; } = string.Empty;
+
+    public int Consistency { get; set; }
+
+    [Precision(0)]
+    public DateTimeOffset ConsultedAtUtc { get; set; }
+
+    [ForeignKey(nameof(RootSubmissionId))]
+    [DeleteBehavior(DeleteBehavior.Restrict)]
+    [InverseProperty(nameof(V1FiscalDailyReportSubmissionRecord.ResponseConsultations))]
+    public V1FiscalDailyReportSubmissionRecord? RootSubmission { get; set; }
+
+    [ForeignKey(nameof(BrCorrectionRevisionId))]
+    [DeleteBehavior(DeleteBehavior.Restrict)]
+    [InverseProperty(nameof(V1FiscalDailyReportBrCorrectionRevisionRecord.ResponseConsultations))]
+    public V1FiscalDailyReportBrCorrectionRevisionRecord? BrCorrectionRevision { get; set; }
 }
