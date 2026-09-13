@@ -168,6 +168,7 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
             OrganizationId = command.OrganizationId.Trim(),
             ReceiverRut = command.ReceiverRut.Trim(),
             IssuerRuc = command.IssuerRuc.Trim(),
+            CreatedAt = WholeSecond(command.CreatedAt),
             OperationId = command.OperationId.Trim(),
             FiscalDocumentIds = command.FiscalDocumentIds.ToArray()
         };
@@ -204,6 +205,7 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
             || !TwelveDigits(stored.IssuerRuc)
             || stored.SenderEnvelopeId is < 0 or > 9_999_999_999L
             || stored.CreatedAt == default
+            || stored.CreatedAt.Ticks % TimeSpan.TicksPerSecond != 0
             || string.IsNullOrWhiteSpace(stored.OperationId)
             || stored.OperationId.Length > 120
             || stored.FiscalDocumentIds is null
@@ -246,6 +248,9 @@ public sealed class PersistFiscalCfeEnvelopeUseCase
                 "inconsistent_replay");
         }
     }
+
+    private static DateTimeOffset WholeSecond(DateTimeOffset value) =>
+        new(value.Ticks - value.Ticks % TimeSpan.TicksPerSecond, value.Offset);
 
     private static bool TwelveDigits(string value) =>
         value.Length == 12 && value.All(char.IsDigit);
