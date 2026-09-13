@@ -110,12 +110,15 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalDailyReportSignatureProvider, XmlDsigFiscalDailyReportSignatureProvider>();
         services.AddSingleton<IFiscalDailyReportTransportClock, SystemFiscalDailyReportTransportClock>();
         services.AddSingleton<IFiscalDailyReportTransportGateway, DgiWsSecurityFiscalDailyReportTransportGateway>();
+        services.AddSingleton<IFiscalCfeEnvelopeTransportClock, SystemFiscalCfeEnvelopeTransportClock>();
+        services.AddSingleton<IFiscalCfeEnvelopeTransportGateway, DgiWsSecurityFiscalCfeEnvelopeTransportGateway>();
         services.AddSingleton<IFiscalDailyReportResponseConsultationGateway, DgiWsSecurityFiscalDailyReportResponseConsultationGateway>();
         services.AddSingleton<IFiscalDailyReportReceiverDiscoveryGateway, DgiWsSecurityFiscalDailyReportReceiverDiscoveryGateway>();
         services.AddSingleton<IFiscalDailyReportBrAckEvidenceParser, DgiFiscalDailyReportBrAckEvidenceParser>();
         services.AddScoped<IFiscalSigningEvidenceRepository, EfFiscalSigningEvidenceRepository>();
         services.AddScoped<IFiscalSignedArtifactRepository, EfFiscalSignedArtifactRepository>();
         services.AddScoped<IFiscalCfeEnvelopeRepository, EfFiscalCfeEnvelopeRepository>();
+        services.AddScoped<IFiscalCfeEnvelopeSubmissionRepository, EfFiscalCfeEnvelopeSubmissionRepository>();
         services.AddSingleton<IFiscalCfeEnvelopePersistenceConflictClassifier, EfFiscalCfeEnvelopePersistenceConflictClassifier>();
         services.AddScoped<IFiscalDailyReportVersionRepository, EfFiscalDailyReportVersionRepository>();
         services.AddScoped<IFiscalDailyReportSigningEvidenceRepository, EfFiscalDailyReportSigningEvidenceRepository>();
@@ -147,6 +150,8 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<SignFiscalDocumentUseCase>();
         services.AddScoped<PackageFiscalCfeEnvelopeUseCase>();
         services.AddScoped<PersistFiscalCfeEnvelopeUseCase>();
+        services.AddScoped<PrepareFiscalCfeEnvelopeSubmissionUseCase>();
+        services.AddScoped<DispatchFiscalCfeEnvelopeSubmissionUseCase>();
         services.AddScoped<AllocateFiscalDailyReportVersionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDailyReportUseCase>();
