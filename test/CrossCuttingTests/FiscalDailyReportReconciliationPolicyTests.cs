@@ -87,6 +87,36 @@ public sealed class FiscalDailyReportReconciliationPolicyTests
     }
 
     [Fact]
+    public async Task Persisted_state_and_original_DGI_code_must_agree()
+    {
+        var observation = Observation(FiscalDailyReportLaterState.Processed, "ER");
+        var useCase = new AssessFiscalDailyReportReconciliationUseCase(new FakeReader(observation));
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+            useCase.ExecuteAsync(new(observation.OrganizationId, observation.DgiReceiverId)));
+
+        Assert.Equal("fiscal.daily_report.reconciliation.state_code_mismatch", error.Code);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Persisted_observation_must_reference_exactly_one_local_target(bool bothTargets)
+    {
+        var observation = Observation(FiscalDailyReportLaterState.Processed, "DR") with
+        {
+            RootSubmissionId = bothTargets ? Guid.NewGuid() : null,
+            BrCorrectionRevisionId = bothTargets ? Guid.NewGuid() : null
+        };
+        var useCase = new AssessFiscalDailyReportReconciliationUseCase(new FakeReader(observation));
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+            useCase.ExecuteAsync(new(observation.OrganizationId, observation.DgiReceiverId)));
+
+        Assert.Equal("fiscal.daily_report.reconciliation.target_invalid", error.Code);
+    }
+
+    [Fact]
     public async Task Root_and_BR_revision_targets_are_preserved_without_mutation()
     {
         var root = Observation(FiscalDailyReportLaterState.Processed, "DR");
@@ -106,9 +136,9 @@ public sealed class FiscalDailyReportReconciliationPolicyTests
             .ExecuteAsync(new(correction.OrganizationId, correction.DgiReceiverId));
 
         Assert.Equal(FiscalDailyReportConsultationTargetKind.RootSubmission, rootResult.TargetKind);
-        Assert.Equal(root.RootSubmissionId, rootResult.TargetId);
+        Assert.Equal(root.RootSubmissionId!.Value, rootResult.TargetId);
         Assert.Equal(FiscalDailyReportConsultationTargetKind.BrCorrectionRevision, correctionResult.TargetKind);
-        Assert.Equal(correction.BrCorrectionRevisionId, correctionResult.TargetId);
+        Assert.Equal(correction.BrCorrectionRevisionId!.Value, correctionResult.TargetId);
         Assert.Equal(2, correctionResult.LocalRevision);
     }
 
