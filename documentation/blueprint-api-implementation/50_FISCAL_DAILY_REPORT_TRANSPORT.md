@@ -89,7 +89,9 @@ The gateway parses only the immediate `ACKRepDiario` returned by `EFACRECEPCIONR
 
 For BR correction authorization, typed rejection reasons are parsed behind an Infrastructure port and preserved separately without modifying the original ACK bytes. The accepted same-sequence correction lifecycle is documented in `51_FISCAL_DAILY_REPORT_BR_SAME_SEQUENCE_CORRECTION.md`.
 
-The pending bounded consultation capability for a **known durable `IdReceptor`** is documented separately in `52_FISCAL_DAILY_REPORT_RESPONSE_CONSULTATION.md`. It retrieves the original ACK without redefining this root transport lifecycle.
+The accepted bounded consultation capability for a **known durable `IdReceptor`** is documented separately in `52_FISCAL_DAILY_REPORT_RESPONSE_CONSULTATION.md`. It retrieves the original ACK without redefining this root transport lifecycle.
+
+The pending receiver-discovery capability for `Unknown` targets without a durable `IdReceptor` is documented separately in `53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md`. It discovers receiver evidence but still does not rewrite this root transport lifecycle.
 
 This transport foundation still does not implement later reconciliation states such as `DR`, `ER` or `FR`, and it does not independently validate the DGI XML signature inside the returned ACK. Raw ACK material therefore remains evidence whose state-changing interpretation is separately governed.
 
@@ -99,7 +101,7 @@ A timeout, connection loss, response-read failure, malformed successful response
 
 `Unknown` is never retried automatically.
 
-If a trustworthy durable `IdReceptor` is available, the pending consultation slice in document 52 can retrieve the original response as append-only evidence. If no receiver id is known, `EFACCONSULTARRESPUESTAREPORTE` alone cannot discover the submission; receiver-id discovery and later reconciliation remain separate governed capabilities.
+If a trustworthy durable `IdReceptor` is available, the accepted consultation slice in document 52 can retrieve the original response as append-only evidence. If no receiver id is known, `EFACCONSULTARRESPUESTAREPORTE` alone cannot discover the submission. PR #80 proposes the separately governed `EFACCONSULTARENVIOSREPORTE` receiver-discovery evidence chain described in document 53.
 
 Failures known to occur before network dispatch, such as invalid external transport configuration, certificate resolution failure or SOAP construction failure, can return the submission to `Prepared`.
 
@@ -115,7 +117,7 @@ It does not redefine this root transport lifecycle and does not convert a reject
 
 ## Validation evidence
 
-The accepted transport/correction lineage has Clean Architecture Guard coverage including:
+The accepted transport/correction/consultation lineage has Clean Architecture Guard coverage including:
 
 - full solution build;
 - Clean Architecture guards;
@@ -127,18 +129,19 @@ The accepted transport/correction lineage has Clean Architecture Guard coverage 
 - concurrent-dispatch serialization proving a single network-boundary call;
 - BR correction revision lineage, replay and R05 fail-closed behavior;
 - accepted-correction N+1 ordering;
-- provider-real local-revision uniqueness.
+- provider-real local-revision uniqueness;
+- known-`IdReceptor` original-response consultation, replay and provider-real persistence.
 
-PR #78 was accepted at `main@0846d63b02db2cff65bc3c86c4eca4cffa20b409`, with post-merge Clean Architecture Guard #301 successful.
+PR #79 was accepted at `main@85fe095449f7b4e9bfb97b45e01ae283b8071913`, with post-merge Clean Architecture Guard #312 (`34727894835`) successful.
 
-The consultation candidate in PR #79 must pass its own exact-final-head Clean Architecture Guard before review or merge.
+The receiver-discovery candidate in PR #80 must pass its own exact-final-head Clean Architecture Guard before review or merge.
 
 ## Deliberate non-scope
 
-This transport lineage still does not implement:
+The accepted transport lineage still does not implement:
 
 - automatic R05 sequence recovery;
-- receiver-id discovery through `EFACCONSULTARENVIOSREPORTE` when no durable `IdReceptor` exists;
+- accepted receiver-id discovery through `EFACCONSULTARENVIOSREPORTE` when no durable `IdReceptor` exists; PR #80 is still pending;
 - `DR` / `ER` / `FR` reconciliation lifecycle;
 - automatic retry from `Unknown`;
 - independent cryptographic validation of DGI ACK signatures;
