@@ -18,19 +18,19 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@e920ee0dea945c60b3fd72f76794cca40857519f",
+            "main@356249ed93938561bed22abbf21f3f87090b9a53",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #84",
+            "merge of PR #85",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Current pending governed increment: PR #85",
+            "Current pending governed increment: PR #86",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #85 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
+            "PR #86 is not part of the accepted baseline until its exact final head is green and the human explicitly approves merge.",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -70,7 +70,11 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Pending PR #85 boundary, not yet accepted",
+            "Durable Sobre transport through `EFACRECEPCIONSOBRE`",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Pending PR #86 boundary, not yet accepted",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -78,7 +82,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #85 remains pending until exact-head CI is green and human review is complete",
+            "PR #86 remains pending until exact-head CI is green and human review is complete",
             currentState,
             StringComparison.Ordinal);
 
