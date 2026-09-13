@@ -72,7 +72,7 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
     }
 
     [Fact]
-    public void Documentation_preserves_accepted_fail_closed_discovery_with_current_PR89_checkpoint()
+    public void Documentation_preserves_accepted_fail_closed_discovery_with_current_PR91_checkpoint()
     {
         var docs = Read("documentation/blueprint-api-implementation/53_FISCAL_DAILY_REPORT_RECEIVER_DISCOVERY.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -89,12 +89,13 @@ public sealed class FiscalDailyReportReceiverDiscoveryArchitectureTests
         Assert.Contains("Document 54", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@f37077b4e85de94d7bd1f63b8b9303239edeb4a0", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #89", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@c5d0c1220ca1c707417092aa905ee8f279056cc6", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #91", checkpoint, StringComparison.Ordinal);
         Assert.Contains("There is no pending governed increment currently open", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Append-only observation of DGI Reporte Diario later states `DR`, `ER` and `FR`", checkpoint, StringComparison.Ordinal);
         Assert.Contains("never selects by timestamp or returned collection order", checkpoint, StringComparison.Ordinal);
         Assert.Contains("AutomaticReliquidationAuthorized = false", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #91 ACKSobre PKI Uruguay certificate-trust boundary", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
