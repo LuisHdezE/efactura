@@ -24,7 +24,9 @@ public sealed class V1FiscalCfeEnvelopeRecord
     public long SenderEnvelopeId { get; set; }
 
     [Precision(0)]
-    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    public int CreatedAtOffsetMinutes { get; set; }
 
     public string FiscalDocumentIdsJson { get; set; } = string.Empty;
 
