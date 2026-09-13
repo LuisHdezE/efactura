@@ -18,11 +18,11 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@68b2b79772230d858ac3c2dde573542b3caaef97",
+            "main@f37077b4e85de94d7bd1f63b8b9303239edeb4a0",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #87",
+            "merge of PR #89",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -30,7 +30,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #87 is part of the accepted baseline",
+            "PR #89 is part of the accepted baseline",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -79,6 +79,14 @@ public sealed class DgiTestingReadinessDocumentationTests
             StringComparison.Ordinal);
         Assert.Contains(
             "Accepted PR #87 ACKSobre signature-verification boundary",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Read-only authoritative DGI CFE-state consultation through `ws_consultas / EFACCONSULTARESTADOCFE`",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "61_FISCAL_CFE_STATE_CONSULTATION.md",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
