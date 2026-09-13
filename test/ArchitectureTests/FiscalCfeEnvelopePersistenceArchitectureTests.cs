@@ -12,12 +12,18 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
 
         Assert.Contains("PackageFiscalCfeEnvelopeUseCase", source, StringComparison.Ordinal);
         Assert.Contains("IFiscalCfeEnvelopeRepository", source, StringComparison.Ordinal);
+        Assert.Contains("IFiscalCfeEnvelopePersistenceConflictClassifier", source, StringComparison.Ordinal);
         Assert.Contains("ITransactionManager", source, StringComparison.Ordinal);
         Assert.Contains("IUnitOfWork", source, StringComparison.Ordinal);
         Assert.Contains("SenderEnvelopeId remains explicit caller input", source, StringComparison.Ordinal);
+        Assert.Contains("RecoverConcurrentReplayAsync", source, StringComparison.Ordinal);
+        Assert.Contains("IsUniqueConstraintConflict", source, StringComparison.Ordinal);
         Assert.Contains("identity_payload_conflict", source, StringComparison.Ordinal);
         Assert.Contains("persisted_evidence_invalid", source, StringComparison.Ordinal);
+        Assert.Contains("concurrent_conflict_unresolved", source, StringComparison.Ordinal);
         Assert.Contains("CreatedAt.Offset != command.CreatedAt.Offset", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("PostgresException", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("MySqlException", source, StringComparison.Ordinal);
         Assert.DoesNotContain("HttpClient", source, StringComparison.Ordinal);
         Assert.DoesNotContain("IFiscalCfeEnvelopeTransport", source, StringComparison.Ordinal);
         Assert.DoesNotContain("IFiscalCfeEnvelopeIdAllocator", source, StringComparison.Ordinal);
@@ -38,6 +44,18 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
         Assert.DoesNotContain("BeginTransaction", source, StringComparison.Ordinal);
         Assert.DoesNotContain("ExecuteSql", source, StringComparison.Ordinal);
         Assert.DoesNotContain("HttpClient", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Provider_unique_conflict_classifier_stays_in_infrastructure()
+    {
+        var source = Read("src/Infrastructure/Persistence/V1/Write/EfFiscalCfeEnvelopePersistenceConflictClassifier.cs");
+
+        Assert.Contains("PostgresException", source, StringComparison.Ordinal);
+        Assert.Contains("PostgresErrorCodes.UniqueViolation", source, StringComparison.Ordinal);
+        Assert.Contains("MySqlException", source, StringComparison.Ordinal);
+        Assert.Contains("mysql.Number == 1062", source, StringComparison.Ordinal);
+        Assert.Contains("IFiscalCfeEnvelopePersistenceConflictClassifier", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -63,11 +81,12 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
     }
 
     [Fact]
-    public void Dependency_injection_registers_repository_and_persistence_use_case()
+    public void Dependency_injection_registers_repository_classifier_and_persistence_use_case()
     {
         var services = Read("src/Infrastructure/Persistence/V1/V1PersistenceServiceCollectionExtensions.cs");
 
         Assert.Contains("IFiscalCfeEnvelopeRepository, EfFiscalCfeEnvelopeRepository", services, StringComparison.Ordinal);
+        Assert.Contains("IFiscalCfeEnvelopePersistenceConflictClassifier, EfFiscalCfeEnvelopePersistenceConflictClassifier", services, StringComparison.Ordinal);
         Assert.Contains("PersistFiscalCfeEnvelopeUseCase", services, StringComparison.Ordinal);
     }
 
@@ -80,6 +99,7 @@ public sealed class FiscalCfeEnvelopePersistenceArchitectureTests
         Assert.Contains("assigned by the issuer", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("no authoritative allocation algorithm", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("local replay/correlation invariant", docs, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("concurrent", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("does not allocate", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("does not submit", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("S08", docs, StringComparison.Ordinal);
