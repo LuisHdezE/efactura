@@ -33,19 +33,20 @@ public sealed class EfFiscalDailyReportLaterStateObservationRepository :
         return record is null ? null : Map(record);
     }
 
-    public async Task<StoredFiscalDailyReportLaterStateObservation?> GetLatestByReceiverIdAsync(
+    public async Task<IReadOnlyList<StoredFiscalDailyReportLaterStateObservation>> GetLatestCandidatesByReceiverIdAsync(
         string organizationId,
         string dgiReceiverId,
         CancellationToken cancellationToken = default)
     {
-        var record = await _dbContext.Set<V1FiscalDailyReportLaterStateObservationRecord>()
+        var records = await _dbContext.Set<V1FiscalDailyReportLaterStateObservationRecord>()
             .AsNoTracking()
             .Where(x => x.OrganizationId == organizationId && x.DgiReceiverId == dgiReceiverId)
             .OrderByDescending(x => x.ObservedAtUtc)
             .ThenByDescending(x => x.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .Take(2)
+            .ToListAsync(cancellationToken);
 
-        return record is null ? null : Map(record);
+        return records.Select(Map).ToArray();
     }
 
     public async Task AddAsync(
