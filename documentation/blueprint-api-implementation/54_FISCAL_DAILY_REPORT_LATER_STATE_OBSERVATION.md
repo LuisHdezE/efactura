@@ -131,9 +131,11 @@ Those are separate governed decisions.
 
 ## Persistence boundary
 
-The later-state table is intentionally migration-owned evidence outside the root/revision aggregate mappings. Its repository performs only parameterized append/read operations and joins the ambient EF transaction when one exists.
+The later-state record is registered in the canonical EF Core v1 model through a small model-customizer extension that delegates first to the existing `V1PersistenceModelCustomizer`. The observation repository uses `Set<V1FiscalDailyReportLaterStateObservationRecord>()`, no-tracking reads and tracked `AddAsync` writes only.
 
-Foreign keys to root submissions and BR correction revisions are restrictive. No cascade or aggregate navigation is introduced that could turn an observation into a local state mutation.
+The repository does not issue raw SQL, call `SaveChanges`, or create its own transaction. Commit and transaction ownership remain with the existing `IUnitOfWork` / `ITransactionManager` boundary used by the Application use case.
+
+Foreign keys to root submissions and BR correction revisions are restrictive. The model exposes no navigation from the observation evidence into a state-changing aggregate workflow, and no cascade is introduced that could turn observation into local fiscal-state mutation.
 
 ## Validation coverage
 
@@ -149,7 +151,7 @@ The increment requires:
 - PostgreSQL/MySQL operation-id uniqueness;
 - multiple observations for the same receiver;
 - proof that source root/revision state and ACK remain unchanged;
-- architecture guards preventing Application HTTP/X509 dependencies and preventing update/delete semantics in the observation repository.
+- architecture guards preventing Application HTTP/X509 dependencies, raw-SQL persistence drift and update/delete semantics in the observation repository.
 
 The exact final PR head must pass the complete Clean Architecture Guard before review or merge.
 
