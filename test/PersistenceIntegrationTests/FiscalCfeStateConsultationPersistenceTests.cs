@@ -161,7 +161,7 @@ public sealed class FiscalCfeStateConsultationPersistenceTests
                 "loc-state",
                 "term-state",
                 null,
-                SaleCommercialIntent.ConsumerSale,
+                SaleCommercialIntent.ConsumerFinal,
                 "UYU",
                 new DateOnly(2026, 9, 13),
                 "UY",
