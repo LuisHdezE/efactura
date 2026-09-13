@@ -156,6 +156,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<CreateFiscalContentSnapshotUseCase>();
         services.AddScoped<PrepareFiscalSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDocumentUseCase>();
+        services.AddScoped<PlanFiscalCfeEnvelopeBatchesUseCase>();
         services.AddScoped<PackageFiscalCfeEnvelopeUseCase>();
         services.AddScoped<PersistFiscalCfeEnvelopeUseCase>();
         services.AddScoped<PrepareFiscalCfeEnvelopeSubmissionUseCase>();
