@@ -75,6 +75,25 @@ public sealed class FiscalDailyReportReconciliationPolicyTests
     }
 
     [Fact]
+    public async Task Equal_latest_observation_timestamps_fail_closed_instead_of_using_id_order()
+    {
+        var first = Observation(FiscalDailyReportLaterState.InManagement, "ER");
+        var second = first with
+        {
+            Id = Guid.NewGuid(),
+            OperationId = "policy-source-op-2",
+            State = FiscalDailyReportLaterState.Reliquidated,
+            DgiStateCode = "FR"
+        };
+        var useCase = new AssessFiscalDailyReportReconciliationUseCase(new FakeReader(first, second));
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+            useCase.ExecuteAsync(new(first.OrganizationId, first.DgiReceiverId)));
+
+        Assert.Equal("fiscal.daily_report.reconciliation.latest_observation_ambiguous", error.Code);
+    }
+
+    [Fact]
     public async Task Invalid_persisted_state_fails_closed()
     {
         var observation = Observation((FiscalDailyReportLaterState)99, "ZZ");
@@ -169,13 +188,15 @@ public sealed class FiscalDailyReportReconciliationPolicyTests
     {
         private readonly IReadOnlyList<StoredFiscalDailyReportLaterStateObservation> _values = values;
 
-        public Task<StoredFiscalDailyReportLaterStateObservation?> GetLatestByReceiverIdAsync(
+        public Task<IReadOnlyList<StoredFiscalDailyReportLaterStateObservation>> GetLatestCandidatesByReceiverIdAsync(
             string organizationId,
             string dgiReceiverId,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult(_values
+            Task.FromResult<IReadOnlyList<StoredFiscalDailyReportLaterStateObservation>>(_values
                 .Where(x => x.OrganizationId == organizationId && x.DgiReceiverId == dgiReceiverId)
                 .OrderByDescending(x => x.ObservedAtUtc)
-                .FirstOrDefault());
+                .ThenByDescending(x => x.Id)
+                .Take(2)
+                .ToArray());
     }
 }
