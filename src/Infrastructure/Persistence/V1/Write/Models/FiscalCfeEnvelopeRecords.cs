@@ -74,3 +74,28 @@ public sealed class V1FiscalCfeEnvelopeAckObservationRecord
     public string RejectionReasonsJson { get; set; } = "[]";
     [Precision(0)] public DateTimeOffset ObservedAtUtc { get; set; }
 }
+
+[Table("v1_fiscal_cfe_envelope_ack_signature_verifications")]
+[Index(nameof(AckObservationId), IsUnique = true, Name = "UX_v1_fceasv_ack_observation")]
+public sealed class V1FiscalCfeEnvelopeAckSignatureVerificationRecord
+{
+    [Key] public Guid Id { get; set; }
+    public Guid AckObservationId { get; set; }
+    public Guid SubmissionId { get; set; }
+    public Guid EnvelopeId { get; set; }
+    [MaxLength(200)] public string OrganizationId { get; set; } = string.Empty;
+    [MaxLength(64)] public string ResponseSha256 { get; set; } = string.Empty;
+    [MaxLength(120)] public string VerificationProfileId { get; set; } = string.Empty;
+    [MaxLength(64)] public string CertificateSha256 { get; set; } = string.Empty;
+    [MaxLength(160)] public string CertificateThumbprint { get; set; } = string.Empty;
+    [MaxLength(160)] public string CertificateSerialNumber { get; set; } = string.Empty;
+    [MaxLength(1024)] public string CertificateSubject { get; set; } = string.Empty;
+    [MaxLength(1024)] public string CertificateIssuer { get; set; } = string.Empty;
+    [MaxLength(300)] public string CanonicalizationMethod { get; set; } = string.Empty;
+    [MaxLength(300)] public string SignatureMethod { get; set; } = string.Empty;
+    [MaxLength(300)] public string DigestMethod { get; set; } = string.Empty;
+    [MaxLength(512)] public string ReferenceUri { get; set; } = string.Empty;
+    public string ReferenceTransformsJson { get; set; } = "[]";
+    public bool CertificateTrustValidated { get; set; }
+    [Precision(0)] public DateTimeOffset VerifiedAtUtc { get; set; }
+}
