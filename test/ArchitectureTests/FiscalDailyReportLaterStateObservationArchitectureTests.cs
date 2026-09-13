@@ -32,6 +32,7 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
     {
         var repository = Read("src/Infrastructure/Persistence/V1/Write/Repositories/EfFiscalDailyReportLaterStateObservationRepository.cs");
         var customizer = Read("src/Infrastructure/Persistence/V1/V1PersistenceLaterStateModelCustomizer.cs");
+        var envelopeCustomizer = Read("src/Infrastructure/Persistence/V1/V1PersistenceEnvelopeModelCustomizer.cs");
         var configurator = Read("src/Infrastructure/Persistence/V1/V1PersistenceDatabaseConfigurator.cs");
         var migration = Read("src/Infrastructure/Persistence/V1/Migrations/20260913012000_V1FiscalDailyReportLaterStateObservation.cs");
 
@@ -50,7 +51,8 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.Contains("UX_v1_fdr_later_operation", customizer, StringComparison.Ordinal);
         Assert.Contains("IX_v1_fdr_later_receiver", customizer, StringComparison.Ordinal);
         Assert.Contains("DeleteBehavior.Restrict", customizer, StringComparison.Ordinal);
-        Assert.Contains("V1PersistenceLaterStateModelCustomizer", configurator, StringComparison.Ordinal);
+        Assert.Contains("V1PersistenceLaterStateModelCustomizer", envelopeCustomizer, StringComparison.Ordinal);
+        Assert.Contains("V1PersistenceEnvelopeModelCustomizer", configurator, StringComparison.Ordinal);
 
         Assert.Contains("v1_fdr_later_state_observations", migration, StringComparison.Ordinal);
         Assert.Contains("UX_v1_fdr_later_operation", migration, StringComparison.Ordinal);
@@ -61,7 +63,7 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
     }
 
     [Fact]
-    public void Documentation_records_PR81_as_accepted_with_PR82_policy_accepted_and_PR83_pending()
+    public void Documentation_records_PR81_and_PR82_as_accepted_with_PR83_packaging_accepted_and_PR84_pending()
     {
         var docs = Read("documentation/blueprint-api-implementation/54_FISCAL_DAILY_REPORT_LATER_STATE_OBSERVATION.md");
         var checkpoint = Read("documentation/BLUEPRINT_CURRENT_STATE.md");
@@ -78,10 +80,10 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.Contains("IUnitOfWork", docs, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("Current pending governed increment: PR #83", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("main@6fd1ae6927bf3789015d3bb659bf094283ec7095", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Current pending governed increment: PR #84", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@b2ea590779d229d8a2eab51111562a0447c6b52e", checkpoint, StringComparison.Ordinal);
         Assert.Contains("AutomaticReliquidationAuthorized = false", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("PR #83 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("PR #84 remains pending until exact-head CI is green and human review is complete", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path)
