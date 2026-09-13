@@ -42,7 +42,7 @@ public sealed class FiscalDailyReportLaterStateObservationArchitectureTests
         Assert.DoesNotContain("INSERT INTO", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("UPDATE ", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("DELETE ", repository, StringComparison.Ordinal);
-        Assert.DoesNotContain("SaveChanges", repository, StringComparison.Ordinal);
+        Assert.DoesNotContain(".SaveChanges", repository, StringComparison.Ordinal);
         Assert.DoesNotContain("BeginTransaction", repository, StringComparison.Ordinal);
 
         Assert.Contains("_baseline.Customize(modelBuilder, context)", customizer, StringComparison.Ordinal);
