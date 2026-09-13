@@ -10,7 +10,7 @@ Formal traditional DGI Testing readiness remains exactly:
 
 This bounded increment packages already-signed CFE artifacts into a deterministic DGI `EnvioCFE` / Sobre candidate and validates the complete package against a byte-pinned local XSD closure.
 
-It deliberately stops before persistence and transport. It does not submit a Sobre to DGI, does not allocate `Idemisor`, does not compress/base64 transport content, does not parse an ACK and does not mutate fiscal state.
+It deliberately stops before persistence and transport. It does not persist the Sobre, does not submit a Sobre to DGI, does not allocate `Idemisor`, does not compress/base64 transport content, does not parse an ACK and does not mutate fiscal state.
 
 ## Authoritative DGI evidence
 
