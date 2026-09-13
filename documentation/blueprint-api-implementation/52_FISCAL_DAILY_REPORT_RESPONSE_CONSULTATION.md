@@ -154,6 +154,8 @@ Accepted PR #81 / document 54 subsequently added append-only observation of DGI 
 
 Accepted PR #82 / document 55 subsequently added the non-mutating DR/ER/FR reconciliation policy at `main@6fd1ae6927bf3789015d3bb659bf094283ec7095`; post-merge Guard #357 passed.
 
+Accepted PR #83 / document 56 subsequently added local deterministic Sobre v05 packaging at `main@b2ea590779d229d8a2eab51111562a0447c6b52e`; post-merge Guard #373 passed.
+
 ## Deliberate non-scope
 
 This accepted increment does not itself implement:
@@ -166,7 +168,7 @@ This accepted increment does not itself implement:
 - Sobre v05 transport/submission;
 - Production enablement.
 
-Pending PR #83 / document 56 separately proposes local Sobre v05 packaging without persistence or transport.
+Pending PR #84 / document 57 separately proposes durable local Sobre identity/replay persistence with explicit caller-supplied `Idemisor` and no DGI transport.
 
 Formal traditional DGI Testing readiness remains exactly:
 

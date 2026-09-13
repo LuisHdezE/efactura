@@ -1,6 +1,11 @@
 # 56 — Fiscal Sobre v05 Packaging
 
-Status: GOVERNED IMPLEMENTATION CANDIDATE
+Status: ACCEPTED IMPLEMENTATION
+
+Accepted baseline: `main@b2ea590779d229d8a2eab51111562a0447c6b52e`
+(merge of PR #83, `feat(fiscal): add Sobre v05 packaging`).
+
+Exact-head Clean Architecture Guard #372 (`34735518140`) and post-merge Clean Architecture Guard #373 (`34735981187`) completed successfully.
 
 Formal traditional DGI Testing readiness remains exactly:
 
@@ -8,9 +13,9 @@ Formal traditional DGI Testing readiness remains exactly:
 
 ## Purpose
 
-This bounded increment packages already-signed CFE artifacts into a deterministic DGI `EnvioCFE` / Sobre candidate and validates the complete package against a byte-pinned local XSD closure.
+This accepted increment packages already-signed CFE artifacts into a deterministic DGI `EnvioCFE` / Sobre candidate and validates the complete package against a byte-pinned local XSD closure.
 
-It deliberately stops before persistence and transport. It does not persist the Sobre, does not submit a Sobre to DGI, does not allocate `Idemisor`, does not compress/base64 transport content, does not parse an ACK and does not mutate fiscal state.
+The accepted packaging boundary deliberately stops before persistence and transport. It does not persist the Sobre, does not submit a Sobre to DGI, does not allocate `Idemisor`, does not compress/base64 transport content, does not parse an ACK and does not mutate fiscal state.
 
 ## Authoritative DGI evidence
 
@@ -44,7 +49,7 @@ The official DGI archive URL listed for `XSDs_FE_V1.44.2` did not return usable 
 - SHA-256: `38b411942eda7c229cf4048965654245ba6218f6079a00acfcbe1804e8daa58f`;
 - bytes: `3395`.
 
-The file committed in this branch has the exact same Git blob identity, proving byte-for-byte equality with the immutable recovery source. The mirror is not treated as the regulatory authority; DGI remains the authority for the published archive/version and functional format.
+The accepted file has the exact same Git blob identity, proving byte-for-byte equality with the immutable recovery source. The mirror is not treated as the regulatory authority; DGI remains the authority for the published archive/version and functional format.
 
 The XSD itself carries the historical internal comment `Version: 1.31`. That comment is preserved as source evidence and is not interpreted as replacing either the currently governed DGI XSD archive identity `1.44.2` or functional Sobre format `v05`.
 
@@ -159,7 +164,7 @@ Infrastructure packaging uses only public certificate parsing, deterministic XML
 
 ## Validation coverage
 
-This increment requires proof that:
+The accepted increment proves that:
 
 - a valid source set is packaged without persistence or transport side effects;
 - 1..250 CFE are accepted as the governed count range;
@@ -177,7 +182,7 @@ This increment requires proof that:
 
 ## Deliberate non-scope
 
-This increment does not implement:
+The accepted packaging increment itself does not implement:
 
 - durable Sobre persistence;
 - `Idemisor` allocation/replay semantics;
@@ -192,4 +197,6 @@ This increment does not implement:
 - external DGI Testing acceptance;
 - Production enablement.
 
-Those are separate governed capabilities. In particular, successful local XSD validation is not evidence that a Sobre has been accepted by DGI Testing or Production.
+Pending PR #84 / document 57 separately proposes durable local Sobre identity and replay persistence with explicit caller-supplied `Idemisor`; it does not change the accepted packaging boundary or add DGI transport.
+
+Successful local XSD validation is not evidence that a Sobre has been accepted by DGI Testing or Production.
