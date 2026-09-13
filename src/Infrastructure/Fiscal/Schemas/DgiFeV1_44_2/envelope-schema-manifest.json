@@ -1,0 +1,53 @@
+{
+  "schemaSetId": "dgi-fe-envelope-xsd-v1.44.2",
+  "version": "1.44.2",
+  "functionalFormatVersion": "05",
+  "rootSchema": "EnvioCFE.xsd",
+  "officialRegistry": "https://www.efactura.dgi.gub.uy/principal/ampliacion_de_contenido/documentos-de-interes?es=",
+  "officialArchive": "https://www.efactura.dgi.gub.uy/files/xsds_fe_1_44_2-zip?es=",
+  "officialFunctionalFormat": "https://www.efactura.dgi.gub.uy/files/Formato_Sobre_v05_pdf?es=",
+  "byteRecoverySource": {
+    "repository": "olagopirez/factible",
+    "commit": "9a24a598e9470c4a1c5c34cb0cb253d08ffa3db3",
+    "path": "packages/cfe/spec/xsd",
+    "role": "immutable byte-recovery mirror only; DGI remains the regulatory authority for version and publication status"
+  },
+  "files": [
+    {
+      "name": "EnvioCFE.xsd",
+      "bytes": 3395,
+      "sha256": "38b411942eda7c229cf4048965654245ba6218f6079a00acfcbe1804e8daa58f",
+      "gitBlobSha1": "3209b5b854bcbf23694c8ae2561509b568d5d263"
+    },
+    {
+      "name": "CFEType.xsd",
+      "bytes": 141427,
+      "sha256": "81d718fa26bba9908d45cf05af47fa6d41bdedc0906f995628820f051f5f9ce5",
+      "gitBlobSha1": "f35c531b90b20c68d5f4e53bcbd0117b04686934"
+    },
+    {
+      "name": "DGITypes.xsd",
+      "bytes": 56751,
+      "sha256": "5bbc462de995acc26c572e5392c5604539b76b6645e4677d06aba84347205769",
+      "gitBlobSha1": "5ee48a1a1e727d7be71c5d8d14983ba576edf67e"
+    },
+    {
+      "name": "xmldsig-core-schema.xsd",
+      "bytes": 10293,
+      "sha256": "35cf8197da812c85e40d57891b35c94187569ed474a2dac813ce5090dafcd35c",
+      "gitBlobSha1": "df126b30e684091b32a748cd2e408f5fb9d651a9"
+    },
+    {
+      "name": "xenc-schema.xsd",
+      "bytes": 5172,
+      "sha256": "a7401e4126ea13975a444f418a173c1ed16785d85b70135728c39f2d74a3aaf9",
+      "gitBlobSha1": "20a70209c899049ceaa6e0f39f4207cc95acc4f1"
+    },
+    {
+      "name": "version.txt",
+      "bytes": 15,
+      "sha256": "8386e71531b561bd75a2ec62c0b2d8d24fae42fd1cc318790a2f2585d5591d27",
+      "gitBlobSha1": "af042bd258b75318500bdb0dee3f4b1d35537e3d2b"
+    }
+  ]
+}
