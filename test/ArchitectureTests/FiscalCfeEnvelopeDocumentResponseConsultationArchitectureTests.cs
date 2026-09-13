@@ -63,7 +63,7 @@ public sealed class FiscalCfeEnvelopeDocumentResponseConsultationArchitectureTes
         Assert.Contains("IFiscalCfeEnvelopeDocumentResponseConsultationRepository", services, StringComparison.Ordinal);
         Assert.Contains("ConsultFiscalCfeEnvelopeDocumentResponseUseCase", services, StringComparison.Ordinal);
         Assert.Contains("FK_v1_fcdrc_ack_observation", migration, StringComparison.Ordinal);
-        Assert.Contains("one or multiple messages", documentation, StringComparison.Ordinal);
+        Assert.Contains("multiple messages or one response", documentation, StringComparison.Ordinal);
         Assert.Contains("does **not**", documentation, StringComparison.Ordinal);
         Assert.Contains("**BLOCKED BY MISSING PRODUCT CAPABILITIES**", documentation, StringComparison.Ordinal);
     }
