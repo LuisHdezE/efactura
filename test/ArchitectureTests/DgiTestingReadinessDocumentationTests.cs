@@ -18,11 +18,11 @@ public sealed class DgiTestingReadinessDocumentationTests
                 "36_DGI_TESTING_READINESS_RECONCILIATION.md"));
 
         Assert.Contains(
-            "main@5fcc1ea45cfa91e069eba62bcb887813646364af",
+            "main@8a70631cc5e2d723f88209459e5b77e487b66c20",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "merge of PR #93",
+            "merge of PR #95",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -30,7 +30,7 @@ public sealed class DgiTestingReadinessDocumentationTests
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
-            "PR #93 is part of the accepted baseline",
+            "PR #95 is part of the accepted baseline",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -111,6 +111,18 @@ public sealed class DgiTestingReadinessDocumentationTests
             StringComparison.Ordinal);
         Assert.Contains(
             "63_FISCAL_SOBRE_BATCH_PLANNING.md",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Read-only ACKCFE document-response consultation by ACKSobre token",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "64_FISCAL_CFE_DOCUMENT_RESPONSE_CONSULTATION.md",
+            currentState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "WS_eFactura.EFACCONSULTARESTADOENVIO",
             currentState,
             StringComparison.Ordinal);
         Assert.Contains(

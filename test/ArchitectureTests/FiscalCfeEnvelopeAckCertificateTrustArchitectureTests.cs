@@ -101,7 +101,7 @@ public sealed class FiscalCfeEnvelopeAckCertificateTrustArchitectureTests
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
         Assert.Contains("main@bf7d97e350192302cd7cc681d6c7feecfa8589ab", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@5fcc1ea45cfa91e069eba62bcb887813646364af", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@8a70631cc5e2d723f88209459e5b77e487b66c20", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #91 ACKSobre PKI Uruguay certificate-trust boundary", checkpoint, StringComparison.Ordinal);
         Assert.Contains("X509Chain CustomRootTrust", checkpoint, StringComparison.Ordinal);
         Assert.Contains("online revocation for EntireChain", checkpoint, StringComparison.Ordinal);
@@ -109,6 +109,7 @@ public sealed class FiscalCfeEnvelopeAckCertificateTrustArchitectureTests
         Assert.Contains("DgiIdentityValidated = false", checkpoint, StringComparison.Ordinal);
         Assert.Contains("DGI-specific legal signer identity/certificate habilitation policy", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #93 deterministic Sobre batch-planning boundary", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #95 ACKCFE document-response consultation boundary", checkpoint, StringComparison.Ordinal);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", checkpoint, StringComparison.Ordinal);
     }
 
