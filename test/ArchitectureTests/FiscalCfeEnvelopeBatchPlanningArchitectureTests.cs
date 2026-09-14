@@ -46,8 +46,8 @@ public sealed class FiscalCfeEnvelopeBatchPlanningArchitectureTests
         Assert.Contains("does not discover pending", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@5fcc1ea45cfa91e069eba62bcb887813646364af", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #93", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@8a70631cc5e2d723f88209459e5b77e487b66c20", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #95", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Deterministic local Sobre batch planning", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #93 deterministic Sobre batch-planning boundary", checkpoint, StringComparison.Ordinal);
         Assert.Contains("caller-selected CFE only", checkpoint, StringComparison.Ordinal);

@@ -103,16 +103,17 @@ public sealed class FiscalCfeEnvelopeAckSignatureVerificationArchitectureTests
         Assert.Contains("does not weaken the consumer's own fiscal signer", docs, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", docs, StringComparison.Ordinal);
 
-        Assert.Contains("main@5fcc1ea45cfa91e069eba62bcb887813646364af", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("merge of PR #93", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("main@8a70631cc5e2d723f88209459e5b77e487b66c20", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("merge of PR #95", checkpoint, StringComparison.Ordinal);
         Assert.Contains("There is no pending governed increment currently open", checkpoint, StringComparison.Ordinal);
         Assert.Contains("CertificateTrustValidated = false", checkpoint, StringComparison.Ordinal);
         Assert.Contains("PkiUruguayTrustValidated = true", checkpoint, StringComparison.Ordinal);
         Assert.Contains("DgiIdentityValidated = false", checkpoint, StringComparison.Ordinal);
-        Assert.Contains("does not establish a web-service operation whose input is the ACKSobre `Token`", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("WS_eFactura.EFACCONSULTARESTADOENVIO", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #87 ACKSobre signature-verification boundary", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #91 ACKSobre PKI Uruguay certificate-trust boundary", checkpoint, StringComparison.Ordinal);
         Assert.Contains("Accepted PR #93 deterministic Sobre batch-planning boundary", checkpoint, StringComparison.Ordinal);
+        Assert.Contains("Accepted PR #95 ACKCFE document-response consultation boundary", checkpoint, StringComparison.Ordinal);
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);
