@@ -188,9 +188,10 @@ public sealed class FiscalCfeEnvelopePersistenceTests
             [documentId],
             "sobre-concurrent-op-a");
 
-        var results = await Task.WhenAll(
-            firstUseCase.ExecuteAsync(command),
-            secondUseCase.ExecuteAsync(command with { OperationId = "sobre-concurrent-op-b" }));
+        var firstTask = Task.Run(() => firstUseCase.ExecuteAsync(command));
+        var secondTask = Task.Run(() => secondUseCase.ExecuteAsync(
+            command with { OperationId = "sobre-concurrent-op-b" }));
+        var results = await Task.WhenAll(firstTask, secondTask);
 
         Assert.Single(results.Where(x => !x.Replayed));
         Assert.Single(results.Where(x => x.Replayed));
