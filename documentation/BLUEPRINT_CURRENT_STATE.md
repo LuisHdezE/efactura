@@ -4,10 +4,10 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-14
 
-Accepted functional baseline: `main@78ac6a48e05c91b59c0ce5f097e5ed56fd6d8e9b`
-(merge of PR #97, `feat(fiscal): verify ACKCFE XMLDSig signature math`).
+Accepted functional baseline: `main@3789b5f07b9b791c938e65f8d6f643d755c9b559`
+(merge of PR #99, `test(persistence): stabilize concurrent Sobre replay race`; no product capability was added after PR #97).
 
-There is no pending governed **functional** increment currently open. This checkpoint reconciliation is governance-only and adds no product capability. PR #97 is part of the accepted baseline after exact-head validation, explicit human merge approval and successful post-merge validation on `main`.
+There is no pending governed **functional** increment currently open. This checkpoint reconciliation is governance-only and adds no product capability. PR #97 remains the latest product-capability increment; PR #98 reconciled the checkpoint and PR #99 repaired only the provider-real concurrency test harness after PR #98's post-merge validation exposed a scheduler-sensitive barrier race.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -21,11 +21,15 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #97. Its post-merge Clean Architecture Guard #453, run `34796048699`, completed successfully on exact `main@78ac6a48e05c91b59c0ce5f097e5ed56fd6d8e9b`, push event, attempt 1, with no rerun. NuGet vulnerability gating passed; Build completed successfully; ArchitectureTests completed **193/193 passed**, CrossCuttingTests **332/332 passed**, legacy UnitTest **21/21 passed**, and the PostgreSQL/MySQL provider-real suite completed **231/231 passed**. The first job therefore completed **546/546 passed**. The provider-real run used PostgreSQL 16.15 and MySQL 8.4.11; container setup and teardown passed.
+The accepted `main` commit is the GitHub-verified merge of PR #99. Its post-merge Clean Architecture Guard #458, run `34837067593`, completed successfully on exact `main@3789b5f07b9b791c938e65f8d6f643d755c9b559`, push event, attempt 1, with no rerun. NuGet vulnerability gating passed; Build completed successfully; ArchitectureTests completed **193/193 passed**, CrossCuttingTests **332/332 passed**, legacy UnitTest **21/21 passed**, and the PostgreSQL/MySQL provider-real suite completed **231/231 passed**. The first job therefore completed **546/546 passed**. The provider-real run used PostgreSQL 16.15 and MySQL 8.4.11; the repaired same-identity Sobre concurrency case passed on both providers; container setup and teardown passed.
+
+PR #99 adds no product/runtime behavior and no fiscal semantics. The latest accepted product-capability increment remains PR #97. Its post-merge Clean Architecture Guard #453, run `34796048699`, had already accepted the ACKCFE XMLDSig signature-math boundary on exact `main@78ac6a48e05c91b59c0ce5f097e5ed56fd6d8e9b` before the later governance-only checkpoint reconciliation and test-harness repair.
 
 ## Historical checkpoint continuity
 
 The immediately preceding accepted checkpoint was `main@8a70631cc5e2d723f88209459e5b77e487b66c20`, the merge of PR #95. PR #95 is part of the accepted baseline history and remains the accepted source for token-input ACKCFE document-response consultation. At that checkpoint the repository recorded: `There is no pending governed increment currently open`. That historical statement is retained here only as checkpoint lineage; the current accepted functional baseline is PR #97.
+
+PR #98 (`docs(governance): reconcile checkpoint after PR #97`) merged as `main@a93123af3bf40f90721b8be2df378023d165d897`, but its push-triggered Clean Architecture Guard #456, run `34805279258`, failed one provider-real MySQL concurrency test at the test-only serialization barrier, so that merge was not accepted as a governed baseline. PR #99 repaired only that scheduler-sensitive test harness by ensuring both operations are independently started before awaiting convergence. Exact-head Guard #457, run `34810614265`, passed before merge, and post-merge Guard #458, run `34837067593`, then passed on the exact accepted merge SHA with the full validation matrix.
 
 ## Accepted major v1 boundaries
 
@@ -269,14 +273,19 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `78ac6a48e05c91b59c0ce5f097e5ed56fd6d8e9b`;
-- accepted merge: PR #97 `feat(fiscal): verify ACKCFE XMLDSig signature math`;
-- approved PR #97 head: `73579583d2926da3a191a1facff4e9702f16b4e1`;
-- exact-head PR #97 Clean Architecture Guard #452 (`34795414394`): SUCCESS, attempt 1, no rerun;
-- post-merge Clean Architecture Guard #453 (`34796048699`): SUCCESS, push on exact accepted merge SHA, attempt 1, no rerun;
+- accepted `main`: `3789b5f07b9b791c938e65f8d6f643d755c9b559`;
+- latest product-capability merge: PR #97 `feat(fiscal): verify ACKCFE XMLDSig signature math`;
+- governance checkpoint merge: PR #98 `docs(governance): reconcile checkpoint after PR #97` -> `a93123af3bf40f90721b8be2df378023d165d897`;
+- PR #98 post-merge Clean Architecture Guard #456 (`34805279258`): FAILED provider-real 230/231 because the MySQL same-identity Sobre test did not reach its test-only serialization barrier; that merge was not accepted as a governed baseline;
+- repair merge: PR #99 `test(persistence): stabilize concurrent Sobre replay race` -> `3789b5f07b9b791c938e65f8d6f643d755c9b559`;
+- approved PR #99 head: `ff3e35bc44ee0700c4c173a543751f49c3388eee`;
+- exact-head PR #99 Clean Architecture Guard #457 (`34810614265`): SUCCESS, attempt 1, no rerun, first job 546/546 and provider-real 231/231;
+- post-merge Clean Architecture Guard #458 (`34837067593`): SUCCESS, push on exact accepted merge SHA, attempt 1, no rerun;
 - accepted validation counts: ArchitectureTests 193/193, CrossCuttingTests 332/332, legacy UnitTest 21/21, first job 546/546, provider-real PostgreSQL/MySQL 231/231;
+- repaired `Provider_recovers_concurrent_same_identity_as_single_durable_replay` passed for both MySQL and PostgreSQL;
 - provider-real versions: PostgreSQL 16.15 and MySQL 8.4.11;
 - provider container setup and teardown passed;
+- PR #98 and PR #99 add no product capability and do not alter the fiscal boundaries accepted through PR #97;
 - no governed functional increment is currently open; this checkpoint reconciliation is governance-only;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;
