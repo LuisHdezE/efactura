@@ -27,9 +27,12 @@ public static class V1PersistenceDatabaseConfigurator
                 throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unsupported v1 database provider.");
         }
 
-        // V1PersistenceCfeDocumentResponseSignatureModelCustomizer extends
-        // V1PersistenceCfeDocumentResponseModelCustomizer, which preserves
-        // V1PersistenceEnvelopeModelCustomizer and the full accepted model chain.
-        options.ReplaceService<IModelCustomizer, V1PersistenceCfeDocumentResponseSignatureModelCustomizer>();
+        // The terminal customizer extends the accepted chain rather than replacing its semantics:
+        // V1PersistenceLaterStateModelCustomizer -> V1PersistenceEnvelopeModelCustomizer ->
+        // V1PersistenceCfeDocumentResponseModelCustomizer ->
+        // V1PersistenceCfeDocumentResponseSignatureModelCustomizer ->
+        // V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer.
+        // Keeping this lineage explicit also makes the architecture guard's continuity invariant visible here.
+        options.ReplaceService<IModelCustomizer, V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer>();
     }
 }
