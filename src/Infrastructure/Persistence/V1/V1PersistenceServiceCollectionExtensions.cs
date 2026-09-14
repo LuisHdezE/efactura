@@ -117,6 +117,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<IFiscalCfeEnvelopeAckCertificateTrustValidator, DgiFiscalCfeEnvelopeAckCertificateTrustValidator>();
         services.AddSingleton<IFiscalCfeStateConsultationGateway, DgiWsSecurityFiscalCfeStateConsultationGateway>();
         services.AddSingleton<IFiscalCfeEnvelopeDocumentResponseConsultationGateway, DgiWsSecurityFiscalCfeEnvelopeDocumentResponseConsultationGateway>();
+        services.AddSingleton<IFiscalCfeEnvelopeDocumentResponseSignatureVerifier, DgiFiscalCfeEnvelopeDocumentResponseSignatureVerifier>();
         services.AddSingleton<IFiscalDailyReportResponseConsultationGateway, DgiWsSecurityFiscalDailyReportResponseConsultationGateway>();
         services.AddSingleton<IFiscalDailyReportReceiverDiscoveryGateway, DgiWsSecurityFiscalDailyReportReceiverDiscoveryGateway>();
         services.AddSingleton<IFiscalDailyReportBrAckEvidenceParser, DgiFiscalDailyReportBrAckEvidenceParser>();
@@ -129,6 +130,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalCfeEnvelopeAckCertificateTrustValidationRepository, EfFiscalCfeEnvelopeAckCertificateTrustValidationRepository>();
         services.AddScoped<IFiscalCfeStateConsultationRepository, EfFiscalCfeStateConsultationRepository>();
         services.AddScoped<IFiscalCfeEnvelopeDocumentResponseConsultationRepository, EfFiscalCfeEnvelopeDocumentResponseConsultationRepository>();
+        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseSignatureVerificationRepository, EfFiscalCfeEnvelopeDocumentResponseSignatureVerificationRepository>();
         services.AddSingleton<IFiscalCfeEnvelopePersistenceConflictClassifier, EfFiscalCfeEnvelopePersistenceConflictClassifier>();
         services.AddScoped<IFiscalDailyReportVersionRepository, EfFiscalDailyReportVersionRepository>();
         services.AddScoped<IFiscalDailyReportSigningEvidenceRepository, EfFiscalDailyReportSigningEvidenceRepository>();
@@ -168,6 +170,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<ValidateFiscalCfeEnvelopeAckCertificateTrustUseCase>();
         services.AddScoped<ConsultFiscalCfeStateUseCase>();
         services.AddScoped<ConsultFiscalCfeEnvelopeDocumentResponseUseCase>();
+        services.AddScoped<VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase>();
         services.AddScoped<AllocateFiscalDailyReportVersionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDailyReportUseCase>();
