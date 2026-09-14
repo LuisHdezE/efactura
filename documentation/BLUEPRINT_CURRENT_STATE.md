@@ -134,7 +134,7 @@ The detailed accepted evidence remains in `documentation/blueprint-api-implement
 
 ## Accepted PR #91 ACKSobre PKI Uruguay certificate-trust boundary
 
-PR #91 adds bounded **append-only PKI Uruguay certificate-trust validation** after accepted ACKSobre signature-math verification. The adapter uses `X509Chain CustomRootTrust` with externally configured SHA-256-pinned trust material, online revocation for `EntireChain`, and exact embedded-certificate continuity. Successful evidence records `PkiUruguayTrustValidated = true` while `DgiIdentityValidated = false` remains mandatory.
+PR #91 adds bounded **append-only PKI Uruguay certificate-trust validation** after accepted ACKSobre signature-math verification. The adapter uses `X509Chain CustomRootTrust` with externally configured SHA-256-pinned trust material, online revocation for EntireChain, and exact embedded-certificate continuity. Successful evidence records `PkiUruguayTrustValidated = true` while `DgiIdentityValidated = false` remains mandatory.
 
 The detailed accepted evidence remains in `documentation/blueprint-api-implementation/62_FISCAL_SOBRE_ACK_CERTIFICATE_TRUST.md`.
 
@@ -230,7 +230,7 @@ The accepted baseline does not complete:
 - general receivable collection/payment allocation workflow;
 - accounts payable/procurement/treasury/cash-management completion.
 
-Cryptographic XMLDSig verification of returned `ACKCFE` is **no longer incomplete**; it was accepted in PR #97. PKI trust, signer identity and state semantics remain separate gaps.
+cryptographic XMLDSig verification of returned `ACKCFE` is **no longer incomplete**; it was accepted in PR #97. PKI trust, signer identity and state semantics remain separate gaps.
 
 ## Blueprint evaluator checkpoint
 
