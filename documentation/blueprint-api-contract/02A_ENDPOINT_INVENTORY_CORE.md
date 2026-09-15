@@ -69,6 +69,7 @@ Every row defines a stable project API ID and canonical future OpenAPI `operatio
 | `API-FIS-008` | `getRegularizationCase` | GET `/api/v1/fiscal-regularizations/{caseId}` | `fiscal.regularization.manage` | NO | Read regularization case/evidence |
 | `API-FIS-009` | `resolveRegularizationCase` | POST `/api/v1/fiscal-regularizations/{caseId}/resolve` | `fiscal.regularization.manage` | REQUIRED | Apply one permitted regularization disposition |
 | `API-FIS-010` | `collectFiscalEnvelopeDocumentResponseEvidence` | POST `/api/v1/fiscal-envelopes/{envelopeId}/document-response-evidence` | `fiscal.regularization.manage` | REQUIRED | Execute one explicit ACKCFE consultation/signature/trust/known-coverage evidence cycle without local fiscal-state mutation |
+| `API-FIS-011` | `collectFiscalDocumentDgiStateEvidence` | POST `/api/v1/fiscal-documents/{fiscalDocumentId}/dgi-state-evidence` | `fiscal.regularization.manage` | REQUIRED | Execute one explicit DGI CFE-state consultation and append raw external state evidence without local lifecycle mutation |
 | `API-FDL-001` | `listFiscalDocumentDeliveries` | GET `/api/v1/fiscal-documents/{fiscalDocumentId}/deliveries` | `fiscal.read` | NO | Read delivery attempts separately from fiscal acceptance |
 | `API-FDL-002` | `requestFiscalDocumentDelivery` | POST `/api/v1/fiscal-documents/{fiscalDocumentId}/deliveries` | `fiscal.read` | REQUIRED | Request delivery through an enabled channel |
 | `API-CAE-001` | `listCaeAuthorizations` | GET `/api/v1/cae-authorizations` | `fiscal.read` | NO | List CAE ranges/status/usage/alerts |
