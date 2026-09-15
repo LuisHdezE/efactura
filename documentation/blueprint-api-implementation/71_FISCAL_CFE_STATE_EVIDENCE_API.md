@@ -2,6 +2,10 @@
 
 Status: GOVERNED IMPLEMENTATION CANDIDATE
 
+Baseline after PR #110 retarget: `main@8201b915dd08a6a6167773bc20db98029fbcb898`.
+
+The implementation delta is evaluated against this accepted `main` baseline; the former stacked PR #110 branch is no longer the active base.
+
 ## Scope
 
 This increment exposes one bounded API v1 surface over the already accepted read-only `ws_consultas / EFACCONSULTARESTADOCFE` capability documented in implementation record 61.
