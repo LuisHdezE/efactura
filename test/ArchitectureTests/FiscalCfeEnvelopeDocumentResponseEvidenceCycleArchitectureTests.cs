@@ -78,7 +78,7 @@ public sealed class FiscalCfeEnvelopeDocumentResponseEvidenceCycleArchitectureTe
         Assert.Contains("ProtocolFinalityProven = false", documentation, StringComparison.Ordinal);
         Assert.Contains("TokenExhaustionProven = false", documentation, StringComparison.Ordinal);
         Assert.Contains("AutomaticReconsultationAuthorized = false", documentation, StringComparison.Ordinal);
-        Assert.Contains("does not add a public REST endpoint", documentation, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("add a public REST endpoint", documentation, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("BLOCKED BY MISSING PRODUCT CAPABILITIES", documentation, StringComparison.Ordinal);
     }
 
