@@ -75,6 +75,7 @@ using ApplicationCore.Interfaces.Services.Supplier;
 using ApplicationCore.Services.Supplier;
 using EFactura.Application.Catalog;
 using EFactura.Application.Common.Context;
+using EFactura.Application.Fiscal;
 using EFactura.Application.Parties;
 using Infrastructure.Persistence.V1;
 using WebApi.CrossCutting.Authorization;
@@ -230,6 +231,7 @@ var v1ConnectionString = builder.Configuration.GetConnectionString(v1ConnectionS
 
 builder.Services.AddV1Persistence(v1DatabaseProvider, v1ConnectionString);
 builder.Services.AddScoped<V1OrganizationContextResolver>();
+builder.Services.AddScoped<CollectFiscalCfeEnvelopeDocumentResponseEvidenceByEnvelopeIdUseCase>();
 
 builder.Services.AddScoped<ListPartiesUseCase>();
 builder.Services.AddScoped<GetPartyUseCase>();
@@ -349,5 +351,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
 
