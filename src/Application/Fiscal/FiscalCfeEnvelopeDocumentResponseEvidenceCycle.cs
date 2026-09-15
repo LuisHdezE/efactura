@@ -131,6 +131,19 @@ public sealed class CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase
     private readonly IFiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps _steps;
 
     public CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase(
+        ConsultFiscalCfeEnvelopeDocumentResponseUseCase consult,
+        VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase verifySignature,
+        ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase validateTrust,
+        AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase assessCoverage)
+        : this(new FiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps(
+            consult,
+            verifySignature,
+            validateTrust,
+            assessCoverage))
+    {
+    }
+
+    public CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase(
         IFiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps steps)
     {
         _steps = steps ?? throw new ArgumentNullException(nameof(steps));
