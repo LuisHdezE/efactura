@@ -1,6 +1,6 @@
 # UI-CUSTOMER-001 — Clientes
 
-Status: `SPECIFIED / NOT_VISUALLY_APPROVED / TRACEABILITY_GAPS_RECORDED`
+Status: `VISUAL_DRAFT / NOT_VISUALLY_APPROVED / TRACEABILITY_GAPS_RECORDED`
 
 Upstream interface scope ID: `WEB-004`
 
@@ -316,30 +316,39 @@ Lista primero; detail en ruta/pantalla completa; acciones principales sticky en 
 - dialogs con focus trap y retorno de foco;
 - acciones destructivas/sensibles con texto explícito.
 
-## 17. Primera referencia visual v1
+## 17. Referencia visual v1
 
-Debe mostrar un estado `list_populated + detail_ready` en desktop, con:
+Estado visual generado: `list_populated + detail_ready` desktop.
 
-- navegación eFactura consistente con `UI-POS-001`;
-- buscador;
-- filtro de activos;
+Artefacto guardado en el repositorio:
+
+```text
+documentation/ui/references/drafts/UI-CUSTOMER-001/v1-desktop.jpg
+```
+
+La composición conserva:
+
+- navegación eFactura;
+- buscador y filtro de activos;
 - tabla/lista de clientes;
 - CTA `Nuevo cliente`;
-- detalle del cliente seleccionado;
-- badges `PERSON/ORGANIZATION` y roles;
-- bloque de identidades fiscales;
-- bloque de direcciones/contactos;
-- acciones `Editar` y `Agregar identidad fiscal` condicionadas a permisos.
+- detalle master-detail;
+- badges `PERSONA/ORGANIZACIÓN` y roles;
+- identidades fiscales;
+- direcciones/contactos;
+- acciones `Editar` y `Agregar identidad fiscal`.
 
-No deberá mostrar como live:
+No muestra saldo, deuda, aging ni límite de crédito.
 
-- saldo;
-- deuda;
-- aging;
-- límite de crédito;
-- historial de ventas si no existe una dependencia gobernada;
-- dropdown de países alimentado por API no implementada;
-- dropdown de tipos fiscales alimentado por API no implementada.
+### Revisión funcional del draft
+
+La referencia se conserva como dirección visual aceptable, pero sigue siendo `DRAFT`.
+
+Hallazgo de implementación a corregir antes de usarla como baseline ejecutable:
+
+- la línea visual `última actualización 12/06/2024` no tiene fuente en el `PartyDto` actual. La implementación debe omitir ese timestamp salvo que una futura proyección lo exponga de forma autoritativa.
+
+Los valores de ejemplo (nombres, CI/RUT, direcciones, emails y teléfonos) son contenido ficticio de mockup, no datos contractuales.
 
 ## 18. Registro de aprobación visual
 
@@ -347,6 +356,8 @@ No deberá mostrar como live:
 - Approval date: `NONE`
 - Approval statement/reference: `NONE`
 - Approved artifact: `NONE`
+
+El comentario positivo sobre el diseño no se convierte automáticamente en `VISUAL_APPROVED` sin una aprobación que identifique explícitamente `UI-CUSTOMER-001 v1-desktop`.
 
 ## 19. Evidencia frontend
 
@@ -357,3 +368,4 @@ No deberá mostrar como live:
 ## 20. Change history
 
 - `v0.1` — primera especificación gobernada de `UI-CUSTOMER-001`, reconciliada contra `main@c59e053d40a78704035e559368f4857f587c04e7`.
+- `v0.2` — se incorpora `v1-desktop.jpg` como referencia `VISUAL_DRAFT` y se documenta el único dato visual sin fuente actual (`last updated`).
