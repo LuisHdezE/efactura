@@ -24,6 +24,99 @@ public sealed record FiscalCfeEnvelopeDocumentResponseEvidenceCycleResult(
     bool AutomaticReconsultationAuthorized);
 
 /// <summary>
+/// Narrow Application seam for the four already-governed ACKCFE boundaries composed by the explicit
+/// evidence cycle. It exists so orchestration behavior can be tested independently while production
+/// still delegates to the canonical consultation, XMLDSig, PKI trust and coverage use cases.
+/// </summary>
+public interface IFiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps
+{
+    Task<FiscalCfeEnvelopeDocumentResponseConsultationResult> ConsultAsync(
+        CollectFiscalCfeEnvelopeDocumentResponseEvidenceCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<FiscalCfeEnvelopeDocumentResponseSignatureVerificationResult> VerifySignatureAsync(
+        string organizationId,
+        string consultationOperationId,
+        CancellationToken cancellationToken = default);
+
+    Task<FiscalCfeEnvelopeDocumentResponseCertificateTrustValidationResult> ValidateTrustAsync(
+        string organizationId,
+        string consultationOperationId,
+        string operationId,
+        CancellationToken cancellationToken = default);
+
+    Task<FiscalCfeEnvelopeDocumentResponseCoverageAssessmentResult> AssessCoverageAsync(
+        CollectFiscalCfeEnvelopeDocumentResponseEvidenceCommand command,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class FiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps :
+    IFiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps
+{
+    private readonly ConsultFiscalCfeEnvelopeDocumentResponseUseCase _consult;
+    private readonly VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase _verifySignature;
+    private readonly ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase _validateTrust;
+    private readonly AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase _assessCoverage;
+
+    public FiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps(
+        ConsultFiscalCfeEnvelopeDocumentResponseUseCase consult,
+        VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase verifySignature,
+        ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase validateTrust,
+        AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase assessCoverage)
+    {
+        _consult = consult ?? throw new ArgumentNullException(nameof(consult));
+        _verifySignature = verifySignature ?? throw new ArgumentNullException(nameof(verifySignature));
+        _validateTrust = validateTrust ?? throw new ArgumentNullException(nameof(validateTrust));
+        _assessCoverage = assessCoverage ?? throw new ArgumentNullException(nameof(assessCoverage));
+    }
+
+    public Task<FiscalCfeEnvelopeDocumentResponseConsultationResult> ConsultAsync(
+        CollectFiscalCfeEnvelopeDocumentResponseEvidenceCommand command,
+        CancellationToken cancellationToken = default) =>
+        _consult.ExecuteAsync(
+            new ConsultFiscalCfeEnvelopeDocumentResponseCommand(
+                command.OrganizationId,
+                command.IssuerRuc,
+                command.ReceiverRut,
+                command.SenderEnvelopeId,
+                command.OperationId),
+            cancellationToken);
+
+    public Task<FiscalCfeEnvelopeDocumentResponseSignatureVerificationResult> VerifySignatureAsync(
+        string organizationId,
+        string consultationOperationId,
+        CancellationToken cancellationToken = default) =>
+        _verifySignature.ExecuteAsync(
+            new VerifyFiscalCfeEnvelopeDocumentResponseSignatureCommand(
+                organizationId,
+                consultationOperationId),
+            cancellationToken);
+
+    public Task<FiscalCfeEnvelopeDocumentResponseCertificateTrustValidationResult> ValidateTrustAsync(
+        string organizationId,
+        string consultationOperationId,
+        string operationId,
+        CancellationToken cancellationToken = default) =>
+        _validateTrust.ExecuteAsync(
+            new ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustCommand(
+                organizationId,
+                consultationOperationId,
+                operationId),
+            cancellationToken);
+
+    public Task<FiscalCfeEnvelopeDocumentResponseCoverageAssessmentResult> AssessCoverageAsync(
+        CollectFiscalCfeEnvelopeDocumentResponseEvidenceCommand command,
+        CancellationToken cancellationToken = default) =>
+        _assessCoverage.ExecuteAsync(
+            new AssessFiscalCfeEnvelopeDocumentResponseCoverageCommand(
+                command.OrganizationId,
+                command.IssuerRuc,
+                command.ReceiverRut,
+                command.SenderEnvelopeId),
+            cancellationToken);
+}
+
+/// <summary>
 /// Executes one explicit, caller-triggered ACKCFE evidence cycle for one durable Sobre source:
 /// consultation by the accepted ACKSobre IdReceptor + Token, XMLDSig verification, PKI Uruguay
 /// trust validation, and read-only known-document coverage assessment.
@@ -35,21 +128,12 @@ public sealed record FiscalCfeEnvelopeDocumentResponseEvidenceCycleResult(
 /// </summary>
 public sealed class CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase
 {
-    private readonly ConsultFiscalCfeEnvelopeDocumentResponseUseCase _consult;
-    private readonly VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase _verifySignature;
-    private readonly ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase _validateTrust;
-    private readonly AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase _assessCoverage;
+    private readonly IFiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps _steps;
 
     public CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase(
-        ConsultFiscalCfeEnvelopeDocumentResponseUseCase consult,
-        VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase verifySignature,
-        ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase validateTrust,
-        AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase assessCoverage)
+        IFiscalCfeEnvelopeDocumentResponseEvidenceCycleSteps steps)
     {
-        _consult = consult ?? throw new ArgumentNullException(nameof(consult));
-        _verifySignature = verifySignature ?? throw new ArgumentNullException(nameof(verifySignature));
-        _validateTrust = validateTrust ?? throw new ArgumentNullException(nameof(validateTrust));
-        _assessCoverage = assessCoverage ?? throw new ArgumentNullException(nameof(assessCoverage));
+        _steps = steps ?? throw new ArgumentNullException(nameof(steps));
     }
 
     public async Task<FiscalCfeEnvelopeDocumentResponseEvidenceCycleResult> ExecuteAsync(
@@ -78,35 +162,17 @@ public sealed class CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase
             OperationId = command.OperationId.Trim()
         };
 
-        var consultation = await _consult.ExecuteAsync(
-            new ConsultFiscalCfeEnvelopeDocumentResponseCommand(
-                normalized.OrganizationId,
-                normalized.IssuerRuc,
-                normalized.ReceiverRut,
-                normalized.SenderEnvelopeId,
-                normalized.OperationId),
+        var consultation = await _steps.ConsultAsync(normalized, cancellationToken);
+        var signature = await _steps.VerifySignatureAsync(
+            normalized.OrganizationId,
+            normalized.OperationId,
             cancellationToken);
-
-        var signature = await _verifySignature.ExecuteAsync(
-            new VerifyFiscalCfeEnvelopeDocumentResponseSignatureCommand(
-                normalized.OrganizationId,
-                normalized.OperationId),
+        var trust = await _steps.ValidateTrustAsync(
+            normalized.OrganizationId,
+            normalized.OperationId,
+            normalized.OperationId,
             cancellationToken);
-
-        var trust = await _validateTrust.ExecuteAsync(
-            new ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustCommand(
-                normalized.OrganizationId,
-                normalized.OperationId,
-                normalized.OperationId),
-            cancellationToken);
-
-        var coverage = await _assessCoverage.ExecuteAsync(
-            new AssessFiscalCfeEnvelopeDocumentResponseCoverageCommand(
-                normalized.OrganizationId,
-                normalized.IssuerRuc,
-                normalized.ReceiverRut,
-                normalized.SenderEnvelopeId),
-            cancellationToken);
+        var coverage = await _steps.AssessCoverageAsync(normalized, cancellationToken);
 
         EnsureExactLineage(consultation, signature, trust, coverage);
 
