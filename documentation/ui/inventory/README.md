@@ -47,8 +47,8 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | `WEB-001` | Login and Session Entry | not assigned | `CANDIDATE` | token acquisition remains external/deployment-specific |
 | `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | contracted dashboard/alerts dependencies not currently evidenced as implemented public routes |
 | `WEB-003` | POS Sale | `UI-POS-001` | `SPECIFIED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md` |
-| `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `SPECIFIED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md` |
+| `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `VISUAL_DRAFT` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/drafts/UI-CUSTOMER-001/v1-desktop.jpg` |
 
-`UI-POS-001` and `UI-CUSTOMER-001` are not visually approved by this inventory state alone. `SPECIFIED` means the view boundary and functional behavior have been reconciled/documented against repository evidence.
+`UI-CUSTOMER-001` has a repository-stored visual draft but no approved visual baseline. `VISUAL_DRAFT` records only that one or more governed reference candidates exist.
 
 No row implies visual approval or frontend implementation. Reconciliation must use current repository evidence, not historical unresolved-API notes alone.
