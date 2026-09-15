@@ -39,7 +39,7 @@ The immediately preceding accepted checkpoint before PR #103 was `main@7c9587ecb
 
 PR #101 remains the accepted source for the separate ACKCFE PKI Uruguay trust boundary. PR #100 was the prior governance-only reconciliation after the PR #99 recovery. PR #98 merged but was not accepted as a governed baseline because its push-triggered Guard failed one provider-real MySQL scheduler-sensitive concurrency test; PR #99 repaired only that test harness and recovered the governed line before later increments advanced product capability.
 
-PR #95 is part of the accepted baseline history. The earlier accepted checkpoint `main@8a70631cc5e2d723f88209459e5b77e487b66c20`, the merge of PR #95, remains the accepted source for token-input ACKCFE document-response consultation. At that checkpoint the repository recorded: `There is no pending governed increment currently open`. That historical statement remains valid as lineage, not as the current product boundary.
+PR #95 is part of the accepted baseline history. The earlier accepted checkpoint `main@8a70631cc5e2d723f88209459e5b77e487b66c20`, the merge of PR #95, remains the accepted source for token-input ACKCFE document-response consultation. At that checkpoint the repository recorded: `There is no pending governed increment currently open`. At that historical PR #95 checkpoint, cryptographic XMLDSig verification of returned `ACKCFE` remained an unresolved gap; PR #97 subsequently closed that signature-math gap, so this historical wording must not be read as the current capability state. That historical statement remains valid as lineage, not as the current product boundary.
 
 ## Accepted major v1 boundaries
 
