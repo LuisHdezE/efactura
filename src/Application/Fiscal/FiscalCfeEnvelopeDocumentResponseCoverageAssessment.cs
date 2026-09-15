@@ -42,7 +42,6 @@ public sealed record FiscalCfeEnvelopeDocumentResponseCoverageDocument(
     int CfeType,
     string Series,
     long Number,
-    int Ordinal,
     string StateCode,
     FiscalCfeEnvelopeDocumentResponseSemanticState State,
     int EvidenceMessageCount,
@@ -82,8 +81,9 @@ public sealed record FiscalCfeEnvelopeDocumentResponseCoverageAssessmentResult(
 
 /// <summary>
 /// Aggregates every currently durable ACKCFE consultation for one exact accepted ACKSobre source.
-/// Each distinct response message must have durable XMLDSig verification and PKI Uruguay trust evidence.
+/// Each consultation must have durable XMLDSig verification and PKI Uruguay trust evidence.
 /// Reconsultations that return the exact same response XML are duplicate observations of the same message and are deduplicated by response SHA-256.
+/// ACKCFE_det ordinal remains message-scoped and is never promoted to cross-message identity.
 /// Contradictory response ids, source identity, counters or per-CFE states fail closed.
 /// The result states document coverage only. It never claims last-message finality, token exhaustion, polling cadence or automatic local lifecycle mutation.
 /// </summary>
@@ -213,14 +213,12 @@ public sealed class AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase
                 if (!coveredByIdentity.TryGetValue(identity, out var aggregate))
                 {
                     aggregate = new MutableCoverageDocument(
-                        detail.Ordinal,
                         detail.StateCode,
                         detail.State,
                         new HashSet<long>());
                     coveredByIdentity.Add(identity, aggregate);
                 }
-                else if (aggregate.Ordinal != detail.Ordinal
-                    || !string.Equals(aggregate.StateCode, detail.StateCode, StringComparison.Ordinal)
+                else if (!string.Equals(aggregate.StateCode, detail.StateCode, StringComparison.Ordinal)
                     || aggregate.State != detail.State)
                 {
                     throw Conflict(
@@ -244,7 +242,6 @@ public sealed class AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase
                     expected.Identity.CfeType,
                     expected.Identity.Series,
                     expected.Identity.Number,
-                    aggregate.Ordinal,
                     aggregate.StateCode,
                     aggregate.State,
                     aggregate.EvidenceMessageCount,
@@ -392,9 +389,24 @@ public sealed class AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase
         var interpreted = new List<FiscalCfeEnvelopeDocumentResponseSemanticDetail>(rawDetails.Count);
         foreach (var detail in rawDetails)
         {
-            var identity = new DocumentIdentity(detail.CfeType, detail.Series.Trim(), detail.Number);
             if (detail.Ordinal is < 1 or > 250
-                || !ordinals.Add(detail.Ordinal)
+                || detail.CfeType <= 0
+                || string.IsNullOrWhiteSpace(detail.Series)
+                || detail.Series.Trim().Length > 20
+                || detail.Number <= 0
+                || string.IsNullOrWhiteSpace(detail.StateCode)
+                || detail.StateCode.Trim().Length > 40)
+            {
+                throw Conflict(
+                    "fiscal.envelope.document_response.coverage.detail_identity_invalid",
+                    "ACKCFE detail evidence is incomplete or outside the governed bounds.",
+                    "invalid_persisted_evidence");
+            }
+
+            var normalizedSeries = detail.Series.Trim();
+            var normalizedStateCode = detail.StateCode.Trim();
+            var identity = new DocumentIdentity(detail.CfeType, normalizedSeries, detail.Number);
+            if (!ordinals.Add(detail.Ordinal)
                 || !identities.Add(identity)
                 || !expectedDocuments.ContainsKey(identity))
             {
@@ -404,14 +416,14 @@ public sealed class AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase
                     "invalid_persisted_evidence");
             }
 
-            var state = detail.StateCode switch
+            var state = normalizedStateCode switch
             {
                 "AE" => FiscalCfeEnvelopeDocumentResponseSemanticState.Received,
                 "BE" => FiscalCfeEnvelopeDocumentResponseSemanticState.Rejected,
                 "CE" => FiscalCfeEnvelopeDocumentResponseSemanticState.ObservedContingency,
                 _ => throw Conflict(
                     "fiscal.envelope.document_response.coverage.state_code_unsupported",
-                    $"ACKCFE detail state '{detail.StateCode}' is not in the governed DGI AE/BE/CE taxonomy.",
+                    $"ACKCFE detail state '{normalizedStateCode}' is not in the governed DGI AE/BE/CE taxonomy.",
                     "unsupported_external_semantics")
             };
 
@@ -431,9 +443,9 @@ public sealed class AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase
             interpreted.Add(new FiscalCfeEnvelopeDocumentResponseSemanticDetail(
                 detail.Ordinal,
                 detail.CfeType,
-                detail.Series.Trim(),
+                normalizedSeries,
                 detail.Number,
-                detail.StateCode,
+                normalizedStateCode,
                 state));
         }
 
@@ -545,12 +557,10 @@ public sealed class AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase
         IReadOnlyList<FiscalCfeEnvelopeDocumentResponseSemanticDetail> Details);
 
     private sealed class MutableCoverageDocument(
-        int ordinal,
         string stateCode,
         FiscalCfeEnvelopeDocumentResponseSemanticState state,
         HashSet<long> dgiResponseIds)
     {
-        public int Ordinal { get; } = ordinal;
         public string StateCode { get; } = stateCode;
         public FiscalCfeEnvelopeDocumentResponseSemanticState State { get; } = state;
         public HashSet<long> DgiResponseIds { get; } = dgiResponseIds;
