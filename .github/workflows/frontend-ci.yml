@@ -1,0 +1,36 @@
+name: Frontend Demo CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/WebApp/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/deploy-demo.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/WebApp/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/WebApp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck and build
+        env:
+          VITE_DATA_MODE: mock
+        run: npm run check
