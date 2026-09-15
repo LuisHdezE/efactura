@@ -42,12 +42,12 @@ The mapping must be recorded in the view specification and inventory entry. The 
 
 ## First reconciliation candidates
 
-The first three web scope candidates are currently:
+| Upstream ID | Candidate | Governed UI ID | Current UI status | Evidence |
+| --- | --- | --- | --- | --- |
+| `WEB-001` | Login and Session Entry | not assigned | `CANDIDATE` | pending reconciliation |
+| `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | pending reconciliation |
+| `WEB-003` | POS Sale | `UI-POS-001` | `SPECIFIED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md` |
 
-| Upstream ID | Candidate | Current UI status |
-| --- | --- | --- |
-| `WEB-001` | Login and Session Entry | `CANDIDATE` |
-| `WEB-002` | Operational Dashboard | `CANDIDATE` |
-| `WEB-003` | POS Sale | `CANDIDATE` |
+`UI-POS-001` is not visually approved. Its `SPECIFIED` status means only that the view boundary and functional behavior have been reconciled/documented against current repository evidence.
 
-No row above implies backend readiness or visual approval. Reconciliation must use current repository evidence, not the historical unresolved-API notes alone.
+No row implies visual approval or frontend implementation. Reconciliation must use current repository evidence, not historical unresolved-API notes alone.
