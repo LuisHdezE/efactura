@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Persistence.V1.Write.Repositories;
 
 public sealed class EfFiscalCfeEnvelopeDocumentResponseConsultationRepository :
-    IFiscalCfeEnvelopeDocumentResponseConsultationRepository
+    IFiscalCfeEnvelopeDocumentResponseConsultationRepository,
+    IFiscalCfeEnvelopeDocumentResponseConsultationHistoryReader
 {
     private readonly V1PersistenceDbContext _dbContext;
 
@@ -23,6 +24,18 @@ public sealed class EfFiscalCfeEnvelopeDocumentResponseConsultationRepository :
                 x => x.OrganizationId == organizationId && x.OperationId == operationId,
                 cancellationToken);
         return Map(record);
+    }
+
+    public async Task<IReadOnlyList<StoredFiscalCfeEnvelopeDocumentResponseConsultation>> ListByAckObservationIdAsync(
+        Guid ackObservationId,
+        CancellationToken cancellationToken = default)
+    {
+        var records = await _dbContext.Set<V1FiscalCfeDocumentResponseConsultationRecord>()
+            .AsNoTracking()
+            .Where(x => x.AckObservationId == ackObservationId)
+            .OrderBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+        return records.Select(MapRequired).ToArray();
     }
 
     public Task AddAsync(
@@ -61,6 +74,10 @@ public sealed class EfFiscalCfeEnvelopeDocumentResponseConsultationRepository :
         ResponseSha256 = value.ResponseSha256,
         ConsultedAtUtc = value.ConsultedAtUtc
     };
+
+    private static StoredFiscalCfeEnvelopeDocumentResponseConsultation MapRequired(
+        V1FiscalCfeDocumentResponseConsultationRecord value) =>
+        Map(value) ?? throw new InvalidOperationException("ACKCFE consultation persistence mapping unexpectedly returned null.");
 
     private static StoredFiscalCfeEnvelopeDocumentResponseConsultation? Map(
         V1FiscalCfeDocumentResponseConsultationRecord? value) =>
