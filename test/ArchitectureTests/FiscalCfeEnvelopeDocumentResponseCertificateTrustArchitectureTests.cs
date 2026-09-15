@@ -76,7 +76,10 @@ public sealed class FiscalCfeEnvelopeDocumentResponseCertificateTrustArchitectur
         var database = Read("src/Infrastructure/Persistence/V1/V1PersistenceDatabaseConfigurator.cs");
 
         Assert.Contains("IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidator, DgiFiscalCfeEnvelopeDocumentResponseCertificateTrustValidator", services, StringComparison.Ordinal);
-        Assert.Contains("IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository, EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository", services, StringComparison.Ordinal);
+        Assert.Contains("AddScoped<EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>()", services, StringComparison.Ordinal);
+        Assert.Contains("IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository", services, StringComparison.Ordinal);
+        Assert.Contains("IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationHistoryReader", services, StringComparison.Ordinal);
+        Assert.Contains("GetRequiredService<EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>()", services, StringComparison.Ordinal);
         Assert.Contains("ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase", services, StringComparison.Ordinal);
         Assert.Contains("V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer", database, StringComparison.Ordinal);
     }
