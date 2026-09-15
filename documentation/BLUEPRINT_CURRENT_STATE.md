@@ -4,10 +4,10 @@ Status: CURRENT HUMAN CHECKPOINT
 
 Checkpoint date: 2026-09-14
 
-Accepted functional baseline: `main@0eb56872bd45dcabaf6c8ed66d7c0de1e97f5466`
-(merge of PR #101, `feat(fiscal): validate ACKCFE PKI Uruguay trust`).
+Accepted functional baseline: `main@6c51b0ab256af45cef15f2948ef27f2eacd1b98a`
+(merge of PR #103, `feat(fiscal): interpret authoritative ACKCFE states`).
 
-There is no pending governed increment currently open. This checkpoint reconciliation is governance-only and adds no product capability. PR #101 is the latest product-capability increment; PR #100 reconciled the previously recovered PR #99 baseline and PR #101 then added the separately governed ACKCFE PKI Uruguay certificate-trust boundary.
+There is no pending governed increment currently open. This checkpoint reconciliation is governance-only and adds no product capability. PR #103 is the latest product-capability increment; PR #102 is the latest governance-only checkpoint before PR #103.
 
 This file is the current human-readable checkpoint for the eFactura brownfield modernization. It does not replace requirements, architecture, API contracts or numbered implementation records. Files under `documentation/blueprint-brownfield/` remain historical inspection/remediation evidence and must not be rewritten to make the original AS-IS observations look current.
 
@@ -21,17 +21,19 @@ This file is the current human-readable checkpoint for the eFactura brownfield m
 - NuGet vulnerability gate blocks known direct/transitive vulnerable packages.
 - Clean Architecture + Ports & Adapters remains mandatory.
 
-The accepted `main` commit is the GitHub-verified merge of PR #101. Its post-merge Clean Architecture Guard #463, run `34846564398`, completed successfully on exact `main@0eb56872bd45dcabaf6c8ed66d7c0de1e97f5466`, push event, attempt 1, with no rerun. NuGet vulnerability gating passed; Build completed successfully; ArchitectureTests completed **198/198 passed**, CrossCuttingTests **334/334 passed**, legacy UnitTest **21/21 passed**, and the PostgreSQL/MySQL provider-real suite completed **237/237 passed**. The first job therefore completed **553/553 passed**. The provider-real run used PostgreSQL 16.15 and MySQL 8.4.11; all six new ACKCFE certificate-trust provider executions passed across both providers; container setup, teardown, network cleanup and orphan-process cleanup passed.
+The accepted `main` commit is the GitHub-verified merge of PR #103. Its post-merge Clean Architecture Guard #469, run `34900941026`, completed successfully on exact `main@6c51b0ab256af45cef15f2948ef27f2eacd1b98a`, push event, attempt 1, with no rerun. NuGet vulnerability gating passed; Build completed successfully; ArchitectureTests completed **200/200 passed**, CrossCuttingTests **339/339 passed**, legacy UnitTest **21/21 passed**, and the PostgreSQL/MySQL provider-real suite completed **237/237 passed**. The first job therefore completed **560/560 passed**. The provider-real run used PostgreSQL 16.15 and MySQL 8.4.11; container setup, teardown, network cleanup and orphan-process cleanup passed.
 
-PR #101 adds the bounded ACKCFE PKI Uruguay trust capability only. It does not prove DGI-specific signer identity/habilitation, interpret `ACKCFE_det/Estado` or `EstadoCFE`, infer response finality/completeness, mutate local lifecycle state or change formal DGI Testing readiness. Its accepted trust record keeps `PkiUruguayTrustValidated = true` and `DgiIdentityValidated = false`.
+PR #103 adds a bounded read-only authoritative ACKCFE detail-state semantic boundary after the already accepted ACKCFE consultation, XMLDSig verification and PKI Uruguay trust chain. It maps only the DGI-published `ACKCFE_det/Estado` codes `AE -> Received`, `BE -> Rejected` and `CE -> ObservedContingency`, validates `CantCFEAceptados`, `CantCFERechazados` and `CantCFEObservados` against the interpreted details, and keeps `CantOtrosRechazados` as source evidence without inventing per-CFE meaning. Unsupported codes and counter mismatches fail closed.
+
+PR #103 does not prove DGI-specific signer identity/habilitation, does not interpret `EstadoCFE`, does not infer response completeness/finality across one or multiple response messages, does not schedule token polling/reconsultation, does not mutate any local fiscal lifecycle and does not change formal DGI Testing readiness. `PkiUruguayTrustValidated = true` remains a PKI-chain statement only and `DgiIdentityValidated = false` remains mandatory.
 
 ## Historical checkpoint continuity
 
-The immediately preceding accepted checkpoint was `main@8245d90c938c49edc5a1b1c98a524fae81c9ab60`, the merge of PR #100, `docs(governance): reconcile checkpoint after PR #99 recovery`. PR #100 was governance-only and added no product/runtime behavior or fiscal semantics. Its post-merge Clean Architecture Guard #460, run `34841417850`, completed successfully on exact `main@8245d90c938c49edc5a1b1c98a524fae81c9ab60`, attempt 1.
+The immediately preceding accepted checkpoint was `main@7c9587ecb4f08c19a78b73c8e43e24a84abe23e5`, the merge of PR #102, `docs(governance): reconcile checkpoint after PR #101`. PR #102 was governance-only and added no product/runtime behavior or fiscal semantics. Its post-merge Clean Architecture Guard #466, run `34873412495`, completed successfully on exact `main@7c9587ecb4f08c19a78b73c8e43e24a84abe23e5`, attempt 1.
+
+PR #101 remains the accepted source for the separate ACKCFE PKI Uruguay trust boundary. PR #100 was the prior governance-only reconciliation after the PR #99 recovery. PR #98 merged but was not accepted as a governed baseline because its push-triggered Guard failed one provider-real MySQL scheduler-sensitive concurrency test; PR #99 repaired only that test harness and recovered the governed line before later increments advanced product capability.
 
 PR #95 is part of the accepted baseline history. The earlier accepted checkpoint `main@8a70631cc5e2d723f88209459e5b77e487b66c20`, the merge of PR #95, remains the accepted source for token-input ACKCFE document-response consultation. At that checkpoint the repository recorded: `There is no pending governed increment currently open`. That historical statement remains valid as lineage, not as the current product boundary.
-
-PR #98 (`docs(governance): reconcile checkpoint after PR #97`) merged as `main@a93123af3bf40f90721b8be2df378023d165d897`, but its push-triggered Clean Architecture Guard #456, run `34805279258`, failed one provider-real MySQL concurrency test at the test-only serialization barrier, so that merge was not accepted as a governed baseline. PR #99 repaired only that scheduler-sensitive test harness by ensuring both operations are independently started before awaiting convergence. Exact-head Guard #457, run `34810614265`, passed before merge, and post-merge Guard #458, run `34837067593`, then passed on exact `main@3789b5f07b9b791c938e65f8d6f643d755c9b559`. PR #100 then reconciled that recovered checkpoint before PR #101 advanced product capability.
 
 ## Accepted major v1 boundaries
 
@@ -80,13 +82,14 @@ The accepted baseline includes, among the earlier transactional and fiscal found
 41. Append-only immediate `ACKSobre` observation mapping `AS -> Received` and `BS -> Rejected`, preserving DGI correlation ids, optional consultation parameters and S01..S08 evidence without CFE mutation or S08 recovery.
 42. Append-only ACKSobre XMLDSig cryptographic verification with exact source-response SHA-256 lineage, bounded whole-document signature policy, embedded X.509 evidence, provider-real replay/concurrency convergence and explicit `CertificateTrustValidated = false` trust boundary on the signature-math record.
 43. Read-only authoritative DGI CFE-state consultation through `ws_consultas / EFACCONSULTARESTADOCFE` using the already durable `TipoCFE + Serie + Nro` identity, append-only exact response XML/SHA-256 evidence, provider-real replay protection and no mutation or invented `EstadoCFE` semantics.
-44. Append-only PKI Uruguay certificate-trust validation for an already verified ACKSobre signature, with exact embedded-certificate SHA-256 continuity, externally configured and SHA-256-pinned CA material, .NET `CustomRootTrust`, online `EntireChain` revocation checking, provider-real replay/concurrency convergence, `PkiUruguayTrustValidated = true` and explicit `DgiIdentityValidated = false`.
+44. Append-only PKI Uruguay certificate-trust validation for an already verified ACKSobre signature, with exact embedded-certificate SHA-256 continuity, externally configured and SHA-256-pinned CA material, `X509Chain CustomRootTrust`, online revocation for EntireChain, provider-real replay/concurrency convergence, `PkiUruguayTrustValidated = true` and explicit `DgiIdentityValidated = false`.
 45. Deterministic local Sobre batch planning for explicitly caller-selected, already-signed CFE: exact certificate thumbprint + serial-number grouping, first-seen certificate-group ordering, caller order preserved inside each certificate group, max 250 CFE per batch and local-only `BatchOrdinal`, without pending-document discovery, `Idemisor` allocation, XML packaging, persistence, transport or DGI-state interpretation.
 46. Read-only ACKCFE document-response consultation by ACKSobre token through `WS_eFactura.EFACCONSULTARESTADOENVIO`, using an accepted durable `IdReceptor + Token`, exact response XML/SHA-256 evidence, strict Sobre/CFE correlation, partial-response support and append-only PostgreSQL/MySQL persistence without local lifecycle mutation or invented `ACKCFE_det/Estado` semantics.
 47. Append-only whole-document ACKCFE XMLDSig signature-math verification over the exact durable consultation response, with bounded algorithm/reference policy, embedded X.509 evidence, source SHA-256 continuity, provider-real replay/concurrency convergence and explicit `CertificateTrustValidated = false`, without PKI trust, DGI signer identity or state semantics.
 48. Append-only ACKCFE PKI Uruguay certificate-trust validation after successful ACKCFE signature-math verification, reusing the governed pinned-root `CustomRootTrust`/online-`EntireChain` revocation policy while persisting independent trust evidence, with exact certificate/response lineage, provider-real replay/concurrency convergence, `PkiUruguayTrustValidated = true` and explicit `DgiIdentityValidated = false`.
+49. Read-only authoritative ACKCFE document-state interpretation after exact consultation/signature/trust continuity, mapping only `AE -> Received`, `BE -> Rejected`, `CE -> ObservedContingency`, enforcing message-level counter consistency and preserving fail-closed boundaries for unsupported codes, multi-message completeness/finality and all local lifecycle mutation.
 
-Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted implementation record `66_FISCAL_CFE_DOCUMENT_RESPONSE_CERTIFICATE_TRUST.md`.
+Detailed bounded evidence remains under `documentation/blueprint-api-implementation/` through accepted implementation record `67_FISCAL_CFE_DOCUMENT_RESPONSE_STATE_SEMANTICS.md`.
 
 ## Accepted Reporte Diario boundary after PR #82
 
@@ -100,9 +103,9 @@ For an exact known receiver, the accepted later-state boundary can persist `DR` 
 
 The accepted reconciliation safety flags remain explicit: `AutomaticReliquidationAuthorized = false` and `AutomaticLocalMutationAuthorized = false`. `Unknown` is never automatically retried because DGI may already have received the bytes.
 
-## Accepted Sobre boundary after PR #101
+## Accepted Sobre boundary after PR #103
 
-The accepted CFE Sobre path now reaches durable signed CFE artifacts -> deterministic local Sobre batch planning -> packaging -> durable Sobre identity -> `EFACRECEPCIONSOBRE` transport -> structural ACKSobre observation -> ACKSobre signature-math verification -> optional accepted ACKSobre PKI Uruguay chain trust -> ACKCFE consultation -> ACKCFE signature-math verification -> ACKCFE PKI Uruguay chain trust.
+The accepted CFE Sobre path now reaches durable signed CFE artifacts -> deterministic local Sobre batch planning -> packaging -> durable Sobre identity -> `EFACRECEPCIONSOBRE` transport -> structural ACKSobre observation -> ACKSobre signature-math verification -> optional accepted ACKSobre PKI Uruguay chain trust -> ACKCFE consultation -> ACKCFE signature-math verification -> ACKCFE PKI Uruguay chain trust -> authoritative ACKCFE per-document state interpretation.
 
 `Idemisor` remains explicit caller input. The planner is **caller-selected CFE only**: it uses first-seen certificate-group ordering, caller order preserved inside each certificate group and max 250 CFE per batch. It does not discover pending CFE and does not allocate `Idemisor`.
 
@@ -125,10 +128,13 @@ accepted durable ACKSobre
 -> separate PKI Uruguay chain/revocation validation
 -> PkiUruguayTrustValidated = true
 -> DgiIdentityValidated = false
+-> trusted semantic mapping AE / BE / CE only
+-> no complete Sobre-resolution claim
+-> no token finality inference
 -> no local lifecycle mutation
 ```
 
-The token consultation and subsequent chain trust do not imply DGI-specific legal signer identity/habilitation, `ACKCFE_det/Estado` semantics, response completeness/finality or local lifecycle transitions.
+The accepted semantic states are evidence-only classifications. DGI permits the per-document result to arrive in one or multiple response messages, so a single ACKCFE cannot be treated as proof that the Sobre is complete or final. Token reconsultation/completeness policy remains a separate bounded candidate.
 
 ## Accepted PR #87 ACKSobre signature-verification boundary
 
@@ -166,26 +172,11 @@ PR #95 does not itself validate the returned ACKCFE XMLDSig or PKI chain; PR #97
 
 PR #97 adds bounded **append-only ACKCFE XMLDSig cryptographic verification** over the exact response already stored by PR #95.
 
-The accepted capability:
-
-- performs no new DGI network call;
-- revalidates the exact consultation response SHA-256 before cryptography;
-- requires root `ACKCFE` in `http://cfe.dgi.gub.uy`;
-- prohibits DTD processing and external XML resolution;
-- requires exactly one direct child XMLDSig `Signature` and one embedded X.509 certificate;
-- requires exactly one whole-document `Reference URI=""`;
-- rejects external/fragment references fail-closed;
-- uses bounded canonicalization, signature, digest and transform allowlists;
-- requires an RSA public key;
-- verifies with `SignedXml.CheckSignature(certificate, verifySignatureOnly: true)`;
-- persists append-only source lineage, algorithms and embedded-certificate evidence;
-- enforces one verification per consultation with provider-real concurrency convergence;
-- keeps `CertificateTrustValidated = false` explicitly on the signature-math evidence;
-- preserves consultation, ACKSobre observation, submission, Sobre, fiscal document, sale, accounting and inventory evidence unchanged.
+The accepted capability performs no new DGI network call, revalidates the exact consultation response SHA-256, enforces a bounded whole-document XMLDSig policy with embedded X.509 evidence and keeps `CertificateTrustValidated = false` explicitly on the signature-math evidence. It preserves consultation, ACKSobre observation, submission, Sobre, fiscal document, sale, accounting and inventory evidence unchanged.
 
 The detailed accepted evidence is recorded in `documentation/blueprint-api-implementation/65_FISCAL_CFE_DOCUMENT_RESPONSE_SIGNATURE_VERIFICATION.md`.
 
-A successful verification proves bounded whole-document signature mathematics only. It does **not** by itself build an `X509Chain`, establish PKI Uruguay trust, validate revocation, prove DGI-specific signer identity/habilitation, interpret `ACKCFE_det/Estado`, reinterpret `EstadoCFE`, infer response completeness, poll automatically, retry `Unknown`, recover S08, allocate `Idemisor`, expose a public REST endpoint or establish DGI Testing/Production readiness. PR #101 adds the separate chain-trust boundary without rewriting this evidence.
+A successful verification proves bounded whole-document signature mathematics only. It does not by itself build an `X509Chain`, establish PKI Uruguay trust, validate revocation, prove DGI-specific signer identity/habilitation, infer response completeness, poll automatically, retry `Unknown`, recover S08, allocate `Idemisor`, expose a public REST endpoint or establish DGI Testing/Production readiness.
 
 ## Accepted PR #101 ACKCFE PKI Uruguay certificate-trust boundary
 
@@ -197,6 +188,22 @@ Successful evidence records `PkiUruguayTrustValidated = true` and mandatory `Dgi
 
 The detailed accepted evidence remains in `documentation/blueprint-api-implementation/66_FISCAL_CFE_DOCUMENT_RESPONSE_CERTIFICATE_TRUST.md`.
 
+## Accepted PR #103 ACKCFE authoritative state-semantics boundary
+
+PR #103 adds bounded **read-only authoritative `ACKCFE_det/Estado` interpretation** after the exact durable ACKCFE consultation has successful XMLDSig verification and PKI Uruguay trust evidence.
+
+The accepted use case requires exact organization, consultation, ACKSobre observation, submission, Sobre, response-hash and certificate-hash continuity across the durable evidence chain. It maps only the published taxonomy:
+
+- `AE` -> `Received`;
+- `BE` -> `Rejected`;
+- `CE` -> `ObservedContingency`.
+
+The semantic boundary verifies message-local counters against the interpreted details. `CantOtrosRechazados` remains source evidence only. Any unsupported state code or counter mismatch fails closed.
+
+This boundary performs no persistence write, no transaction side effect and no local fiscal-document lifecycle mutation. It does not infer complete/final Sobre resolution, schedule token polling/reconsultation, change the accepted `Unknown` transport policy, recover S08 or claim DGI legal signer identity/habilitation. `DgiIdentityValidated = false` remains mandatory.
+
+The detailed accepted evidence remains in `documentation/blueprint-api-implementation/67_FISCAL_CFE_DOCUMENT_RESPONSE_STATE_SEMANTICS.md`.
+
 ## DGI technical baseline currently used by the consumer
 
 The governed fiscal lineage continues to use official DGI artifacts already pinned/reviewed in numbered implementation records, including `Formato CFE v25.2`, `Formato_Sobre_v05`, `Formato Reporte CFE v13.2`, `Formato Mensajes Respuesta v19`, `XSDs_FE_V1.44.2`, the current Web Services Externos Consultas contract and the current portal copy of Servicios Web Externos Factura Electrónica.
@@ -205,7 +212,9 @@ Current authoritative response evidence supports ACKSobre and ACKCFE public-cert
 
 DGI material tying recognized eFactura certificates to certification providers accredited before UCE and UCE evidence for PKI Uruguay are sufficient for the accepted ACKSobre and ACKCFE PKI chain-trust boundaries. They still do not prove a DGI-specific legal signer identity/habilitation rule for the end-entity certificate.
 
-The accepted `EFACCONSULTARESTADOCFE` boundary remains a read-only query by durable `TipoCFE + Serie + Nro`. The current DGI response-format lineage identifies response codes such as AE/BE/CE in relevant response contexts, but no local `EstadoCFE` transition policy is accepted until the authoritative taxonomy and context linkage are sufficient to avoid invented semantics.
+For the exact ACKCFE per-document response context, the accepted DGI response-format evidence now governs `AE`, `BE` and `CE` semantics through PR #103. That acceptance is message-local only and does not turn one response into a completeness/finality signal.
+
+The accepted `EFACCONSULTARESTADOCFE` boundary remains a read-only query by durable `TipoCFE + Serie + Nro`. The returned `EstadoCFE` taxonomy and any safe local transition policy remain separately unresolved and must not be inferred from the ACKCFE detail taxonomy.
 
 No XML element, namespace, mandatory-field rule, sequence/allocation rule, response state, Testing threshold, signature requirement, endpoint or SOAPAction may be inferred from memory, legacy demo code or provider examples when authoritative DGI evidence is required.
 
@@ -238,8 +247,9 @@ The accepted baseline does not complete:
 - persisted batch-plan lifecycle or automatic conversion of the local batching policy into a pending-work selector;
 - authoritative semantic interpretation of the returned `EstadoCFE` taxonomy and any resulting local lifecycle transition;
 - DGI-specific signer identity/habilitation for the returned `ACKCFE` certificate;
-- authoritative semantic interpretation of `ACKCFE_det/Estado` and any resulting local lifecycle transition;
-- automatic token polling/reconsultation or authoritative completeness assessment across multiple `ACKCFE` messages;
+- automatic token polling/reconsultation;
+- authoritative completeness/finality assessment across one or multiple `ACKCFE` response messages;
+- local lifecycle transition from validated ACKCFE per-document semantics;
 - `S08` interpretation/recovery semantics beyond preserving the reason;
 - automatic reconciliation of ambiguous Sobre `Unknown` delivery;
 - authoritative external DGI Testing evidence;
@@ -249,7 +259,7 @@ The accepted baseline does not complete:
 - general receivable collection/payment allocation workflow;
 - accounts payable/procurement/treasury/cash-management completion.
 
-cryptographic XMLDSig verification of returned `ACKCFE` is **no longer incomplete**; it was accepted in PR #97. PKI Uruguay trust validation for the returned `ACKCFE` signature is also **no longer incomplete**; it was accepted in PR #101. DGI-specific signer identity/habilitation, response semantics and completeness/finality remain separate gaps.
+cryptographic XMLDSig verification of returned `ACKCFE` is **no longer incomplete**; it was accepted in PR #97. PKI Uruguay trust validation for the returned `ACKCFE` signature is also **no longer incomplete**; it was accepted in PR #101. Authoritative `ACKCFE_det/Estado` detail-state semantics are **no longer incomplete**; they were accepted in PR #103. DGI-specific signer identity/habilitation, multi-message completeness/finality, token reconsultation policy, `EstadoCFE` semantics and local lifecycle mutation remain separate gaps.
 
 ## Blueprint evaluator checkpoint
 
@@ -261,23 +271,24 @@ There is no automatic consumer upgrade. Current consumer classification remains 
 
 ## Next bounded implementation sequence
 
-PR #101 is closed and accepted. Later identity, response interpretation, recovery and product-capability work may advance only through separately governed, evidence-backed increments.
+PR #103 is closed and accepted. Later identity, completeness/reconsultation, state interpretation, recovery and product-capability work may advance only through separately governed, evidence-backed increments.
 
-Candidate boundaries after PR #101 are:
+Candidate boundaries after PR #103 are:
 
-1. DGI-specific legal signer identity/certificate habilitation only if authoritative end-entity policy evidence is sufficient;
-2. semantic interpretation of `ACKCFE_det/Estado` only if an authoritative taxonomy and safe local transition policy are proven;
-3. semantic interpretation of `EstadoCFE` only if an authoritative state taxonomy and safe local transition policy are proven;
-4. token reconsultation/completeness policy only if safe product rules can distinguish partial/evolving responses without inventing finality;
-5. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
-6. S08 recovery only if authoritative evidence proves a safe action rather than merely the rejection reason;
-7. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
-8. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
-9. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
-10. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
-11. Production transport only after explicit technical and operational review.
+1. token reconsultation/completeness policy only if safe product rules can distinguish partial/evolving responses without inventing finality;
+2. semantic interpretation of `EstadoCFE` only if an authoritative state taxonomy, exact context linkage and safe local transition policy are proven;
+3. DGI-specific legal signer identity/certificate habilitation only if authoritative end-entity policy evidence is sufficient;
+4. reconciliation/discovery for ambiguous Sobre `Unknown` only if authoritative service evidence exists;
+5. S08 recovery only if authoritative evidence proves a safe action rather than merely the rejection reason;
+6. automatic `Idemisor` allocation only if sufficient authoritative evidence is found;
+7. ER inconsistency-detail retrieval only if DGI exposes sufficient authoritative evidence;
+8. separately evidenced Reporte Diario `R05` sequence recovery only if the correct sequence can be proven rather than guessed;
+9. external DGI Testing evidence using legitimate credentials/certificate material outside source control;
+10. Production transport only after explicit technical and operational review.
 
-The DGI-specific legal signer identity/certificate habilitation candidate remains unresolved: existing PKI Uruguay and certificate-policy evidence is insufficient by itself to prove an eFactura ACK signer-specific authorization/identity rule. It must remain fail-closed rather than inferred. Therefore this checkpoint does not authorize implementation of that candidate until stronger authoritative evidence is found; the next functional slice may skip to another bounded candidate only after its own evidence review.
+The DGI-specific legal signer identity/certificate habilitation candidate remains unresolved: existing PKI Uruguay and certificate-policy evidence is insufficient by itself to prove an eFactura ACK signer-specific authorization/identity rule. It must remain fail-closed rather than inferred. Therefore this checkpoint does not authorize implementation of that candidate until stronger authoritative evidence is found.
+
+The token reconsultation/completeness candidate is also bounded conservatively. Current DGI response evidence establishes that per-document results may arrive in one or multiple response messages and that ACKSobre provides token/consultation timing evidence, but this checkpoint does not claim that a definitive token-exhaustion or final-completeness signal has been proven. Any later implementation must preserve append-only observations and fail closed when completeness cannot be demonstrated.
 
 ## Known non-blocking modernization debt
 
@@ -287,19 +298,18 @@ These items remain inventory for later bounded modernization slices and must not
 
 ## Repository governance at this checkpoint
 
-- accepted `main`: `0eb56872bd45dcabaf6c8ed66d7c0de1e97f5466`;
-- latest product-capability merge: PR #101 `feat(fiscal): validate ACKCFE PKI Uruguay trust`;
-- latest governance-only checkpoint merge before PR #101: PR #100 `docs(governance): reconcile checkpoint after PR #99 recovery` -> `8245d90c938c49edc5a1b1c98a524fae81c9ab60`;
-- PR #100 post-merge Clean Architecture Guard #460 (`34841417850`): SUCCESS, push on exact accepted merge SHA, attempt 1;
-- approved PR #101 head: `343b4ed8aebcd162eada9662cad9216a05160671`;
-- exact-head PR #101 Clean Architecture Guard #462 (`34844303667`): SUCCESS, attempt 1, no rerun, first job 553/553 and provider-real 237/237;
-- PR #101 merge commit: `0eb56872bd45dcabaf6c8ed66d7c0de1e97f5466`, GitHub signature valid;
-- post-merge Clean Architecture Guard #463 (`34846564398`): SUCCESS, push on exact accepted merge SHA, attempt 1, no rerun;
-- accepted validation counts: ArchitectureTests 198/198, CrossCuttingTests 334/334, legacy UnitTest 21/21, first job 553/553, provider-real PostgreSQL/MySQL 237/237;
-- all six new ACKCFE trust provider executions passed across PostgreSQL/MySQL;
+- accepted `main`: `6c51b0ab256af45cef15f2948ef27f2eacd1b98a`;
+- latest product-capability merge: PR #103 `feat(fiscal): interpret authoritative ACKCFE states`;
+- latest governance-only checkpoint merge before PR #103: PR #102 `docs(governance): reconcile checkpoint after PR #101` -> `7c9587ecb4f08c19a78b73c8e43e24a84abe23e5`;
+- PR #102 post-merge Clean Architecture Guard #466 (`34873412495`): SUCCESS, push on exact accepted merge SHA, attempt 1;
+- approved PR #103 head: `98fa5b6013734c0cdf0dd4a353114df0bc8fd303`;
+- exact-head PR #103 Clean Architecture Guard #468 (`34898380425`): SUCCESS, attempt 1, no rerun, first job 560/560 and provider-real 237/237;
+- PR #103 merge commit: `6c51b0ab256af45cef15f2948ef27f2eacd1b98a`, GitHub signature valid;
+- post-merge Clean Architecture Guard #469 (`34900941026`): SUCCESS, push on exact accepted merge SHA, attempt 1, no rerun;
+- accepted validation counts: ArchitectureTests 200/200, CrossCuttingTests 339/339, legacy UnitTest 21/21, first job 560/560, provider-real PostgreSQL/MySQL 237/237;
 - provider-real versions: PostgreSQL 16.15 and MySQL 8.4.11;
 - provider container setup, teardown, network removal and orphan-process cleanup passed;
-- PR #101 preserves `DgiIdentityValidated = false` and does not authorize state semantics, response finality/completeness or local mutation;
+- PR #103 preserves `DgiIdentityValidated = false` and does not authorize response completeness/finality, token polling/reconsultation or local lifecycle mutation;
 - no governed functional increment is currently open; this checkpoint reconciliation is governance-only;
 - one atomic slice per PR remains required;
 - Blueprint 0.5.2 consumer adoption remains DEFER;
