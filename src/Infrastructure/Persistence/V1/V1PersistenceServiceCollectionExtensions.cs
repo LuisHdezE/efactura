@@ -130,9 +130,17 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<IFiscalCfeEnvelopeAckSignatureVerificationRepository, EfFiscalCfeEnvelopeAckSignatureVerificationRepository>();
         services.AddScoped<IFiscalCfeEnvelopeAckCertificateTrustValidationRepository, EfFiscalCfeEnvelopeAckCertificateTrustValidationRepository>();
         services.AddScoped<IFiscalCfeStateConsultationRepository, EfFiscalCfeStateConsultationRepository>();
-        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseConsultationRepository, EfFiscalCfeEnvelopeDocumentResponseConsultationRepository>();
+        services.AddScoped<EfFiscalCfeEnvelopeDocumentResponseConsultationRepository>();
+        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseConsultationRepository>(sp =>
+            sp.GetRequiredService<EfFiscalCfeEnvelopeDocumentResponseConsultationRepository>());
+        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseConsultationHistoryReader>(sp =>
+            sp.GetRequiredService<EfFiscalCfeEnvelopeDocumentResponseConsultationRepository>());
         services.AddScoped<IFiscalCfeEnvelopeDocumentResponseSignatureVerificationRepository, EfFiscalCfeEnvelopeDocumentResponseSignatureVerificationRepository>();
-        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository, EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>();
+        services.AddScoped<EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>();
+        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>(sp =>
+            sp.GetRequiredService<EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>());
+        services.AddScoped<IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationHistoryReader>(sp =>
+            sp.GetRequiredService<EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository>());
         services.AddSingleton<IFiscalCfeEnvelopePersistenceConflictClassifier, EfFiscalCfeEnvelopePersistenceConflictClassifier>();
         services.AddScoped<IFiscalDailyReportVersionRepository, EfFiscalDailyReportVersionRepository>();
         services.AddScoped<IFiscalDailyReportSigningEvidenceRepository, EfFiscalDailyReportSigningEvidenceRepository>();
@@ -174,6 +182,8 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<ConsultFiscalCfeEnvelopeDocumentResponseUseCase>();
         services.AddScoped<VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase>();
         services.AddScoped<ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase>();
+        services.AddScoped<AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase>();
+        services.AddScoped<CollectFiscalCfeEnvelopeDocumentResponseEvidenceUseCase>();
         services.AddScoped<AllocateFiscalDailyReportVersionUseCase>();
         services.AddScoped<PrepareFiscalDailyReportSigningEvidenceUseCase>();
         services.AddScoped<SignFiscalDailyReportUseCase>();
