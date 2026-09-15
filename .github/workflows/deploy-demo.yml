@@ -1,0 +1,42 @@
+name: Deploy eFactura Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/WebApp/**'
+      - '.github/workflows/deploy-demo.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/WebApp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build demo
+        env:
+          VITE_DATA_MODE: mock
+        run: npm run build
+
+      - name: Deploy static bundle via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.eliasworks.uy
+          username: luis@eliasworks.uy
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          local-dir: src/WebApp/dist/
+          server-dir: public_html/efactura/
