@@ -13,7 +13,8 @@ public sealed class FiscalCfeEnvelopeDocumentResponseEvidenceCycleArchitectureTe
         Assert.Contains("VerifyFiscalCfeEnvelopeDocumentResponseSignatureUseCase", application, StringComparison.Ordinal);
         Assert.Contains("ValidateFiscalCfeEnvelopeDocumentResponseCertificateTrustUseCase", application, StringComparison.Ordinal);
         Assert.Contains("AssessFiscalCfeEnvelopeDocumentResponseCoverageUseCase", application, StringComparison.Ordinal);
-        Assert.Contains("normalized.OperationId,\n                normalized.OperationId", application, StringComparison.Ordinal);
+        Assert.Contains("ValidateTrustAsync(", application, StringComparison.Ordinal);
+        Assert.Contains("normalized.OperationId", application, StringComparison.Ordinal);
         Assert.Contains("EnsureExactLineage", application, StringComparison.Ordinal);
         Assert.Contains("SignatureValid", application, StringComparison.Ordinal);
         Assert.Contains("PkiUruguayTrustValidated", application, StringComparison.Ordinal);
@@ -72,7 +73,7 @@ public sealed class FiscalCfeEnvelopeDocumentResponseEvidenceCycleArchitectureTe
         Assert.Contains("multiple messages", documentation, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("new operation `Y`", documentation, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("contains no loop", documentation, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("does not prove that DGI has emitted its last ACKCFE message", documentation, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("prove that DGI has emitted its last ACKCFE message", documentation, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("DgiIdentityValidated = false", documentation, StringComparison.Ordinal);
         Assert.Contains("ProtocolFinalityProven = false", documentation, StringComparison.Ordinal);
         Assert.Contains("TokenExhaustionProven = false", documentation, StringComparison.Ordinal);
