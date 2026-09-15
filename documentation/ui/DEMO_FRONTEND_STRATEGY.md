@@ -12,6 +12,20 @@ A demo view may use local fixtures, but every visible field, state, action and n
 
 A contracted-but-not-implemented endpoint does not authorize an apparently functional control.
 
+## Hosting boundary
+
+The public hosting target `efactura.eliasworks.uy` serves **only the compiled WebApp static bundle**.
+
+The eFactura .NET API is explicitly outside this hosting/deployment increment:
+
+- it is not copied to HostingMontevideo;
+- it is not uploaded by FTP;
+- it is not executed under `public_html/efactura/`;
+- it is not packaged into the WebApp deployment artifact;
+- backend source, binaries, migrations and configuration are not deployed by `deploy-demo.yml`.
+
+The WebApp runs today in `mock` data mode. When API integration is authorized later, the browser will call an independently deployed API endpoint through the HTTP gateway. The backend deployment lifecycle remains a separate lane and a separate infrastructure decision.
+
 ## Initial runtime scope
 
 The first navigable demo exposes only:
@@ -67,7 +81,7 @@ Target public URL: `https://efactura.eliasworks.uy`.
 
 Expected document root: `public_html/efactura/`.
 
-GitHub Actions builds `src/WebApp` and uploads only the static `dist/` output over FTP, following the deployment pattern already used by `erp_eliasworks`.
+GitHub Actions builds `src/WebApp` and uploads **only** the static `src/WebApp/dist/` output over FTP, following the deployment pattern already used by `erp_eliasworks`.
 
 Repository prerequisite before the first successful automatic deploy:
 
