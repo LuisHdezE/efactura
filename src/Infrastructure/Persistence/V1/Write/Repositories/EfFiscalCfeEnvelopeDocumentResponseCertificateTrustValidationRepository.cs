@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Persistence.V1.Write.Repositories;
 
 public sealed class EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository :
-    IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository
+    IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationRepository,
+    IFiscalCfeEnvelopeDocumentResponseCertificateTrustValidationHistoryReader
 {
     private readonly V1PersistenceDbContext _dbContext;
 
@@ -23,6 +24,18 @@ public sealed class EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidatio
                 x => x.OrganizationId == organizationId && x.OperationId == operationId,
                 cancellationToken);
         return Map(record);
+    }
+
+    public async Task<IReadOnlyList<StoredFiscalCfeEnvelopeDocumentResponseCertificateTrustValidation>> ListByConsultationIdAsync(
+        Guid consultationId,
+        CancellationToken cancellationToken = default)
+    {
+        var records = await _dbContext.Set<V1FiscalCfeDocumentResponseCertificateTrustValidationRecord>()
+            .AsNoTracking()
+            .Where(x => x.ConsultationId == consultationId)
+            .OrderBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+        return records.Select(MapRequired).ToArray();
     }
 
     public Task AddAsync(
@@ -55,6 +68,10 @@ public sealed class EfFiscalCfeEnvelopeDocumentResponseCertificateTrustValidatio
         DgiIdentityValidated = value.DgiIdentityValidated,
         ValidatedAtUtc = value.ValidatedAtUtc
     };
+
+    private static StoredFiscalCfeEnvelopeDocumentResponseCertificateTrustValidation MapRequired(
+        V1FiscalCfeDocumentResponseCertificateTrustValidationRecord value) =>
+        Map(value) ?? throw new InvalidOperationException("ACKCFE trust persistence mapping unexpectedly returned null.");
 
     private static StoredFiscalCfeEnvelopeDocumentResponseCertificateTrustValidation? Map(
         V1FiscalCfeDocumentResponseCertificateTrustValidationRecord? value) =>
