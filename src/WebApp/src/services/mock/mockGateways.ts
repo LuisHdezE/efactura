@@ -1,5 +1,6 @@
 import type { AppGateways } from '../contracts';
 import { mockItems, mockParties } from './data';
+import { mockSalesGateway } from './mockSales';
 
 const pause = <T,>(value: T) => new Promise<T>((resolve) => window.setTimeout(() => resolve(value), 120));
 
@@ -17,5 +18,6 @@ export const mockGateways: AppGateways = {
       const items = mockParties.filter((party) => party.roles.includes('CUSTOMER') && (!term || party.name.toLowerCase().includes(term) || party.fiscalIdentities.some((identity) => identity.number.toLowerCase().includes(term))));
       return pause({ items, page: 1, pageSize: 50, total: items.length });
     }
-  }
+  },
+  sales: mockSalesGateway,
 };
