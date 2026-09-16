@@ -142,6 +142,10 @@ This prevents the demo from manufacturing a fiscal readiness state that the curr
 
 The UI explains that boundary instead of fabricating a payment method or treating an empty local gesture as a durable confirmed sale.
 
+## CI recovery note
+
+The first D1.2 guard attempts were cancelled during an interrupted/restarted CI sequence and by the workflow concurrency policy. They are not treated as code failures. Final readiness requires a fresh successful `Frontend Demo CI` and `Clean Architecture Guard` on the exact current PR head after the concurrency group is clear.
+
 ## Remaining review items
 
 Before final `PASS`, `PASS_WITH_ACCEPTED_DEVIATIONS` or `FAIL`:
