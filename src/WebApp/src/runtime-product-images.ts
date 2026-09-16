@@ -40,6 +40,7 @@ function paintProductImages() {
       image.loading = compact ? 'eager' : 'lazy';
       image.decoding = 'async';
       Object.assign(image.style, {
+        boxSizing: 'border-box',
         objectFit: 'contain',
         objectPosition: 'center',
         padding: compact ? '2px' : '6px',
