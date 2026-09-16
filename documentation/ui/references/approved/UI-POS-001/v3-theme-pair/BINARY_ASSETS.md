@@ -29,6 +29,19 @@ The product artwork was recovered from the healthy retained visual source and st
 
 The exact runtime mapping and integrity metadata are recorded in `product-sprite-manifest.json` (historical filename retained for compatibility).
 
+## Governed service asset
+
+`SERV-001 — Servicio de entrega` uses a presentation-only 128×128 PNG stored twice with the **same Git blob**:
+
+- governed reference: `documentation/ui/references/approved/UI-POS-001/v3-theme-pair/services/servicio-entrega.png`
+- runtime asset: `src/WebApp/public/assets/services/servicio-entrega.png`
+
+| Asset | Git blob SHA | Bytes |
+| --- | --- | ---: |
+| `servicio-entrega.png` | `a34c4d68066ded906338fc4484e0cdc7e019ec98` | 3336 |
+
+This service artwork is presentation-only metadata. It does not add or imply logistics, fleet, delivery-tracking or media capabilities to the API.
+
 ## Corrupted historical blobs
 
 | Asset | Historical Git blob SHA | Repository bytes | Integrity status |
