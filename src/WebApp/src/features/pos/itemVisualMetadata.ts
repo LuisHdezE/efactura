@@ -1,4 +1,5 @@
 import type { CommercialItemDto } from '../../contracts/api';
+import approvedSpriteUrl from '../../assets/ui-pos-001-v3-product-sprite.webp';
 
 export interface ItemVisualMetadata {
   imageUrl: string | null;
@@ -6,8 +7,6 @@ export interface ItemVisualMetadata {
   column?: number;
   row?: number;
 }
-
-const approvedSpriteUrl = '/assets/ui-pos-001/v3/product-sprite.webp';
 
 type SpriteCell = { column: number; row: number; alt: string };
 
@@ -32,10 +31,9 @@ const spriteByCode: Record<string, SpriteCell> = {
 /**
  * Presentation-only metadata derived from the approved UI-POS-001 v3 theme pair.
  *
- * The source image remains the exact governed sprite. The mapping is by stable
- * mock catalog code rather than entity id so the visual layer stays decoupled
- * from API persistence identity. This does not add a media field to
- * CommercialItemDto or imply upload/gallery/media-management capabilities.
+ * The source image is the same governed Git blob approved in PR #117, now also
+ * referenced from src/assets so Vite emits a fingerprinted runtime URL. The
+ * mapping is by stable mock catalog code and remains outside CommercialItemDto.
  */
 export const getItemVisualMetadata = (item: CommercialItemDto): ItemVisualMetadata => {
   const sprite = spriteByCode[item.code];
