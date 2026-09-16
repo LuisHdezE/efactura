@@ -1,0 +1,34 @@
+/* Runtime-safe product imagery for UI-POS-001.
+ *
+ * The outer element is currently an <svg>. Some browsers leave the nested
+ * <image href="...webp"> blank in this deployment path. We therefore paint
+ * the same governed sprite as a CSS background on the outer visual box.
+ * Vite resolves this relative asset URL into a fingerprinted build asset.
+ */
+
+svg.pos-product-visual[aria-label^='Imagen de referencia aprobada'] > image {
+  display: none;
+}
+
+.pos-product-visual[aria-label^='Imagen de referencia aprobada'] {
+  background-image: url('./assets/ui-pos-001-v3-product-sprite.webp');
+  background-size: 500% 300%;
+  background-repeat: no-repeat;
+  background-color: var(--surface);
+}
+
+.pos-product-visual[aria-label*='Papas Fritas Clásicas 100g'] { background-position: 0% 0%; }
+.pos-product-visual[aria-label*='Agua Mineral 500ml'] { background-position: 25% 0%; }
+.pos-product-visual[aria-label*='Coca-Cola 600ml'] { background-position: 50% 0%; }
+.pos-product-visual[aria-label*='Leche Entera 1L'] { background-position: 75% 0%; }
+.pos-product-visual[aria-label*='Pan Francés'] { background-position: 100% 0%; }
+.pos-product-visual[aria-label*='Queso Mozzarella'] { background-position: 0% 50%; }
+.pos-product-visual[aria-label*='Jamón Cocido'] { background-position: 25% 50%; }
+.pos-product-visual[aria-label*='Banana'] { background-position: 50% 50%; }
+.pos-product-visual[aria-label*='Detergente 750ml'] { background-position: 75% 50%; }
+.pos-product-visual[aria-label*='Papel Higiénico 4u'] { background-position: 100% 50%; }
+.pos-product-visual[aria-label*='Galletitas Surtidas 300g'] { background-position: 0% 100%; }
+.pos-product-visual[aria-label*='Café Molido 500g'] { background-position: 25% 100%; }
+.pos-product-visual[aria-label*='Yerba Mate 1kg'] { background-position: 50% 100%; }
+.pos-product-visual[aria-label*='Azúcar 1kg'] { background-position: 75% 100%; }
+.pos-product-visual[aria-label*='Aceite de Girasol 1L'] { background-position: 100% 100%; }
