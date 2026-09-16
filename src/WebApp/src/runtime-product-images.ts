@@ -32,6 +32,7 @@ function paintProductImages() {
       if (!asset) return;
 
       const compact = visual.classList.contains('compact');
+      const isService = asset.directory === 'services';
       const image = document.createElement('img');
       image.src = `/assets/${asset.directory ?? 'products'}/${asset.file}`;
       image.alt = asset.label;
@@ -42,7 +43,10 @@ function paintProductImages() {
       Object.assign(image.style, {
         objectFit: 'contain',
         objectPosition: 'center',
-        padding: compact ? '2px' : '6px',
+        // Service artwork is wider and visually denser than the square product
+        // cutouts. Give it additional breathing room without modifying the
+        // governed PNG or changing product framing.
+        padding: compact ? (isService ? '4px' : '2px') : (isService ? '14px 20px' : '6px'),
       });
 
       image.addEventListener('error', () => {
