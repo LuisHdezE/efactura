@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './app/App';
 import './styles.css';
 import './visual-parity.css';
-import './product-images-runtime.css';
+import './runtime-product-images';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
