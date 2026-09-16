@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type {
   CommercialItemDto,
   PartyDto,
@@ -18,20 +19,25 @@ type SaleBusyState = 'saving' | 'validating' | 'preview' | null;
 type CatalogFilter = 'ALL' | 'PRODUCT' | 'SERVICE';
 
 function ProductVisual({ item, compact = false }: { item: CommercialItemDto; compact?: boolean }) {
-  const visual = getItemVisualMetadata(item.id);
+  const visual = getItemVisualMetadata(item);
 
-  if (visual.imageUrl && visual.spritePosition) {
+  if (visual.imageUrl && visual.column !== undefined && visual.row !== undefined) {
     return (
-      <div
+      <svg
+        viewBox="0 0 160 160"
         role="img"
         aria-label={visual.alt}
         className={`pos-product-visual ${compact ? 'compact' : ''}`}
-        style={{
-          backgroundImage: `url(${visual.imageUrl})`,
-          backgroundSize: '500% 300%',
-          backgroundPosition: visual.spritePosition,
-        }}
-      />
+      >
+        <image
+          href={visual.imageUrl}
+          x={-visual.column * 160}
+          y={-visual.row * 160}
+          width="800"
+          height="480"
+          preserveAspectRatio="none"
+        />
+      </svg>
     );
   }
 
@@ -55,9 +61,10 @@ function PreviewValue({ label, value }: { label: string; value: string }) {
 }
 
 export function PosPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') ?? '';
   const [items, setItems] = useState<CommercialItemDto[]>([]);
   const [customers, setCustomers] = useState<PartyDto[]>([]);
-  const [search, setSearch] = useState('');
   const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>('ALL');
   const [customerId, setCustomerId] = useState('');
   const [intent, setIntent] = useState<SaleCommercialIntent>('CONSUMER_FINAL');
@@ -82,6 +89,13 @@ export function PosPage() {
       .catch(() => setLoadError('No se pudo cargar el catálogo o los clientes de demostración.'))
       .finally(() => setLoading(false));
   }, []);
+
+  const setSearch = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value.trim()) next.set('q', value);
+    else next.delete('q');
+    setSearchParams(next, { replace: true });
+  };
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -199,7 +213,7 @@ export function PosPage() {
         <div>
           <div className="pos-kicker">UI-POS-001 · v3-theme-pair</div>
           <h1 className="pos-heading">Productos</h1>
-          <p className="pos-subheading">Selecciona un artículo o servicio para agregarlo a la venta.</p>
+          <p className="pos-subheading">Selecciona un producto para agregarlo a la venta.</p>
         </div>
         <div className="pos-contract-note">
           <strong>Demo contractual:</strong> el catálogo no expone precio de venta. El precio se informa por línea y la fiscalidad sigue siendo autoridad del servidor.
@@ -213,7 +227,7 @@ export function PosPage() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar en catálogo por código o nombre…"
+                placeholder="Buscar en catálogo…"
                 className="pos-search"
               />
               <div className="pos-counter">{loading ? 'Cargando…' : `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`}</div>
@@ -232,7 +246,7 @@ export function PosPage() {
           </div>
 
           <div className="pos-grid">
-            {loading && Array.from({ length: 8 }).map((_, index) => (
+            {loading && Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="pos-product-card animate-pulse">
                 <div className="pos-product-visual" />
                 <div className="pos-product-body gap-2"><div className="h-2 w-1/2 rounded bg-slate-200" /><div className="h-3 w-3/4 rounded bg-slate-200" /><div className="mt-auto h-7 rounded bg-slate-200" /></div>
@@ -249,10 +263,10 @@ export function PosPage() {
               <article key={item.id} className="pos-product-card">
                 <ProductVisual item={item} />
                 <div className="pos-product-body">
-                  <div className="pos-product-code">{item.code}</div>
                   <h2 className="pos-product-name">{item.name}</h2>
-                  <div className="pos-product-meta">{item.kind === 'PRODUCT' ? 'Producto' : 'Servicio'} · unidad {item.unit}</div>
-                  <button type="button" onClick={() => addItem(item)} className="pos-add-button">+ Agregar</button>
+                  <div className="pos-product-code">Cód. {item.code}</div>
+                  <div className="pos-product-meta">{item.kind === 'PRODUCT' ? (item.unit === 'KG' ? 'Kilogramo' : 'Unidad') : 'Servicio'}</div>
+                  <button type="button" onClick={() => addItem(item)} className="pos-add-button">＋ Agregar</button>
                 </div>
               </article>
             ))}
@@ -281,7 +295,7 @@ export function PosPage() {
               <label className="pos-label">
                 Cliente
                 <select value={customerId} onChange={(event) => { setCustomerId(event.target.value); markDraftChanged(); }} className="pos-select">
-                  <option value="">Sin cliente seleccionado</option>
+                  <option value="">Consumidor final · sin identificar</option>
                   {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
                 </select>
               </label>
@@ -298,13 +312,18 @@ export function PosPage() {
               {selectedCustomer ? (
                 <><strong>{selectedCustomer.name}</strong>{selectedIdentity ? ` · ${selectedIdentity.typeCode}: ${selectedIdentity.number}` : ''} · residencia {selectedCustomer.residenceCountry}</>
               ) : (
-                <>Sin cliente seleccionado · UYU · fecha efectiva {effectiveOn}</>
+                <><strong>Consumidor Final</strong> · sin cliente identificado · UYU · {effectiveOn}</>
               )}
               <div className="mt-1 opacity-70">Ubicación y terminal aún no integrados; el mock los mantiene en null.</div>
             </div>
           </div>
 
           <div className="pos-lines">
+            {cart.length > 0 && (
+              <div className="pos-line-header">
+                <span>Producto</span><span>Cant.</span><span>Precio unit.</span><span>Subtotal</span><span />
+              </div>
+            )}
             {cart.length === 0 ? (
               <div className="pos-empty m-2">La venta está vacía. Agrega un producto o servicio; luego informa cantidad y precio unitario.</div>
             ) : cart.map((line) => {
@@ -336,27 +355,6 @@ export function PosPage() {
               <strong className="pos-total-value">{money.format(total)}</strong>
             </div>
 
-            <div className="pos-actions">
-              <button type="button" onClick={saveDraft} disabled={!canSaveDraft} className="pos-action-secondary">
-                {saleBusy === 'saving' ? 'Guardando…' : sale ? (draftDirty ? 'Actualizar borrador' : 'Borrador guardado') : 'Guardar borrador'}
-              </button>
-              <button type="button" onClick={validateSale} disabled={!canUseSavedDraft} className="pos-action-primary">
-                {saleBusy === 'validating' ? 'Validando…' : 'Validar'}
-              </button>
-            </div>
-
-            {sale && (
-              <button type="button" onClick={loadPreview} disabled={!canUseSavedDraft} className="pos-action-preview">
-                {saleBusy === 'preview' ? 'Cargando preview…' : 'Ver preview fiscal'}
-              </button>
-            )}
-
-            <div aria-live="polite">
-              {saleError && <div className="pos-message error">{saleError}</div>}
-              {sale && !draftDirty && <div className="pos-message info">Borrador mock guardado · versión {sale.version}. Vive solo en memoria del navegador; no fue persistido por la API real.</div>}
-              {validation && <div className="pos-message info"><strong>{validation.valid ? 'Validación mock completada.' : 'Validación mock con hallazgos.'}</strong> Representa la forma de `API-SAL-005`, no una ejecución del backend desplegado.</div>}
-            </div>
-
             <div className="pos-preview">
               <div className="pos-preview-title">Vista previa fiscal</div>
               <div className="pos-preview-copy">
@@ -373,6 +371,24 @@ export function PosPage() {
                   {preview.findings.length > 0 && <div className="pos-preview-copy mt-2">{preview.findings.join(' · ')}</div>}
                 </>
               )}
+            </div>
+
+            <div className="pos-actions pos-actions-three">
+              <button type="button" onClick={saveDraft} disabled={!canSaveDraft} className="pos-action-secondary">
+                {saleBusy === 'saving' ? 'Guardando…' : sale ? (draftDirty ? 'Actualizar borrador' : 'Borrador guardado') : 'Guardar borrador'}
+              </button>
+              <button type="button" onClick={loadPreview} disabled={!canUseSavedDraft} className="pos-action-secondary">
+                {saleBusy === 'preview' ? 'Cargando…' : 'Ver preview fiscal'}
+              </button>
+              <button type="button" onClick={validateSale} disabled={!canUseSavedDraft} className="pos-action-primary">
+                {saleBusy === 'validating' ? 'Validando…' : '✓ Validar'}
+              </button>
+            </div>
+
+            <div aria-live="polite">
+              {saleError && <div className="pos-message error">{saleError}</div>}
+              {sale && !draftDirty && <div className="pos-message info">Borrador mock guardado · versión {sale.version}. Vive solo en memoria del navegador; no fue persistido por la API real.</div>}
+              {validation && <div className="pos-message info"><strong>{validation.valid ? 'Validación mock completada.' : 'Validación mock con hallazgos.'}</strong> Representa la forma de `API-SAL-005`, no una ejecución del backend desplegado.</div>}
             </div>
 
             <div className="mt-2 text-[9px] leading-4 opacity-55">
