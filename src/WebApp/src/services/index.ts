@@ -11,7 +11,13 @@ function unavailableApiGateways(): AppGateways {
   };
   return {
     catalog: { listItems: notIntegrated },
-    parties: { listCustomers: notIntegrated }
+    parties: { listCustomers: notIntegrated },
+    sales: {
+      createSale: notIntegrated,
+      updateSaleDraft: notIntegrated,
+      validateSale: notIntegrated,
+      getSaleFiscalPreview: notIntegrated,
+    },
   };
 }
 
