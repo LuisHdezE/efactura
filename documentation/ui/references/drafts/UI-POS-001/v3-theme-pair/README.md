@@ -1,6 +1,6 @@
 # UI-POS-001 v3 theme pair
 
-Status: `VISUAL_DRAFT / USER_ACCEPTED_APPEARANCE / FORMAL_VERSION_APPROVAL_PENDING`
+Status: `VISUAL_DRAFT / PROMOTED_TO_VISUAL_APPROVED`
 
 This package preserves the visual direction selected during D1 visual-fidelity recovery before any corresponding React implementation is changed.
 
@@ -29,7 +29,7 @@ The implementation target represented here is intentionally more compact than th
 
 ## Theme behavior intended for implementation
 
-After formal promotion of this exact visual package to `references/approved`, the WebApp implementation may add:
+The approved WebApp implementation may add:
 
 - dark/light theme tokens;
 - an operator-visible theme toggle;
@@ -61,10 +61,12 @@ This package does not authorize:
 
 ## Governance note
 
-The dark and light variants were each positively accepted in the visual review conversation. Repository governance, however, requires the exact governed view/version to be named unambiguously before promotion to `VISUAL_APPROVED`.
-
-Therefore this commit preserves the exact artifacts first, as requested, without silently upgrading governance state. The intended approval identifier is:
+Luis explicitly approved the exact governed identifier:
 
 `UI-POS-001 v3-theme-pair`
 
-Once that exact identifier is explicitly approved, these same blobs can be promoted unchanged to `documentation/ui/references/approved/UI-POS-001/v3-theme-pair/` before React implementation begins.
+The authoritative promoted package now lives at:
+
+`documentation/ui/references/approved/UI-POS-001/v3-theme-pair/`
+
+The approved dark baseline, light baseline, product sprite and manifest are preserved with the same Git blob identities as this draft package.
