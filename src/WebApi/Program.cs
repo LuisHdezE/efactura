@@ -167,17 +167,21 @@ builder.Services.AddSwaggerGen(c =>
 
 #region Serilog
 
-var telemetryConfiguration = TelemetryConfiguration
-    .CreateDefault();
+var applicationInsightsInstrumentationKey = builder.Configuration["ApplicationInsights:InstrumentationKey"];
 
-telemetryConfiguration.InstrumentationKey = builder.Configuration["ApplicationInsights:InstrumentationKey"];
-
-var logger = new LoggerConfiguration()
+var loggerConfiguration = new LoggerConfiguration()
   .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
   .Enrich.FromLogContext()
-  .WriteTo.Async(f => f.File("Logs/webapi-.log", outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {CorrelationId} {Level:u3}] {Username} {Message:lj}{NewLine}{Exception}", rollingInterval: RollingInterval.Day))
-  .WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces)
-  .CreateLogger();
+  .WriteTo.Async(f => f.File("Logs/webapi-.log", outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {CorrelationId} {Level:u3}] {Username} {Message:lj}{NewLine}{Exception}", rollingInterval: RollingInterval.Day));
+
+if (!string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey))
+{
+    var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+    telemetryConfiguration.InstrumentationKey = applicationInsightsInstrumentationKey;
+    loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces);
+}
+
+var logger = loggerConfiguration.CreateLogger();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
@@ -186,7 +190,10 @@ builder.Logging.AddSerilog(logger);
 
 #region ApplicationInsights
 
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["ApplicationInsights:InstrumentationKey"]);
+if (!string.IsNullOrWhiteSpace(applicationInsightsInstrumentationKey))
+{
+    builder.Services.AddApplicationInsightsTelemetry(applicationInsightsInstrumentationKey);
+}
 
 #endregion ApplicationInsights
 
