@@ -63,6 +63,10 @@ This approval does not authorize:
 - fiscal representation download;
 - authoritative offline operation.
 
+## Implementation gate
+
+This approved package must be merged before the React fidelity increment begins. After implementation, the deployed POS must be compared against both the dark and light baselines.
+
 ## Immutability rule
 
 The approved baseline must not be silently overwritten. Any material visual change creates a new governed version and requires a new explicit visual approval.
