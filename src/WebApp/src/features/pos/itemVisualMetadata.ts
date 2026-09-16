@@ -27,23 +27,31 @@ const productAssetByCode: Record<string, ProductAsset> = {
   'ART-015': { file: 'aceite-girasol-1l.png', alt: 'Aceite de Girasol 1L' },
 };
 
+const serviceAssetByCode: Record<string, ProductAsset> = {
+  'SERV-001': { file: 'servicio-entrega.png', alt: 'Servicio de entrega' },
+};
+
 /**
  * Presentation-only metadata derived from the approved UI-POS-001 v3 package.
  *
  * Product artwork is preserved as individual PNG files under public/assets/products.
+ * Service artwork is preserved separately under public/assets/services.
  * The mapping remains outside CommercialItemDto and does not imply an API media field.
  */
 export const getItemVisualMetadata = (item: CommercialItemDto): ItemVisualMetadata => {
-  const asset = productAssetByCode[item.code];
+  const productAsset = productAssetByCode[item.code];
+  const serviceAsset = serviceAssetByCode[item.code];
+  const asset = productAsset ?? serviceAsset;
+
   if (!asset) {
     return {
       imageUrl: null,
-      alt: item.kind === 'SERVICE' ? 'Servicio sin imagen de producto' : 'Sin imagen de demostración disponible',
+      alt: item.kind === 'SERVICE' ? 'Servicio sin imagen de demostración disponible' : 'Sin imagen de demostración disponible',
     };
   }
 
   return {
-    imageUrl: `/assets/products/${asset.file}`,
+    imageUrl: productAsset ? `/assets/products/${asset.file}` : `/assets/services/${asset.file}`,
     // ProductVisual still renders the governed placeholder SVG before the runtime
     // adapter replaces it with a native HTML <img>. These zero coordinates keep
     // that transitional render deterministic without depending on the old sprite.
