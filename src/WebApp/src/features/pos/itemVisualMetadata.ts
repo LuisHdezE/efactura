@@ -1,5 +1,4 @@
 import type { CommercialItemDto } from '../../contracts/api';
-import approvedSpriteUrl from '../../assets/ui-pos-001-v3-product-sprite.webp';
 
 export interface ItemVisualMetadata {
   imageUrl: string | null;
@@ -8,36 +7,35 @@ export interface ItemVisualMetadata {
   row?: number;
 }
 
-type SpriteCell = { column: number; row: number; alt: string };
+type ProductAsset = { file: string; alt: string };
 
-const spriteByCode: Record<string, SpriteCell> = {
-  'ART-001': { column: 0, row: 0, alt: 'Papas Fritas Clásicas 100g' },
-  'ART-002': { column: 1, row: 0, alt: 'Agua Mineral 500ml' },
-  'ART-003': { column: 2, row: 0, alt: 'Coca-Cola 600ml' },
-  'ART-004': { column: 3, row: 0, alt: 'Leche Entera 1L' },
-  'ART-005': { column: 4, row: 0, alt: 'Pan Francés' },
-  'ART-006': { column: 0, row: 1, alt: 'Queso Mozzarella' },
-  'ART-007': { column: 1, row: 1, alt: 'Jamón Cocido' },
-  'ART-008': { column: 2, row: 1, alt: 'Banana' },
-  'ART-009': { column: 3, row: 1, alt: 'Detergente 750ml' },
-  'ART-010': { column: 4, row: 1, alt: 'Papel Higiénico 4u' },
-  'ART-011': { column: 0, row: 2, alt: 'Galletitas Surtidas 300g' },
-  'ART-012': { column: 1, row: 2, alt: 'Café Molido 500g' },
-  'ART-013': { column: 2, row: 2, alt: 'Yerba Mate 1kg' },
-  'ART-014': { column: 3, row: 2, alt: 'Azúcar 1kg' },
-  'ART-015': { column: 4, row: 2, alt: 'Aceite de Girasol 1L' },
+const productAssetByCode: Record<string, ProductAsset> = {
+  'ART-001': { file: 'papas-fritas-clasicas-100g.png', alt: 'Papas Fritas Clásicas 100g' },
+  'ART-002': { file: 'agua-mineral-500ml.png', alt: 'Agua Mineral 500ml' },
+  'ART-003': { file: 'coca-cola-600ml.png', alt: 'Coca-Cola 600ml' },
+  'ART-004': { file: 'leche-entera-1l.png', alt: 'Leche Entera 1L' },
+  'ART-005': { file: 'pan-frances-kg.png', alt: 'Pan Francés' },
+  'ART-006': { file: 'queso-mozzarella-kg.png', alt: 'Queso Mozzarella' },
+  'ART-007': { file: 'jamon-cocido-kg.png', alt: 'Jamón Cocido' },
+  'ART-008': { file: 'banana-kg.png', alt: 'Banana' },
+  'ART-009': { file: 'detergente-750ml.png', alt: 'Detergente 750ml' },
+  'ART-010': { file: 'papel-higienico-4u.png', alt: 'Papel Higiénico 4u' },
+  'ART-011': { file: 'galletitas-surtidas-300g.png', alt: 'Galletitas Surtidas 300g' },
+  'ART-012': { file: 'cafe-molido-500g.png', alt: 'Café Molido 500g' },
+  'ART-013': { file: 'yerba-mate-1kg.png', alt: 'Yerba Mate 1kg' },
+  'ART-014': { file: 'azucar-1kg.png', alt: 'Azúcar 1kg' },
+  'ART-015': { file: 'aceite-girasol-1l.png', alt: 'Aceite de Girasol 1L' },
 };
 
 /**
- * Presentation-only metadata derived from the approved UI-POS-001 v3 theme pair.
+ * Presentation-only metadata derived from the approved UI-POS-001 v3 package.
  *
- * The source image is the same governed Git blob approved in PR #117, now also
- * referenced from src/assets so Vite emits a fingerprinted runtime URL. The
- * mapping is by stable mock catalog code and remains outside CommercialItemDto.
+ * Product artwork is preserved as individual PNG files under public/assets/products.
+ * The mapping remains outside CommercialItemDto and does not imply an API media field.
  */
 export const getItemVisualMetadata = (item: CommercialItemDto): ItemVisualMetadata => {
-  const sprite = spriteByCode[item.code];
-  if (!sprite) {
+  const asset = productAssetByCode[item.code];
+  if (!asset) {
     return {
       imageUrl: null,
       alt: item.kind === 'SERVICE' ? 'Servicio sin imagen de producto' : 'Sin imagen de demostración disponible',
@@ -45,9 +43,12 @@ export const getItemVisualMetadata = (item: CommercialItemDto): ItemVisualMetada
   }
 
   return {
-    imageUrl: approvedSpriteUrl,
-    column: sprite.column,
-    row: sprite.row,
-    alt: `Imagen de referencia aprobada para ${sprite.alt}`,
+    imageUrl: `/assets/products/${asset.file}`,
+    // ProductVisual still renders the governed placeholder SVG before the runtime
+    // adapter replaces it with a native HTML <img>. These zero coordinates keep
+    // that transitional render deterministic without depending on the old sprite.
+    column: 0,
+    row: 0,
+    alt: `Imagen de referencia aprobada para ${asset.alt}`,
   };
 };
