@@ -1,4 +1,4 @@
-type ProductAsset = { label: string; file: string };
+type ProductAsset = { label: string; file: string; directory?: 'products' | 'services' };
 
 const productAssets: ProductAsset[] = [
   { label: 'Papas Fritas Clásicas 100g', file: 'papas-fritas-clasicas-100g.png' },
@@ -16,6 +16,7 @@ const productAssets: ProductAsset[] = [
   { label: 'Yerba Mate 1kg', file: 'yerba-mate-1kg.png' },
   { label: 'Azúcar 1kg', file: 'azucar-1kg.png' },
   { label: 'Aceite de Girasol 1L', file: 'aceite-girasol-1l.png' },
+  { label: 'Servicio de entrega', file: 'servicio-entrega.png', directory: 'services' },
 ];
 
 const findAsset = (label: string) => productAssets.find((asset) => label.includes(asset.label));
@@ -32,7 +33,7 @@ function paintProductImages() {
 
       const compact = visual.classList.contains('compact');
       const image = document.createElement('img');
-      image.src = `/assets/products/${asset.file}`;
+      image.src = `/assets/${asset.directory ?? 'products'}/${asset.file}`;
       image.alt = asset.label;
       image.draggable = false;
       image.className = visual.getAttribute('class') ?? `pos-product-visual${compact ? ' compact' : ''}`;
@@ -45,7 +46,7 @@ function paintProductImages() {
       });
 
       image.addEventListener('error', () => {
-        console.error('UI-POS-001 product PNG failed to load', image.src);
+        console.error('UI-POS-001 visual PNG failed to load', image.src);
       });
 
       visual.replaceWith(image);
