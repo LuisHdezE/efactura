@@ -15,36 +15,41 @@ import { getItemVisualMetadata } from './itemVisualMetadata';
 const money = new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' });
 
 type SaleBusyState = 'saving' | 'validating' | 'preview' | null;
+type CatalogFilter = 'ALL' | 'PRODUCT' | 'SERVICE';
 
 function ProductVisual({ item, compact = false }: { item: CommercialItemDto; compact?: boolean }) {
   const visual = getItemVisualMetadata(item.id);
 
-  if (visual.imageUrl) {
+  if (visual.imageUrl && visual.spritePosition) {
     return (
-      <img
-        src={visual.imageUrl}
-        alt={visual.alt}
-        className={compact ? 'h-12 w-12 rounded-xl object-cover' : 'h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]'}
+      <div
+        role="img"
+        aria-label={visual.alt}
+        className={`pos-product-visual ${compact ? 'compact' : ''}`}
+        style={{
+          backgroundImage: `url(${visual.imageUrl})`,
+          backgroundSize: '500% 300%',
+          backgroundPosition: visual.spritePosition,
+        }}
       />
     );
   }
 
   return (
-    <div className={compact ? 'flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500' : 'flex h-full w-full flex-col items-center justify-center bg-slate-100 px-4 text-center text-slate-500'}>
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={compact ? 'h-5 w-5' : 'mb-2 h-9 w-9'} fill="none" stroke="currentColor" strokeWidth="1.7">
+    <div className={`pos-product-visual ${compact ? 'compact' : ''} flex items-center justify-center`} aria-label={visual.alt}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={compact ? 'h-4 w-4 opacity-50' : 'h-7 w-7 opacity-40'} fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z" />
         <path d="m4.5 7.8 7.5 4.1 7.5-4.1M12 12v9" />
       </svg>
-      {!compact && <span className="text-xs font-semibold">Visual de demo no disponible</span>}
     </div>
   );
 }
 
 function PreviewValue({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-800">{value}</div>
+    <div className="pos-preview-value">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -53,6 +58,7 @@ export function PosPage() {
   const [items, setItems] = useState<CommercialItemDto[]>([]);
   const [customers, setCustomers] = useState<PartyDto[]>([]);
   const [search, setSearch] = useState('');
+  const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>('ALL');
   const [customerId, setCustomerId] = useState('');
   const [intent, setIntent] = useState<SaleCommercialIntent>('CONSUMER_FINAL');
   const [deliveryCountry, setDeliveryCountry] = useState('');
@@ -79,10 +85,15 @@ export function PosPage() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return items.filter((item) => item.active && (!term || item.code.toLowerCase().includes(term) || item.name.toLowerCase().includes(term)));
-  }, [items, search]);
+    return items.filter((item) => {
+      const matchesText = !term || item.code.toLowerCase().includes(term) || item.name.toLowerCase().includes(term);
+      const matchesKind = catalogFilter === 'ALL' || item.kind === catalogFilter;
+      return item.active && matchesText && matchesKind;
+    });
+  }, [items, search, catalogFilter]);
 
   const selectedCustomer = customers.find((customer) => customer.id === customerId) ?? null;
+  const selectedIdentity = selectedCustomer?.fiscalIdentities.find((identity) => identity.active) ?? null;
   const total = cart.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
   const canPrepare = cart.length > 0 && cart.every((line) => Number.isFinite(line.quantity) && line.quantity > 0 && Number.isFinite(line.unitPrice) && line.unitPrice >= 0);
   const canSaveDraft = canPrepare && saleBusy === null && (!sale || draftDirty);
@@ -125,25 +136,16 @@ export function PosPage() {
 
   const saveDraft = async () => {
     if (!canSaveDraft) return;
-
     setSaleBusy('saving');
     setSaleError(null);
     try {
       let saved: SaleDto;
       if (sale) {
-        saved = await gateways.sales.updateSaleDraft(sale.id, {
-          expectedVersion: sale.version,
-          ...commonSaleInput(),
-        });
+        saved = await gateways.sales.updateSaleDraft(sale.id, { expectedVersion: sale.version, ...commonSaleInput() });
       } else {
-        const input: SaleCreateInput = {
-          ...commonSaleInput(),
-          locationId: null,
-          terminalId: null,
-        };
+        const input: SaleCreateInput = { ...commonSaleInput(), locationId: null, terminalId: null };
         saved = await gateways.sales.createSale(input);
       }
-
       setSale(saved);
       setDraftDirty(false);
       setValidation(null);
@@ -157,7 +159,6 @@ export function PosPage() {
 
   const validateSale = async () => {
     if (!sale || draftDirty || saleBusy !== null) return;
-
     setSaleBusy('validating');
     setSaleError(null);
     try {
@@ -175,7 +176,6 @@ export function PosPage() {
 
   const loadPreview = async () => {
     if (!sale || draftDirty || saleBusy !== null) return;
-
     setSaleBusy('preview');
     setSaleError(null);
     try {
@@ -190,109 +190,97 @@ export function PosPage() {
   const statusLabel = draftDirty
     ? 'CAMBIOS SIN GUARDAR'
     : validation
-      ? validation.valid
-        ? 'VALIDADO MOCK'
-        : 'REQUIERE REVISIÓN'
-      : sale
-        ? 'BORRADOR MOCK'
-        : 'BORRADOR LOCAL';
+      ? validation.valid ? 'VALIDADO MOCK' : 'REQUIERE REVISIÓN'
+      : sale ? 'BORRADOR MOCK' : 'BORRADOR LOCAL';
 
   return (
-    <div className="p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8 xl:pb-8">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="pos-page">
+      <div className="pos-toolbar">
         <div>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">UI-POS-001</span>
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-700 ring-1 ring-inset ring-amber-200">Demo mock</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Punto de Venta</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Construye una venta con productos o servicios usando datos de demostración alineados con los contratos actuales.</p>
+          <div className="pos-kicker">UI-POS-001 · v3-theme-pair</div>
+          <h1 className="pos-heading">Productos</h1>
+          <p className="pos-subheading">Selecciona un artículo o servicio para agregarlo a la venta.</p>
         </div>
-        <div className="max-w-xl rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-sm leading-5 text-blue-900">
-          <strong className="font-semibold">Regla contractual:</strong> el catálogo no aporta precio de venta. El precio se informa en cada línea; impuestos y fiscalidad siguen siendo autoridad del servidor.
+        <div className="pos-contract-note">
+          <strong>Demo contractual:</strong> el catálogo no expone precio de venta. El precio se informa por línea y la fiscalidad sigue siendo autoridad del servidor.
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(390px,0.8fr)]">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-4 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <label className="block flex-1">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Buscar artículo o servicio</span>
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Código o nombre…"
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
-                />
-              </label>
-              <div className="text-xs font-medium text-slate-500">{loading ? 'Cargando…' : `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`}</div>
+      <div className="pos-layout">
+        <section className="pos-panel">
+          <div className="pos-panel-header">
+            <div className="pos-search-row">
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar en catálogo por código o nombre…"
+                className="pos-search"
+              />
+              <div className="pos-counter">{loading ? 'Cargando…' : `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`}</div>
+            </div>
+            <div className="pos-filter-row" aria-label="Filtro de catálogo">
+              {([
+                ['ALL', 'Todos'],
+                ['PRODUCT', 'Productos'],
+                ['SERVICE', 'Servicios'],
+              ] as const).map(([value, label]) => (
+                <button key={value} type="button" onClick={() => setCatalogFilter(value)} className={`pos-filter-chip ${catalogFilter === value ? 'is-active' : ''}`}>
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
-            {loading && Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="overflow-hidden rounded-2xl border border-slate-200">
-                <div className="aspect-[4/3] animate-pulse bg-slate-100" />
-                <div className="space-y-3 p-4"><div className="h-3 w-20 animate-pulse rounded bg-slate-100" /><div className="h-5 w-3/4 animate-pulse rounded bg-slate-100" /><div className="h-10 animate-pulse rounded-xl bg-slate-100" /></div>
+          <div className="pos-grid">
+            {loading && Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="pos-product-card animate-pulse">
+                <div className="pos-product-visual" />
+                <div className="pos-product-body gap-2"><div className="h-2 w-1/2 rounded bg-slate-200" /><div className="h-3 w-3/4 rounded bg-slate-200" /><div className="mt-auto h-7 rounded bg-slate-200" /></div>
               </div>
             ))}
 
-            {!loading && loadError && (
-              <div className="col-span-full rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-800">{loadError}</div>
-            )}
+            {!loading && loadError && <div className="pos-empty text-rose-700">{loadError}</div>}
 
             {!loading && !loadError && filtered.length === 0 && (
-              <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center">
-                <div className="text-base font-semibold text-slate-800">Sin resultados</div>
-                <p className="mt-1 text-sm text-slate-500">Prueba otro código o nombre. Este estado no representa un error de API.</p>
-              </div>
+              <div className="pos-empty"><strong>Sin resultados.</strong> Prueba otro código, nombre o filtro. Este estado no representa un error de API.</div>
             )}
 
             {!loading && !loadError && filtered.map((item) => (
-              <article key={item.id} className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-slate-200/60">
-                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                  <ProductVisual item={item} />
-                  <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 shadow-sm backdrop-blur">{item.kind === 'PRODUCT' ? 'Producto' : 'Servicio'}</span>
-                </div>
-                <div className="flex flex-1 flex-col p-4">
-                  <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500"><span className="font-semibold text-slate-700">{item.code}</span><span>Unidad {item.unit}</span></div>
-                  <h2 className="font-semibold leading-5 text-slate-950">{item.name}</h2>
-                  {item.description && <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-500">{item.description}</p>}
-                  <button onClick={() => addItem(item)} className="mt-4 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100">Agregar a venta</button>
+              <article key={item.id} className="pos-product-card">
+                <ProductVisual item={item} />
+                <div className="pos-product-body">
+                  <div className="pos-product-code">{item.code}</div>
+                  <h2 className="pos-product-name">{item.name}</h2>
+                  <div className="pos-product-meta">{item.kind === 'PRODUCT' ? 'Producto' : 'Servicio'} · unidad {item.unit}</div>
+                  <button type="button" onClick={() => addItem(item)} className="pos-add-button">+ Agregar</button>
                 </div>
               </article>
             ))}
           </div>
         </section>
 
-        <aside id="venta-actual" className="h-fit scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:sticky xl:top-24">
-          <div className="border-b border-slate-200 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div><h2 className="text-xl font-bold text-slate-950">Venta actual</h2><p className="mt-0.5 text-sm text-slate-500">Ciclo mock alineado con API-SAL-002/004/005/006</p></div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{statusLabel}</span>
+        <aside id="venta-actual" className="pos-panel pos-sale scroll-mt-20">
+          <div className="pos-sale-head">
+            <div>
+              <div className="pos-sale-title">Venta actual</div>
+              <div className="pos-sale-meta">{sale ? `Versión v${sale.version}` : 'Sin versión persistida'} · ciclo mock API-shaped</div>
             </div>
+            <span className="pos-status">{statusLabel}</span>
+          </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <div className="pos-sale-form">
+            <div className="pos-form-grid">
+              <label className="pos-label">
                 Intent comercial
-                <select
-                  value={intent}
-                  onChange={(event) => { setIntent(event.target.value as SaleCommercialIntent); markDraftChanged(); }}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
-                >
+                <select value={intent} onChange={(event) => { setIntent(event.target.value as SaleCommercialIntent); markDraftChanged(); }} className="pos-select">
                   <option value="CONSUMER_FINAL">Consumidor final</option>
                   <option value="TAXPAYER_INVOICE">Factura a contribuyente</option>
                   <option value="EXPORT">Exportación</option>
                 </select>
               </label>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="pos-label">
                 Cliente
-                <select
-                  value={customerId}
-                  onChange={(event) => { setCustomerId(event.target.value); markDraftChanged(); }}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
-                >
+                <select value={customerId} onChange={(event) => { setCustomerId(event.target.value); markDraftChanged(); }} className="pos-select">
                   <option value="">Sin cliente seleccionado</option>
                   {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
                 </select>
@@ -300,109 +288,104 @@ export function PosPage() {
             </div>
 
             {intent === 'EXPORT' && (
-              <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="pos-label mt-2 block">
                 País de entrega
-                <input
-                  value={deliveryCountry}
-                  onChange={(event) => { setDeliveryCountry(event.target.value.toUpperCase()); markDraftChanged(); }}
-                  maxLength={2}
-                  placeholder="Código ISO, ej. BR"
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
-                />
+                <input value={deliveryCountry} onChange={(event) => { setDeliveryCountry(event.target.value.toUpperCase()); markDraftChanged(); }} maxLength={2} placeholder="Código ISO, ej. BR" className="pos-input" />
               </label>
             )}
 
-            {selectedCustomer && <p className="mt-2 text-xs leading-5 text-slate-500">{selectedCustomer.kind === 'ORGANIZATION' ? 'Organización' : 'Persona'} · residencia {selectedCustomer.residenceCountry}</p>}
-            <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">UYU · fecha efectiva {effectiveOn} · ubicación y terminal todavía no integrados; el mock los mantiene en `null`.</p>
+            <div className="pos-client-note">
+              {selectedCustomer ? (
+                <><strong>{selectedCustomer.name}</strong>{selectedIdentity ? ` · ${selectedIdentity.typeCode}: ${selectedIdentity.number}` : ''} · residencia {selectedCustomer.residenceCountry}</>
+              ) : (
+                <>Sin cliente seleccionado · UYU · fecha efectiva {effectiveOn}</>
+              )}
+              <div className="mt-1 opacity-70">Ubicación y terminal aún no integrados; el mock los mantiene en null.</div>
+            </div>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="pos-lines">
             {cart.length === 0 ? (
-              <div className="px-6 py-10 text-center">
-                <div className="text-sm font-semibold text-slate-800">La venta está vacía</div>
-                <p className="mt-1 text-sm leading-5 text-slate-500">Agrega al menos un producto o servicio. El precio unitario se captura después en cada línea.</p>
-              </div>
+              <div className="pos-empty m-2">La venta está vacía. Agrega un producto o servicio; luego informa cantidad y precio unitario.</div>
             ) : cart.map((line) => {
               const item = items.find((candidate) => candidate.id === line.itemId);
               return (
-                <div key={line.itemId} className="p-4 sm:p-5">
-                  <div className="flex items-start gap-3">
-                    {item && <div className="shrink-0 overflow-hidden rounded-xl ring-1 ring-slate-200"><ProductVisual item={item} compact /></div>}
-                    <div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900">{line.itemName}</div><div className="text-xs text-slate-500">{line.itemCode}</div></div>
-                    <button onClick={() => removeLine(line.itemId)} className="text-sm font-medium text-rose-600 hover:text-rose-700">Quitar</button>
+                <div key={line.itemId} className="pos-line">
+                  <div className="pos-line-product">
+                    {item && <ProductVisual item={item} compact />}
+                    <div className="min-w-0">
+                      <div className="pos-line-name">{line.itemName}</div>
+                      <div className="pos-line-code">{line.itemCode}</div>
+                    </div>
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    <label className="text-xs font-medium text-slate-500">Cantidad<input type="number" min="0.001" step="0.001" value={line.quantity} onChange={(event) => updateLine(line.itemId, { quantity: Number(event.target.value) })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" /></label>
-                    <label className="text-xs font-medium text-slate-500">Precio unitario<input type="number" min="0" step="0.01" value={line.unitPrice} onChange={(event) => updateLine(line.itemId, { unitPrice: Number(event.target.value) })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500" /></label>
-                  </div>
-                  <div className="mt-2 text-right text-xs text-slate-500">Neto de línea: <strong className="text-slate-700">{money.format(line.quantity * line.unitPrice)}</strong></div>
+                  <input aria-label={`Cantidad ${line.itemName}`} type="number" min="0.001" step="0.001" value={line.quantity} onChange={(event) => updateLine(line.itemId, { quantity: Number(event.target.value) })} className="pos-input" />
+                  <input aria-label={`Precio unitario ${line.itemName}`} type="number" min="0" step="0.01" value={line.unitPrice} onChange={(event) => updateLine(line.itemId, { unitPrice: Number(event.target.value) })} className="pos-input" />
+                  <div className="pos-line-total">{money.format(line.quantity * line.unitPrice)}</div>
+                  <button type="button" onClick={() => removeLine(line.itemId)} className="pos-remove" aria-label={`Quitar ${line.itemName}`}>×</button>
                 </div>
               );
             })}
           </div>
 
-          <div className="border-t border-slate-200 bg-slate-50/70 p-5">
-            <div className="flex items-end justify-between gap-4"><div><span className="text-sm font-medium text-slate-600">Neto informado</span><p className="mt-0.5 text-xs text-slate-400">Sin cálculo fiscal autoritativo en cliente</p></div><strong className="text-2xl tracking-tight text-slate-950">{money.format(total)}</strong></div>
+          <div className="pos-sale-footer">
+            <div className="pos-total-row">
+              <div>
+                <div className="pos-total-label">Neto informado</div>
+                <div className="text-[9px] opacity-50">Sin cálculo fiscal autoritativo en cliente</div>
+              </div>
+              <strong className="pos-total-value">{money.format(total)}</strong>
+            </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <button onClick={saveDraft} disabled={!canSaveDraft} className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300">
-                {saleBusy === 'saving' ? 'Guardando…' : sale ? (draftDirty ? 'Actualizar borrador' : 'Borrador guardado') : 'Crear borrador'}
+            <div className="pos-actions">
+              <button type="button" onClick={saveDraft} disabled={!canSaveDraft} className="pos-action-secondary">
+                {saleBusy === 'saving' ? 'Guardando…' : sale ? (draftDirty ? 'Actualizar borrador' : 'Borrador guardado') : 'Guardar borrador'}
               </button>
-              <button onClick={validateSale} disabled={!canUseSavedDraft} className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition enabled:hover:border-blue-300 enabled:hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400">
-                {saleBusy === 'validating' ? 'Validando…' : 'Validar venta'}
+              <button type="button" onClick={validateSale} disabled={!canUseSavedDraft} className="pos-action-primary">
+                {saleBusy === 'validating' ? 'Validando…' : 'Validar'}
               </button>
             </div>
 
             {sale && (
-              <button onClick={loadPreview} disabled={!canUseSavedDraft} className="mt-2 w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-800 transition enabled:hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50">
+              <button type="button" onClick={loadPreview} disabled={!canUseSavedDraft} className="pos-action-preview">
                 {saleBusy === 'preview' ? 'Cargando preview…' : 'Ver preview fiscal'}
               </button>
             )}
 
-            <div aria-live="polite" className="mt-4 space-y-3">
-              {saleError && <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-sm leading-5 text-rose-800">{saleError}</div>}
+            <div aria-live="polite">
+              {saleError && <div className="pos-message error">{saleError}</div>}
+              {sale && !draftDirty && <div className="pos-message info">Borrador mock guardado · versión {sale.version}. Vive solo en memoria del navegador; no fue persistido por la API real.</div>}
+              {validation && <div className="pos-message info"><strong>{validation.valid ? 'Validación mock completada.' : 'Validación mock con hallazgos.'}</strong> Representa la forma de `API-SAL-005`, no una ejecución del backend desplegado.</div>}
+            </div>
 
-              {sale && !draftDirty && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm leading-5 text-emerald-800">
-                  Borrador mock API-shaped guardado · versión {sale.version}. Vive solo en memoria del navegador y no fue persistido por la API real.
-                </div>
-              )}
-
-              {validation && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm leading-5 text-blue-900">
-                  <strong>{validation.valid ? 'Validación mock completada.' : 'Validación mock con hallazgos.'}</strong> Se representa la respuesta de `API-SAL-005`; no equivale a una validación ejecutada por el backend desplegado.
-                </div>
+            <div className="pos-preview">
+              <div className="pos-preview-title">Vista previa fiscal</div>
+              <div className="pos-preview-copy">
+                {preview ? 'El tratamiento impositivo y la selección CFE permanecen sujetos al resultado representado por el contrato.' : 'El tratamiento impositivo y la selección CFE requieren revisión. Guarda el borrador para consultar el preview mock.'}
+              </div>
+              {preview && (
+                <>
+                  <div className="pos-preview-grid">
+                    <PreviewValue label="Neto" value={money.format(preview.netAmount)} />
+                    <PreviewValue label="Impuestos" value={preview.previewTaxAmount === null ? 'No resueltos' : money.format(preview.previewTaxAmount)} />
+                    <PreviewValue label="Total" value={preview.previewTotalAmount === null ? 'No resuelto' : money.format(preview.previewTotalAmount)} />
+                    <PreviewValue label="CFE" value={preview.cfe.selectionStatus} />
+                  </div>
+                  {preview.findings.length > 0 && <div className="pos-preview-copy mt-2">{preview.findings.join(' · ')}</div>}
+                </>
               )}
             </div>
 
-            {preview && (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div><h3 className="font-bold text-slate-950">Preview fiscal mock</h3><p className="mt-0.5 text-xs leading-5 text-slate-500">Estructura `API-SAL-006`. La demo deja impuestos y selección CFE deliberadamente sin resolver.</p></div>
-                  <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-violet-700">PREVIEW</span>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <PreviewValue label="Neto" value={money.format(preview.netAmount)} />
-                  <PreviewValue label="Impuestos" value={preview.previewTaxAmount === null ? 'No resueltos' : money.format(preview.previewTaxAmount)} />
-                  <PreviewValue label="Total" value={preview.previewTotalAmount === null ? 'No resuelto' : money.format(preview.previewTotalAmount)} />
-                  <PreviewValue label="CFE" value={preview.cfe.selectionStatus} />
-                </div>
-                <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">Tratamiento: {preview.overallTaxTreatment} · autoridad aritmética: {preview.arithmeticAuthority}</div>
-                {preview.findings.length > 0 && <ul className="mt-3 list-disc space-y-1 pl-5 text-xs leading-5 text-slate-600">{preview.findings.map((finding) => <li key={finding}>{finding}</li>)}</ul>}
-              </div>
-            )}
-
-            <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-3 text-xs leading-5 text-slate-500">
-              `API-SAL-007 confirmSale` existe, pero este incremento no habilita confirmación: todavía falta una fuente válida de settlement/medios de pago. No se inventa una selección de pago ni se afirma aceptación DGI.
+            <div className="mt-2 text-[9px] leading-4 opacity-55">
+              `API-SAL-007 confirmSale` no se habilita aquí: aún falta una fuente gobernada de settlement/medios de pago. No se afirma aceptación DGI.
             </div>
           </div>
         </aside>
       </div>
 
       {cart.length > 0 && (
-        <a href="#venta-actual" className="fixed inset-x-4 bottom-4 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-950 px-4 py-3 text-white shadow-2xl shadow-slate-900/20 xl:hidden">
-          <span><span className="block text-xs text-slate-300">{cart.length} línea{cart.length === 1 ? '' : 's'} en venta</span><strong className="text-lg">{money.format(total)}</strong></span>
-          <span className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-950">Ver venta</span>
+        <a href="#venta-actual" className="pos-mobile-summary fixed inset-x-3 bottom-3 z-30 flex items-center justify-between rounded-xl px-3 py-2.5 shadow-2xl lg:hidden">
+          <span><span className="block text-[10px] opacity-65">{cart.length} línea{cart.length === 1 ? '' : 's'} en venta</span><strong className="text-base">{money.format(total)}</strong></span>
+          <span className="rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-950">Ver venta</span>
         </a>
       )}
     </div>
