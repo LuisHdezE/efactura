@@ -189,8 +189,10 @@ export function PosPage() {
 
   const statusLabel = draftDirty
     ? 'CAMBIOS SIN GUARDAR'
-    : validation?.valid
-      ? 'VALIDADO MOCK'
+    : validation
+      ? validation.valid
+        ? 'VALIDADO MOCK'
+        : 'REQUIERE REVISIÓN'
       : sale
         ? 'BORRADOR MOCK'
         : 'BORRADOR LOCAL';
