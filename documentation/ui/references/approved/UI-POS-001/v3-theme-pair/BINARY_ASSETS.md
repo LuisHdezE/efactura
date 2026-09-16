@@ -1,12 +1,40 @@
-# Binary asset fingerprints
+# Binary asset integrity
 
-The approved binary assets below are promoted from the draft package without modification.
+`UI-POS-001 v3-theme-pair` was visually approved before the repository binary-preservation step. Runtime investigation later proved that the committed WebP baselines and product sprite were truncated during that preservation step, so those blobs are not valid renderable assets.
 
-| Asset | Git blob SHA |
-| --- | --- |
-| `UI-POS-001_v3-dark-baseline.webp` | `3025b9eabbc759ad31909c6e3702bf0b8593a522` |
-| `UI-POS-001_v3-light-baseline.webp` | `f52be432e90a7fd273ea595508bd6e6e4086a701` |
-| `UI-POS-001_v3-product-sprite.webp` | `8e0523a24a43bad000d16057cf2404294c4921a0` |
-| `product-sprite-manifest.json` | `325236783d36e5ea91022a7e1f242daff398c2d6` |
+## Recovered governed product assets
 
-These fingerprints are the immutability check for `UI-POS-001 v3-theme-pair`.
+The product artwork was recovered from the healthy retained visual source and stored as **15 individual 128×128 PNG files**. Each product file is preserved twice using the **same Git blob**:
+
+- governed reference: `documentation/ui/references/approved/UI-POS-001/v3-theme-pair/products/`
+- runtime asset: `src/WebApp/public/assets/products/`
+
+| Asset | Git blob SHA | Bytes |
+| --- | --- | ---: |
+| `papas-fritas-clasicas-100g.png` | `cf9881ebec12b0c6cf9a0db5c9e5177b64885787` | 3226 |
+| `agua-mineral-500ml.png` | `f4f880fcce35e6b70f22526ac47752d241e06250` | 2244 |
+| `coca-cola-600ml.png` | `fb2ede9b411c800d4ff6ba63e726f5701814d7c2` | 1745 |
+| `leche-entera-1l.png` | `25bfe56dcba2044c9fc8a13bdf0bc1d335ed5da2` | 2636 |
+| `pan-frances-kg.png` | `d89e12c6d745f262fb277b597a07e682424b1562` | 2575 |
+| `queso-mozzarella-kg.png` | `c6cc2647f923ffb263556c4d1aa759434efbbc2d` | 2477 |
+| `jamon-cocido-kg.png` | `15c46ee752997db05e1a215a239c70434f60a78f` | 2877 |
+| `banana-kg.png` | `e7e740d26f09aae50098c74ddec8d0e78b94597a` | 1870 |
+| `detergente-750ml.png` | `e49a82847255298f09c1143834025e5259a34031` | 1806 |
+| `papel-higienico-4u.png` | `86b5b58c2bfc6034b61073f041098970a16bdb4d` | 3321 |
+| `galletitas-surtidas-300g.png` | `25e6dcf24e9e52014b5babd45e6e5c1660c2e7a4` | 2723 |
+| `cafe-molido-500g.png` | `de3f4bb0ae731a31104ea7890b34d61d84e8f41e` | 2529 |
+| `yerba-mate-1kg.png` | `f75f9fd41946adf0504c673acc2825dce97e905f` | 2295 |
+| `azucar-1kg.png` | `954576d9453e36020cff0109e16f7213c5cb7a60` | 2601 |
+| `aceite-girasol-1l.png` | `0fd865a9c5848a01d9fe170e803b9f2a53c79190` | 2349 |
+
+The exact runtime mapping and integrity metadata are recorded in `product-sprite-manifest.json` (historical filename retained for compatibility).
+
+## Corrupted historical blobs
+
+| Asset | Historical Git blob SHA | Repository bytes | Integrity status |
+| --- | --- | ---: | --- |
+| `UI-POS-001_v3-dark-baseline.webp` | `3025b9eabbc759ad31909c6e3702bf0b8593a522` | 14368 | TRUNCATED |
+| `UI-POS-001_v3-light-baseline.webp` | `f52be432e90a7fd273ea595508bd6e6e4086a701` | 15009 | TRUNCATED |
+| `UI-POS-001_v3-product-sprite.webp` | `8e0523a24a43bad000d16057cf2404294c4921a0` | 15018 | TRUNCATED |
+
+These historical WebP fingerprints are retained only as forensic evidence of the failed binary-preservation step. They must not be used by the WebApp as runtime image sources.
