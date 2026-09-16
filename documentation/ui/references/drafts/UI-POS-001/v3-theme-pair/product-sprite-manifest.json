@@ -1,0 +1,28 @@
+{
+  "viewId": "UI-POS-001",
+  "packageVersion": "v3-theme-pair",
+  "source": "UI-POS-001 v3 light visual reference reviewed in the D1 visual-fidelity recovery lane",
+  "sprite": "UI-POS-001_v3-product-sprite.webp",
+  "cellSize": 160,
+  "columns": 5,
+  "rows": 3,
+  "presentationOnly": true,
+  "authoritativeApiField": false,
+  "products": {
+    "papas-fritas-clasicas-100g": {"row":0,"column":0,"x":0,"y":0,"width":160,"height":160},
+    "agua-mineral-500ml": {"row":0,"column":1,"x":160,"y":0,"width":160,"height":160},
+    "coca-cola-600ml": {"row":0,"column":2,"x":320,"y":0,"width":160,"height":160},
+    "leche-entera-1l": {"row":0,"column":3,"x":480,"y":0,"width":160,"height":160},
+    "pan-frances-kg": {"row":0,"column":4,"x":640,"y":0,"width":160,"height":160},
+    "queso-mozzarella-kg": {"row":1,"column":0,"x":0,"y":160,"width":160,"height":160},
+    "jamon-cocido-kg": {"row":1,"column":1,"x":160,"y":160,"width":160,"height":160},
+    "banana-kg": {"row":1,"column":2,"x":320,"y":160,"width":160,"height":160},
+    "detergente-750ml": {"row":1,"column":3,"x":480,"y":160,"width":160,"height":160},
+    "papel-higienico-4u": {"row":1,"column":4,"x":640,"y":160,"width":160,"height":160},
+    "galletitas-surtidas-300g": {"row":2,"column":0,"x":0,"y":320,"width":160,"height":160},
+    "cafe-molido-500g": {"row":2,"column":1,"x":160,"y":320,"width":160,"height":160},
+    "yerba-mate-1kg": {"row":2,"column":2,"x":320,"y":320,"width":160,"height":160},
+    "azucar-1kg": {"row":2,"column":3,"x":480,"y":320,"width":160,"height":160},
+    "aceite-girasol-1l": {"row":2,"column":4,"x":640,"y":320,"width":160,"height":160}
+  }
+}
