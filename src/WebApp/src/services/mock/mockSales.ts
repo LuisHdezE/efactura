@@ -65,35 +65,38 @@ const buildPreview = (sale: SaleDto): SaleFiscalPreviewDto => ({
     lineId: line.id,
     itemCode: line.itemCode,
     netAmount: line.netAmount,
-    taxTreatmentStatus: 'MOCK_UNRESOLVED',
-    taxTreatment: 'SERVER_AUTHORITY_REQUIRED',
-    treatmentCode: 'MOCK',
-    taxRateStatus: 'MOCK_UNRESOLVED',
-    vatLiability: 'MOCK_UNRESOLVED',
-    vatRateKind: 'MOCK_UNRESOLVED',
+    taxTreatmentStatus: 'REQUIRES_REVIEW',
+    taxTreatment: 'REQUIRES_REVIEW',
+    treatmentCode: 'REQUIRES_REVIEW',
+    taxRateStatus: 'REQUIRES_REVIEW',
+    vatLiability: 'REQUIRES_REVIEW',
+    vatRateKind: 'UNSUPPORTED',
     appliedRatePercent: null,
     previewTaxAmount: null,
-    reasons: ['Demo mock: la forma del preview replica el contrato, pero el navegador no calcula fiscalidad.'],
-    missingFacts: [],
+    reasons: ['Demo mock: la forma del preview replica el contrato, pero la autoridad fiscal real no está conectada.'],
+    missingFacts: ['authoritative_fiscal_preview'],
     ruleReferences: [],
   })),
-  overallTaxTreatmentStatus: 'MOCK_UNRESOLVED',
-  overallTaxTreatment: 'SERVER_AUTHORITY_REQUIRED',
-  treatmentCode: 'MOCK',
+  overallTaxTreatmentStatus: 'REQUIRES_REVIEW',
+  overallTaxTreatment: 'REQUIRES_REVIEW',
+  treatmentCode: 'REQUIRES_REVIEW',
   cfe: {
-    eligibilityStatus: 'MOCK_UNRESOLVED',
-    selectionStatus: 'MOCK_NOT_SELECTED',
+    eligibilityStatus: 'REQUIRES_REVIEW',
+    selectionStatus: 'REQUIRES_REVIEW',
     selectedFamilyCode: null,
     selectedFamily: null,
     candidates: [],
     reasons: ['Demo mock: la selección de familia CFE permanece bajo autoridad del servidor.'],
-    missingFacts: [],
+    missingFacts: ['authoritative_cfe_selection'],
     formatVersion: 'mock-demo-v1',
   },
-  readyForValidation: true,
-  validationFingerprint: sale.validationFingerprint ?? `mock-preview-${sale.id}-v${sale.version}`,
-  findings: ['Preview de demostración API-shaped. Importes fiscales deliberadamente no resueltos.'],
-  arithmeticAuthority: 'MOCK_DEMO_ONLY',
+  readyForValidation: false,
+  validationFingerprint: `mock-preview-${sale.id}-v${sale.version}`,
+  findings: [
+    'authoritative_fiscal_preview',
+    'authoritative_cfe_selection',
+  ],
+  arithmeticAuthority: 'PREVIEW_ONLY_NOT_FINAL_CFE_ARITHMETIC',
 });
 
 export const mockSalesGateway: SalesGateway = {
@@ -148,22 +151,13 @@ export const mockSalesGateway: SalesGateway = {
   async validateSale(saleId: string, expectedVersion: number): Promise<SaleValidationDto> {
     const state = findSale(saleId);
     assertVersion(state.sale, expectedVersion);
-
-    const version = state.sale.version + 1;
-    const sale: SaleDto = {
-      ...state.sale,
-      version,
-      status: 'VALIDATED',
-      validationFingerprint: `mock-validation-${saleId}-v${version}`,
-      validatedAtUtc: new Date().toISOString(),
-    };
-    state.sale = sale;
+    const preview = buildPreview(state.sale);
 
     return pause({
-      valid: true,
+      valid: false,
       replayed: false,
-      sale,
-      preview: buildPreview(sale),
+      sale: state.sale,
+      preview,
     });
   },
 
