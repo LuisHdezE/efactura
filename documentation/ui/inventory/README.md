@@ -46,8 +46,10 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | --- | --- | --- | --- | --- |
 | `WEB-001` | Login and Session Entry | not assigned | `CANDIDATE` | pending reconciliation |
 | `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | pending reconciliation |
-| `WEB-003` | POS Sale | `UI-POS-001` | `SPECIFIED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md` |
+| `WEB-003` | POS Sale | `UI-POS-001` | `VISUAL_DRAFT` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/drafts/UI-POS-001/` |
 
-`UI-POS-001` is not visually approved. Its `SPECIFIED` status means only that the view boundary and functional behavior have been reconciled/documented against current repository evidence.
+`UI-POS-001` is not visually approved. Its `VISUAL_DRAFT` status means that a governed functional specification exists and repository-stored draft references now exist, but no visual baseline has been approved.
+
+The v1 references are exploratory and currently marked `NOT_APPROVAL_READY` because their visual review found assumptions that exceed the current authoritative backend surface. Those findings are recorded in `../references/drafts/UI-POS-001/README.md`.
 
 No row implies visual approval or frontend implementation. Reconciliation must use current repository evidence, not historical unresolved-API notes alone.
