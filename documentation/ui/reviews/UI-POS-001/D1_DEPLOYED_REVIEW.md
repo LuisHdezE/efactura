@@ -122,6 +122,20 @@ It does **not** imply:
 
 `locationId` and `terminalId` remain `null` in the mock and the UI states that the operational bootstrap is not integrated. No fictitious `getPosBootstrap` result is invented.
 
+## Validation semantics verified against Application
+
+The current `ValidateSaleUseCase` obtains the fiscal preview first and returns `Valid = false` immediately when `preview.ReadyForConfirmation` is false. In that path it does not mark the sale validated and does not advance its version.
+
+D1.2 mirrors that behavior deliberately:
+
+- the mock preview leaves tax treatment/rate and CFE selection in `REQUIRES_REVIEW`;
+- preview tax and total remain unresolved;
+- the API-shaped readiness field remains false;
+- `validateSale` returns `valid:false` and the current draft unchanged;
+- the UI renders this as validation with findings, not as a successful server validation.
+
+This prevents the demo from manufacturing a fiscal readiness state that the current authoritative backend would not grant under equivalent unresolved conditions.
+
 ## Confirmation boundary
 
 `API-SAL-007 confirmSale` exists in the backend, but this increment intentionally does not enable confirmation because the current POS lane still lacks a governed source for settlement/payment-method data.
