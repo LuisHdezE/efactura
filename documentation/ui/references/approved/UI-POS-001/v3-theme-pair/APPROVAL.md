@@ -11,3 +11,5 @@ Exact approval instruction:
 The approved visual scope is the paired dark/light POS baseline preserved in this package together with the presentation-only product imagery mapping.
 
 The approved binary assets are promoted unchanged from the draft package. Any material visual change requires a new governed version and a new explicit approval.
+
+React implementation is explicitly downstream of this approval and must not begin until the approved package is merged into `main`.
