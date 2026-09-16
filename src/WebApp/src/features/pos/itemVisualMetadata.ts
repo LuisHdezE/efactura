@@ -1,48 +1,53 @@
+import type { CommercialItemDto } from '../../contracts/api';
+import approvedSpriteUrl from '../../assets/ui-pos-001-v3-product-sprite.webp';
+
 export interface ItemVisualMetadata {
   imageUrl: string | null;
   alt: string;
-  spritePosition?: string;
+  column?: number;
+  row?: number;
 }
 
-const approvedSpriteUrl = '/assets/ui-pos-001/v3/product-sprite.webp';
+type SpriteCell = { column: number; row: number; alt: string };
+
+const spriteByCode: Record<string, SpriteCell> = {
+  'ART-001': { column: 0, row: 0, alt: 'Papas Fritas Clásicas 100g' },
+  'ART-002': { column: 1, row: 0, alt: 'Agua Mineral 500ml' },
+  'ART-003': { column: 2, row: 0, alt: 'Coca-Cola 600ml' },
+  'ART-004': { column: 3, row: 0, alt: 'Leche Entera 1L' },
+  'ART-005': { column: 4, row: 0, alt: 'Pan Francés' },
+  'ART-006': { column: 0, row: 1, alt: 'Queso Mozzarella' },
+  'ART-007': { column: 1, row: 1, alt: 'Jamón Cocido' },
+  'ART-008': { column: 2, row: 1, alt: 'Banana' },
+  'ART-009': { column: 3, row: 1, alt: 'Detergente 750ml' },
+  'ART-010': { column: 4, row: 1, alt: 'Papel Higiénico 4u' },
+  'ART-011': { column: 0, row: 2, alt: 'Galletitas Surtidas 300g' },
+  'ART-012': { column: 1, row: 2, alt: 'Café Molido 500g' },
+  'ART-013': { column: 2, row: 2, alt: 'Yerba Mate 1kg' },
+  'ART-014': { column: 3, row: 2, alt: 'Azúcar 1kg' },
+  'ART-015': { column: 4, row: 2, alt: 'Aceite de Girasol 1L' },
+};
 
 /**
  * Presentation-only metadata derived from the approved UI-POS-001 v3 theme pair.
  *
- * The sprite is copied byte-for-byte from the governed visual package. These
- * mappings remain outside CommercialItemDto and do not imply media-management,
- * upload, gallery or persistence capabilities.
+ * The source image is the same governed Git blob approved in PR #117, now also
+ * referenced from src/assets so Vite emits a fingerprinted runtime URL. The
+ * mapping is by stable mock catalog code and remains outside CommercialItemDto.
  */
-export const itemVisualMetadata: Record<string, ItemVisualMetadata> = {
-  '11111111-1111-4111-8111-111111111111': {
-    imageUrl: approvedSpriteUrl,
-    spritePosition: '25% 100%',
-    alt: 'Imagen de referencia aprobada para Café Molido',
-  },
-  '22222222-2222-4222-8222-222222222222': {
-    imageUrl: approvedSpriteUrl,
-    spritePosition: '75% 100%',
-    alt: 'Imagen de referencia aprobada para Azúcar 1kg',
-  },
-  '33333333-3333-4333-8333-333333333333': {
-    imageUrl: approvedSpriteUrl,
-    spritePosition: '75% 0%',
-    alt: 'Imagen de referencia aprobada para Leche Entera 1L',
-  },
-  '44444444-4444-4444-8444-444444444444': {
-    imageUrl: approvedSpriteUrl,
-    spritePosition: '100% 0%',
-    alt: 'Imagen de referencia aprobada para producto de panadería',
-  },
-  '66666666-6666-4666-8666-666666666666': {
-    imageUrl: approvedSpriteUrl,
-    spritePosition: '25% 0%',
-    alt: 'Imagen de referencia aprobada para Agua Mineral 500ml',
-  },
-};
+export const getItemVisualMetadata = (item: CommercialItemDto): ItemVisualMetadata => {
+  const sprite = spriteByCode[item.code];
+  if (!sprite) {
+    return {
+      imageUrl: null,
+      alt: item.kind === 'SERVICE' ? 'Servicio sin imagen de producto' : 'Sin imagen de demostración disponible',
+    };
+  }
 
-export const getItemVisualMetadata = (itemId: string): ItemVisualMetadata =>
-  itemVisualMetadata[itemId] ?? {
-    imageUrl: null,
-    alt: 'Sin imagen de demostración disponible',
+  return {
+    imageUrl: approvedSpriteUrl,
+    column: sprite.column,
+    row: sprite.row,
+    alt: `Imagen de referencia aprobada para ${sprite.alt}`,
   };
+};
