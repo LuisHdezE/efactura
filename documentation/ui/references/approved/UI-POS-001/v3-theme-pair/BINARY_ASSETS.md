@@ -38,9 +38,9 @@ The exact runtime mapping and integrity metadata are recorded in `product-sprite
 
 | Asset | Git blob SHA | Bytes |
 | --- | --- | ---: |
-| `servicio-entrega.png` | `b2c201593b6f04f88552c023d605bf03976abeb5` | 6640 |
+| `servicio-entrega.png` | `a34c4d68066ded906338fc4484e0cdc7e019ec98` | 3336 |
 
-The current service artwork revision preserves the approved delivery-truck concept but adds transparent safe-area padding so the full vehicle remains visible inside the POS card and compact line-item renderer.
+The service artwork uses the previously stable delivery-truck asset. Runtime containment is handled by the image renderer (`object-fit: contain` plus `box-sizing: border-box`) so presentation padding does not enlarge the image beyond its card bounds.
 
 This service artwork is presentation-only metadata. It does not add or imply logistics, fleet, delivery-tracking or media capabilities to the API.
 
