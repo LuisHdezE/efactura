@@ -23,8 +23,8 @@ Each candidate should be classified as one of:
 - `VISUAL_DRAFT`: one or more reference drafts exist;
 - `VISUAL_APPROVED`: Luis explicitly approved one exact visual version;
 - `IMPLEMENTED`: frontend implementation exists;
-- `REVIEWED`: implementation was compared against the approved visual baseline;
-- `ACCEPTED`: visual/functional review is accepted.
+- `REVIEWED`: implementation was compared against the approved visual baseline and runtime-reviewed;
+- `ACCEPTED`: visual/functional review is accepted and all governance prerequisites are satisfied.
 
 These are UI-governance states and do not replace Blueprint project maturity fields.
 
@@ -46,8 +46,14 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | --- | --- | --- | --- | --- |
 | `WEB-001` | Login and Session Entry | not assigned | `CANDIDATE` | pending reconciliation |
 | `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | pending reconciliation |
-| `WEB-003` | POS Sale | `UI-POS-001` | `SPECIFIED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md` |
+| `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 
-`UI-POS-001` is not visually approved. Its `SPECIFIED` status means only that the view boundary and functional behavior have been reconciled/documented against current repository evidence.
+## UI-POS-001 closure note
 
-No row implies visual approval or frontend implementation. Reconciliation must use current repository evidence, not historical unresolved-API notes alone.
+`UI-POS-001` has an approved `v3-theme-pair`, a deployed React implementation, and explicit cross-browser runtime acceptance by Luis on 2026-09-17 after successful rendering in Firefox and Chrome Incognito.
+
+The visual/runtime implementation lane is therefore closed as `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
+
+The inventory intentionally does not promote the row to final `ACCEPTED` yet because `UI-POS-001_POS.md` records an independent governance prerequisite: a governed `US-*` user-story artifact for this flow is still missing. That traceability gap must be resolved in its proper governance lane and must not be fabricated by frontend work.
+
+Reconciliation and future views must continue to use current repository evidence rather than historical unresolved-API notes alone.
