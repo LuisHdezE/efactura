@@ -333,9 +333,16 @@ builder.Services.AddScoped<IVoucherTypeRepository, VoucherTypeRepository>();
 
 var app = builder.Build();
 
+var swaggerEnabled = app.Environment.IsDevelopment()
+    || app.Configuration.GetValue<bool>("Swagger:Enabled");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+}
+
+if (swaggerEnabled)
+{
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", builder.Configuration["App:Name"]));
 }
