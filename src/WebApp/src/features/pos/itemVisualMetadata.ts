@@ -28,14 +28,14 @@ const productAssetByCode: Record<string, ProductAsset> = {
 };
 
 const serviceAssetByCode: Record<string, ProductAsset> = {
-  'SERV-001': { file: 'servicio-entrega.png', alt: 'Servicio de entrega' },
+  'SERV-001': { file: 'servicio-entrega.svg', alt: 'Servicio de entrega' },
 };
 
 /**
  * Presentation-only metadata derived from the approved UI-POS-001 v3 package.
  *
  * Product artwork is preserved as individual PNG files under public/assets/products.
- * Service artwork is preserved separately under public/assets/services.
+ * Service artwork is preserved separately under public/assets/services as SVG.
  * The mapping remains outside CommercialItemDto and does not imply an API media field.
  */
 export const getItemVisualMetadata = (item: CommercialItemDto): ItemVisualMetadata => {

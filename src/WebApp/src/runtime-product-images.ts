@@ -16,7 +16,7 @@ const productAssets: ProductAsset[] = [
   { label: 'Yerba Mate 1kg', file: 'yerba-mate-1kg.png' },
   { label: 'Azúcar 1kg', file: 'azucar-1kg.png' },
   { label: 'Aceite de Girasol 1L', file: 'aceite-girasol-1l.png' },
-  { label: 'Servicio de entrega', file: 'servicio-entrega.png', directory: 'services' },
+  { label: 'Servicio de entrega', file: 'servicio-entrega.svg', directory: 'services' },
 ];
 
 const findAsset = (label: string) => productAssets.find((asset) => label.includes(asset.label));
@@ -47,7 +47,7 @@ function paintProductImages() {
       });
 
       image.addEventListener('error', () => {
-        console.error('UI-POS-001 visual PNG failed to load', image.src);
+        console.error('UI-POS-001 visual asset failed to load', image.src);
       });
 
       visual.replaceWith(image);
