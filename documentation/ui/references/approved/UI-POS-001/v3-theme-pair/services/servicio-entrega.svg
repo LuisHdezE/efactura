@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title id="title">Servicio de entrega</title>
+<desc id="desc">Ilustración vectorial de una camioneta de reparto azul.</desc>
+<g fill="none" fill-rule="evenodd">
+  <rect x="14" y="38" width="62" height="42" rx="7" fill="#EAF3FF" stroke="#0F3D73" stroke-width="4"/>
+  <path d="M76 49h17c3.2 0 5.9 1.5 7.7 4l11.3 15v12H76V49Z" fill="#1677E8" stroke="#0F3D73" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M85 54h8c1.8 0 3.2.8 4.3 2.2L104 65H85V54Z" fill="#DDEFFF" stroke="#0F3D73" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="20" y="46" width="48" height="6" rx="3" fill="#1677E8"/>
+  <path d="M14 70h14M109 70h5v10h-9" stroke="#0F3D73" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25 62h18m-18 7h28" stroke="#77ACE8" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="38" cy="83" r="11" fill="#FFFFFF" stroke="#0F3D73" stroke-width="4"/>
+  <circle cx="38" cy="83" r="4.5" fill="#1677E8"/>
+  <circle cx="94" cy="83" r="11" fill="#FFFFFF" stroke="#0F3D73" stroke-width="4"/>
+  <circle cx="94" cy="83" r="4.5" fill="#1677E8"/>
+  <path d="M49 83h34" stroke="#0F3D73" stroke-width="4" stroke-linecap="round"/>
+  <path d="M83 60h-7v20h9" stroke="#0F3D73" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="103" y="71" width="9" height="5" rx="2.5" fill="#FFB020"/>
+</g>
+</svg>
