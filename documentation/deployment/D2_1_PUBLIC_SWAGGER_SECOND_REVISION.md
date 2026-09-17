@@ -4,13 +4,11 @@ Status: IMPLEMENTATION READY / CI IN PROGRESS
 
 Pull request: `#133 — feat(d2): make demo Swagger exposure configuration-driven`
 
-Current governed head at record creation:
+Governed branch:
 
-`21c5c3a9b7f34bec16401bfe9d3fe7255d2fcb72`
+`deployment/d2-repeatable-demo-integration`
 
-Current base:
-
-`main@916c6d42ff9746bd48c9b08d0b6d42a776fda6da`
+The exact PR head and base are intentionally treated as dynamic while parallel governed work may advance `main`. Only the final reconciled PR head and the Clean Architecture Guard run attached to that exact head count as merge evidence. Final accepted commit/base/run identifiers are appended after the increment is frozen and accepted.
 
 ## 1. Purpose
 
@@ -105,7 +103,7 @@ Governance/documentation:
 - `documentation/deployment/D2_REPEATABLE_DEPLOYMENT_DEMO_INTEGRATION.md`
 - this D2.1 implementation record
 
-Note: this record itself is added after PR creation and therefore will move the PR head once committed. CI evidence must always be associated with the final exact PR head.
+Parallel UI changes are not part of this increment. If `main` advances because of the UI lane, the D2.1 branch is reconciled onto the new base while preserving this bounded five-file backend/documentation diff.
 
 ## 6. Security properties preserved
 
@@ -149,6 +147,8 @@ The exact final PR head must pass the governed Clean Architecture Guard, includi
 
 PR creation is not merge authorization.
 
+If the branch is reconciled after any CI run because `main` advanced, that earlier run becomes historical/preliminary evidence only. A new Guard on the new exact head is required.
+
 ## 9. Required post-deployment acceptance
 
 After merge and second-revision deployment, capture all of the following:
@@ -188,14 +188,21 @@ Public Swagger/OpenAPI is the intended demonstrable API surface and future contr
 
 ## 12. Evidence ledger
 
-At record creation:
+Verified during implementation:
 
-- branch reconciled onto current `main` before PR creation;
-- branch state before this documentation commit: 1 commit ahead / 0 behind;
-- runtime diff audited as a 7-line addition in `Program.cs`;
-- configuration diff audited as a 3-line addition in `appsettings.json`;
-- PR #133 created;
-- PR currently reports mergeable;
-- Clean Architecture Guard #530 started and is in progress on the pre-documentation head.
+- PR #133 exists and is governed independently from the parallel UI lane;
+- runtime diff remains a 7-line addition in `Program.cs`;
+- configuration diff remains a 3-line addition in `appsettings.json`;
+- branch reconciliation has preserved exactly the five intended D2.1 files while inheriting newer accepted `main` changes;
+- multiple preliminary Guard runs may be superseded when documentation or base reconciliation moves the branch head;
+- only the Guard attached to the final frozen PR head may be cited as merge evidence.
 
-Because this document is part of the governed increment, the final head and CI run must be rechecked after this commit and only the final exact-head CI result may be used as merge evidence.
+To append after final head freeze / acceptance:
+
+- final PR head SHA;
+- final base SHA;
+- final Clean Architecture Guard number/run id/conclusion;
+- merge commit SHA;
+- second Cloud Run image tag/digest;
+- second Cloud Run revision;
+- public Swagger/API smoke-test evidence.
