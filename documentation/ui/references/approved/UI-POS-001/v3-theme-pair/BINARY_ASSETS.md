@@ -31,16 +31,16 @@ The exact runtime mapping and integrity metadata are recorded in `product-sprite
 
 ## Governed service asset
 
-`SERV-001 — Servicio de entrega` uses a presentation-only 128×128 PNG stored twice with the **same Git blob**:
+`SERV-001 — Servicio de entrega` uses a presentation-only 128×128 RGBA PNG stored twice with the **same Git blob**:
 
 - governed reference: `documentation/ui/references/approved/UI-POS-001/v3-theme-pair/services/servicio-entrega.png`
 - runtime asset: `src/WebApp/public/assets/services/servicio-entrega.png`
 
-| Asset | Git blob SHA | Bytes |
-| --- | --- | ---: |
-| `servicio-entrega.png` | `a34c4d68066ded906338fc4484e0cdc7e019ec98` | 3336 |
+| Asset | Git blob SHA | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| `servicio-entrega.png` | `05daeee32694626326dcb5803e150a9493233db0` | 12408 | `6b8dec77d69f77f5004a84d99fd802ee3e1c772a5b9056892abb48a9efd46623` |
 
-The service artwork uses the previously stable delivery-truck asset. Runtime containment is handled by the image renderer (`object-fit: contain` plus `box-sizing: border-box`) so presentation padding does not enlarge the image beyond its card bounds.
+The current service artwork was regenerated from a clean approved delivery-van visual source after runtime evidence showed that the earlier service PNG itself contained visible corruption. The van is centered inside a 128×128 transparent canvas with a safe visual margin. Runtime containment remains handled by `object-fit: contain` plus `box-sizing: border-box`.
 
 This service artwork is presentation-only metadata. It does not add or imply logistics, fleet, delivery-tracking or media capabilities to the API.
 
@@ -51,5 +51,6 @@ This service artwork is presentation-only metadata. It does not add or imply log
 | `UI-POS-001_v3-dark-baseline.webp` | `3025b9eabbc759ad31909c6e3702bf0b8593a522` | 14368 | TRUNCATED |
 | `UI-POS-001_v3-light-baseline.webp` | `f52be432e90a7fd273ea595508bd6e6e4086a701` | 15009 | TRUNCATED |
 | `UI-POS-001_v3-product-sprite.webp` | `8e0523a24a43bad000d16057cf2404294c4921a0` | 15018 | TRUNCATED |
+| `servicio-entrega.png` (superseded) | `a34c4d68066ded906338fc4484e0cdc7e019ec98` | 3336 | VISUALLY CORRUPTED |
 
-These historical WebP fingerprints are retained only as forensic evidence of the failed binary-preservation step. They must not be used by the WebApp as runtime image sources.
+These historical fingerprints are retained only as forensic evidence of failed or superseded binary assets. They must not be used by the WebApp as runtime image sources.
