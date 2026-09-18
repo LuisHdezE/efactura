@@ -44,10 +44,18 @@ The mapping must be recorded in the view specification and inventory entry. The 
 
 | Upstream ID | Candidate | Governed UI ID | Current UI status | Evidence |
 | --- | --- | --- | --- | --- |
-| `WEB-001` | Login and Session Entry | not assigned | `CANDIDATE` | pending reconciliation |
+| `WEB-001` | Login and Session Entry | `UI-AUTH-001` | `SPECIFIED` | `UI-AUTH-001_RECONCILIATION.md`, `../specifications/UI-AUTH-001_LOGIN_SESSION.md` |
 | `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | pending reconciliation |
 | `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
+
+## UI-AUTH-001 reconciliation note
+
+`WEB-001` is reconciled as `UI-AUTH-001` with a provider-neutral session-entry boundary. The accepted API contract keeps token acquisition/refresh/logout outside the business API and contracts `getCurrentActor` as the safe application-context operation.
+
+The current WebApp has no login/session route, auth gateway or route guard, and the current WebApi controller inventory does not evidence executable `GET /api/v1/me`. Therefore the view is `SPECIFIED` but real authentication integration remains pending.
+
+A visual mock may be produced next, but it must not invent local username/password issuance or a specific identity provider.
 
 ## UI-POS-001 closure note
 
