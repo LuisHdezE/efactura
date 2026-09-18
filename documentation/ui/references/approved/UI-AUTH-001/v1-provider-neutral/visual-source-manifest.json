@@ -1,0 +1,24 @@
+{
+  "ui_id": "UI-AUTH-001",
+  "version": "v1-provider-neutral",
+  "status": "VISUAL_APPROVED",
+  "approval_date": "2026-09-17",
+  "approval_statement": "aprobado",
+  "source": {
+    "filename": "a_clean_split_panel_ui_presentation_mockup_high_r.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 1831942,
+    "sha256": "ed2a9039dd60c8eff2398197f48b6cc1d71d8c3457630fedb0998d2615584834",
+    "generation_id": "53dc6741-8d31-4c0d-8dd6-7d001c5cdbb7"
+  },
+  "binary_preservation": "PENDING_DIRECT_BINARY_TRANSFER",
+  "functional_boundary": {
+    "provider_neutral": true,
+    "local_credentials": false,
+    "api_owned_login": false,
+    "api_owned_refresh": false,
+    "api_owned_logout": false,
+    "identity_provider_selected": false
+  }
+}
