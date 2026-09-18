@@ -14,6 +14,7 @@ on:
       - 'global.json'
       - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
+      - '.github/workflows/deploy-api-demo.yml'
       - 'documentation/BLUEPRINT_CURRENT_STATE.md'
   push:
     branches: [main]
@@ -27,6 +28,7 @@ on:
       - 'global.json'
       - 'Dockerfile'
       - '.github/workflows/clean-architecture.yml'
+      - '.github/workflows/deploy-api-demo.yml'
       - 'documentation/BLUEPRINT_CURRENT_STATE.md'
 
 permissions:
