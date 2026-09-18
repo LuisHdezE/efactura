@@ -1,6 +1,6 @@
 # D2.1 — Public Swagger and Controlled Second API Revision
 
-Status: IMPLEMENTATION READY / CI IN PROGRESS
+Status: CLOSED / DEPLOYED / VERIFIED
 
 Pull request: `#133 — feat(d2): make demo Swagger exposure configuration-driven`
 
@@ -8,7 +8,14 @@ Governed branch:
 
 `deployment/d2-repeatable-demo-integration`
 
-The exact PR head and base are intentionally treated as dynamic while parallel governed work may advance `main`. Only the final reconciled PR head and the Clean Architecture Guard run attached to that exact head count as merge evidence. Final accepted commit/base/run identifiers are appended after the increment is frozen and accepted.
+Final accepted governance evidence:
+
+- PR head: `724936e84d5dfc67afb929b1430d348e34583777`;
+- PR base at merge: `ede0475dda758097dbdea74426ecd955492fff0d`;
+- Clean Architecture Guard: run #534, workflow run id `35180211947`, conclusion `success`;
+- merge commit: `8cbc896d5be7a8ff9d3ebaf0e84bd3ca56580360`.
+
+The parallel UI lane advanced `main` after this deployment. The D2.1 runtime evidence remains bound to the immutable image and Cloud Run revision recorded below.
 
 ## 1. Purpose
 
@@ -82,7 +89,7 @@ if (swaggerEnabled)
 
 ## 4. Demo runtime configuration
 
-After merge and before/while deploying the second revision, the existing Cloud Run demo service will explicitly receive:
+The deployed second revision explicitly receives:
 
 `Swagger__Enabled=true`
 
@@ -132,7 +139,7 @@ D2.1 SHALL reuse the existing accepted infrastructure:
 - Google Secret Manager bindings;
 - Neon PostgreSQL project/database.
 
-A second Cloud Run revision is expected. A second Cloud Run service is not.
+The second Cloud Run revision is `efactura-api-d21-swagger-01`. No second Cloud Run service was created.
 
 ## 8. Required CI acceptance before merge
 
@@ -149,20 +156,43 @@ PR creation is not merge authorization.
 
 If the branch is reconciled after any CI run because `main` advanced, that earlier run becomes historical/preliminary evidence only. A new Guard on the new exact head is required.
 
-## 9. Required post-deployment acceptance
+## 9. Post-deployment acceptance evidence
 
-After merge and second-revision deployment, capture all of the following:
+D2.1 post-deployment acceptance is complete.
 
-1. new image tag;
-2. immutable image digest;
-3. new Cloud Run revision name;
-4. traffic assignment;
-5. `GET /swagger` or canonical Swagger UI redirect returns successfully;
-6. `GET /swagger/v1/swagger.json` returns HTTP 200 and valid OpenAPI JSON;
-7. generated OpenAPI document contains no secrets;
-8. unauthenticated `GET /api/v1/parties` remains HTTP 401;
-9. authenticated `GET /api/v1/parties` remains HTTP 200 against Neon;
-10. the accepted prior revision remains available as rollback evidence.
+Image publication:
+
+- Artifact Registry tag: `us-east5-docker.pkg.dev/efactura-demo-0916-9b93/efactura/webapi:d21-swagger`;
+- OCI image-index digest: `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
+- resolved `linux/amd64` application manifest digest: `sha256:b45a2e5d7edc15f40ea4a09b34812245853bc1273e99c00d1ad7c378a8a0f4b4`;
+- OCI attestation manifest observed in the index: `sha256:b2d5734df67392dbea3da3546c0a6e8df18418f13ee864d52c25852df1535f77`.
+
+The distinction between the index digest and the platform manifest digest is intentional: Artifact Registry reports the immutable OCI index as `3113a175...`, while Cloud Run resolves and executes the `linux/amd64` manifest `b45a2e5d...`.
+
+Cloud Run:
+
+- service: `efactura-api`;
+- region: `us-east5`;
+- revision: `efactura-api-d21-swagger-01`;
+- tagged canary URL: `https://d21-swagger---efactura-api-yblnutgx3q-ul.a.run.app`;
+- current public service URL: `https://efactura-api-yblnutgx3q-ul.a.run.app`;
+- final traffic: `100%` to `efactura-api-d21-swagger-01`.
+
+Canary smoke tests before promotion:
+
+- Swagger UI: HTTP 200;
+- OpenAPI JSON: HTTP 200;
+- `GET /api/v1/parties` without JWT: HTTP 401;
+- `GET /api/v1/parties` with locally generated valid JWT and Neon-backed runtime: HTTP 200.
+
+Public service smoke tests after promotion:
+
+- `GET /swagger`: HTTP 301 to `swagger/index.html`, followed to HTTP 200 at `/swagger/index.html`;
+- `GET /swagger/v1/swagger.json`: HTTP 200;
+- `GET /api/v1/parties` without JWT: HTTP 401;
+- `GET /api/v1/parties` with locally generated valid JWT and Neon-backed runtime: HTTP 200.
+
+No secret value, token, connection string or signing key is recorded in this evidence.
 
 ## 10. Rollback expectation
 
@@ -172,7 +202,7 @@ Prior known-good revision at D2.1 opening:
 
 `efactura-api-00001-b8c`
 
-The exact rollback procedure will be captured with real second-revision evidence during D2.4/backend operational closure.
+The prior known-good revision remains available for rollback. The operational rollback target is `efactura-api-00001-b8c`; D2.2/D2.4 will codify the repeatable rollback command/workflow rather than recreate infrastructure.
 
 ## 11. Parallel UI boundary
 
@@ -188,21 +218,20 @@ Public Swagger/OpenAPI is the intended demonstrable API surface and future contr
 
 ## 12. Evidence ledger
 
-Verified during implementation:
+Accepted D2.1 evidence:
 
-- PR #133 exists and is governed independently from the parallel UI lane;
-- runtime diff remains a 7-line addition in `Program.cs`;
-- configuration diff remains a 3-line addition in `appsettings.json`;
-- branch reconciliation has preserved exactly the five intended D2.1 files while inheriting newer accepted `main` changes;
-- multiple preliminary Guard runs may be superseded when documentation or base reconciliation moves the branch head;
-- only the Guard attached to the final frozen PR head may be cited as merge evidence.
+- PR #133 merged;
+- final PR head: `724936e84d5dfc67afb929b1430d348e34583777`;
+- final PR base: `ede0475dda758097dbdea74426ecd955492fff0d`;
+- Clean Architecture Guard #534 / run id `35180211947`: SUCCESS;
+- merge commit: `8cbc896d5be7a8ff9d3ebaf0e84bd3ca56580360`;
+- Artifact Registry tag: `d21-swagger`;
+- immutable OCI index digest: `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
+- Cloud Run-resolved `linux/amd64` manifest: `sha256:b45a2e5d7edc15f40ea4a09b34812245853bc1273e99c00d1ad7c378a8a0f4b4`;
+- Cloud Run revision: `efactura-api-d21-swagger-01`;
+- final traffic: 100% to the D2.1 revision;
+- canary acceptance: Swagger 200, OpenAPI 200, protected endpoint 401 without JWT and 200 with JWT + Neon;
+- public-main acceptance: Swagger 301 -> 200, OpenAPI 200, protected endpoint 401 without JWT and 200 with JWT + Neon;
+- prior rollback revision retained: `efactura-api-00001-b8c`.
 
-To append after final head freeze / acceptance:
-
-- final PR head SHA;
-- final base SHA;
-- final Clean Architecture Guard number/run id/conclusion;
-- merge commit SHA;
-- second Cloud Run image tag/digest;
-- second Cloud Run revision;
-- public Swagger/API smoke-test evidence.
+D2.1 is therefore closed. D2.2 is the next backend increment.
