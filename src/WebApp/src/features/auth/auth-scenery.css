@@ -4,7 +4,7 @@
 
 .auth-page .auth-waterfront {
   background-position: center bottom, left bottom;
-  background-size: 100% 100%, 200% 100%;
+  background-size: 100% 100%, 200% auto;
 }
 
 :root[data-theme='dark'] .auth-page .auth-waterfront {
