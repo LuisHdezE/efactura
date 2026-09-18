@@ -137,13 +137,32 @@ The next backend increment is D2.2 — Reproducible API deployment workflow.
 
 ### D2.2 — Reproducible API deployment workflow
 
-After D2.1 succeeds, codify the deployment so a future accepted `main` can produce a new Cloud Run revision with materially less manual work.
+Status: `IMPLEMENTATION READY / CI PENDING`.
 
-Expected flow:
+Governed branch:
 
-`feature branch -> PR -> Clean Architecture Guard -> explicit merge approval -> main -> image build -> Artifact Registry -> Cloud Run revision -> public smoke tests`
+`deployment/d2-2-reproducible-api-deploy`
 
-The workflow must not embed secret values in GitHub, workflow YAML, image layers or command output.
+D2.2 introduces an API-specific GitHub Actions workflow independent from the WebApp FTP deployment.
+
+Target flow:
+
+`feature branch -> PR -> Clean Architecture Guard -> explicit merge approval -> main -> local container build -> OIDC/WIF authentication -> Artifact Registry push -> zero-traffic tagged Cloud Run canary -> canary smoke -> 100% promotion -> public smoke -> automatic traffic rollback on failed post-promotion acceptance`
+
+Security properties:
+
+- no Google service-account JSON key;
+- no JWT key or database connection string stored in GitHub;
+- WIF trust restricted to this repository and `refs/heads/main`;
+- deployment service account separated from the Cloud Run runtime service account;
+- immutable image digest used for Cloud Run deployment;
+- temporary Google credential files excluded from Git and Docker build context.
+
+Detailed implementation and acceptance evidence:
+
+`documentation/deployment/D2_2_REPRODUCIBLE_API_DEPLOYMENT.md`
+
+D2.2 does not become CLOSED until the first merge-triggered automated deployment succeeds and its exact run/revision/image evidence is reconciled.
 
 ### D2.3 — Demo WebApp to real API integration
 
