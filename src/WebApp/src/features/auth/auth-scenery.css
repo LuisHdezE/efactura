@@ -1,7 +1,12 @@
 .auth-page {
-  --auth-scenic-image: url('/assets/auth/auth-scenery-light.webp');
+  --auth-scenic-image: url('/assets/auth/auth-scenery-sprite.webp');
 }
 
-:root[data-theme='dark'] .auth-page {
-  --auth-scenic-image: url('/assets/auth/auth-scenery-dark.webp');
+.auth-page .auth-waterfront {
+  background-position: center bottom, left bottom;
+  background-size: 100% 100%, 200% 100%;
+}
+
+:root[data-theme='dark'] .auth-page .auth-waterfront {
+  background-position: center bottom, right bottom;
 }
