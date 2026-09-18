@@ -1,0 +1,461 @@
+name: Deploy eFactura API Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/WebApi/**'
+      - 'src/Application/**'
+      - 'src/ApplicationCore/**'
+      - 'src/Domain/**'
+      - 'src/Infrastructure/**'
+      - 'src/Shared/**'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'global.json'
+      - 'Directory.Build.*'
+      - 'Directory.Packages.props'
+      - 'NuGet.config'
+      - '.github/workflows/deploy-api-demo.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-efactura-api-demo
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: efactura-demo-0916-9b93
+  PROJECT_NUMBER: '195831190862'
+  REGION: us-east5
+  ARTIFACT_REPOSITORY: efactura
+  SERVICE: efactura-api
+  IMAGE_NAME: webapi
+  WIF_PROVIDER: projects/195831190862/locations/global/workloadIdentityPools/github-actions/providers/efactura-main
+  DEPLOY_SERVICE_ACCOUNT: efactura-deploy@efactura-demo-0916-9b93.iam.gserviceaccount.com
+  RUNTIME_SERVICE_ACCOUNT: efactura-run@efactura-demo-0916-9b93.iam.gserviceaccount.com
+  JWT_SECRET: efactura-jwt-key
+
+jobs:
+  deploy:
+    name: Build, canary, smoke and promote
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout accepted main
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Define immutable deployment identifiers
+        id: ids
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          short_sha="${GITHUB_SHA::7}"
+          image_repository="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPOSITORY}/${IMAGE_NAME}"
+          image_tag="${image_repository}:sha-${GITHUB_SHA}"
+          revision_suffix="d22-${short_sha}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          revision="${SERVICE}-${revision_suffix}"
+          canary_tag="d22-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+
+          {
+            echo "image_repository=${image_repository}"
+            echo "image_tag=${image_tag}"
+            echo "revision_suffix=${revision_suffix}"
+            echo "revision=${revision}"
+            echo "canary_tag=${canary_tag}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build API image locally before cloud authentication
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build             --pull             --platform linux/amd64             --tag "${{ steps.ids.outputs.image_tag }}"             .
+
+      - name: Authenticate to Google Cloud for publish and deploy
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Artifact Registry Docker authentication
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Push image and resolve immutable digest
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker push "${{ steps.ids.outputs.image_tag }}"
+
+          digest=""
+          for attempt in 1 2 3 4 5; do
+            digest="$(
+              gcloud artifacts docker images describe "${{ steps.ids.outputs.image_tag }}"                 --project="$PROJECT_ID"                 --format='value(image_summary.digest)' 2>/dev/null || true
+            )"
+
+            if [[ "$digest" == sha256:* ]]; then
+              break
+            fi
+
+            sleep 3
+          done
+
+          if [[ "$digest" != sha256:* ]]; then
+            echo "::error::Artifact Registry did not return an immutable digest for the pushed image."
+            exit 1
+          fi
+
+          image_ref="${{ steps.ids.outputs.image_repository }}@${digest}"
+
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "image_ref=$image_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Capture rollback revision and service URL
+        id: before
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          service_json="$(
+            gcloud run services describe "$SERVICE"               --project="$PROJECT_ID"               --region="$REGION"               --platform=managed               --format=json
+          )"
+
+          previous_revision="$(
+            jq -r '
+              .status.traffic[]
+              | select((.percent // 0) == 100)
+              | .revisionName // empty
+            ' <<< "$service_json" | head -n 1
+          )"
+
+          service_url="$(jq -r '.status.url // empty' <<< "$service_json")"
+
+          if [[ -z "$previous_revision" || -z "$service_url" ]]; then
+            echo "::error::Unable to capture a deterministic 100% rollback revision or service URL."
+            exit 1
+          fi
+
+          echo "previous_revision=$previous_revision" >> "$GITHUB_OUTPUT"
+          echo "service_url=$service_url" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy tagged canary with zero traffic
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gcloud run deploy "$SERVICE"             --project="$PROJECT_ID"             --region="$REGION"             --platform=managed             --image="${{ steps.image.outputs.image_ref }}"             --revision-suffix="${{ steps.ids.outputs.revision_suffix }}"             --service-account="$RUNTIME_SERVICE_ACCOUNT"             --update-env-vars=Swagger__Enabled=true             --no-traffic             --tag="${{ steps.ids.outputs.canary_tag }}"             --quiet
+
+      - name: Refresh Google Cloud authentication before acceptance
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - name: Resolve canary URL and verify deployed revision
+        id: canary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          service_json="$(
+            gcloud run services describe "$SERVICE"               --project="$PROJECT_ID"               --region="$REGION"               --platform=managed               --format=json
+          )"
+
+          canary_url="$(
+            jq -r --arg tag "${{ steps.ids.outputs.canary_tag }}" '
+              .status.traffic[]
+              | select(.tag == $tag)
+              | .url // empty
+            ' <<< "$service_json"
+          )"
+
+          latest_ready="$(jq -r '.status.latestReadyRevisionName // empty' <<< "$service_json")"
+
+          if [[ "$latest_ready" != "${{ steps.ids.outputs.revision }}" ]]; then
+            echo "::error::Latest ready revision '$latest_ready' does not match expected revision '${{ steps.ids.outputs.revision }}'."
+            exit 1
+          fi
+
+          if [[ -z "$canary_url" ]]; then
+            echo "::error::Cloud Run did not expose the tagged canary URL."
+            exit 1
+          fi
+
+          echo "url=$canary_url" >> "$GITHUB_OUTPUT"
+
+      - name: Canary smoke tests
+        shell: bash
+        env:
+          BASE_URL: ${{ steps.canary.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          smoke_dir="$RUNNER_TEMP/efactura-canary-smoke"
+          mkdir -p "$smoke_dir"
+
+          swagger_code="$(
+            curl -sS -L               -o "$smoke_dir/swagger.html"               -w '%{http_code}'               "$BASE_URL/swagger"
+          )"
+          echo "Canary Swagger final HTTP $swagger_code"
+          [[ "$swagger_code" == "200" ]]
+
+          openapi_code="$(
+            curl -sS               -o "$smoke_dir/openapi.json"               -w '%{http_code}'               "$BASE_URL/swagger/v1/swagger.json"
+          )"
+          echo "Canary OpenAPI HTTP $openapi_code"
+          [[ "$openapi_code" == "200" ]]
+          jq -e '(.openapi // .swagger) != null' "$smoke_dir/openapi.json" >/dev/null
+
+          unauth_code="$(
+            curl -sS               -o "$smoke_dir/parties-unauth.json"               -w '%{http_code}'               "$BASE_URL/api/v1/parties"
+          )"
+          echo "Canary Parties without JWT HTTP $unauth_code"
+          [[ "$unauth_code" == "401" ]]
+
+          JWT_KEY="$(
+            gcloud secrets versions access latest               --project="$PROJECT_ID"               --secret="$JWT_SECRET"
+          )"
+
+          if [[ -z "$JWT_KEY" ]]; then
+            echo "::error::JWT smoke secret could not be read."
+            exit 1
+          fi
+
+          echo "::add-mask::$JWT_KEY"
+
+          if grep -Fq -- "$JWT_KEY" "$smoke_dir/openapi.json"; then
+            echo "::error::JWT signing material appeared in generated OpenAPI output."
+            exit 1
+          fi
+
+          JWT_ISSUER="$(jq -r '.Jwt.Issuer' src/WebApi/appsettings.json)"
+          JWT_AUDIENCE="$(jq -r '.Jwt.Audience' src/WebApi/appsettings.json)"
+
+          TOKEN="$(
+            JWT_KEY="$JWT_KEY"             JWT_ISSUER="$JWT_ISSUER"             JWT_AUDIENCE="$JWT_AUDIENCE"             python3 - <<'PY'
+import base64
+import hashlib
+import hmac
+import json
+import os
+import time
+
+def b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+now = int(time.time())
+header = {"alg": "HS256", "typ": "JWT"}
+payload = {
+    "sub": "d22-deploy-smoke",
+    "iss": os.environ["JWT_ISSUER"],
+    "aud": os.environ["JWT_AUDIENCE"],
+    "iat": now,
+    "nbf": now - 5,
+    "exp": now + 600,
+    "permission": "parties.read",
+    "company_scope": "demo-org",
+}
+
+encoded_header = b64(json.dumps(header, separators=(",", ":")).encode())
+encoded_payload = b64(json.dumps(payload, separators=(",", ":")).encode())
+unsigned = f"{encoded_header}.{encoded_payload}"
+signature = hmac.new(
+    os.environ["JWT_KEY"].encode(),
+    unsigned.encode(),
+    hashlib.sha256,
+).digest()
+
+print(f"{unsigned}.{b64(signature)}")
+PY
+          )"
+
+          unset JWT_KEY
+          echo "::add-mask::$TOKEN"
+
+          auth_code="$(
+            curl -sS               -H "Authorization: Bearer $TOKEN"               -o "$smoke_dir/parties-auth.json"               -w '%{http_code}'               "$BASE_URL/api/v1/parties"
+          )"
+          unset TOKEN
+
+          echo "Canary Parties with JWT + Neon HTTP $auth_code"
+          [[ "$auth_code" == "200" ]]
+
+      - name: Promote accepted revision to 100 percent
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gcloud run services update-traffic "$SERVICE"             --project="$PROJECT_ID"             --region="$REGION"             --platform=managed             --to-revisions="${{ steps.ids.outputs.revision }}=100"             --quiet
+
+      - name: Public service smoke tests after promotion
+        id: final_smoke
+        continue-on-error: true
+        shell: bash
+        env:
+          BASE_URL: ${{ steps.before.outputs.service_url }}
+        run: |
+          set -euo pipefail
+
+          smoke_dir="$RUNNER_TEMP/efactura-public-smoke"
+          mkdir -p "$smoke_dir"
+
+          swagger_code="$(
+            curl -sS -L               -o "$smoke_dir/swagger.html"               -w '%{http_code}'               "$BASE_URL/swagger"
+          )"
+          echo "Public Swagger final HTTP $swagger_code"
+          [[ "$swagger_code" == "200" ]]
+
+          openapi_code="$(
+            curl -sS               -o "$smoke_dir/openapi.json"               -w '%{http_code}'               "$BASE_URL/swagger/v1/swagger.json"
+          )"
+          echo "Public OpenAPI HTTP $openapi_code"
+          [[ "$openapi_code" == "200" ]]
+          jq -e '(.openapi // .swagger) != null' "$smoke_dir/openapi.json" >/dev/null
+
+          unauth_code="$(
+            curl -sS               -o "$smoke_dir/parties-unauth.json"               -w '%{http_code}'               "$BASE_URL/api/v1/parties"
+          )"
+          echo "Public Parties without JWT HTTP $unauth_code"
+          [[ "$unauth_code" == "401" ]]
+
+          JWT_KEY="$(
+            gcloud secrets versions access latest               --project="$PROJECT_ID"               --secret="$JWT_SECRET"
+          )"
+
+          if [[ -z "$JWT_KEY" ]]; then
+            echo "::error::JWT smoke secret could not be read."
+            exit 1
+          fi
+
+          echo "::add-mask::$JWT_KEY"
+
+          JWT_ISSUER="$(jq -r '.Jwt.Issuer' src/WebApi/appsettings.json)"
+          JWT_AUDIENCE="$(jq -r '.Jwt.Audience' src/WebApi/appsettings.json)"
+
+          TOKEN="$(
+            JWT_KEY="$JWT_KEY"             JWT_ISSUER="$JWT_ISSUER"             JWT_AUDIENCE="$JWT_AUDIENCE"             python3 - <<'PY'
+import base64
+import hashlib
+import hmac
+import json
+import os
+import time
+
+def b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+now = int(time.time())
+header = {"alg": "HS256", "typ": "JWT"}
+payload = {
+    "sub": "d22-deploy-smoke",
+    "iss": os.environ["JWT_ISSUER"],
+    "aud": os.environ["JWT_AUDIENCE"],
+    "iat": now,
+    "nbf": now - 5,
+    "exp": now + 600,
+    "permission": "parties.read",
+    "company_scope": "demo-org",
+}
+
+encoded_header = b64(json.dumps(header, separators=(",", ":")).encode())
+encoded_payload = b64(json.dumps(payload, separators=(",", ":")).encode())
+unsigned = f"{encoded_header}.{encoded_payload}"
+signature = hmac.new(
+    os.environ["JWT_KEY"].encode(),
+    unsigned.encode(),
+    hashlib.sha256,
+).digest()
+
+print(f"{unsigned}.{b64(signature)}")
+PY
+          )"
+
+          unset JWT_KEY
+          echo "::add-mask::$TOKEN"
+
+          auth_code="$(
+            curl -sS               -H "Authorization: Bearer $TOKEN"               -o "$smoke_dir/parties-auth.json"               -w '%{http_code}'               "$BASE_URL/api/v1/parties"
+          )"
+          unset TOKEN
+
+          echo "Public Parties with JWT + Neon HTTP $auth_code"
+          [[ "$auth_code" == "200" ]]
+
+      - name: Refresh Google Cloud authentication for rollback
+        if: steps.final_smoke.outcome == 'failure'
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - name: Roll back traffic after failed promoted smoke
+        if: steps.final_smoke.outcome == 'failure'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "::warning::Post-promotion smoke failed. Rolling traffic back to ${{ steps.before.outputs.previous_revision }}."
+
+          gcloud run services update-traffic "$SERVICE"             --project="$PROJECT_ID"             --region="$REGION"             --platform=managed             --to-revisions="${{ steps.before.outputs.previous_revision }}=100"             --quiet
+
+      - name: Fail deployment after rollback
+        if: steps.final_smoke.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::error::D2.2 deployment failed post-promotion smoke and traffic was rolled back."
+          exit 1
+
+      - name: Capture accepted deployment evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          service_state="$(
+            gcloud run services describe "$SERVICE"               --project="$PROJECT_ID"               --region="$REGION"               --platform=managed               --format='yaml(status.latestCreatedRevisionName,status.latestReadyRevisionName,status.traffic,status.url)'
+          )"
+
+          revision_state="$(
+            gcloud run revisions describe "${{ steps.ids.outputs.revision }}"               --project="$PROJECT_ID"               --region="$REGION"               --platform=managed               --format='yaml(metadata.name,spec.containers[0].image,status.imageDigest)'
+          )"
+
+          {
+            echo "## eFactura API demo deployment"
+            echo
+            echo "Source commit: $GITHUB_SHA"
+            echo "Image tag: ${{ steps.ids.outputs.image_tag }}"
+            echo "Immutable registry digest: ${{ steps.image.outputs.digest }}"
+            echo "Accepted revision: ${{ steps.ids.outputs.revision }}"
+            echo "Previous rollback revision: ${{ steps.before.outputs.previous_revision }}"
+            echo "Canary smoke: PASS"
+            echo "Public post-promotion smoke: PASS"
+            echo
+            echo "### Cloud Run service"
+            echo "$service_state"
+            echo
+            echo "### Cloud Run revision"
+            echo "$revision_state"
+          } >> "$GITHUB_STEP_SUMMARY"
