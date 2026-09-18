@@ -1,6 +1,6 @@
 # UI-CUSTOMER-001 — Clientes
 
-Status: `VISUAL_APPROVED / TRACEABILITY_GAPS_RECORDED / NOT_IMPLEMENTED`
+Status: `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED`
 
 Upstream interface scope ID: `WEB-004`
 
@@ -370,16 +370,32 @@ Los datos de ejemplo del mockup no son contractuales. La implementación debe se
 - Approved artifact: `documentation/ui/references/approved/UI-CUSTOMER-001/v2-theme-pair/customer-theme-pair.png`
 - Approval record: `documentation/ui/references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`
 
-Esta aprobación es exclusivamente visual. No implica que la vista esté implementada, revisada en runtime ni aceptada funcionalmente.
+Esta aprobación visual fue posteriormente implementada y validada en runtime. La aceptación runtime no amplía contratos ni resuelve por sí sola los huecos de trazabilidad gobernada registrados en esta especificación.
 
 ## 19. Evidencia frontend
 
-- implementation: `NONE`
-- running capture: `NONE`
-- visual review: `NONE`
+- implementation: `src/WebApp/src/features/customers/CustomersPage.tsx`
+- visual styles: `src/WebApp/src/features/customers/customers.css`
+- implementation PR: `#135 — feat(webapp): implement approved UI-CUSTOMER-001 v2 theme pair`
+- deployed main: `b38e7b2ca57ba2262a85786b12af5d1917b3c1d2`
+- deployment workflow: `Deploy eFactura Demo #16 — SUCCESS`
+- frontend workflow: `Frontend Demo CI #38 — SUCCESS`
+- repository guard: `Clean Architecture Guard #537 — SUCCESS`
+- runtime review: light and dark deployed `/clientes` views reviewed directly by Luis on 2026-09-17
+- runtime approval statement: `Apruebo UI-CUSTOMER-001 runtime visual`
+- review record: `documentation/ui/reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md`
+
+The deployed implementation preserves the approved master-detail composition, light/dark themes, compact customer list, visible search, non-photographic identifiers, status/type/role badges and right-side customer detail.
+
+`Nuevo cliente` and `Editar` remain visibly disabled in the current demo because the WebApp write path is not wired in its current gateway boundary. This is intentional functional honesty and does not alter the backend contract.
+
+The runtime review also confirmed that the view does not fabricate balances, aging, credit limits or unsupported financial projections.
+
+The visual/runtime implementation lane is closed as `REVIEWED / VISUAL_RUNTIME_ACCEPTED`. Final repository-wide `ACCEPTED` remains blocked only by the independent governed user-story/use-case traceability gaps recorded in sections 5 and the reconciliation artifact.
 
 ## 20. Change history
 
 - `v0.1` — primera especificación gobernada de `UI-CUSTOMER-001`, reconciliada contra `main@c59e053d40a78704035e559368f4857f587c04e7`.
 - `v0.2` — se incorpora `v1-desktop.jpg` como referencia `VISUAL_DRAFT` y se documenta el único dato visual sin fuente actual (`last updated`).
 - `v0.3` — Luis aprueba explícitamente `UI-CUSTOMER-001 v2-theme-pair`; se preserva el PNG exacto bajo `references/approved` y se mantiene la implementación como pendiente.
+- `v0.4` — PR `#135` implementa el baseline aprobado; deployment, Frontend Demo CI y Clean Architecture Guard cierran en verde; Luis aprueba explícitamente la vista desplegada en claro y oscuro y el carril visual/runtime queda `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
