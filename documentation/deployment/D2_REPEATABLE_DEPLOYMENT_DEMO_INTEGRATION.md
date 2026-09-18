@@ -113,7 +113,27 @@ Scope:
 - smoke-test `/swagger`, `/swagger/v1/swagger.json`, unauthenticated protected-endpoint behavior, and an authenticated API path;
 - record the deployed revision and image digest.
 
-D2.1 proves repeatability. It is intentionally manual and controlled before deployment automation is introduced.
+D2.1 proves repeatability. It was intentionally manual and controlled before deployment automation is introduced.
+
+D2.1 status: `CLOSED / DEPLOYED / VERIFIED`.
+
+Accepted evidence:
+
+- PR #133 final head `724936e84d5dfc67afb929b1430d348e34583777`;
+- Clean Architecture Guard #534 / workflow run `35180211947`: SUCCESS;
+- merge commit `8cbc896d5be7a8ff9d3ebaf0e84bd3ca56580360`;
+- Artifact Registry tag `d21-swagger`;
+- immutable OCI index digest `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
+- resolved Cloud Run `linux/amd64` manifest `sha256:b45a2e5d7edc15f40ea4a09b34812245853bc1273e99c00d1ad7c378a8a0f4b4`;
+- Cloud Run revision `efactura-api-d21-swagger-01`;
+- traffic promoted to 100% after canary validation;
+- public service URL `https://efactura-api-yblnutgx3q-ul.a.run.app`;
+- public Swagger `/swagger`: canonical HTTP 301 redirect followed to HTTP 200;
+- public OpenAPI JSON: HTTP 200;
+- protected parties endpoint: HTTP 401 without JWT, HTTP 200 with valid JWT against Neon;
+- prior known-good revision `efactura-api-00001-b8c` retained as rollback target.
+
+The next backend increment is D2.2 — Reproducible API deployment workflow.
 
 ### D2.2 — Reproducible API deployment workflow
 
