@@ -190,7 +190,7 @@ D2 target flow is:
 
 D2.1 intentionally performs a second controlled deployment before automation is introduced.
 
-D2.2 then codifies the repeatable API deployment path.
+D2.2 codifies the repeatable API deployment path through `.github/workflows/deploy-api-demo.yml`, using OIDC/WIF, immutable image digests, a zero-traffic tagged canary, automated smoke tests, promotion and rollback.
 
 The existing `.github/workflows/deploy-demo.yml` is a WebApp/FTP workflow and is not the API Cloud Run deployment pipeline.
 
@@ -232,13 +232,29 @@ Accepted outcome:
 
 ### D2.2 — Repeatable API deployment
 
-Objectives:
+Status: `IMPLEMENTATION READY / CI PENDING`.
 
-- remove unnecessary manual deployment steps;
-- preserve secret isolation;
-- deploy accepted `main` as a new revision of the existing service;
-- make post-deploy smoke tests part of the governed delivery evidence;
-- document rollback.
+D2.2 introduces `.github/workflows/deploy-api-demo.yml`, an API-only deployment workflow separate from the existing WebApp FTP workflow.
+
+Authentication uses GitHub OIDC + Google Workload Identity Federation rather than a long-lived Google service-account key.
+
+Current deployment identity:
+
+`efactura-deploy@efactura-demo-0916-9b93.iam.gserviceaccount.com`
+
+Current WIF provider:
+
+`projects/195831190862/locations/global/workloadIdentityPools/github-actions/providers/efactura-main`
+
+The provider trust is limited to this repository's immutable GitHub owner/repository ids and `refs/heads/main`.
+
+The automated delivery model is:
+
+`accepted main -> local Linux image build -> short-lived WIF auth -> Artifact Registry push -> immutable digest -> tagged zero-traffic Cloud Run canary -> Swagger/OpenAPI/401/JWT+Neon smoke -> promote 100% -> repeat public smoke -> rollback traffic on failed post-promotion acceptance`
+
+The workflow never receives the PostgreSQL connection string. It may read only the JWT signing secret required for the authenticated smoke test, masks that value immediately, and does not persist it.
+
+D2.2 remains open until the first merge-triggered run completes successfully and the resulting workflow run, image digest, revision and traffic evidence are reconciled.
 
 ### D2.3 — WebApp integration
 
