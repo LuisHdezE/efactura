@@ -1,6 +1,6 @@
 # UI-AUTH-001 — Acceso y sesión
 
-Status: `SPECIFIED / NOT_VISUALLY_APPROVED / REAL_INTEGRATION_PENDING`
+Status: `VISUAL_APPROVED / REAL_INTEGRATION_PENDING / BINARY_PRESERVATION_PENDING`
 
 Upstream interface scope ID: `WEB-001`
 
@@ -239,16 +239,21 @@ Puede existir una experiencia visual de entrada en modo mock con estas condicion
 
 | Versión | Artefacto | Estado | Evidencia |
 | --- | --- | --- | --- |
-| `v1-provider-neutral` | pendiente | `NOT_CREATED` | ninguna |
+| `v1-provider-neutral` | `../references/approved/UI-AUTH-001/v1-provider-neutral/` | `VISUAL_APPROVED` | Luis: `aprobado`, 2026-09-17 |
 
-La primera propuesta visual debe mantener el lenguaje light/dark ya aprobado para POS y Clientes, pero sin copiar una pantalla de credenciales que contradiga la separación IdP/API.
+La versión aprobada conserva el lenguaje light/dark de POS/Clientes y mantiene la separación IdP/API: no presenta campos locales de usuario/contraseña, recuperación de contraseña ni branding de un proveedor de identidad no seleccionado.
+
+El origen visual exacto está fijado por SHA-256 en el registro de autoridad. La inserción binaria byte-identical del PNG en Git queda pendiente por limitación del canal actual; no se autoriza regenerar o sustituir silenciosamente la imagen aprobada.
 
 ## 20. Registro de aprobación
 
-- Approved version: `NONE`
-- Approval date: `NONE`
-- Approval statement/reference: `NONE`
-- Approved artifact: `NONE`
+- Approved version: `UI-AUTH-001 v1-provider-neutral`
+- Approval date: `2026-09-17`
+- Approval statement/reference: `aprobado`
+- Approved authority record: `documentation/ui/references/approved/UI-AUTH-001/v1-provider-neutral/README.md`
+- Source manifest: `documentation/ui/references/approved/UI-AUTH-001/v1-provider-neutral/visual-source-manifest.json`
+- Source PNG SHA-256: `ed2a9039dd60c8eff2398197f48b6cc1d71d8c3457630fedb0998d2615584834`
+- Binary preservation: `PENDING_DIRECT_BINARY_TRANSFER`
 
 ## 21. Evidencia de implementación
 
@@ -261,3 +266,4 @@ La primera propuesta visual debe mantener el lenguaje light/dark ya aprobado par
 ## 22. Change history
 
 - `v0.1` — `WEB-001` reconciliado como `UI-AUTH-001`; se preserva la separación entre IdP/deployment y API de negocio, y se documentan los huecos de integración reales.
+- `v0.2` — Luis aprueba explícitamente `UI-AUTH-001 v1-provider-neutral`; se registra la autoridad visual light/dark, su fingerprint SHA-256 y se mantiene la integración real de identidad como pendiente.
