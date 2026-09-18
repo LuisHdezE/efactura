@@ -63,11 +63,15 @@ Cloud Run service:
 
 `efactura-api`
 
-Public base URL:
+Current public base URL:
 
-`https://efactura-api-195831190862.us-east5.run.app`
+`https://efactura-api-yblnutgx3q-ul.a.run.app`
 
-Accepted first deployed revision:
+Current accepted deployed revision:
+
+`efactura-api-d21-swagger-01`
+
+Prior known-good rollback revision:
 
 `efactura-api-00001-b8c`
 
@@ -141,25 +145,24 @@ Swagger/OpenAPI Bearer metadata is documentation/client tooling only. It does no
 
 ## 8. Swagger/OpenAPI
 
-At D2 opening, Swagger services and Bearer metadata already exist in `src/WebApi/Program.cs`, but Swagger middleware is enabled only when `app.Environment.IsDevelopment()`.
-
-Because Cloud Run runs with `ASPNETCORE_ENVIRONMENT=Production`, Swagger is not publicly available in the accepted first revision.
-
-D2 introduces the following intended configuration contract:
+D2.1 changed Swagger exposure to an explicit configuration contract:
 
 `Swagger:Enabled=false` by default.
 
-Development remains allowed to expose Swagger automatically. The demo Cloud Run environment will deliberately set:
+Development continues to expose Swagger automatically. The demo Cloud Run revision explicitly sets:
 
 `Swagger__Enabled=true`
 
-D2 cannot close until the deployed demo exposes and validates:
+The deployed demo has now validated:
 
-- `/swagger` (or canonical redirect);
-- `/swagger/v1/swagger.json`;
-- Bearer/JWT interaction without weakening protected endpoints.
+- `/swagger`: HTTP 301 canonical redirect followed to HTTP 200 at `/swagger/index.html`;
+- `/swagger/v1/swagger.json`: HTTP 200;
+- protected `GET /api/v1/parties`: HTTP 401 without JWT;
+- the same protected endpoint: HTTP 200 with a valid locally generated JWT against Neon.
 
-Swagger exposure is a demo/documentation capability and must not leak secrets or change endpoint authorization semantics.
+`UseDeveloperExceptionPage()` remains Development-only. Swagger exposure is therefore enabled for the demo without changing the Production environment semantics or weakening runtime authentication/authorization.
+
+Swagger exposure remains a demo/documentation capability and must not leak secrets or change endpoint authorization semantics.
 
 ## 9. Logging and observability
 
@@ -215,15 +218,17 @@ No backend increment may invent temporary UI screens, fake frontend contracts or
 
 ### D2.1 — Controlled second API revision + public Swagger
 
-Objectives:
+Status: `CLOSED / DEPLOYED / VERIFIED`.
 
-- make Swagger exposure explicitly configuration-driven;
-- keep it disabled by default outside Development;
-- deploy a second revision to the existing Cloud Run service;
-- reuse existing Artifact Registry, service account, secrets and Neon connection;
-- enable Swagger only in the demo runtime;
-- validate public Swagger JSON/UI plus JWT-protected API behavior;
-- record image and revision lineage.
+Accepted outcome:
+
+- Swagger exposure is explicitly configuration-driven and disabled by default outside Development;
+- the existing Cloud Run service and infrastructure were reused;
+- revision `efactura-api-d21-swagger-01` is deployed and receives 100% of service traffic;
+- Artifact Registry tag `d21-swagger` resolves to OCI index digest `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
+- Cloud Run resolves the `linux/amd64` application manifest `sha256:b45a2e5d7edc15f40ea4a09b34812245853bc1273e99c00d1ad7c378a8a0f4b4`;
+- public Swagger/OpenAPI and protected JWT + Neon behavior are verified;
+- `efactura-api-00001-b8c` remains available as the prior known-good rollback target.
 
 ### D2.2 — Repeatable API deployment
 
@@ -267,7 +272,22 @@ Accepted D1.2 / D2-opening evidence:
 - public authenticated `GET /api/v1/parties`: HTTP 200;
 - unauthenticated protected call: HTTP 401.
 
-New D2 evidence must be appended/reconciled as increments are completed.
+Accepted D2.1 evidence:
+
+- PR #133 merged from final head `724936e84d5dfc67afb929b1430d348e34583777`;
+- Clean Architecture Guard #534 / workflow run `35180211947`: SUCCESS;
+- merge commit: `8cbc896d5be7a8ff9d3ebaf0e84bd3ca56580360`;
+- Artifact Registry image tag: `us-east5-docker.pkg.dev/efactura-demo-0916-9b93/efactura/webapi:d21-swagger`;
+- immutable OCI index digest: `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
+- Cloud Run `linux/amd64` runtime manifest: `sha256:b45a2e5d7edc15f40ea4a09b34812245853bc1273e99c00d1ad7c378a8a0f4b4`;
+- accepted revision: `efactura-api-d21-swagger-01`;
+- service traffic: 100% to the accepted revision;
+- public Swagger: HTTP 301 -> HTTP 200;
+- public OpenAPI JSON: HTTP 200;
+- protected parties endpoint: HTTP 401 without JWT and HTTP 200 with valid JWT against Neon;
+- rollback target retained: `efactura-api-00001-b8c`.
+
+D2.2 is now the next backend increment.
 
 ## 15. Known non-blocking debt
 
