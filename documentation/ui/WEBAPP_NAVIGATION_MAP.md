@@ -18,7 +18,8 @@ Current runtime state:
 - `WEB-002 / UI-DASHBOARD-001` is active at `/dashboard`;
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
-- `WEB-005..WEB-019` remain planned shell candidates with no executable route yet;
+- `WEB-005 / UI-SUPPLIER-001` is reconciled and specification-ready for `/proveedores`, but remains planned/disabled until visual approval and implementation;
+- `WEB-006..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options are visible in the Sidebar information architecture;
 - only the 3 implemented entries are interactive links;
 - the 15 future entries are visible as disabled/non-clickable options, not fake routes.
@@ -82,7 +83,7 @@ Legend:
 | `WEB-002` | Operational Dashboard | Inicio | `UI-DASHBOARD-001` | `/dashboard` | `ACTIVE` |
 | `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` |
 | `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` |
-| `WEB-005` | Suppliers | Comercial | `UI ID pending` | `/proveedores` candidate | `PLANNED_DISABLED` |
+| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `PLANNED_DISABLED` |
 | `WEB-006` | Products and Services Catalog | Comercial | `UI ID pending` | `/catalogo` candidate | `PLANNED_DISABLED` |
 | `WEB-007` | Inventory and Movements | Inventario y Compras | `UI ID pending` | `/inventario` candidate | `PLANNED_DISABLED` |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI ID pending` | `/transferencias` candidate | `PLANNED_DISABLED` |
