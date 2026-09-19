@@ -7,6 +7,7 @@ import './visual-parity.css';
 import './navigation-compact.css';
 import './runtime-product-images';
 import './features/dashboard/dashboard-density.css';
+import './features/dashboard/dashboard-icons.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
