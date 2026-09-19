@@ -1,14 +1,14 @@
 # API Completion Master Matrix — Wave Count Ledger
 
-Status: `FULLY_RECONCILED / W1_1A_REFERENCE_DATA_FOUNDATION`
+Status: `FULLY_RECONCILED / W1_1B_COUNTRY_CURRENCY_CATALOGS`
 
 This companion ledger prevents the public-v1 denominator, implementation count and wave ownership from drifting while the completion program proceeds.
 
 Current public-v1 inventory denominator: **194 operation IDs**.
 
-Current implemented HTTP operations: **43**.
+Current implemented HTTP operations: **45**.
 
-Current non-implemented operation IDs: **151**.
+Current non-implemented operation IDs: **149**.
 
 Current distinct HTTP method/path signatures: **193** because one accepted-contract collision uses the same signature for two API IDs.
 
@@ -16,30 +16,30 @@ Current distinct HTTP method/path signatures: **193** because one accepted-contr
 
 | Wave | Scope | Contract operations | Implemented | Missing HTTP | Contract-collision IDs | Non-implemented | Raw operation coverage |
 |---:|---|---:|---:|---:|---:|---:|---:|
-| 1 | Identity + Organization + Reference Data | 30 | 9 | 21 | 0 | 21 | 30.00% |
+| 1 | Identity + Organization + Reference Data | 30 | 11 | 19 | 0 | 19 | 36.67% |
 | 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 | 84.62% |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 | 0.00% |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 | 17.39% |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 | 20.00% |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 | 0.00% |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 | 0.00% |
-| **Total** |  | **194** | **43** | **149** | **2** | **151** | **22.16%** |
+| **Total** |  | **194** | **45** | **147** | **2** | **149** | **23.20%** |
 
 The totals reconcile exactly:
 
 `30 + 26 + 24 + 23 + 40 + 21 + 30 = 194`
 
-`9 + 22 + 0 + 4 + 8 + 0 + 0 = 43`
+`11 + 22 + 0 + 4 + 8 + 0 + 0 = 45`
 
-`21 + 4 + 24 + 19 + 32 + 21 + 30 = 151`
+`19 + 4 + 24 + 19 + 32 + 21 + 30 = 149`
 
-`149 MISSING_HTTP + 2 CONTRACT_COLLISION = 151 non-implemented IDs`
+`147 MISSING_HTTP + 2 CONTRACT_COLLISION = 149 non-implemented IDs`
 
 ## Family-to-wave allocation
 
 | Wave | API families | Count | Current implemented families/operations |
 |---:|---|---:|---|
-| 1 | `IAM-001..011`, `ORG-001..010`, `REF-001..008`, `CAT-009` | 30 | `ORG-001..006`, `REF-002..003`, `CAT-009` |
+| 1 | `IAM-001..011`, `ORG-001..010`, `REF-001..008`, `CAT-009` | 30 | `ORG-001..006`, `REF-001..004`, `CAT-009` |
 | 2 | `PTY-001..008`, `CAT-001..008`, `POS-001`, `SAL-001..009` | 26 | `PTY-001..007`, `CAT-001..008`, `SAL-001..007` |
 | 3 | `PMT-001..003`, `AR-001..004`, `COL-001..003`, `AP-001..004`, `PAY-001..003`, `CSH-001..007` | 24 | none |
 | 4 | `INV-001..004`, `TRF-001..007`, `RPL-001..002`, `PRC-001..006`, `GRC-001..004` | 23 | `INV-001..004` |
@@ -75,4 +75,4 @@ Architecture tests require those seven shards to contain the exact 194 inventory
 
 ## Next implementation gate
 
-W1.1A implements exactly `API-REF-002` and `API-REF-003`. The remaining Reference Data operations retain their audited prerequisites. After W1.1A is merged and deployed, prerequisite closure proceeds for W1.1B/C/D before additional Reference Data routes are exposed.
+W1.1A implements `API-REF-002` and `API-REF-003`; W1.1B now implements `API-REF-001` and `API-REF-004` after closing their country/currency source prerequisites. `API-REF-005..008` retain their audited prerequisites and proceed through W1.1C/W1.1D before any additional Reference Data routes are exposed.
