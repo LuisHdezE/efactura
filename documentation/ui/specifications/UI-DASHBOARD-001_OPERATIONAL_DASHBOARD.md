@@ -1,6 +1,6 @@
 # UI-DASHBOARD-001 — Dashboard operativo
 
-Status: `SPECIFIED / VISUAL_BASELINE_PENDING / API_MOCK_DATA_ONLY`
+Status: `VISUAL_APPROVED / IMPLEMENTATION_PENDING / API_MOCK_DATA_ONLY / BINARY_PRESERVATION_PENDING`
 
 Upstream interface scope ID: `WEB-002`
 
@@ -251,19 +251,34 @@ La vista debe soportar los dos temas heredados del shell.
 
 El feature no implementa un segundo selector de tema ni redefine globalmente tokens de Sidebar/Topbar/BottomBar.
 
-La propuesta visual debe revisarse en pareja claro/oscuro antes de implementación.
+La propuesta visual se revisó y aprobó como pareja claro/oscuro antes de implementación.
 
-## 19. Referencias visuales existentes
+## 19. Referencia visual aprobada
 
-Auditoría realizada antes de autorizar un nuevo mock:
+La auditoría previa confirmó que no existía un Dashboard aprobado ni un draft histórico reutilizable. Se creó una nueva propuesta y Luis aprobó explícitamente `UI-DASHBOARD-001 v1-theme-pair` el 2026-09-19 con la declaración `aprobado`.
 
-- `documentation/ui/references/approved/`: sin Dashboard;
-- `documentation/ui/references/drafts/`: sin Dashboard;
-- historial de repositorio/PRs: sin baseline visual aprobado de Dashboard localizado.
+Registro gobernado:
 
-Por ello la siguiente etapa puede crear `UI-DASHBOARD-001 v1-theme-pair` como nuevo draft.
+```text
+documentation/ui/references/approved/UI-DASHBOARD-001/v1-theme-pair/README.md
+documentation/ui/references/approved/UI-DASHBOARD-001/v1-theme-pair/visual-source-manifest.json
+```
 
-El draft debe mantener el shell actual como marco visual, no rediseñarlo.
+Fuente aprobada:
+
+- filename: `a_clean_multi_panel_ui_mockup_collage_of_an_efactu.png`;
+- generation id: `b5781a68-6c5a-4ef1-b7a5-e8d100c45dfd`;
+- dimensions: `1536 x 1024`;
+- bytes: `1750916`;
+- SHA-256: `2b2c90f70a4e66055e7a7881af0932708e9288143cf7a34c6dc361cc06bd2a08`.
+
+La composición aprobada establece una experiencia Dashboard responsive en pareja claro/oscuro con KPIs, tendencia comercial, resumen fiscal/CAE, alertas, próximos eventos/obligaciones y resumen financiero, siempre dentro del shell reusable existente.
+
+El mock incluye entradas de navegación futuras y valores de ejemplo. Esas entradas son ilustrativas y no autorizan rutas inexistentes. La implementación debe mostrar como navegación activa únicamente las vistas presentes en `shellRoutes` y conservar el `Topbar`, `Sidebar`, `BottomBar` y `MobileNavigation` compartidos.
+
+Asimismo, cifras, fechas, alertas y estados de integración visibles en la referencia son fixtures visuales de demostración. No constituyen evidencia de datos live ni amplían el contrato backend.
+
+El PNG fuente exacto está fingerprinted pero todavía no puede preservarse byte-identical en Git mediante el canal actual. Por ello permanece `BINARY_PRESERVATION_PENDING`; queda prohibido resolver esa deuda mediante regeneración o sustitución silenciosa.
 
 ## 20. Definition of Done de implementación
 
@@ -280,14 +295,13 @@ El draft debe mantener el shell actual como marco visual, no rediseñarlo.
 9. Frontend Demo CI y gates del repositorio estén verdes;
 10. exista deploy y revisión runtime.
 
-Cambiar `defaultShellRoute` a `/dashboard` es una decisión posterior y explícita, no parte automática de este Definition of Done.
+El punto 1 ya está satisfecho por `UI-DASHBOARD-001 v1-theme-pair`. Cambiar `defaultShellRoute` a `/dashboard` es una decisión posterior y explícita, no parte automática de este Definition of Done.
 
 ## 21. Próxima etapa
 
-Crear y revisar el baseline visual `UI-DASHBOARD-001 v1-theme-pair` sobre esta especificación.
-
-No debe iniciarse la implementación React antes de aprobación visual explícita.
+Implementar `UI-DASHBOARD-001 v1-theme-pair` dentro del `AppShell` existente, registrar `/dashboard` en `shellRoutes`, mantener únicamente navegación ejecutable y usar fixtures demo explícitos hasta que el API autoritativo correspondiente exista.
 
 ## 22. Change history
 
 - `v0.1` — primera especificación gobernada de `UI-DASHBOARD-001`, reconciliada contra `main@bd51dd53c7d44644fd0e5bcdee4f8de7cb89eea4`; API específica del Dashboard clasificada como mock-only hasta implementación backend; shell reusable declarado obligatorio.
+- `v0.2` — Luis aprueba explícitamente `UI-DASHBOARD-001 v1-theme-pair`; se registra el fingerprint exacto de la fuente visual, se mantiene deuda de preservación binaria y se habilita la implementación React dentro del shell reusable.
