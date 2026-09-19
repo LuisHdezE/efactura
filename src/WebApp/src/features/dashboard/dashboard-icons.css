@@ -1,0 +1,29 @@
+.dashboard-stock-icon {
+  position: relative;
+  font-size: 0;
+}
+
+.dashboard-stock-icon::before,
+.dashboard-stock-icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.dashboard-stock-icon::before {
+  width: 14px;
+  height: 11px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -42%);
+}
+
+.dashboard-stock-icon::after {
+  width: 8px;
+  height: 6px;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translate(-50%, -72%) rotate(-45deg) skew(8deg, 8deg);
+  opacity: .85;
+}

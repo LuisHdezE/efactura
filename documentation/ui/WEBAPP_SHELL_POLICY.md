@@ -6,50 +6,32 @@ Status: `ACTIVE / GOVERNED`
 
 Define one reusable application shell for every governed WebApp view so global navigation and chrome are not repainted or reimplemented per feature.
 
-This policy applies to all shell-hosted WebApp views from `WEB-002` onward and retroactively governs existing shell views such as POS and Customers.
-
-The complete planned product-navigation structure is governed by:
-
-`documentation/ui/WEBAPP_NAVIGATION_MAP.md`
-
-The Navigation Map defines where current and future views belong. `shellRoutes` defines which of those views exist now.
+The complete planned product-navigation structure is governed by `documentation/ui/WEBAPP_NAVIGATION_MAP.md`.
 
 ## Canonical shell components
-
-The global WebApp chrome is owned by reusable layout components:
 
 - `src/WebApp/src/layout/Topbar.tsx`
 - `src/WebApp/src/layout/Sidebar.tsx`
 - `src/WebApp/src/layout/BottomBar.tsx`
 - `src/WebApp/src/layout/MobileNavigation.tsx`
-- `src/WebApp/src/layout/AppShell.tsx` as composition/orchestration only
+- `src/WebApp/src/layout/AppShell.tsx`
 
 Feature pages must not recreate their own global sidebar, topbar or bottom bar.
 
-## Single navigation policy
+## Unified navigation policy
 
-Executable shell navigation and route binding are centralized in:
+Product-navigation metadata and executable route binding are centralized in `src/WebApp/src/app/routes.tsx`.
 
-`src/WebApp/src/app/routes.tsx`
+The registry has two states:
 
-A shell-hosted feature is not considered implemented until it is registered there.
+- `active`: the feature exists and is executable;
+- `planned`: the product option belongs in the governed information architecture but has no executable route yet.
 
-The same `shellRoutes` registry drives:
+`Sidebar` and `MobileNavigation` consume the complete grouped registry. `shellRoutes` is derived only from `active` entries and drives React Router.
 
-1. React Router route creation;
-2. desktop Sidebar links;
-3. mobile navigation links;
-4. active-route highlighting;
-5. feature icon/label presentation;
-6. navigation-group placement once grouping metadata is activated.
-
-This prevents a route from being added to the application while being forgotten in the Sidebar.
-
-There must never be a second manually-maintained list of Sidebar links.
+There must never be a second manually-maintained Sidebar list.
 
 ## Product navigation groups
-
-The governed navigation map organizes shell-hosted views into these product groups:
 
 - `Inicio`;
 - `Comercial`;
@@ -59,108 +41,80 @@ The governed navigation map organizes shell-hosted views into these product grou
 - `Reportes`;
 - `Administración`.
 
-A future view may be planned in one of these groups while remaining hidden from runtime navigation.
-
-Before the third shell route is implemented, route metadata must support a navigation-group field consumed by both `Sidebar` and `MobileNavigation`.
-
-Feature pages must not decide their own Sidebar section.
+Every accepted shell-hosted `WEB-*` option is visible inside one of these groups from the beginning. Feature pages must not decide their own Sidebar section.
 
 ## Planned versus executable navigation
 
-`WEBAPP_NAVIGATION_MAP.md` may contain the complete future information architecture, including candidate routes that are not yet executable.
-
-Runtime navigation is stricter:
+Runtime rules:
 
 - no dead links;
-- no placeholder links merely to expose the roadmap;
-- no disabled future modules pretending to be implemented;
-- no route becomes visible until it is registered in `shellRoutes`.
+- no candidate route is exposed merely because it exists in planning;
+- planned modules are visible but disabled/non-clickable;
+- planned modules must not pretend to have an implemented page or backend capability;
+- only active entries receive a route target and active-link behavior;
+- only active entries are present in `shellRoutes`.
 
-The activation event for a shell-hosted view is its governed registration in `shellRoutes` after reconciliation, specification, visual approval when required, and React implementation.
+A disabled future module is a product-architecture cue, not a placeholder page.
 
 ## Capability binding
 
-Business/API capability metadata remains governed by:
+`src/WebApp/src/app/capabilities.ts` remains authoritative for implemented UI-to-API capability bindings.
 
-`src/WebApp/src/app/capabilities.ts`
-
-Every shell route must reference an existing governed `UiCapability` by `uiId`. `routes.tsx` fails fast when a requested capability registration is missing.
-
-The policy therefore separates responsibilities:
-
-- `WEBAPP_NAVIGATION_MAP.md`: complete product navigation roadmap and grouping;
-- `capabilities.ts`: UI-to-API capability contract and permissions;
-- `routes.tsx`: executable feature component binding and live shell navigation;
-- `AppShell.tsx`: layout composition;
-- feature pages: view-specific content only.
+Only implemented/active shell entries require a governed `UiCapability`. Planned navigation entries must not invent `UiCapability` identifiers, operations or backend contracts merely to appear in the Sidebar.
 
 ## New-view Definition of Done
 
-For every new governed WebApp view:
+For every planned WebApp view transitioning to active:
 
 1. Reconcile the upstream `WEB-*` candidate and assign a governed `UI-*` identifier.
-2. Confirm or revise its planned Navigation Map group and route.
-3. Add/update its `UiCapability` contract only from accepted repository evidence.
+2. Confirm its Navigation Map group and final route.
+3. Add/update its `UiCapability` only from accepted evidence.
 4. Implement the feature page without global shell duplication.
-5. Register the feature in `shellRoutes` with its component, icon and navigation group.
-6. Confirm desktop Sidebar and mobile navigation expose the same route under the same group.
+5. Convert the existing navigation entry from `planned` to `active`, binding its capability and component.
+6. Confirm it is derived into `shellRoutes`.
 7. Confirm direct URL navigation and active-link state.
-8. Preserve light/dark shell behavior.
-9. Run Frontend Demo CI and repository gates.
-10. Deploy and perform runtime visual review.
-11. Update Navigation Map progress accounting when the route becomes active.
-
-A feature that renders but is not reachable through governed shell navigation is incomplete.
+8. Confirm Sidebar and mobile navigation retain the same label/group.
+9. Preserve light/dark shell behavior.
+10. Run Frontend Demo CI and repository gates.
+11. Deploy and perform runtime visual review.
+12. Update Navigation Map progress accounting.
 
 ## Shell visual-change rule
 
-The shell is shared infrastructure. A feature PR must not casually repaint global navigation.
+The shell is shared infrastructure. Changes to Sidebar, Topbar, BottomBar, mobile navigation, shell width, global spacing, brand treatment or theme behavior are shell-wide changes and must be reviewed across all implemented views.
 
-Changes to Sidebar, Topbar, BottomBar, mobile navigation, global spacing, shell width, brand treatment or shell theme behavior must be treated as shell-wide changes and reviewed for impact across all implemented views.
+## Sidebar density rule
 
-Feature-specific visual work belongs inside the feature content area beneath `AppShell`.
+The desktop Sidebar represents business-application information architecture, not a tile launcher.
+
+Therefore:
+
+- entries use compact horizontal rows;
+- icons remain subordinate to labels and must not dominate row height;
+- group headings remain visible and stable;
+- planned entries use the same rhythm but reduced emphasis and no click behavior;
+- the Sidebar may scroll independently when viewport height cannot contain the full map;
+- planned modules must not inflate navigation into oversized cards.
 
 ## Standalone-route exception
-
-A route may live outside `AppShell` only when its product boundary requires a standalone experience.
 
 Current explicit exception:
 
 - `/acceso` (`UI-AUTH-001`) because it represents pre-session/session-entry presentation.
 
-Standalone routes must be deliberate and documented. They do not create an alternative application shell.
+Standalone routes must be deliberate and documented.
 
-## Dashboard progression
+## Current checkpoint
 
-`WEB-002 — Operational Dashboard` is the next governed shell feature.
+- total accepted Web interfaces: **19**;
+- implemented standalone views: **1**;
+- active shell routes: **3**;
+- planned disabled shell options: **15**.
 
-Once `UI-DASHBOARD-001` is reconciled, visually approved and implemented:
-
-- it must be registered in `shellRoutes`;
-- it must be classified in the `Inicio` navigation group;
-- it must appear in Sidebar and mobile navigation automatically from that registry;
-- after explicit product approval it may replace `/pos` as `defaultShellRoute`.
-
-The Dashboard implementation is also the point at which executable route metadata must gain group support, because it becomes the third live shell route.
-
-## Progress visibility rule
-
-UI progress reporting must remain tied to navigation reality.
-
-Every roadmap/checkpoint should report:
-
-- total accepted Web interfaces;
-- implemented standalone views;
-- active shell routes;
-- next shell route;
-- remaining shell candidates.
-
-The current authoritative counts and full matrix live in `WEBAPP_NAVIGATION_MAP.md`.
+`/pos` remains the default shell route until a separate explicit product decision changes it.
 
 ## Non-negotiable rule
 
 `Sidebar`, `Topbar` and `BottomBar` are reusable platform components, not per-screen artwork.
 
-Future views extend the shell. They do not repaint it.
-
-A future view may exist in the roadmap without appearing in the Sidebar. A live view may not exist in the shell without appearing in governed navigation.
+Future views extend the shell. Every accepted shell-hosted product option is visible in governed navigation, but only implemented options are interactive.
