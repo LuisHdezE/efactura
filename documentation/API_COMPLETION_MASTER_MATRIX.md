@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_1A_REFERENCE_DATA_FOUNDATION`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_1B_COUNTRY_CURRENCY_CATALOGS`
 
-Baseline source: W1.1A branch created from `main@bcefca379158d951e59ad6cf1ee69247d92df010`.
+Baseline source: W1.1B branch created from `main@8e11feaf5fe9d8284297325e1d5acc0db825bed0`.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
@@ -47,20 +47,20 @@ The legitimate later `+1` is:
 
 | Wave | Scope | Operation IDs | Implemented | Missing HTTP | Contract collision | Non-implemented |
 |---:|---|---:|---:|---:|---:|---:|
-| 1 | Identity + Organization + Reference Data | 30 | 9 | 21 | 0 | 21 |
+| 1 | Identity + Organization + Reference Data | 30 | 11 | 19 | 0 | 19 |
 | 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 |
-| **Total** |  | **194** | **43** | **149** | **2** | **151** |
+| **Total** |  | **194** | **45** | **147** | **2** | **149** |
 
-Raw operation-ID implementation coverage is `43 / 194 = 22.16%`.
+Raw operation-ID implementation coverage is `45 / 194 = 23.20%`.
 
 This is an operation-count measure only. It is not a product-readiness score and does not diminish deeper Domain/Application/fiscal capabilities that are not yet exposed through the governed public API.
 
-W1.1A contributes exactly two new public operations: `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. The other six Reference Data operations remain non-implemented until their audited prerequisites are closed.
+W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. The remaining four Reference Data operations, REF-005..008, stay non-implemented until W1.1C/W1.1D close their audited prerequisites.
 
 ## 4. Logical matrix shards
 
@@ -110,7 +110,7 @@ Both rows remain represented in Wave 7 and are marked `CONTRACT_COLLISION / BLOC
 
 1. `W1.1` Reference Data read-only foundation: `API-REF-001..008`.
    - `W1.1A`: implemented `API-REF-002` and `API-REF-003` from governed source-ready metadata.
-   - `W1.1B`: close country/currency source prerequisites for `API-REF-001` and `API-REF-004`.
+   - `W1.1B`: implemented `API-REF-001` and `API-REF-004` after closing country/currency source prerequisites.
    - `W1.1C`: close fiscal document/indicator scope for `API-REF-005` and `API-REF-006`.
    - `W1.1D`: close ContactType/UOM semantics for `API-REF-007` and `API-REF-008`.
 2. `W1.2` Current actor + permission catalog: `API-IAM-001`, `API-IAM-011`.
@@ -135,6 +135,6 @@ Every implementation increment must include, as applicable:
 
 ## 9. Next gate
 
-W1.1A is the first executable Reference Data slice. It introduces no persistence and no direct dependency on the legacy `ApplicationCore`/Npgsql/Dapper reference repositories. After its governed merge and demo deployment, the next Reference Data work is prerequisite closure for W1.1B/C/D before those six routes can move from `MISSING_HTTP`.
+W1.1A is deployed and runtime-accepted. W1.1B adds no persistence and keeps countries/currencies behind the provider-neutral Reference Data boundary. After exact-head CI, merge approval, deployment and runtime acceptance, Reference Data proceeds to W1.1C for REF-005/006; REF-007/008 remain for W1.1D.
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.

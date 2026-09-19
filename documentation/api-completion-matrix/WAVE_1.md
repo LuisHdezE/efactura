@@ -1,14 +1,14 @@
 # API Completion Master Matrix — Wave 1
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_1A_REFERENCE_DATA_FOUNDATION_IMPLEMENTED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_1B_COUNTRY_CURRENCY_IMPLEMENTED`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Identity + Organization + Reference Data**.
 
-Baseline: **30 operation IDs**, **9 implemented**, **21 non-implemented**.
+Baseline: **30 operation IDs**, **11 implemented**, **19 non-implemented**.
 
-`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A now implements only the two source-ready operations, while the other six remain prerequisite-blocked.
+`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003 and W1.1B closes the source prerequisites and implements REF-001/004. REF-005..008 remain prerequisite-blocked.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -33,10 +33,10 @@ Baseline: **30 operation IDs**, **9 implemented**, **21 non-implemented**.
 | `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal registration command required |
 | `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal detail read required |
 | `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal status/location update required |
-| `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Complete governed country catalog required; legacy seed has only six countries |
+| `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListCountries -> ListCountriesUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated provider-neutral 249-entry ISO 3166-1 alpha-2 snapshot |
 | `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListUruguayDepartments -> ListUruguayDepartmentsUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated-only, provider-neutral reference projection |
 | `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListFiscalIdentityTypes -> ListFiscalIdentityTypesUseCase` | EXISTING_PATH / regression | 1 | Preserve versioned DGI identity metadata projection |
-| `API-REF-004` | `listCurrencies` | GET `/api/v1/reference-data/currencies` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Supported-currency catalog/source must be governed before exposure |
+| `API-REF-004` | `listCurrencies` | GET `/api/v1/reference-data/currencies` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListCurrencies -> ListCurrenciesUseCase` | EXISTING_PATH / regression | 1 | Preserve fail-closed Release-1 supported subset `USD`, `UYI`, `UYU`; ISO recognition alone does not imply product support |
 | `API-REF-005` | `listFiscalDocumentTypes` | GET `/api/v1/reference-data/fiscal-document-types` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Versioned catalog exists but Release-1 enabled family policy remains open |
 | `API-REF-006` | `listInvoiceIndicators` | GET `/api/v1/reference-data/invoice-indicators` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Decide complete DGI metadata vs application-supported indicator subset |
 | `API-REF-007` | `listContactTypes` | GET `/api/v1/reference-data/contact-types` | `parties.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Previously deferred legacy ContactType semantic reconciliation required |

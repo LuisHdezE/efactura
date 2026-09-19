@@ -5,6 +5,10 @@ public sealed record ReferenceDataCollectionDto<T>(
     string SourceVersion,
     IReadOnlyList<T> Items);
 
+public sealed record CountryDto(
+    string Alpha2Code,
+    string Name);
+
 public sealed record UruguayDepartmentDto(string Name);
 
 public sealed record FiscalIdentityTypeDto(
@@ -14,3 +18,7 @@ public sealed record FiscalIdentityTypeDto(
     IReadOnlyList<string> AllowedIssuingCountryCodes,
     bool AllowsOtherIsoCountry,
     bool AllowsSpecialCountryFallback);
+
+public sealed record CurrencyDto(
+    string AlphabeticCode,
+    string Name);

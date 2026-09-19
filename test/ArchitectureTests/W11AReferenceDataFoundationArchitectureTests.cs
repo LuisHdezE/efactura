@@ -6,7 +6,7 @@ namespace ArchitectureTests;
 public sealed class W11AReferenceDataFoundationArchitectureTests
 {
     [Fact]
-    public void Reference_data_controller_exposes_only_the_two_W1_1A_authenticated_routes()
+    public void Reference_data_controller_preserves_the_two_W1_1A_authenticated_routes()
     {
         var controller = Read("src/WebApi/Controllers/V1/ReferenceDataController.cs");
 
