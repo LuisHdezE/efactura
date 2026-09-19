@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_1A_REFERENCE_DATA_FOUNDATION`
 
-Baseline commit: `main@6483c66e4c50486011a54babb3b7fcbfa7054e7a`.
+Baseline source: W1.1A branch created from `main@bcefca379158d951e59ad6cf1ee69247d92df010`.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
@@ -47,18 +47,20 @@ The legitimate later `+1` is:
 
 | Wave | Scope | Operation IDs | Implemented | Missing HTTP | Contract collision | Non-implemented |
 |---:|---|---:|---:|---:|---:|---:|
-| 1 | Identity + Organization + Reference Data | 30 | 7 | 23 | 0 | 23 |
+| 1 | Identity + Organization + Reference Data | 30 | 9 | 21 | 0 | 21 |
 | 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 |
-| **Total** |  | **194** | **41** | **151** | **2** | **153** |
+| **Total** |  | **194** | **43** | **149** | **2** | **151** |
 
-Raw operation-ID implementation coverage remains `41 / 194 = 21.13%`.
+Raw operation-ID implementation coverage is `43 / 194 = 22.16%`.
 
 This is an operation-count measure only. It is not a product-readiness score and does not diminish deeper Domain/Application/fiscal capabilities that are not yet exposed through the governed public API.
+
+W1.1A contributes exactly two new public operations: `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. The other six Reference Data operations remain non-implemented until their audited prerequisites are closed.
 
 ## 4. Logical matrix shards
 
@@ -88,6 +90,7 @@ Deep-readiness markers are deliberately separate from HTTP status:
 
 - `EXISTING_PATH / regression`: current public surface exists; preserve and regression-test it.
 - `NOT_YET_AUDITED`: do not assume Application, persistence or test readiness from the API contract alone.
+- `PREREQUISITE_REQUIRED`: bounded audit found a concrete prerequisite that must close before HTTP implementation.
 - `BLOCKED_BY_CONTRACT`: contract reconciliation must occur before implementation.
 
 ## 6. Contract collision audit
@@ -106,6 +109,10 @@ Both rows remain represented in Wave 7 and are marked `CONTRACT_COLLISION / BLOC
 ## 7. Wave 1 bounded implementation order
 
 1. `W1.1` Reference Data read-only foundation: `API-REF-001..008`.
+   - `W1.1A`: implemented `API-REF-002` and `API-REF-003` from governed source-ready metadata.
+   - `W1.1B`: close country/currency source prerequisites for `API-REF-001` and `API-REF-004`.
+   - `W1.1C`: close fiscal document/indicator scope for `API-REF-005` and `API-REF-006`.
+   - `W1.1D`: close ContactType/UOM semantics for `API-REF-007` and `API-REF-008`.
 2. `W1.2` Current actor + permission catalog: `API-IAM-001`, `API-IAM-011`.
 3. `W1.3` Roles read/write: `API-IAM-006..009`.
 4. `W1.4` Users + role assignment: `API-IAM-002..005`, `API-IAM-010`.
@@ -118,9 +125,9 @@ Before each bounded implementation increment, the affected rows receive a deeper
 
 Every implementation increment must include, as applicable:
 
-- Unit tests for new Application behavior;
+- tests for new Application behavior;
 - architecture tests protecting dependency direction and public-contract placement;
-- CrossCutting/API tests for route, permission, Problem Details and idempotency obligations;
+- CrossCutting/API tests for route, permission/authentication, Problem Details and idempotency obligations;
 - provider-real PostgreSQL/MySQL integration tests for persistence/concurrency behavior when persistence changes;
 - exact-head Clean Architecture Guard success before merge approval;
 - matrix row/status updates in the same governed increment;
@@ -128,6 +135,6 @@ Every implementation increment must include, as applicable:
 
 ## 9. Next gate
 
-All **194 operation IDs** now have row-level representation and a wave assignment. After this full-matrix increment is approved and merged, the next backend task is the **W1.1 Reference Data readiness audit**, followed by the first bounded implementation PR only after that audit proves the required layers and tests.
+W1.1A is the first executable Reference Data slice. It introduces no persistence and no direct dependency on the legacy `ApplicationCore`/Npgsql/Dapper reference repositories. After its governed merge and demo deployment, the next Reference Data work is prerequisite closure for W1.1B/C/D before those six routes can move from `MISSING_HTTP`.
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.
