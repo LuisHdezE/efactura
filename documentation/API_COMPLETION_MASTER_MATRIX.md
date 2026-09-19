@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_1C_FISCAL_REFERENCE_SCOPE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_1D_REFERENCE_DATA_COMPLETED`
 
-Baseline source: W1.1C branch created from `main@498469ce315ef77097bdada7db98383170164256`.
+Baseline source: W1.1D branch created from `main@950a2ec681458c00e3370fb8be2b7de2b5c8ecc2`.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
@@ -47,20 +47,20 @@ The legitimate later `+1` is:
 
 | Wave | Scope | Operation IDs | Implemented | Missing HTTP | Contract collision | Non-implemented |
 |---:|---|---:|---:|---:|---:|---:|
-| 1 | Identity + Organization + Reference Data | 30 | 13 | 17 | 0 | 17 |
+| 1 | Identity + Organization + Reference Data | 30 | 15 | 15 | 0 | 15 |
 | 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 |
-| **Total** |  | **194** | **47** | **145** | **2** | **147** |
+| **Total** |  | **194** | **49** | **143** | **2** | **145** |
 
-Raw operation-ID implementation coverage is `47 / 194 = 24.23%`.
+Raw operation-ID implementation coverage is `49 / 194 = 25.26%`.
 
 This is an operation-count measure only. It is not a product-readiness score and does not diminish deeper Domain/Application/fiscal capabilities that are not yet exposed through the governed public API.
 
-W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. Only REF-007/008 remain non-implemented within Reference Data and proceed through W1.1D.
+W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. W1.1D completes Reference Data with `API-REF-007 listContactTypes` and `API-REF-008 listUnitsOfMeasure`, preserving configurable party-contact semantics and projecting only active commercial units visible through the actor's company scopes.
 
 ## 4. Logical matrix shards
 
@@ -112,7 +112,7 @@ Both rows remain represented in Wave 7 and are marked `CONTRACT_COLLISION / BLOC
    - `W1.1A`: implemented `API-REF-002` and `API-REF-003` from governed source-ready metadata.
    - `W1.1B`: implemented `API-REF-001` and `API-REF-004` after closing country/currency source prerequisites.
    - `W1.1C`: implemented `API-REF-005` and `API-REF-006` with fail-closed fiscal document/indicator scope and exact `fiscal.read` authorization.
-   - `W1.1D`: close ContactType/UOM semantics for `API-REF-007` and `API-REF-008`.
+   - `W1.1D`: implemented `API-REF-007` and `API-REF-008` after closing ContactType compatibility and commercial-unit/DGI boundary semantics.
 2. `W1.2` Current actor + permission catalog: `API-IAM-001`, `API-IAM-011`.
 3. `W1.3` Roles read/write: `API-IAM-006..009`.
 4. `W1.4` Users + role assignment: `API-IAM-002..005`, `API-IAM-010`.
@@ -135,6 +135,8 @@ Every implementation increment must include, as applicable:
 
 ## 9. Next gate
 
-W1.1A and W1.1B are deployed and runtime-accepted. W1.1C introduces no persistence and keeps fiscal reference metadata behind the same provider-neutral Reference Data boundary. Its executable scope is deliberately narrower than the complete DGI catalogs: domestic document types `101/102/103/111/112/113` and builder-supported invoice indicators `1/2/3/10`. After exact-head CI, merge approval, deployment and runtime acceptance, Reference Data proceeds to W1.1D for REF-007/008.
+W1.1 Reference Data is now executable across all eight accepted operations. W1.1D deliberately keeps two different truths separate: contact types expose the Release-1 compatibility defaults without turning `PartyContact.TypeCode` into a closed enum, while units of measure come from active `CommercialItem.Unit` values within actor company scopes. DGI CFE 25.2 compatibility is reported from the accepted maximum-four-character constraint only; no DGI unit enumeration is invented and no `N/A` value is manufactured.
+
+After exact-head CI, merge approval, deployment and runtime acceptance for W1.1D, Wave 1 proceeds to **W1.2 Current actor + permission catalog** (`API-IAM-001`, `API-IAM-011`).
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.

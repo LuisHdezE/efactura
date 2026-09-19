@@ -39,6 +39,14 @@ public sealed record InvoiceIndicatorReference(
     string Name,
     string TaxTreatment);
 
+public sealed record ContactTypeReference(
+    string Code,
+    string Name);
+
+public sealed record UnitOfMeasureReference(
+    string Code,
+    bool DgiCfe25_2Compatible);
+
 public interface IReferenceDataCatalog
 {
     ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(
@@ -58,6 +66,16 @@ public interface IReferenceDataCatalog
 
     ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ListInvoiceIndicatorsAsync(
         CancellationToken cancellationToken = default);
+
+    ValueTask<ReferenceDataSet<ContactTypeReference>> ListContactTypesAsync(
+        CancellationToken cancellationToken = default);
+}
+
+public interface IUnitOfMeasureReferenceReader
+{
+    Task<IReadOnlyList<string>> ListActiveDistinctUnitsAsync(
+        IReadOnlyCollection<string> organizationIds,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class ListCountriesUseCase
@@ -65,31 +83,19 @@ public sealed class ListCountriesUseCase
     private readonly IReferenceDataCatalog _catalog;
     private readonly IActorContextAccessor _actorContextAccessor;
 
-    public ListCountriesUseCase(
-        IReferenceDataCatalog catalog,
-        IActorContextAccessor actorContextAccessor)
+    public ListCountriesUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
     {
         _catalog = catalog;
         _actorContextAccessor = actorContextAccessor;
     }
 
-    public ValueTask<ReferenceDataSet<CountryReference>> ExecuteAsync(
-        CancellationToken cancellationToken = default)
+    public ValueTask<ReferenceDataSet<CountryReference>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListCountriesAsync(cancellationToken);
     }
 
-    private static void EnsureAuthenticated(ActorContext actor)
-    {
-        if (!actor.IsAuthenticated)
-        {
-            throw new ApplicationProblemException(
-                ApplicationProblemKind.AuthenticationRequired,
-                "authentication_required",
-                "A valid bearer token is required for this operation.");
-        }
-    }
+    private static void EnsureAuthenticated(ActorContext actor) => ReferenceDataAuthorization.EnsureAuthenticated(actor);
 }
 
 public sealed class ListUruguayDepartmentsUseCase
@@ -97,30 +103,16 @@ public sealed class ListUruguayDepartmentsUseCase
     private readonly IReferenceDataCatalog _catalog;
     private readonly IActorContextAccessor _actorContextAccessor;
 
-    public ListUruguayDepartmentsUseCase(
-        IReferenceDataCatalog catalog,
-        IActorContextAccessor actorContextAccessor)
+    public ListUruguayDepartmentsUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
     {
         _catalog = catalog;
         _actorContextAccessor = actorContextAccessor;
     }
 
-    public ValueTask<ReferenceDataSet<UruguayDepartmentReference>> ExecuteAsync(
-        CancellationToken cancellationToken = default)
+    public ValueTask<ReferenceDataSet<UruguayDepartmentReference>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        EnsureAuthenticated(_actorContextAccessor.Current);
+        ReferenceDataAuthorization.EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListUruguayDepartmentsAsync(cancellationToken);
-    }
-
-    private static void EnsureAuthenticated(ActorContext actor)
-    {
-        if (!actor.IsAuthenticated)
-        {
-            throw new ApplicationProblemException(
-                ApplicationProblemKind.AuthenticationRequired,
-                "authentication_required",
-                "A valid bearer token is required for this operation.");
-        }
     }
 }
 
@@ -129,30 +121,16 @@ public sealed class ListFiscalIdentityTypesUseCase
     private readonly IReferenceDataCatalog _catalog;
     private readonly IActorContextAccessor _actorContextAccessor;
 
-    public ListFiscalIdentityTypesUseCase(
-        IReferenceDataCatalog catalog,
-        IActorContextAccessor actorContextAccessor)
+    public ListFiscalIdentityTypesUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
     {
         _catalog = catalog;
         _actorContextAccessor = actorContextAccessor;
     }
 
-    public ValueTask<ReferenceDataSet<FiscalIdentityTypeReference>> ExecuteAsync(
-        CancellationToken cancellationToken = default)
+    public ValueTask<ReferenceDataSet<FiscalIdentityTypeReference>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        EnsureAuthenticated(_actorContextAccessor.Current);
+        ReferenceDataAuthorization.EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListFiscalIdentityTypesAsync(cancellationToken);
-    }
-
-    private static void EnsureAuthenticated(ActorContext actor)
-    {
-        if (!actor.IsAuthenticated)
-        {
-            throw new ApplicationProblemException(
-                ApplicationProblemKind.AuthenticationRequired,
-                "authentication_required",
-                "A valid bearer token is required for this operation.");
-        }
     }
 }
 
@@ -161,30 +139,16 @@ public sealed class ListCurrenciesUseCase
     private readonly IReferenceDataCatalog _catalog;
     private readonly IActorContextAccessor _actorContextAccessor;
 
-    public ListCurrenciesUseCase(
-        IReferenceDataCatalog catalog,
-        IActorContextAccessor actorContextAccessor)
+    public ListCurrenciesUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
     {
         _catalog = catalog;
         _actorContextAccessor = actorContextAccessor;
     }
 
-    public ValueTask<ReferenceDataSet<CurrencyReference>> ExecuteAsync(
-        CancellationToken cancellationToken = default)
+    public ValueTask<ReferenceDataSet<CurrencyReference>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        EnsureAuthenticated(_actorContextAccessor.Current);
+        ReferenceDataAuthorization.EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListCurrenciesAsync(cancellationToken);
-    }
-
-    private static void EnsureAuthenticated(ActorContext actor)
-    {
-        if (!actor.IsAuthenticated)
-        {
-            throw new ApplicationProblemException(
-                ApplicationProblemKind.AuthenticationRequired,
-                "authentication_required",
-                "A valid bearer token is required for this operation.");
-        }
     }
 }
 
@@ -193,30 +157,16 @@ public sealed class ListFiscalDocumentTypesUseCase
     private readonly IReferenceDataCatalog _catalog;
     private readonly IActorContextAccessor _actorContextAccessor;
 
-    public ListFiscalDocumentTypesUseCase(
-        IReferenceDataCatalog catalog,
-        IActorContextAccessor actorContextAccessor)
+    public ListFiscalDocumentTypesUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
     {
         _catalog = catalog;
         _actorContextAccessor = actorContextAccessor;
     }
 
-    public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ExecuteAsync(
-        CancellationToken cancellationToken = default)
+    public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        EnsureAuthenticated(_actorContextAccessor.Current);
+        ReferenceDataAuthorization.EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListFiscalDocumentTypesAsync(cancellationToken);
-    }
-
-    private static void EnsureAuthenticated(ActorContext actor)
-    {
-        if (!actor.IsAuthenticated)
-        {
-            throw new ApplicationProblemException(
-                ApplicationProblemKind.AuthenticationRequired,
-                "authentication_required",
-                "A valid bearer token is required for this operation.");
-        }
     }
 }
 
@@ -225,22 +175,71 @@ public sealed class ListInvoiceIndicatorsUseCase
     private readonly IReferenceDataCatalog _catalog;
     private readonly IActorContextAccessor _actorContextAccessor;
 
-    public ListInvoiceIndicatorsUseCase(
-        IReferenceDataCatalog catalog,
-        IActorContextAccessor actorContextAccessor)
+    public ListInvoiceIndicatorsUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
     {
         _catalog = catalog;
         _actorContextAccessor = actorContextAccessor;
     }
 
-    public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ExecuteAsync(
-        CancellationToken cancellationToken = default)
+    public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        EnsureAuthenticated(_actorContextAccessor.Current);
+        ReferenceDataAuthorization.EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListInvoiceIndicatorsAsync(cancellationToken);
     }
+}
 
-    private static void EnsureAuthenticated(ActorContext actor)
+public sealed class ListContactTypesUseCase
+{
+    private readonly IReferenceDataCatalog _catalog;
+    private readonly IActorContextAccessor _actorContextAccessor;
+
+    public ListContactTypesUseCase(IReferenceDataCatalog catalog, IActorContextAccessor actorContextAccessor)
+    {
+        _catalog = catalog;
+        _actorContextAccessor = actorContextAccessor;
+    }
+
+    public ValueTask<ReferenceDataSet<ContactTypeReference>> ExecuteAsync(CancellationToken cancellationToken = default)
+    {
+        ReferenceDataAuthorization.EnsureAuthenticated(_actorContextAccessor.Current);
+        return _catalog.ListContactTypesAsync(cancellationToken);
+    }
+}
+
+public sealed class ListUnitsOfMeasureUseCase
+{
+    private readonly IUnitOfMeasureReferenceReader _reader;
+    private readonly IActorContextAccessor _actorContextAccessor;
+
+    public ListUnitsOfMeasureUseCase(
+        IUnitOfMeasureReferenceReader reader,
+        IActorContextAccessor actorContextAccessor)
+    {
+        _reader = reader;
+        _actorContextAccessor = actorContextAccessor;
+    }
+
+    public async Task<ReferenceDataSet<UnitOfMeasureReference>> ExecuteAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var actor = _actorContextAccessor.Current;
+        ReferenceDataAuthorization.EnsureAuthenticated(actor);
+
+        var units = await _reader.ListActiveDistinctUnitsAsync(actor.CompanyScopes, cancellationToken);
+        var items = units
+            .Select(unit => new UnitOfMeasureReference(unit, unit.Length <= 4))
+            .ToArray();
+
+        return new ReferenceDataSet<UnitOfMeasureReference>(
+            "Configured active commercial item units visible to current actor",
+            "release-1/runtime-projection",
+            items);
+    }
+}
+
+internal static class ReferenceDataAuthorization
+{
+    public static void EnsureAuthenticated(ActorContext actor)
     {
         if (!actor.IsAuthenticated)
         {
