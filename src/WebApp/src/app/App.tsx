@@ -1,8 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { AppShell } from '../layout/AppShell';
 import { AuthPage } from '../features/auth/AuthPage';
-import { PosPage } from '../features/pos/PosPage';
-import { CustomersPage } from '../features/customers/CustomersPage';
+import { AppShell } from '../layout/AppShell';
+import { defaultShellRoute, shellRoutes } from './routes';
 
 export function App() {
   return (
@@ -10,10 +9,11 @@ export function App() {
       <Route path="/acceso" element={<AuthPage />} />
 
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/pos" replace />} />
-        <Route path="/pos" element={<PosPage />} />
-        <Route path="/clientes" element={<CustomersPage />} />
-        <Route path="*" element={<Navigate to="/pos" replace />} />
+        <Route index element={<Navigate to={defaultShellRoute} replace />} />
+        {shellRoutes.map(({ capability, element }) => (
+          <Route key={capability.uiId} path={capability.route} element={element} />
+        ))}
+        <Route path="*" element={<Navigate to={defaultShellRoute} replace />} />
       </Route>
     </Routes>
   );
