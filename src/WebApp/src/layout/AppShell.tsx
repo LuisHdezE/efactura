@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useSearchParams } from 'react-router-dom';
-import { shellRoutes } from '../app/routes';
+import { shellNavigationItems } from '../app/routes';
 import { BottomBar } from './BottomBar';
 import { MobileNavigation } from './MobileNavigation';
 import { Sidebar } from './Sidebar';
@@ -48,11 +48,11 @@ export function AppShell() {
         } : undefined}
       />
 
-      <div className="ef-workspace lg:grid lg:grid-cols-[128px_minmax(0,1fr)]">
-        <Sidebar routes={shellRoutes} />
+      <div className="ef-workspace lg:grid lg:grid-cols-[208px_minmax(0,1fr)]">
+        <Sidebar items={shellNavigationItems} />
 
         <main className="min-w-0">
-          <MobileNavigation routes={shellRoutes} />
+          <MobileNavigation items={shellNavigationItems} />
           <Outlet />
           <BottomBar />
         </main>
