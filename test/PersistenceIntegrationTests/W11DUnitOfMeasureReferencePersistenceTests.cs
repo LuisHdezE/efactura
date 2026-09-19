@@ -1,6 +1,7 @@
 using System.Data.Common;
 using EFactura.Domain.Catalog;
 using Infrastructure.Persistence.V1;
+using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
