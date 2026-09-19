@@ -1,8 +1,21 @@
 import type { AppGateways } from '../contracts';
 import { mockItems, mockParties } from './data';
 import { mockSalesGateway } from './mockSales';
+import { mockSupplierParties } from './supplierData';
 
 const pause = <T,>(value: T) => new Promise<T>((resolve) => window.setTimeout(() => resolve(value), 120));
+
+function filterPartiesByRole(role: 'CUSTOMER' | 'SUPPLIER', search = '') {
+  const term = search.trim().toLowerCase();
+  const source = role === 'SUPPLIER' ? [...mockParties, ...mockSupplierParties] : mockParties;
+  return source.filter((party) =>
+    party.roles.includes(role) &&
+    (!term ||
+      party.name.toLowerCase().includes(term) ||
+      party.fiscalIdentities.some((identity) => identity.number.toLowerCase().includes(term)) ||
+      party.contacts.some((contact) => contact.value.toLowerCase().includes(term)))
+  );
+}
 
 export const mockGateways: AppGateways = {
   catalog: {
@@ -14,8 +27,11 @@ export const mockGateways: AppGateways = {
   },
   parties: {
     async listCustomers(search = '') {
-      const term = search.trim().toLowerCase();
-      const items = mockParties.filter((party) => party.roles.includes('CUSTOMER') && (!term || party.name.toLowerCase().includes(term) || party.fiscalIdentities.some((identity) => identity.number.toLowerCase().includes(term))));
+      const items = filterPartiesByRole('CUSTOMER', search);
+      return pause({ items, page: 1, pageSize: 50, total: items.length });
+    },
+    async listSuppliers(search = '') {
+      const items = filterPartiesByRole('SUPPLIER', search);
       return pause({ items, page: 1, pageSize: 50, total: items.length });
     }
   },

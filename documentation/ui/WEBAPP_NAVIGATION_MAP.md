@@ -12,24 +12,24 @@ Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx` an
 
 The accepted web scope contains `WEB-001..WEB-018` plus additive `WEB-019 Technical Operations Console`.
 
-Current runtime state:
+Current implementation-branch state:
 
 - `WEB-001 / UI-AUTH-001` is standalone at `/acceso`;
 - `WEB-002 / UI-DASHBOARD-001` is active at `/dashboard`;
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
-- `WEB-005 / UI-SUPPLIER-001` is reconciled, specification-ready and visual-approved for `/proveedores`, but remains planned/disabled until implementation;
+- `WEB-005 / UI-SUPPLIER-001` is implemented and active at `/proveedores`, pending CI, merge authorization, deployment and runtime visual review;
 - `WEB-006..WEB-019` remain planned shell candidates with no executable route yet;
-- all 18 shell-hosted product options are visible in the Sidebar information architecture;
-- only the 3 implemented entries are interactive links;
-- the 15 future entries are visible as disabled/non-clickable options, not fake routes.
+- all 18 shell-hosted product options remain visible in the Sidebar information architecture;
+- 4 entries are interactive in this implementation branch;
+- 14 future entries remain visible as disabled/non-clickable options, not fake routes.
 
-Current counts:
+Current implementation-branch counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
-- active shell routes: **3**;
-- planned disabled shell options: **15**.
+- active shell routes: **4**;
+- planned disabled shell options: **14**.
 
 ## 3. Sidebar information architecture
 
@@ -83,7 +83,7 @@ Legend:
 | `WEB-002` | Operational Dashboard | Inicio | `UI-DASHBOARD-001` | `/dashboard` | `ACTIVE` |
 | `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` |
 | `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` |
-| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `PLANNED_DISABLED` |
+| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` |
 | `WEB-006` | Products and Services Catalog | Comercial | `UI ID pending` | `/catalogo` candidate | `PLANNED_DISABLED` |
 | `WEB-007` | Inventory and Movements | Inventario y Compras | `UI ID pending` | `/inventario` candidate | `PLANNED_DISABLED` |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI ID pending` | `/transferencias` candidate | `PLANNED_DISABLED` |
