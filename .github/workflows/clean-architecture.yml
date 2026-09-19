@@ -16,6 +16,8 @@ on:
       - '.github/workflows/clean-architecture.yml'
       - '.github/workflows/deploy-api-demo.yml'
       - 'documentation/BLUEPRINT_CURRENT_STATE.md'
+      - 'documentation/API_COMPLETION_MASTER_MATRIX.md'
+      - 'documentation/API_COMPLETION_MASTER_MATRIX_WAVE_COUNTS.md'
   push:
     branches: [main]
     paths:
@@ -30,6 +32,8 @@ on:
       - '.github/workflows/clean-architecture.yml'
       - '.github/workflows/deploy-api-demo.yml'
       - 'documentation/BLUEPRINT_CURRENT_STATE.md'
+      - 'documentation/API_COMPLETION_MASTER_MATRIX.md'
+      - 'documentation/API_COMPLETION_MASTER_MATRIX_WAVE_COUNTS.md'
 
 permissions:
   contents: read
