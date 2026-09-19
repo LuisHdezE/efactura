@@ -11,7 +11,7 @@ function unavailableApiGateways(): AppGateways {
   };
   return {
     catalog: { listItems: notIntegrated },
-    parties: { listCustomers: notIntegrated },
+    parties: { listCustomers: notIntegrated, listSuppliers: notIntegrated },
     sales: {
       createSale: notIntegrated,
       updateSaleDraft: notIntegrated,
