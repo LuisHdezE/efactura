@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave 1
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_1_REFERENCE_DATA_AUDITED`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
@@ -8,7 +8,7 @@ Scope: **Identity + Organization + Reference Data**.
 
 Baseline: **30 operation IDs**, **7 implemented**, **23 non-implemented**.
 
-`Deep readiness` is intentionally conservative. Missing HTTP rows are `NOT_YET_AUDITED` until the bounded wave-readiness audit proves Application, persistence and test readiness.
+`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` have now completed that audit; their detailed evidence is governed in `documentation/api-completion-matrix/W1_1_REFERENCE_DATA_READINESS.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -33,12 +33,12 @@ Baseline: **30 operation IDs**, **7 implemented**, **23 non-implemented**.
 | `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal registration command required |
 | `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal detail read required |
 | `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal status/location update required |
-| `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Reference projection required |
-| `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Reference projection required |
-| `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Governed identity-type metadata projection required |
-| `API-REF-004` | `listCurrencies` | GET `/api/v1/reference-data/currencies` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Currency metadata projection required |
-| `API-REF-005` | `listFiscalDocumentTypes` | GET `/api/v1/reference-data/fiscal-document-types` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Read-only enabled/versioned fiscal metadata projection required |
-| `API-REF-006` | `listInvoiceIndicators` | GET `/api/v1/reference-data/invoice-indicators` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Fiscal indicator metadata projection required |
-| `API-REF-007` | `listContactTypes` | GET `/api/v1/reference-data/contact-types` | `parties.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Party contact metadata projection required |
-| `API-REF-008` | `listUnitsOfMeasure` | GET `/api/v1/reference-data/units-of-measure` | `catalog.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Commercial/fiscal UOM projection required |
+| `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Complete governed country catalog required; legacy seed has only six countries |
+| `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | READY_FOR_FOUNDATION | 1 | 19-department source evidenced; provider-neutral v1 projection required |
+| `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | READY_FOR_FOUNDATION | 1 | Versioned fiscal identity source evidenced; v1 projection required |
+| `API-REF-004` | `listCurrencies` | GET `/api/v1/reference-data/currencies` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Supported-currency catalog/source must be governed before exposure |
+| `API-REF-005` | `listFiscalDocumentTypes` | GET `/api/v1/reference-data/fiscal-document-types` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Versioned catalog exists but Release-1 enabled family policy remains open |
+| `API-REF-006` | `listInvoiceIndicators` | GET `/api/v1/reference-data/invoice-indicators` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Decide complete DGI metadata vs application-supported indicator subset |
+| `API-REF-007` | `listContactTypes` | GET `/api/v1/reference-data/contact-types` | `parties.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Previously deferred legacy ContactType semantic reconciliation required |
+| `API-REF-008` | `listUnitsOfMeasure` | GET `/api/v1/reference-data/units-of-measure` | `catalog.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Canonical commercial/fiscal UOM catalog semantics must be approved |
 | `API-CAT-009` | `listTaxProfiles` | GET `/api/v1/tax-profiles` | `catalog.read` | ACCEPTED | IMPLEMENTED | `TaxProfilesController.List -> ListTaxProfilesUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
