@@ -46,11 +46,11 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | Upstream ID | Candidate | Governed UI ID | Current UI status | Evidence |
 | --- | --- | --- | --- | --- |
 | `WEB-001` | Login and Session Entry | `UI-AUTH-001` | `IMPLEMENTED / VISUAL_DEBT_DEFERRED` | `UI-AUTH-001_RECONCILIATION.md`, `../specifications/UI-AUTH-001_LOGIN_SESSION.md`, `../references/approved/UI-AUTH-001/v1-provider-neutral/README.md`, `../reviews/UI-AUTH-001/TECHNICAL_DEBT_DEFERRED_2026-09-19.md`, issue `#154` |
-| `WEB-002` | Operational Dashboard | `UI-DASHBOARD-001` | `SPECIFIED` | `UI-DASHBOARD-001_RECONCILIATION.md`, `../specifications/UI-DASHBOARD-001_OPERATIONAL_DASHBOARD.md` |
+| `WEB-002` | Operational Dashboard | `UI-DASHBOARD-001` | `VISUAL_APPROVED / BINARY_PRESERVATION_PENDING` | `UI-DASHBOARD-001_RECONCILIATION.md`, `../specifications/UI-DASHBOARD-001_OPERATIONAL_DASHBOARD.md`, `../references/approved/UI-DASHBOARD-001/v1-theme-pair/README.md` |
 | `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 
-## UI-DASHBOARD-001 reconciliation note
+## UI-DASHBOARD-001 reconciliation and visual note
 
 `WEB-002` is reconciled as `UI-DASHBOARD-001` and reserved for `/dashboard` inside the governed reusable WebApp shell.
 
@@ -60,7 +60,11 @@ Therefore the first Dashboard implementation may use explicit demo/mock fixtures
 
 The reusable-shell policy is mandatory: `UI-DASHBOARD-001` may own feature content only. Once implemented it must be registered in `shellRoutes`, which provides React Router, Sidebar and mobile navigation from the same registry. `/pos` remains the default shell route until a separate explicit product decision after Dashboard runtime review.
 
-No approved or draft Dashboard reference existed in the governed reference folders, and no historical approved Operational Dashboard mock was located during reconciliation. A new visual theme-pair draft is therefore the next governed step.
+The required pre-mock audit found no approved/draft/historical Dashboard baseline. A new `UI-DASHBOARD-001 v1-theme-pair` was therefore produced and Luis explicitly approved it on 2026-09-19 with the statement `aprobado`.
+
+The visual authority is registered under `../references/approved/UI-DASHBOARD-001/v1-theme-pair/` with source fingerprint SHA-256 `2b2c90f70a4e66055e7a7881af0932708e9288143cf7a34c6dc361cc06bd2a08`. The exact PNG binary is not yet physically preserved in Git through the current repository channel, so `BINARY_PRESERVATION_PENDING` remains explicit and regeneration/substitution is forbidden.
+
+The approved composition includes future navigation entries and sample KPI/alert/integration values for visual context. Those elements do not authorize executable routes or live API claims. Implementation must expose only routes actually present in `shellRoutes`, reuse the existing shared shell components and keep Dashboard-specific data explicitly demo/mock until backend authority exists.
 
 ## UI-AUTH-001 reconciliation note
 
