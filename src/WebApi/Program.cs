@@ -78,6 +78,7 @@ using EFactura.Application.Common.Context;
 using EFactura.Application.Fiscal;
 using EFactura.Application.Parties;
 using Infrastructure.Persistence.V1;
+using Infrastructure.ReferenceData;
 using WebApi.CrossCutting.Authorization;
 using WebApi.CrossCutting.Context;
 using WebApi.CrossCutting.Correlation;
@@ -237,6 +238,7 @@ var v1ConnectionString = builder.Configuration.GetConnectionString(v1ConnectionS
         "Configure V1Persistence:ConnectionStringName and the corresponding ConnectionStrings entry outside source control.");
 
 builder.Services.AddV1Persistence(v1DatabaseProvider, v1ConnectionString);
+builder.Services.AddReferenceDataFoundation();
 builder.Services.AddScoped<V1OrganizationContextResolver>();
 builder.Services.AddScoped<CollectFiscalCfeEnvelopeDocumentResponseEvidenceByEnvelopeIdUseCase>();
 

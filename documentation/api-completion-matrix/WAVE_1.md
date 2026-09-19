@@ -1,14 +1,14 @@
 # API Completion Master Matrix — Wave 1
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_1_REFERENCE_DATA_AUDITED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_1A_REFERENCE_DATA_FOUNDATION_IMPLEMENTED`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Identity + Organization + Reference Data**.
 
-Baseline: **30 operation IDs**, **7 implemented**, **23 non-implemented**.
+Baseline: **30 operation IDs**, **9 implemented**, **21 non-implemented**.
 
-`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` have now completed that audit; their detailed evidence is governed in `documentation/api-completion-matrix/W1_1_REFERENCE_DATA_READINESS.md`.
+`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A now implements only the two source-ready operations, while the other six remain prerequisite-blocked.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -34,8 +34,8 @@ Baseline: **30 operation IDs**, **7 implemented**, **23 non-implemented**.
 | `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal detail read required |
 | `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal status/location update required |
 | `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Complete governed country catalog required; legacy seed has only six countries |
-| `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | READY_FOR_FOUNDATION | 1 | 19-department source evidenced; provider-neutral v1 projection required |
-| `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | READY_FOR_FOUNDATION | 1 | Versioned fiscal identity source evidenced; v1 projection required |
+| `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListUruguayDepartments -> ListUruguayDepartmentsUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated-only, provider-neutral reference projection |
+| `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListFiscalIdentityTypes -> ListFiscalIdentityTypesUseCase` | EXISTING_PATH / regression | 1 | Preserve versioned DGI identity metadata projection |
 | `API-REF-004` | `listCurrencies` | GET `/api/v1/reference-data/currencies` | `AUTHENTICATED` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Supported-currency catalog/source must be governed before exposure |
 | `API-REF-005` | `listFiscalDocumentTypes` | GET `/api/v1/reference-data/fiscal-document-types` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Versioned catalog exists but Release-1 enabled family policy remains open |
 | `API-REF-006` | `listInvoiceIndicators` | GET `/api/v1/reference-data/invoice-indicators` | `fiscal.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Decide complete DGI metadata vs application-supported indicator subset |

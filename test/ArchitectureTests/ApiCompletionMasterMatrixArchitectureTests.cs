@@ -7,10 +7,10 @@ namespace ArchitectureTests;
 public sealed class ApiCompletionMasterMatrixArchitectureTests
 {
     private const int CurrentInventoryCount = 194;
-    private const int CurrentImplementedCount = 41;
-    private const int CurrentMissingHttpCount = 151;
+    private const int CurrentImplementedCount = 43;
+    private const int CurrentMissingHttpCount = 149;
     private const int CurrentContractCollisionCount = 2;
-    private const int CurrentNonImplementedCount = 153;
+    private const int CurrentNonImplementedCount = 151;
     private const int CurrentDistinctRouteSignatureCount = 193;
 
     private static readonly string[] MatrixShardPaths =
@@ -85,7 +85,7 @@ public sealed class ApiCompletionMasterMatrixArchitectureTests
     }
 
     [Fact]
-    public void Wave_ledger_arithmetic_reconciles_194_41_151_2_153()
+    public void Wave_ledger_arithmetic_reconciles_194_43_149_2_151()
     {
         var ledger = Read("documentation/API_COMPLETION_MASTER_MATRIX_WAVE_COUNTS.md");
         var rows = Regex.Matches(
