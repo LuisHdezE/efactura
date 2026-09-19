@@ -1,12 +1,18 @@
 # D2 — Repeatable Deployment & Demo Integration
 
-Status: ACTIVE
+Status: ACTIVE / BACKEND D2.4 CLOSURE CANDIDATE
 
-Opened from accepted baseline: `main@1bf26f57bc94fc57b5ef3f34815cd4781e832b87`
+Opened from accepted baseline:
 
-Current backend checkpoint after D2.2:
+`main@1bf26f57bc94fc57b5ef3f34815cd4781e832b87`
 
-`main@7eed21f969486bd689b5abf2e9c37ba2462b00bd`
+Current governed repository checkpoint entering D2.4:
+
+`main@9e1b9b6758215aa875e32d5792f85e6655dd7e07`
+
+Current accepted deployed backend source:
+
+`7eed21f969486bd689b5abf2e9c37ba2462b00bd`
 
 ## D1.2 closure checkpoint
 
@@ -14,85 +20,87 @@ D1.2 — Secrets & Configuration Hardening is CLOSED.
 
 Accepted merge: PR #129, merge commit `1bf26f57bc94fc57b5ef3f34815cd4781e832b87`.
 
-Validated outcomes:
+Accepted D1.2 outcomes include:
 
-- sensitive JWT/PostgreSQL/BlobStorage values are not populated in version-controlled WebApi configuration;
-- local sensitive values are supplied through .NET User Secrets;
-- Cloud Run sensitive values are supplied through Google Secret Manager bindings;
-- JWT signing material exposed historically was rotated before the public deployment;
-- Release build and the governed test suites passed;
-- Clean Architecture Guard #525 completed successfully on the exact PR head before merge;
-- the WebApi container runs on Linux/.NET 10 and listens on port 8080;
-- the public Cloud Run service `efactura-api` is deployed in `us-east5`;
-- the deployed API reaches Neon PostgreSQL successfully;
-- authenticated `GET /api/v1/parties` returned HTTP 200 from the public Cloud Run URL;
-- no Redis deployment was required for that accepted public runtime path.
+- version-controlled WebApi configuration does not contain populated JWT/PostgreSQL/BlobStorage secrets;
+- local sensitive values use .NET User Secrets;
+- Cloud Run sensitive values use Google Secret Manager bindings;
+- the historically exposed JWT signing material was rotated before public deployment;
+- Linux/.NET 10 container startup on port `8080` was proven;
+- the public Cloud Run service `efactura-api` was created in `us-east5`;
+- Cloud Run -> Neon PostgreSQL connectivity was proven;
+- protected API behavior was proven with HTTP `401` unauthenticated and HTTP `200` authenticated;
+- Redis was not required for the accepted demo path.
 
-D1.2 infrastructure remains an accepted baseline. D2 does not recreate Cloud Run, Artifact Registry, Secret Manager, the Cloud Run service account, or the Neon database unless a demonstrated requirement makes a change necessary.
+D1.2 infrastructure remains an accepted platform baseline. D2 does not recreate working Cloud Run, Artifact Registry, Secret Manager, service-account or Neon resources without a demonstrated requirement.
 
 ## Documentation-as-you-build rule
 
-D2 uses continuous technical documentation as part of the implementation itself.
+D2 treats technical documentation as part of implementation acceptance.
 
-A material backend/runtime/deployment change is not considered fully recorded until repository documentation captures, as applicable:
+Material runtime/deployment work must record, as applicable:
 
-- why the change was needed;
-- the accepted design decision and alternatives rejected when relevant;
-- affected source/configuration/workflow files;
-- public/runtime behavior before and after the change;
-- security implications and secret-handling boundaries;
+- reason and design decision;
+- affected code/configuration/workflow;
+- public/runtime behavior;
+- security and secret-handling boundaries;
 - build/test/CI evidence;
-- Cloud Run revision and image lineage when deployed;
-- smoke-test evidence and rollback implications;
-- known limitations, debt and deferred work;
-- dependencies on parallel project lanes.
+- Cloud Run revision and image lineage;
+- smoke-test evidence;
+- rollback implications;
+- known limitations and debt;
+- parallel-lane dependencies.
 
 The living integral technical reference is:
 
 `documentation/TECHNICAL_SOLUTION_CURRENT.md`
 
-Historical implementation/evidence documents remain historical records and must not be silently rewritten to make old observations appear current.
+Detailed D2 operational records are:
+
+- `documentation/deployment/D2_2_REPRODUCIBLE_API_DEPLOYMENT.md`;
+- `documentation/deployment/D2_4_BACKEND_OPERATIONAL_CLOSURE.md`.
+
+Historical implementation/evidence documents remain historical and are not rewritten to make past observations look current.
 
 ## D2 objective
 
-Turn the successful one-time deployment into a repeatable, governed demo-delivery path in which accepted API increments can be built, deployed as new Cloud Run revisions, verified from the public Internet, and progressively consumed by the deployed WebApp when the parallel governed UI lane is ready.
+Turn the successful one-time deployment into a repeatable, governed demo-delivery path in which accepted API increments can be built, deployed as Cloud Run revisions, verified from the public Internet and progressively consumed by the separately governed WebApp.
 
-The API must no longer be treated as a capability that is only practically inspectable from a developer workstation.
+The backend must be independently demonstrable through the public API and Swagger/OpenAPI without requiring a developer workstation.
 
-## Mandatory D2 exit condition — public Swagger/OpenAPI
+## Mandatory D2 backend exit condition — public Swagger/OpenAPI
 
-D2 SHALL NOT be considered complete unless Swagger/OpenAPI is functional in the deployed demo environment.
+Backend D2 readiness requires:
 
-At D2 closure all of the following must be true:
-
-1. `GET /swagger` or its canonical redirected UI path is reachable on the public Cloud Run service.
-2. `GET /swagger/v1/swagger.json` returns a valid OpenAPI document from the deployed revision.
-3. Swagger is not enabled in Production accidentally or only because the whole application is running with `Development` environment semantics.
-4. Demo Swagger exposure is controlled explicitly by configuration so another Production deployment can keep it disabled without recompilation.
-5. The OpenAPI UI preserves Bearer/JWT authorization support.
-6. Protected endpoints remain protected by application authorization policy.
-7. No secret value, connection string or signing material is exposed through Swagger, configuration endpoints, logs or generated OpenAPI content.
-8. The deployed Swagger contract is smoke-tested after deployment and is part of D2 acceptance evidence.
+1. public `/swagger` or canonical redirected UI path;
+2. public `/swagger/v1/swagger.json` returning valid OpenAPI;
+3. explicit configuration-driven demo exposure rather than Development-mode leakage;
+4. Bearer/JWT documentation support;
+5. application authorization remaining enforced independently of Swagger metadata;
+6. no secret/signing material exposed through generated OpenAPI;
+7. deployment smoke coverage for Swagger/OpenAPI and protected endpoint behavior.
 
 Configuration contract:
 
-`Swagger:Enabled=false` by default, with the demo Cloud Run revision explicitly setting `Swagger__Enabled=true`.
+`Swagger:Enabled=false` by default.
 
-Development may continue to expose Swagger without requiring that demo flag.
+Demo Cloud Run explicitly sets:
 
-D2.1 and D2.2 have both validated the public Swagger/OpenAPI requirement against accepted Cloud Run revisions.
+`Swagger__Enabled=true`
+
+D2.1 and D2.2 both validated this requirement against accepted Cloud Run revisions.
 
 ## Parallel-lane dependency rule
 
 This workstream is the backend/API/deployment lane.
 
-D2.3 belongs to the separate governed UI/POS lane. Therefore:
+D2.3 belongs to the separate governed WebApp/UI lane. Therefore:
 
-- D2.3 SHALL NOT be implemented in the backend lane;
-- backend work SHALL NOT invent or prematurely reshape UI behavior to unblock D2.3;
-- the backend lane may reach `READY_FOR_DEMO_INTEGRATION` while D2.3 remains owned by the parallel UI lane;
-- Swagger/OpenAPI and the deployed API contract are the handoff surface between lanes;
-- D2.3 begins only when the parallel UI lane is sufficiently mature and explicitly ready for real-API integration.
+- D2.3 is not implemented in the backend lane;
+- backend work does not invent or reshape UI behavior merely to unblock integration;
+- Swagger/OpenAPI plus the stable public API URL are the lane handoff surface;
+- the WebApp may integrate approved slices progressively when their authoritative API operations exist;
+- backend operational readiness does not imply that all future API-completion waves are already implemented.
 
 ## D2 delivery sequence
 
@@ -100,113 +108,73 @@ D2.3 belongs to the separate governed UI/POS lane. Therefore:
 
 Status: `CLOSED / DEPLOYED / VERIFIED`.
 
-Purpose: prove that the existing infrastructure can receive a new application revision without recreating the platform.
-
 Accepted evidence:
 
 - PR #133 final head `724936e84d5dfc67afb929b1430d348e34583777`;
-- Clean Architecture Guard #534 / workflow run `35180211947`: SUCCESS;
+- Clean Architecture Guard #534 / run `35180211947`: SUCCESS;
 - merge commit `8cbc896d5be7a8ff9d3ebaf0e84bd3ca56580360`;
 - Artifact Registry tag `d21-swagger`;
-- immutable OCI index digest `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
+- OCI index digest `sha256:3113a175da3929a8ca3c0e3fcc18447ac9e6ef62a5bccdb08d6b491feec5234d`;
 - resolved Cloud Run `linux/amd64` manifest `sha256:b45a2e5d7edc15f40ea4a09b34812245853bc1273e99c00d1ad7c378a8a0f4b4`;
 - Cloud Run revision `efactura-api-d21-swagger-01`;
 - traffic promoted to 100% after canary validation;
-- public service URL `https://efactura-api-yblnutgx3q-ul.a.run.app`;
-- public Swagger `/swagger`: canonical redirect followed to HTTP 200;
-- public OpenAPI JSON: HTTP 200;
-- protected parties endpoint: HTTP 401 without JWT, HTTP 200 with valid JWT against Neon;
-- prior known-good revision `efactura-api-00001-b8c` retained as rollback target at D2.1 closure.
+- stable public URL `https://efactura-api-yblnutgx3q-ul.a.run.app`;
+- Swagger/OpenAPI HTTP `200`;
+- parties endpoint HTTP `401` without JWT and HTTP `200` with valid JWT + Neon.
 
-D2.1 intentionally proved the rollout manually before deployment automation was introduced.
+D2.1 intentionally proved the rollout manually before automation.
 
 ### D2.2 — Reproducible API deployment workflow
 
 Status: `CLOSED / AUTOMATED / VERIFIED`.
 
-D2.2 introduced the API-specific GitHub Actions workflow:
+Workflow:
 
 `.github/workflows/deploy-api-demo.yml`
 
-It is independent from the WebApp FTP deployment.
-
 Accepted delivery flow:
 
-`feature/deployment branch -> PR -> Clean Architecture Guard -> explicit merge approval -> main -> local container build -> OIDC/WIF authentication -> Artifact Registry push -> immutable digest -> zero-traffic tagged Cloud Run canary -> canary smoke -> 100% promotion -> public smoke -> automatic traffic rollback path on failed post-promotion acceptance`
+`accepted main -> linux/amd64 build -> OIDC/WIF -> Artifact Registry -> immutable digest -> zero-traffic tagged canary -> canary smoke -> 100% promotion -> public smoke -> rollback branch on failed post-promotion acceptance`
 
 Security properties:
 
-- no Google service-account JSON key;
-- no JWT key or database connection string stored in GitHub;
-- WIF trust restricted to this repository and `refs/heads/main`;
-- deployment service account separated from the Cloud Run runtime service account;
-- immutable image digest used for Cloud Run deployment;
-- temporary Google credential files excluded from Git and Docker build context and removed after the job.
+- no permanent Google service-account JSON key;
+- no database connection string stored in GitHub;
+- WIF trust restricted to repository identity and `refs/heads/main`;
+- deployment/runtime identities are separate;
+- Cloud Run deploys by immutable digest;
+- smoke JWT material is read only through the bounded secret-safe workflow path.
 
-#### D2.2 implementation and hotfix lineage
+Implementation/hotfix lineage:
 
 - implementation PR #139 merged as `f0540d915499ce8a62ed464e36375993819cb52b`;
-- the first automated run after #139 failed before creating jobs because two Python JWT heredocs were outside the YAML `run: |` indentation;
-- failed workflow run #15 / run id `35298178478` therefore performed no cloud mutation;
-- corrective PR #142 changed only `.github/workflows/deploy-api-demo.yml` heredoc indentation;
-- approved hotfix head: `ebdb495a69ca2ea83494c0ecf37852fcc98ebaa6`;
-- Clean Architecture Guard #551 / run `35403102577`: SUCCESS on that exact head;
-- PR #142 merge/source commit: `7eed21f969486bd689b5abf2e9c37ba2462b00bd`.
+- initial automated run #15 / `35298178478` failed before creating jobs because JWT heredocs were outside the YAML `run: |` indentation;
+- no cloud mutation occurred in that failed run;
+- PR #142 corrected only the workflow heredoc indentation;
+- approved hotfix head `ebdb495a69ca2ea83494c0ecf37852fcc98ebaa6`;
+- Clean Architecture Guard #551 / `35403102577`: SUCCESS;
+- PR #142 merge/source commit `7eed21f969486bd689b5abf2e9c37ba2462b00bd`.
 
-#### First accepted automated deployment
+First accepted automated deployment:
 
-Workflow:
+- workflow `Deploy eFactura API Demo`;
+- run #46 / id `35406809175`;
+- conclusion `SUCCESS`;
+- image tag `us-east5-docker.pkg.dev/efactura-demo-0916-9b93/efactura/webapi:sha-7eed21f969486bd689b5abf2e9c37ba2462b00bd`;
+- immutable registry digest `sha256:0fec87aa1700f24c3f54682f2ab5940af0782fcdf1ebae9629ba05b8fb3c77ac`;
+- accepted revision `efactura-api-d22-7eed21f-46-1`;
+- captured rollback revision `efactura-api-d21-swagger-01`;
+- zero-traffic canary smoke `PASS` with `200 / 200 / 401 / 200`;
+- 100% promotion to the accepted revision;
+- public post-promotion smoke `PASS` with `200 / 200 / 401 / 200`.
 
-`Deploy eFactura API Demo`
+Rollback steps were correctly skipped because the public post-promotion smoke passed.
 
-Accepted run:
+PR #148 then reconciled D2.2 documentation only. Its merge commit is:
 
-- run number: `46`;
-- run id: `35406809175`;
-- source SHA: `7eed21f969486bd689b5abf2e9c37ba2462b00bd`;
-- conclusion: `SUCCESS`.
+`9e1b9b6758215aa875e32d5792f85e6655dd7e07`
 
-Image tag:
-
-`us-east5-docker.pkg.dev/efactura-demo-0916-9b93/efactura/webapi:sha-7eed21f969486bd689b5abf2e9c37ba2462b00bd`
-
-Immutable Artifact Registry digest:
-
-`sha256:0fec87aa1700f24c3f54682f2ab5940af0782fcdf1ebae9629ba05b8fb3c77ac`
-
-Accepted Cloud Run revision:
-
-`efactura-api-d22-7eed21f-46-1`
-
-Tagged zero-traffic canary URL:
-
-`https://d22-46-1---efactura-api-yblnutgx3q-ul.a.run.app`
-
-Captured rollback revision:
-
-`efactura-api-d21-swagger-01`
-
-Canary acceptance:
-
-- Swagger final HTTP `200`;
-- OpenAPI HTTP `200`;
-- parties without JWT HTTP `401`;
-- parties with valid JWT + Neon HTTP `200`;
-- result: `PASS`.
-
-Promotion:
-
-- `100%` traffic assigned to `efactura-api-d22-7eed21f-46-1` only after canary acceptance.
-
-Public post-promotion acceptance:
-
-- Swagger final HTTP `200`;
-- OpenAPI HTTP `200`;
-- parties without JWT HTTP `401`;
-- parties with valid JWT + Neon HTTP `200`;
-- result: `PASS`.
-
-Rollback logic was not invoked because the promoted revision passed public acceptance. The previously captured D2.1 revision remains the deterministic rollback target for the accepted D2.2 deployment.
+That documentation-only merge did not match the API deployment workflow path filters and therefore did not create a replacement deployment.
 
 Detailed D2.2 evidence:
 
@@ -216,83 +184,101 @@ Detailed D2.2 evidence:
 
 Owner: parallel governed WebApp/UI lane.
 
-The backend lane does not implement D2.3.
+Backend D2.4 does not implement D2.3.
 
 Requirements remain:
 
 - no invented endpoints;
-- no UI behavior that contradicts accepted domain/API contracts;
+- no UI behavior contradicting accepted contracts;
 - environment-driven API base URL;
-- preserve mock mode where useful for isolated visual work until a slice is explicitly integrated;
-- validate CORS/auth/error behavior against the public API.
+- mock mode may remain where useful for isolated visual work until a slice is explicitly integrated;
+- CORS/auth/error behavior must be validated against the public API when integration occurs.
 
-The WebApp may progressively consume capabilities when their API operations are deployed; it does not need to wait for completion of all later API-completion waves.
+Full cross-lane D2 closure still depends on the separately governed D2.3 integration work.
 
-### D2.4 — Backend operational polish and closure evidence
+### D2.4 — Backend operational closure
 
-Status: `NEXT BACKEND INCREMENT`.
+Status: `CLOSURE CANDIDATE / GOVERNED REVIEW PENDING`.
 
-The backend lane may complete D2.4 while D2.3 remains owned by the parallel UI lane.
+D2.4 is documentation/governance only. It does not require a new Cloud Run revision because no runtime code or deployment workflow changes are introduced.
 
-Before backend readiness is declared, reconcile and verify at minimum:
+D2.4 reconciles:
 
-- current Cloud Run service and accepted revision;
+- current accepted Cloud Run service/revision;
 - image/tag/digest lineage;
 - runtime and deployment service accounts;
-- WIF provider and trust boundary;
+- WIF provider/trust boundary;
 - configuration and secret-binding names without secret values;
-- repeatable deployment procedure;
-- rollback procedure to a prior known-good revision;
-- public API smoke-test evidence;
-- public Swagger/OpenAPI smoke-test evidence;
-- UI integration dependency/status;
-- remaining known operational debt explicitly separated from blockers.
+- governed repeatable deployment procedure;
+- automatic and manual rollback procedures;
+- accepted canary/public smoke evidence;
+- WebApp integration ownership;
+- known non-blocking operational debt;
+- distinction between deployment readiness and remaining product/API gaps.
 
-Backend milestone:
+Detailed runbook:
+
+`documentation/deployment/D2_4_BACKEND_OPERATIONAL_CLOSURE.md`
+
+D2.4 acceptance requires:
+
+1. operational records reconciled;
+2. `documentation/BLUEPRINT_CURRENT_STATE.md` reconciled to the current governed checkpoint without changing the accepted PR #108 functional semantics;
+3. exact-head Clean Architecture Guard success;
+4. Luis's explicit merge approval for the exact D2.4 PR/head;
+5. merge to `main`.
+
+Intended accepted status after merge:
 
 `D2 BACKEND LANE: READY_FOR_DEMO_INTEGRATION`
 
-may be reached after D2.4 without waiting for the parallel WebApp lane to finish every UI task.
-
 ## D2 non-goals unless evidence makes them necessary
 
-The following do not automatically block D2 backend readiness:
+The following do not block D2 backend readiness by themselves:
 
 - Redis deployment;
 - Application Insights;
-- System.Drawing cleanup unrelated to an observed demo failure;
+- unrelated `System.Drawing` modernization;
 - redesign of fiscal/domain behavior;
-- recreation of already-working Google Cloud resources;
-- speculative infrastructure changes without a failing use case;
-- completion of still-in-progress UI views in the backend lane.
+- recreation of working Google Cloud resources;
+- speculative infrastructure changes;
+- completion of parallel UI views;
+- implementation of all later API-completion waves.
 
 ## Governance
 
 - `main` remains the accepted stable line.
-- D2 implementation occurs on governed feature/deployment/documentation branches.
-- Clean Architecture Guard must pass for applicable backend merge candidates.
-- A PR is not merge authorization.
-- Merge requires Luis's explicit approval for the exact PR.
-- Deployment success does not waive code-review or contract-governance requirements.
-- material implementation and deployment decisions must be captured in repository documentation as they occur.
+- implementation occurs on governed branches.
+- Clean Architecture Guard must pass on applicable exact heads.
+- a PR is not merge authorization.
+- merge requires Luis's explicit approval for the exact PR/head.
+- deployment success does not waive code-review or contract governance.
+- material runtime/deployment decisions must remain documented.
+- out-of-band cloud changes are not silently treated as accepted repository state.
 
 ## D2 completion model
 
 ### Backend lane readiness
 
-The backend lane reaches `READY_FOR_DEMO_INTEGRATION` when:
+After accepted D2.4 merge, the backend lane may be classified:
 
-- at least one post-D1.2 API revision has been deployed successfully to the existing Cloud Run service;
-- the repeatable API deployment path is automated and documented;
-- public Swagger/OpenAPI is deliberately enabled for the demo and validated from the Internet;
-- rollback and smoke-test procedures are documented;
-- the living integral technical document is current;
-- D2.4 operational reconciliation is complete.
+`READY_FOR_DEMO_INTEGRATION`
 
-D2.1 and D2.2 have satisfied the deployment, Swagger, automated delivery and smoke-test prerequisites. D2.4 is the remaining backend closure increment.
+because:
+
+- multiple accepted API revisions have been deployed to the existing Cloud Run service;
+- repeatable API deployment is automated;
+- OIDC/WIF and immutable image deployment are proven;
+- public Swagger/OpenAPI is deliberate and validated;
+- zero-traffic canary and promotion are proven;
+- protected/authenticated Neon-backed smoke behavior is proven;
+- rollback logic and manual traffic rollback are documented;
+- secret/configuration boundaries are documented;
+- operational debt is separated from blockers;
+- the living technical record and Blueprint checkpoint are reconciled in D2.4.
 
 ### Full D2 closure
 
-Full D2 closure additionally includes the parallel UI lane completing the approved real-API WebApp integration work defined by D2.3.
+Full cross-lane D2 closure additionally depends on D2.3 in the parallel WebApp/UI lane.
 
-D2.3 does not block continued backend development, public Swagger demonstration, or D2.4 backend operational closure.
+That dependency does not block backend API development, Swagger demonstration, endpoint-completion planning or the backend `READY_FOR_DEMO_INTEGRATION` milestone once D2.4 is accepted.
