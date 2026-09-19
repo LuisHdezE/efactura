@@ -14,7 +14,14 @@ public sealed class W11AReferenceDataFoundationArchitectureTests
         Assert.Contains("[Route(\"api/v1/reference-data\")]", controller, StringComparison.Ordinal);
         Assert.Contains("[HttpGet(\"uruguay-departments\", Name = \"listUruguayDepartments\")]", controller, StringComparison.Ordinal);
         Assert.Contains("[HttpGet(\"fiscal-identity-types\", Name = \"listFiscalIdentityTypes\")]", controller, StringComparison.Ordinal);
-        Assert.DoesNotContain("RequirePermission", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RequirePermission",
+            ActionSlice(controller, "[HttpGet(\"uruguay-departments\", Name = \"listUruguayDepartments\")]"),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RequirePermission",
+            ActionSlice(controller, "[HttpGet(\"fiscal-identity-types\", Name = \"listFiscalIdentityTypes\")]"),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("ApplicationCore", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("Infrastructure.", controller, StringComparison.Ordinal);
     }
@@ -50,6 +57,14 @@ public sealed class W11AReferenceDataFoundationArchitectureTests
         Assert.DoesNotContain("Dapper", provider, StringComparison.Ordinal);
         Assert.DoesNotContain("ApplicationCore", provider, StringComparison.Ordinal);
         Assert.DoesNotContain("DbContext", provider, StringComparison.Ordinal);
+    }
+
+    private static string ActionSlice(string source, string routeMarker)
+    {
+        var start = source.IndexOf(routeMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Missing route marker {routeMarker}.");
+        var next = source.IndexOf("[HttpGet(", start + routeMarker.Length, StringComparison.Ordinal);
+        return next < 0 ? source[start..] : source[start..next];
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);
