@@ -5,6 +5,11 @@ namespace Infrastructure.ReferenceData;
 
 public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
 {
+    private static readonly ReferenceDataSet<CountryReference> Countries = new(
+        "ISO 3166-1 current country codes",
+        "snapshot-2026-09-19",
+        Release1CountryCatalog.Items);
+
     private static readonly ReferenceDataSet<UruguayDepartmentReference> UruguayDepartments = new(
         "Uruguay administrative departments",
         "release-1",
@@ -45,6 +50,15 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
             new(7, "NIFE", "FOREIGN_OR_SPECIAL_FALLBACK", Array.Empty<string>(), true, true)
         });
 
+    private static readonly ReferenceDataSet<CurrencyReference> Currencies = new(
+        "ISO 4217 / eFactura Release-1 supported currency policy",
+        "release-1/amendment-180",
+        Release1CurrencyCatalog.Items);
+
+    public ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(Countries);
+
     public ValueTask<ReferenceDataSet<UruguayDepartmentReference>> ListUruguayDepartmentsAsync(
         CancellationToken cancellationToken = default) =>
         ValueTask.FromResult(UruguayDepartments);
@@ -52,6 +66,10 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
     public ValueTask<ReferenceDataSet<FiscalIdentityTypeReference>> ListFiscalIdentityTypesAsync(
         CancellationToken cancellationToken = default) =>
         ValueTask.FromResult(FiscalIdentityTypes);
+
+    public ValueTask<ReferenceDataSet<CurrencyReference>> ListCurrenciesAsync(
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(Currencies);
 }
 
 public static class ReferenceDataServiceCollectionExtensions
@@ -61,8 +79,10 @@ public static class ReferenceDataServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<IReferenceDataCatalog, Release1ReferenceDataCatalog>();
+        services.AddScoped<ListCountriesUseCase>();
         services.AddScoped<ListUruguayDepartmentsUseCase>();
         services.AddScoped<ListFiscalIdentityTypesUseCase>();
+        services.AddScoped<ListCurrenciesUseCase>();
 
         return services;
     }
