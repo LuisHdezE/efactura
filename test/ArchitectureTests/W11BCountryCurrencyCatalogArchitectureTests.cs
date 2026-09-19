@@ -25,7 +25,7 @@ public sealed class W11BCountryCurrencyCatalogArchitectureTests
         var catalog = Read("src/Infrastructure/ReferenceData/Release1CountryCatalog.cs");
         var rows = Regex.Matches(
                 catalog,
-                @"new\(\"\"(?<code>[A-Z]{2})\"\",\s*\"\"(?<name>[^\"\"]+)\"\"\)")
+                "new\\(\"(?<code>[A-Z]{2})\",\\s*\"(?<name>[^\"]+)\"\\)")
             .Select(match => (
                 Code: match.Groups["code"].Value,
                 Name: match.Groups["name"].Value))
@@ -50,7 +50,7 @@ public sealed class W11BCountryCurrencyCatalogArchitectureTests
     public void Currency_catalog_is_an_explicit_fail_closed_release1_supported_subset()
     {
         var catalog = Read("src/Infrastructure/ReferenceData/Release1CurrencyCatalog.cs");
-        var codes = Regex.Matches(catalog, @"new\(\"\"(?<code>[A-Z]{3})\"\",")
+        var codes = Regex.Matches(catalog, "new\\(\"(?<code>[A-Z]{3})\",")
             .Select(match => match.Groups["code"].Value)
             .ToArray();
 
