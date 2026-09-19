@@ -22,20 +22,23 @@ public sealed class W11ReferenceDataReadinessArchitectureTests
     };
 
     [Fact]
-    public void W1_1_reference_data_rows_are_audited_without_claiming_runtime_implementation()
+    public void W1_1_reference_data_rows_preserve_audited_prerequisites_as_W1_1A_advances()
     {
         var rows = ReferenceRows(Read(WavePath));
 
         Assert.Equal(8, rows.Length);
         Assert.Equal(ReferenceIds, rows.Select(row => row.Id).ToArray());
-        Assert.All(rows, row => Assert.Equal("MISSING_HTTP", row.Implementation));
         Assert.DoesNotContain(rows, row => row.Readiness == "NOT_YET_AUDITED");
 
         Assert.Equal(
             new[] { "API-REF-002", "API-REF-003" },
-            rows.Where(row => row.Readiness == "READY_FOR_FOUNDATION")
+            rows.Where(row => row.Implementation == "IMPLEMENTED")
                 .Select(row => row.Id)
                 .ToArray());
+
+        Assert.All(
+            rows.Where(row => row.Id is "API-REF-002" or "API-REF-003"),
+            row => Assert.Equal("EXISTING_PATH / regression", row.Readiness));
 
         Assert.Equal(
             new[]
@@ -47,13 +50,13 @@ public sealed class W11ReferenceDataReadinessArchitectureTests
                 "API-REF-007",
                 "API-REF-008"
             },
-            rows.Where(row => row.Readiness == "PREREQUISITE_REQUIRED")
+            rows.Where(row => row.Implementation == "MISSING_HTTP" && row.Readiness == "PREREQUISITE_REQUIRED")
                 .Select(row => row.Id)
                 .ToArray());
     }
 
     [Fact]
-    public void W1_1_readiness_audit_covers_the_exact_reference_data_contract_set()
+    public void W1_1_readiness_audit_remains_the_historical_eight_operation_gate()
     {
         var audit = Read(AuditPath);
         var contractedRows = Regex.Matches(
