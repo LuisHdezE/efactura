@@ -26,6 +26,19 @@ public sealed record CurrencyReference(
     string AlphabeticCode,
     string Name);
 
+public sealed record FiscalDocumentTypeReference(
+    int Code,
+    string Name,
+    string Family,
+    string CorrectionKind,
+    int ContingencyCode,
+    bool RequiresApplicabilityValidation);
+
+public sealed record InvoiceIndicatorReference(
+    int Code,
+    string Name,
+    string TaxTreatment);
+
 public interface IReferenceDataCatalog
 {
     ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(
@@ -38,6 +51,12 @@ public interface IReferenceDataCatalog
         CancellationToken cancellationToken = default);
 
     ValueTask<ReferenceDataSet<CurrencyReference>> ListCurrenciesAsync(
+        CancellationToken cancellationToken = default);
+
+    ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ListFiscalDocumentTypesAsync(
+        CancellationToken cancellationToken = default);
+
+    ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ListInvoiceIndicatorsAsync(
         CancellationToken cancellationToken = default);
 }
 
@@ -155,6 +174,70 @@ public sealed class ListCurrenciesUseCase
     {
         EnsureAuthenticated(_actorContextAccessor.Current);
         return _catalog.ListCurrenciesAsync(cancellationToken);
+    }
+
+    private static void EnsureAuthenticated(ActorContext actor)
+    {
+        if (!actor.IsAuthenticated)
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.AuthenticationRequired,
+                "authentication_required",
+                "A valid bearer token is required for this operation.");
+        }
+    }
+}
+
+public sealed class ListFiscalDocumentTypesUseCase
+{
+    private readonly IReferenceDataCatalog _catalog;
+    private readonly IActorContextAccessor _actorContextAccessor;
+
+    public ListFiscalDocumentTypesUseCase(
+        IReferenceDataCatalog catalog,
+        IActorContextAccessor actorContextAccessor)
+    {
+        _catalog = catalog;
+        _actorContextAccessor = actorContextAccessor;
+    }
+
+    public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ExecuteAsync(
+        CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated(_actorContextAccessor.Current);
+        return _catalog.ListFiscalDocumentTypesAsync(cancellationToken);
+    }
+
+    private static void EnsureAuthenticated(ActorContext actor)
+    {
+        if (!actor.IsAuthenticated)
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.AuthenticationRequired,
+                "authentication_required",
+                "A valid bearer token is required for this operation.");
+        }
+    }
+}
+
+public sealed class ListInvoiceIndicatorsUseCase
+{
+    private readonly IReferenceDataCatalog _catalog;
+    private readonly IActorContextAccessor _actorContextAccessor;
+
+    public ListInvoiceIndicatorsUseCase(
+        IReferenceDataCatalog catalog,
+        IActorContextAccessor actorContextAccessor)
+    {
+        _catalog = catalog;
+        _actorContextAccessor = actorContextAccessor;
+    }
+
+    public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ExecuteAsync(
+        CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated(_actorContextAccessor.Current);
+        return _catalog.ListInvoiceIndicatorsAsync(cancellationToken);
     }
 
     private static void EnsureAuthenticated(ActorContext actor)

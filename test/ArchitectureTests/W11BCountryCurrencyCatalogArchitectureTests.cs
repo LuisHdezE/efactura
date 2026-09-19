@@ -14,7 +14,14 @@ public sealed class W11BCountryCurrencyCatalogArchitectureTests
         Assert.Contains("[Authorize]", controller, StringComparison.Ordinal);
         Assert.Contains("[HttpGet(\"countries\", Name = \"listCountries\")]", controller, StringComparison.Ordinal);
         Assert.Contains("[HttpGet(\"currencies\", Name = \"listCurrencies\")]", controller, StringComparison.Ordinal);
-        Assert.DoesNotContain("RequirePermission", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RequirePermission",
+            ActionSlice(controller, "[HttpGet(\"countries\", Name = \"listCountries\")]"),
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "RequirePermission",
+            ActionSlice(controller, "[HttpGet(\"currencies\", Name = \"listCurrencies\")]"),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("ApplicationCore", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("Infrastructure.", controller, StringComparison.Ordinal);
     }
@@ -95,6 +102,14 @@ public sealed class W11BCountryCurrencyCatalogArchitectureTests
         Assert.DoesNotContain("Npgsql", provider, StringComparison.Ordinal);
         Assert.DoesNotContain("Dapper", provider, StringComparison.Ordinal);
         Assert.DoesNotContain("ApplicationCore", provider, StringComparison.Ordinal);
+    }
+
+    private static string ActionSlice(string source, string routeMarker)
+    {
+        var start = source.IndexOf(routeMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Missing route marker {routeMarker}.");
+        var next = source.IndexOf("[HttpGet(", start + routeMarker.Length, StringComparison.Ordinal);
+        return next < 0 ? source[start..] : source[start..next];
     }
 
     private static string Read(string path) => File.ReadAllText(Full(path), Encoding.UTF8);

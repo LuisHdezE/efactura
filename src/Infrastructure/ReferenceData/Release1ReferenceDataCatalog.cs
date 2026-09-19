@@ -55,6 +55,16 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
         "release-1/amendment-180",
         Release1CurrencyCatalog.Items);
 
+    private static readonly ReferenceDataSet<FiscalDocumentTypeReference> FiscalDocumentTypes = new(
+        "DGI Formato_CFE / eFactura Release-1 enabled document policy",
+        "25-2/release-1-domestic",
+        Release1FiscalReferenceCatalog.DocumentTypes);
+
+    private static readonly ReferenceDataSet<InvoiceIndicatorReference> InvoiceIndicators = new(
+        "DGI Formato_CFE / eFactura Release-1 supported indicator policy",
+        "25-2/release-1",
+        Release1FiscalReferenceCatalog.InvoiceIndicators);
+
     public ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(
         CancellationToken cancellationToken = default) =>
         ValueTask.FromResult(Countries);
@@ -70,6 +80,14 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
     public ValueTask<ReferenceDataSet<CurrencyReference>> ListCurrenciesAsync(
         CancellationToken cancellationToken = default) =>
         ValueTask.FromResult(Currencies);
+
+    public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ListFiscalDocumentTypesAsync(
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(FiscalDocumentTypes);
+
+    public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ListInvoiceIndicatorsAsync(
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(InvoiceIndicators);
 }
 
 public static class ReferenceDataServiceCollectionExtensions
@@ -83,6 +101,8 @@ public static class ReferenceDataServiceCollectionExtensions
         services.AddScoped<ListUruguayDepartmentsUseCase>();
         services.AddScoped<ListFiscalIdentityTypesUseCase>();
         services.AddScoped<ListCurrenciesUseCase>();
+        services.AddScoped<ListFiscalDocumentTypesUseCase>();
+        services.AddScoped<ListInvoiceIndicatorsUseCase>();
 
         return services;
     }
