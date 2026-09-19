@@ -65,29 +65,37 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
         "25-2/release-1",
         Release1FiscalReferenceCatalog.InvoiceIndicators);
 
+    private static readonly ReferenceDataSet<ContactTypeReference> ContactTypes = new(
+        "Legacy ContactType compatibility / eFactura Release-1 defaults",
+        "release-1",
+        new ContactTypeReference[]
+        {
+            new("PHONE", "Phone"),
+            new("MOBILE", "Mobile"),
+            new("EMAIL", "Email"),
+            new("FAX", "Fax")
+        });
+
     public ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(
-        CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(Countries);
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(Countries);
 
     public ValueTask<ReferenceDataSet<UruguayDepartmentReference>> ListUruguayDepartmentsAsync(
-        CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(UruguayDepartments);
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(UruguayDepartments);
 
     public ValueTask<ReferenceDataSet<FiscalIdentityTypeReference>> ListFiscalIdentityTypesAsync(
-        CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(FiscalIdentityTypes);
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(FiscalIdentityTypes);
 
     public ValueTask<ReferenceDataSet<CurrencyReference>> ListCurrenciesAsync(
-        CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(Currencies);
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(Currencies);
 
     public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ListFiscalDocumentTypesAsync(
-        CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(FiscalDocumentTypes);
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(FiscalDocumentTypes);
 
     public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ListInvoiceIndicatorsAsync(
-        CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(InvoiceIndicators);
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(InvoiceIndicators);
+
+    public ValueTask<ReferenceDataSet<ContactTypeReference>> ListContactTypesAsync(
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(ContactTypes);
 }
 
 public static class ReferenceDataServiceCollectionExtensions
@@ -103,6 +111,8 @@ public static class ReferenceDataServiceCollectionExtensions
         services.AddScoped<ListCurrenciesUseCase>();
         services.AddScoped<ListFiscalDocumentTypesUseCase>();
         services.AddScoped<ListInvoiceIndicatorsUseCase>();
+        services.AddScoped<ListContactTypesUseCase>();
+        services.AddScoped<ListUnitsOfMeasureUseCase>();
 
         return services;
     }
