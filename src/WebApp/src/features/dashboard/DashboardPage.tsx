@@ -67,6 +67,16 @@ function severityLabel(severity: AlertSeverity) {
   return 'Informativa';
 }
 
+function PackageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z" />
+      <path d="M4.5 7.7 12 12l7.5-4.3" />
+      <path d="M12 12v9" />
+    </svg>
+  );
+}
+
 export function DashboardPage() {
   return (
     <div className="dashboard-page">
@@ -167,12 +177,12 @@ export function DashboardPage() {
 
           <div className="dashboard-quick-links" aria-label="Accesos rápidos a vistas implementadas">
             <Link to="/pos" className="dashboard-quick-link">
-              <span className="dashboard-quick-icon" aria-hidden="true">🛒</span>
+              <span className="dashboard-quick-icon" aria-hidden="true">▣</span>
               <span><strong>Punto de Venta</strong><small>Abrir venta demo</small></span>
               <span aria-hidden="true">→</span>
             </Link>
             <Link to="/clientes" className="dashboard-quick-link">
-              <span className="dashboard-quick-icon" aria-hidden="true">◉</span>
+              <span className="dashboard-quick-icon" aria-hidden="true">●</span>
               <span><strong>Clientes</strong><small>Consultar maestro Party</small></span>
               <span aria-hidden="true">→</span>
             </Link>
@@ -259,7 +269,7 @@ export function DashboardPage() {
             {lowStock.map((item) => (
               <div key={item.sku} className="dashboard-stock-row">
                 <div className="dashboard-stock-product">
-                  <span className="dashboard-stock-icon" aria-hidden="true">□</span>
+                  <span className="dashboard-stock-icon" aria-hidden="true"><PackageIcon /></span>
                   <div>
                     <strong>{item.name}</strong>
                     <span>{item.sku}</span>
