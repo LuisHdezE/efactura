@@ -15,6 +15,7 @@ export interface CatalogGateway {
 
 export interface PartiesGateway {
   listCustomers(search?: string): Promise<PageResponse<PartyDto>>;
+  listSuppliers(search?: string): Promise<PageResponse<PartyDto>>;
 }
 
 export interface SalesGateway {
