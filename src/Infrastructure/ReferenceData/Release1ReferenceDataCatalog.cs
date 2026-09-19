@@ -1,4 +1,5 @@
 using EFactura.Application.ReferenceData;
+using Infrastructure.Persistence.V1.Write.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.ReferenceData;
@@ -15,25 +16,10 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
         "release-1",
         new UruguayDepartmentReference[]
         {
-            new("Artigas"),
-            new("Canelones"),
-            new("Cerro Largo"),
-            new("Colonia"),
-            new("Durazno"),
-            new("Flores"),
-            new("Florida"),
-            new("Lavalleja"),
-            new("Maldonado"),
-            new("Montevideo"),
-            new("Paysandú"),
-            new("Río Negro"),
-            new("Rivera"),
-            new("Rocha"),
-            new("Salto"),
-            new("San José"),
-            new("Soriano"),
-            new("Tacuarembó"),
-            new("Treinta y Tres")
+            new("Artigas"), new("Canelones"), new("Cerro Largo"), new("Colonia"), new("Durazno"),
+            new("Flores"), new("Florida"), new("Lavalleja"), new("Maldonado"), new("Montevideo"),
+            new("Paysandú"), new("Río Negro"), new("Rivera"), new("Rocha"), new("Salto"), new("San José"),
+            new("Soriano"), new("Tacuarembó"), new("Treinta y Tres")
         });
 
     private static readonly ReferenceDataSet<FiscalIdentityTypeReference> FiscalIdentityTypes = new(
@@ -76,26 +62,13 @@ public sealed class Release1ReferenceDataCatalog : IReferenceDataCatalog
             new("FAX", "Fax")
         });
 
-    public ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(Countries);
-
-    public ValueTask<ReferenceDataSet<UruguayDepartmentReference>> ListUruguayDepartmentsAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(UruguayDepartments);
-
-    public ValueTask<ReferenceDataSet<FiscalIdentityTypeReference>> ListFiscalIdentityTypesAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(FiscalIdentityTypes);
-
-    public ValueTask<ReferenceDataSet<CurrencyReference>> ListCurrenciesAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(Currencies);
-
-    public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ListFiscalDocumentTypesAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(FiscalDocumentTypes);
-
-    public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ListInvoiceIndicatorsAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(InvoiceIndicators);
-
-    public ValueTask<ReferenceDataSet<ContactTypeReference>> ListContactTypesAsync(
-        CancellationToken cancellationToken = default) => ValueTask.FromResult(ContactTypes);
+    public ValueTask<ReferenceDataSet<CountryReference>> ListCountriesAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(Countries);
+    public ValueTask<ReferenceDataSet<UruguayDepartmentReference>> ListUruguayDepartmentsAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(UruguayDepartments);
+    public ValueTask<ReferenceDataSet<FiscalIdentityTypeReference>> ListFiscalIdentityTypesAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(FiscalIdentityTypes);
+    public ValueTask<ReferenceDataSet<CurrencyReference>> ListCurrenciesAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(Currencies);
+    public ValueTask<ReferenceDataSet<FiscalDocumentTypeReference>> ListFiscalDocumentTypesAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(FiscalDocumentTypes);
+    public ValueTask<ReferenceDataSet<InvoiceIndicatorReference>> ListInvoiceIndicatorsAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(InvoiceIndicators);
+    public ValueTask<ReferenceDataSet<ContactTypeReference>> ListContactTypesAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(ContactTypes);
 }
 
 public static class ReferenceDataServiceCollectionExtensions
@@ -105,6 +78,7 @@ public static class ReferenceDataServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<IReferenceDataCatalog, Release1ReferenceDataCatalog>();
+        services.AddScoped<IUnitOfMeasureReferenceReader>(sp => sp.GetRequiredService<EfCommercialItemRepository>());
         services.AddScoped<ListCountriesUseCase>();
         services.AddScoped<ListUruguayDepartmentsUseCase>();
         services.AddScoped<ListFiscalIdentityTypesUseCase>();
