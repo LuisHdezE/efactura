@@ -46,9 +46,21 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | Upstream ID | Candidate | Governed UI ID | Current UI status | Evidence |
 | --- | --- | --- | --- | --- |
 | `WEB-001` | Login and Session Entry | `UI-AUTH-001` | `IMPLEMENTED / VISUAL_DEBT_DEFERRED` | `UI-AUTH-001_RECONCILIATION.md`, `../specifications/UI-AUTH-001_LOGIN_SESSION.md`, `../references/approved/UI-AUTH-001/v1-provider-neutral/README.md`, `../reviews/UI-AUTH-001/TECHNICAL_DEBT_DEFERRED_2026-09-19.md`, issue `#154` |
-| `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | pending reconciliation |
+| `WEB-002` | Operational Dashboard | `UI-DASHBOARD-001` | `SPECIFIED` | `UI-DASHBOARD-001_RECONCILIATION.md`, `../specifications/UI-DASHBOARD-001_OPERATIONAL_DASHBOARD.md` |
 | `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
+
+## UI-DASHBOARD-001 reconciliation note
+
+`WEB-002` is reconciled as `UI-DASHBOARD-001` and reserved for `/dashboard` inside the governed reusable WebApp shell.
+
+The accepted interface/API contract maps the view to `API-DAS-001 getDashboardSummary`, `API-ALT-001 listAlerts` and `API-MON-001 getIntegrationStatus` as permitted. None is currently an executable WebApi dependency: `API-DAS-001` is `MISSING_HTTP` in API Wave 6, `API-ALT-001` is `MISSING_HTTP` in API Wave 7, and `API-MON-001` is blocked by the accepted-contract collision with `API-180` on `GET /api/v1/operations/integrations`.
+
+Therefore the first Dashboard implementation may use explicit demo/mock fixtures to validate product hierarchy, responsive behavior and visual interaction, but it must not claim live authoritative dashboard/alert/integration data and must not resolve backend contract collisions in frontend code.
+
+The reusable-shell policy is mandatory: `UI-DASHBOARD-001` may own feature content only. Once implemented it must be registered in `shellRoutes`, which provides React Router, Sidebar and mobile navigation from the same registry. `/pos` remains the default shell route until a separate explicit product decision after Dashboard runtime review.
+
+No approved or draft Dashboard reference existed in the governed reference folders, and no historical approved Operational Dashboard mock was located during reconciliation. A new visual theme-pair draft is therefore the next governed step.
 
 ## UI-AUTH-001 reconciliation note
 
