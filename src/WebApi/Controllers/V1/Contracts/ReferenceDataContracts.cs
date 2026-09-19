@@ -22,3 +22,16 @@ public sealed record FiscalIdentityTypeDto(
 public sealed record CurrencyDto(
     string AlphabeticCode,
     string Name);
+
+public sealed record FiscalDocumentTypeDto(
+    int Code,
+    string Name,
+    string Family,
+    string CorrectionKind,
+    int ContingencyCode,
+    bool RequiresApplicabilityValidation);
+
+public sealed record InvoiceIndicatorDto(
+    int Code,
+    string Name,
+    string TaxTreatment);
