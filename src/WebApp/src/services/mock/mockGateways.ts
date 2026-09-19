@@ -1,12 +1,14 @@
 import type { AppGateways } from '../contracts';
 import { mockItems, mockParties } from './data';
 import { mockSalesGateway } from './mockSales';
+import { mockSupplierParties } from './supplierData';
 
 const pause = <T,>(value: T) => new Promise<T>((resolve) => window.setTimeout(() => resolve(value), 120));
 
 function filterPartiesByRole(role: 'CUSTOMER' | 'SUPPLIER', search = '') {
   const term = search.trim().toLowerCase();
-  return mockParties.filter((party) =>
+  const source = role === 'SUPPLIER' ? [...mockParties, ...mockSupplierParties] : mockParties;
+  return source.filter((party) =>
     party.roles.includes(role) &&
     (!term ||
       party.name.toLowerCase().includes(term) ||
