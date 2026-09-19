@@ -7,7 +7,29 @@
 }
 
 .auth-page .auth-waterfront {
-  height: clamp(220px, 48vh, 300px);
-  background-position: center bottom, center bottom;
-  background-size: 100% 100%, auto 100%;
+  height: clamp(190px, 36vh, 260px);
+  background-repeat: no-repeat;
+  background-position: center top, center 30%;
+  background-size: 100% 100%, 100% auto;
+}
+
+/*
+ * Desktop runtime must anchor the scenic layer to the visible viewport, not to
+ * the document height. The auth content can be taller than 100dvh on short
+ * laptop viewports, which previously pushed the waterfront below the fold.
+ */
+@media (min-width: 821px) and (min-height: 560px) {
+  .auth-page .auth-waterfront {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 58px;
+  }
+
+  .auth-page .auth-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
 }
