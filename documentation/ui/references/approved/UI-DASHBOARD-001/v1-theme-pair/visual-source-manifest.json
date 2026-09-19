@@ -1,0 +1,23 @@
+{
+  "ui_id": "UI-DASHBOARD-001",
+  "version": "v1-theme-pair",
+  "status": "VISUAL_APPROVED",
+  "approval_date": "2026-09-19",
+  "approval_statement": "aprobado",
+  "source": {
+    "filename": "a_clean_multi_panel_ui_mockup_collage_of_an_efactu.png",
+    "generation_id": "b5781a68-6c5a-4ef1-b7a5-e8d100c45dfd",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 1750916,
+    "sha256": "2b2c90f70a4e66055e7a7881af0932708e9288143cf7a34c6dc361cc06bd2a08"
+  },
+  "binary_preservation": "PENDING_DIRECT_BINARY_TRANSFER",
+  "implementation_data_mode": "API_MOCK_DATA_ONLY",
+  "governance_notes": [
+    "The approved source image is visual authority and must not be silently regenerated or substituted.",
+    "Illustrative future navigation entries in the mock are not executable-route authority.",
+    "Executable navigation remains governed exclusively by shellRoutes and WEBAPP_SHELL_POLICY.md.",
+    "Dashboard-specific values and integration status remain demo/mock until accepted backend operations are executable."
+  ]
+}
