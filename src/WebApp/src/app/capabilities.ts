@@ -18,6 +18,13 @@ export interface UiCapability {
 
 export const uiCapabilities: UiCapability[] = [
   {
+    uiId: 'UI-DASHBOARD-001',
+    label: 'Dashboard',
+    route: '/dashboard',
+    status: 'IMPLEMENTED_API_MOCK_DATA',
+    operations: []
+  },
+  {
     uiId: 'UI-POS-001',
     label: 'Punto de Venta',
     route: '/pos',
