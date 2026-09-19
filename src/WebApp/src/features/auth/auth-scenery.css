@@ -1,12 +1,13 @@
 .auth-page {
-  --auth-scenic-image: url('/assets/auth/auth-scenery-sprite.webp');
+  --auth-scenic-image: url('/assets/auth/auth-scenery-light.webp');
+}
+
+:root[data-theme='dark'] .auth-page {
+  --auth-scenic-image: url('/assets/auth/auth-scenery-dark.webp');
 }
 
 .auth-page .auth-waterfront {
-  background-position: center bottom, left bottom;
-  background-size: 100% 100%, 200% auto;
-}
-
-:root[data-theme='dark'] .auth-page .auth-waterfront {
-  background-position: center bottom, right bottom;
+  height: clamp(220px, 48vh, 300px);
+  background-position: center bottom, center bottom;
+  background-size: 100% 100%, auto 100%;
 }
