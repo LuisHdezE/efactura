@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './app/App';
 import './styles.css';
 import './visual-parity.css';
+import './navigation-compact.css';
 import './runtime-product-images';
 import './features/dashboard/dashboard-density.css';
 
