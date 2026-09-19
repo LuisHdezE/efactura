@@ -1,0 +1,335 @@
+/*
+ * UI-DASHBOARD-001 runtime density and typography correction.
+ *
+ * This file intentionally layers over dashboard.css instead of changing
+ * component structure or data authority. It keeps the approved visual
+ * language while making the deployed dashboard denser and more readable.
+ */
+
+.dashboard-page {
+  padding: 14px 18px 28px;
+}
+
+.dashboard-heading-row {
+  margin-bottom: 10px;
+}
+
+.dashboard-kicker,
+.dashboard-panel-eyebrow {
+  font-size: 11px;
+  letter-spacing: .1em;
+}
+
+.dashboard-heading-row h1 {
+  margin-top: 1px;
+  font-size: clamp(26px, 2vw, 30px);
+  line-height: 1.08;
+}
+
+.dashboard-heading-row p {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboard-demo-badge {
+  padding: 6px 9px;
+  font-size: 11px;
+}
+
+.dashboard-kpis {
+  gap: 9px;
+  margin-bottom: 8px;
+}
+
+.dashboard-kpi-card {
+  padding: 11px 13px;
+}
+
+.dashboard-kpi-topline {
+  font-size: 11px;
+}
+
+.dashboard-kpi-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+.dashboard-kpi-card > strong {
+  margin-top: 8px;
+  font-size: clamp(22px, 1.8vw, 26px);
+}
+
+.dashboard-kpi-foot {
+  margin-top: 7px;
+  font-size: 10.5px;
+}
+
+.dashboard-primary-grid,
+.dashboard-secondary-grid,
+.dashboard-bottom-grid {
+  gap: 9px;
+  margin-top: 9px;
+}
+
+.dashboard-panel {
+  padding: 12px 13px;
+}
+
+.dashboard-panel-head h2 {
+  font-size: 16px;
+}
+
+.dashboard-panel-period,
+.dashboard-status-pill,
+.dashboard-panel-count {
+  font-size: 10px;
+}
+
+.dashboard-chart-summary {
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.dashboard-chart-summary > div span,
+.dashboard-chart-summary p {
+  font-size: 10.5px;
+}
+
+.dashboard-chart-summary > div strong {
+  font-size: 18px;
+}
+
+.dashboard-bars {
+  height: 150px;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.dashboard-bar-column {
+  grid-template-rows: 1fr 18px;
+  font-size: 10px;
+}
+
+.dashboard-quick-links {
+  margin-top: 8px;
+}
+
+.dashboard-quick-link {
+  gap: 8px;
+  padding: 8px 9px;
+}
+
+.dashboard-quick-link strong {
+  font-size: 11.5px;
+}
+
+.dashboard-quick-link small {
+  font-size: 9.5px;
+}
+
+.dashboard-quick-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
+.dashboard-cae-meter {
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dashboard-cae-ring {
+  width: 96px;
+  height: 96px;
+  flex-basis: 96px;
+}
+
+.dashboard-cae-ring span {
+  font-size: 21px;
+}
+
+.dashboard-cae-ring small {
+  font-size: 9.5px;
+}
+
+.dashboard-cae-copy > span,
+.dashboard-cae-copy p {
+  font-size: 10.5px;
+}
+
+.dashboard-cae-copy strong {
+  font-size: 16px;
+}
+
+.dashboard-fiscal-stats {
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.dashboard-fiscal-stats > div {
+  padding: 8px;
+}
+
+.dashboard-fiscal-stats dt {
+  font-size: 9.5px;
+}
+
+.dashboard-fiscal-stats dd {
+  margin-top: 3px;
+  font-size: 15px;
+}
+
+.dashboard-authority-note {
+  margin-top: 8px;
+  padding: 8px 9px;
+}
+
+.dashboard-authority-note strong {
+  font-size: 10.5px;
+}
+
+.dashboard-authority-note span {
+  font-size: 9.5px;
+}
+
+.dashboard-alert-list,
+.dashboard-stock-list,
+.dashboard-obligation-list {
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.dashboard-alert {
+  gap: 9px;
+  padding: 8px;
+}
+
+.dashboard-alert-marker {
+  min-height: 36px;
+}
+
+.dashboard-alert-meta {
+  font-size: 9.5px;
+}
+
+.dashboard-alert-copy > strong {
+  font-size: 11.5px;
+}
+
+.dashboard-alert-copy p {
+  font-size: 9.5px;
+}
+
+.dashboard-alert-state {
+  font-size: 9.5px;
+}
+
+.dashboard-stock-row {
+  gap: 9px;
+  padding: 6px 0;
+}
+
+.dashboard-stock-icon {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+
+.dashboard-stock-product strong {
+  font-size: 11.5px;
+}
+
+.dashboard-stock-product span,
+.dashboard-stock-values span {
+  font-size: 9.5px;
+}
+
+.dashboard-stock-values strong {
+  font-size: 12.5px;
+}
+
+.dashboard-stock-state {
+  font-size: 9.5px;
+}
+
+.dashboard-disabled-note {
+  margin-top: 8px;
+  font-size: 9.5px;
+}
+
+.dashboard-obligation-row {
+  gap: 9px;
+  padding: 6px 0;
+}
+
+.dashboard-date-tile {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.dashboard-date-tile strong {
+  font-size: 13.5px;
+}
+
+.dashboard-date-tile span {
+  font-size: 8.5px;
+}
+
+.dashboard-obligation-row > div:last-child strong {
+  font-size: 11.5px;
+}
+
+.dashboard-obligation-row > div:last-child span {
+  font-size: 9.5px;
+}
+
+.dashboard-finance-summary {
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.dashboard-finance-row {
+  padding: 5px 0;
+  font-size: 10.5px;
+}
+
+.dashboard-finance-row strong {
+  font-size: 12px;
+}
+
+.dashboard-finance-row.is-net {
+  padding: 8px;
+}
+
+.dashboard-finance-row.is-net strong {
+  font-size: 14px;
+}
+
+.dashboard-finance-track {
+  margin-top: 8px;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-page {
+    padding: 13px 14px 72px;
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-heading-row h1 {
+    font-size: 26px;
+  }
+
+  .dashboard-bars {
+    height: 142px;
+  }
+}
+
+@media (max-width: 460px) {
+  .dashboard-page {
+    padding: 11px 11px 72px;
+  }
+}
