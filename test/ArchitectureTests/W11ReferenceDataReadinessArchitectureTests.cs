@@ -22,7 +22,7 @@ public sealed class W11ReferenceDataReadinessArchitectureTests
     };
 
     [Fact]
-    public void W1_1_reference_data_rows_preserve_audited_prerequisites_as_W1_1B_advances()
+    public void W1_1_reference_data_rows_preserve_audited_prerequisites_as_W1_1C_advances()
     {
         var rows = ReferenceRows(Read(WavePath));
 
@@ -31,20 +31,32 @@ public sealed class W11ReferenceDataReadinessArchitectureTests
         Assert.DoesNotContain(rows, row => row.Readiness == "NOT_YET_AUDITED");
 
         Assert.Equal(
-            new[] { "API-REF-001", "API-REF-002", "API-REF-003", "API-REF-004" },
+            new[]
+            {
+                "API-REF-001",
+                "API-REF-002",
+                "API-REF-003",
+                "API-REF-004",
+                "API-REF-005",
+                "API-REF-006"
+            },
             rows.Where(row => row.Implementation == "IMPLEMENTED")
                 .Select(row => row.Id)
                 .ToArray());
 
         Assert.All(
-            rows.Where(row => row.Id is "API-REF-001" or "API-REF-002" or "API-REF-003" or "API-REF-004"),
+            rows.Where(row => row.Id is
+                "API-REF-001" or
+                "API-REF-002" or
+                "API-REF-003" or
+                "API-REF-004" or
+                "API-REF-005" or
+                "API-REF-006"),
             row => Assert.Equal("EXISTING_PATH / regression", row.Readiness));
 
         Assert.Equal(
             new[]
             {
-                "API-REF-005",
-                "API-REF-006",
                 "API-REF-007",
                 "API-REF-008"
             },
