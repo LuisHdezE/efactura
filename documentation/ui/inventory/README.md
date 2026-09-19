@@ -24,6 +24,7 @@ Each candidate should be classified as one of:
 - `VISUAL_APPROVED`: Luis explicitly approved one exact visual version;
 - `IMPLEMENTED`: frontend implementation exists;
 - `REVIEWED`: implementation was compared against the approved visual baseline and runtime-reviewed;
+- `VISUAL_DEBT_DEFERRED`: runtime review found a known visual mismatch that Luis explicitly chose to defer without accepting it;
 - `ACCEPTED`: visual/functional review is accepted and all governance prerequisites are satisfied.
 
 These are UI-governance states and do not replace Blueprint project maturity fields.
@@ -44,7 +45,7 @@ The mapping must be recorded in the view specification and inventory entry. The 
 
 | Upstream ID | Candidate | Governed UI ID | Current UI status | Evidence |
 | --- | --- | --- | --- | --- |
-| `WEB-001` | Login and Session Entry | `UI-AUTH-001` | `VISUAL_APPROVED` | `UI-AUTH-001_RECONCILIATION.md`, `../specifications/UI-AUTH-001_LOGIN_SESSION.md`, `../references/approved/UI-AUTH-001/v1-provider-neutral/README.md` |
+| `WEB-001` | Login and Session Entry | `UI-AUTH-001` | `IMPLEMENTED / VISUAL_DEBT_DEFERRED` | `UI-AUTH-001_RECONCILIATION.md`, `../specifications/UI-AUTH-001_LOGIN_SESSION.md`, `../references/approved/UI-AUTH-001/v1-provider-neutral/README.md`, `../reviews/UI-AUTH-001/TECHNICAL_DEBT_DEFERRED_2026-09-19.md`, issue `#154` |
 | `WEB-002` | Operational Dashboard | not assigned | `CANDIDATE` | pending reconciliation |
 | `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
@@ -57,7 +58,13 @@ Luis explicitly approved `UI-AUTH-001 v1-provider-neutral` on 2026-09-17. The ap
 
 The approved source PNG is fingerprinted by SHA-256 under `../references/approved/UI-AUTH-001/v1-provider-neutral/`. Direct byte-identical binary insertion remains pending through the current repository channel, so regeneration/substitution is forbidden until that source is physically preserved.
 
-The current WebApp still has no login/session route, auth gateway or route guard, and the current WebApi controller inventory does not evidence executable `GET /api/v1/me`. Therefore visual approval does not authorize real authentication integration.
+The provider-neutral `/acceso` WebApp view is now implemented. The frontend implementation trail includes PRs `#143`, `#144`, `#145`, `#146`, `#149` and `#151`. Runtime review after PR `#151` on `main@7c046f18a32cf373577d7338c2e26a9aae142144` confirmed that the primary layout renders but the approved scenic waterfront/city layer still does not achieve acceptable visible parity in the target desktop viewport in either theme.
+
+On 2026-09-19 Luis explicitly chose to defer that unresolved scenic mismatch as technical debt and continue the roadmap. The debt is tracked in issue `#154` and `../reviews/UI-AUTH-001/TECHNICAL_DEBT_DEFERRED_2026-09-19.md`.
+
+This is not runtime visual acceptance. `UI-AUTH-001` must not be promoted to `REVIEWED / VISUAL_RUNTIME_ACCEPTED` or final `ACCEPTED` until fresh deployed light/dark runtime evidence is explicitly accepted.
+
+Real authentication integration also remains independently pending because an identity-provider flow and executable application-context integration are not yet governed in this frontend lane.
 
 ## UI-POS-001 closure note
 
