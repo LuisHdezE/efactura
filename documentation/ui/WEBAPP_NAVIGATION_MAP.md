@@ -18,7 +18,7 @@ Current runtime state:
 - `WEB-002 / UI-DASHBOARD-001` is active at `/dashboard`;
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
-- `WEB-005 / UI-SUPPLIER-001` is reconciled and specification-ready for `/proveedores`, but remains planned/disabled until visual approval and implementation;
+- `WEB-005 / UI-SUPPLIER-001` is reconciled, specification-ready and visual-approved for `/proveedores`, but remains planned/disabled until implementation;
 - `WEB-006..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options are visible in the Sidebar information architecture;
 - only the 3 implemented entries are interactive links;

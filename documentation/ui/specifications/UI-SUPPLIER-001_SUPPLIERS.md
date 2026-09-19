@@ -1,6 +1,6 @@
 # UI-SUPPLIER-001 — Proveedores
 
-Status: `SPECIFICATION_READY / VISUAL_APPROVAL_PENDING`
+Status: `VISUAL_APPROVED / IMPLEMENTATION_READY / TRACEABILITY_GAPS_RECORDED`
 
 Upstream interface scope ID: `WEB-005`
 
@@ -137,7 +137,7 @@ Secciones recomendadas:
 2. `Identidades fiscales`;
 3. `Direcciones y contactos`.
 
-Puede existir un bloque visual `Compras y obligaciones` únicamente como estado explícitamente no disponible/futuro, sin cifras mock presentadas como reales. Para la primera referencia visual se prefiere omitirlo y mantener la pantalla enfocada.
+Puede existir un bloque visual `Compras y obligaciones` únicamente como estado explícitamente no disponible/futuro, sin cifras mock presentadas como reales. Para la primera implementación se prefiere omitirlo y mantener la pantalla enfocada.
 
 ### 7.3 Crear proveedor
 
@@ -278,7 +278,7 @@ No disponible para v1:
 
 ## 11. Estados UI
 
-La referencia visual debe contemplar:
+La implementación debe contemplar:
 
 - `loading_list`;
 - `list_populated`;
@@ -314,7 +314,7 @@ Mostrar estado vacío y acción de edición solo cuando corresponda.
 
 ## 13. Dirección visual
 
-La vista debe reutilizar el lenguaje aprobado del producto y especialmente la familia visual de Clientes:
+La vista reutiliza el lenguaje aprobado del producto y especialmente la familia visual de Clientes:
 
 - mismo `AppShell`;
 - Sidebar/Topbar/BottomBar reutilizables;
@@ -326,7 +326,7 @@ La vista debe reutilizar el lenguaje aprobado del producto y especialmente la fa
 - iconografía subordinada al contenido;
 - sin grandes tarjetas decorativas que desperdicien espacio.
 
-La vista debe sentirse claramente `Proveedores`, no una copia textual de Clientes. El énfasis visual puede recaer en:
+La vista debe sentirse claramente `Proveedores`, no una copia textual de Clientes. El énfasis visual recae en:
 
 - organización/persona;
 - identidad fiscal;
@@ -365,32 +365,59 @@ Lista primero; detalle a pantalla completa; acciones sensibles accesibles sin ho
 - dialogs con gestión de foco;
 - estados disabled distinguibles sin depender solo de opacidad.
 
-## 16. Visual approval gate
+## 16. Baseline visual aprobado
 
-Antes de implementar `/proveedores` se requiere una referencia visual explícitamente aprobada.
+Luis aprobó explícitamente `UI-SUPPLIER-001 v1-theme-pair` el 2026-09-19 con la instrucción:
 
-La referencia deberá mostrar, como mínimo:
+> Úsalo como baseline visual UI-SUPPLIER-001.
 
-- desktop light;
-- desktop dark;
-- Sidebar completo ya gobernado;
-- entrada `Proveedores` activa en el mockup visual de la vista;
-- lista compacta de proveedores;
-- panel de detalle;
-- búsqueda;
+Registro de autoridad:
+
+```text
+documentation/ui/references/approved/UI-SUPPLIER-001/v1-theme-pair/README.md
+```
+
+Manifest de fuente:
+
+```text
+documentation/ui/references/approved/UI-SUPPLIER-001/v1-theme-pair/visual-source-manifest.md
+```
+
+La composición aprobada establece para la implementación:
+
+- desktop light + dark;
+- shell compacto completo;
+- `Proveedores` activo visualmente;
+- tabla/lista de proveedores densa;
+- búsqueda y filtros visibles;
 - CTA `Nuevo proveedor`;
-- identidad fiscal/contacto/rol dual;
-- ausencia de cifras financieras no soportadas.
+- panel master-detail a la derecha;
+- información de identidad fiscal/contacto/estado;
+- jerarquía tipográfica y espacial coherente con Dashboard y Clientes.
 
-La aprobación visual no activa la ruta. La activación ocurre únicamente después de implementación, CI, merge autorizado, deployment y runtime review.
+Los datos de ejemplo del mockup no son contractuales.
+
+El PNG fuente exacto está fingerprinted, pero su preservación binaria en Git permanece pendiente por limitación del conector actual. Esto no autoriza sustituirlo por una regeneración distinta.
 
 ## 17. Estado de implementación
 
 Actualmente:
 
 ```text
-UI-SUPPLIER-001 = SPECIFICATION_READY
+UI-SUPPLIER-001 = VISUAL_APPROVED / IMPLEMENTATION_READY
 /proveedores = PLANNED_DISABLED
 ```
 
-No se modifica `capabilities.ts`, `routes.tsx` ni React Router en este incremento documental.
+La aprobación visual por sí sola no modifica `capabilities.ts`, `routes.tsx` ni React Router. La ruta se activa únicamente en el incremento de implementación, después de preservar los contratos funcionales y el shell compartido.
+
+## 18. Registro de aprobación visual
+
+- Approved version: `UI-SUPPLIER-001 v1-theme-pair`
+- Approval date: `2026-09-19`
+- Approval statement: `Úsalo como baseline visual UI-SUPPLIER-001.`
+- Generation id: `742b47d8-fc9b-47ef-b30c-08af759d453e`
+- Source SHA-256: `5eba4cf03854c7804bacd1ab31186a1a0817a92f0730d3679a814538f0c26f8b`
+- Source dimensions: `1536 x 1024`
+- Binary preservation: `PENDING`
+
+Siguiente gate: implementación frontend de la vista aprobada dentro del shell existente, CI, autorización explícita de merge, deployment y runtime visual review.
