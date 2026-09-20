@@ -1,10 +1,10 @@
 # W1.3 Roles read/write readiness
 
-Status: `IMPLEMENTED / CI_GREEN / TEMP_NEON_SCHEMA_VALIDATED / PRODUCTION_SCHEMA_PENDING_APPROVAL`
+Status: `IMPLEMENTED / NEON_PRODUCTION_SCHEMA_APPLIED / MERGE_GATE_PENDING`
 
 Accepted backend base: `e669ab6cf12caa8d5c537489ebd35ff8bfaf0241` (`main` after W1.2 closure).
 
-Live-main reconciliation note: `main` later advanced through WebApp-only documentation changes; W1.3 must be reconciled against the live `main` again before merge approval.
+Live-main reconciliation: W1.3 is reconciled with `main@dcf54ef640bc206ee8c360610b8c4e93f25aab18`, which includes the approved WebApp `UI-CATALOG-001` implementation. The reconciliation preserves both lanes and leaves the W1.3 branch `0` commits behind that main checkpoint.
 
 Scope: `API-IAM-006..009` only.
 
@@ -21,11 +21,11 @@ No endpoint outside this set is introduced in W1.3.
 
 ## Readiness findings
 
-1. There was no existing IAM role aggregate, repository, EF record, mapping or migration in the V1 persistence model.
+1. There was no prior IAM security-role aggregate, repository, EF record, mapping or migration in the V1 persistence model.
 2. Existing `PartyRole` / `v1_party_roles` belongs to the Parties bounded context (`CUSTOMER` / `SUPPLIER`) and is not reused for security authorization.
 3. `Permissions.All` remains the canonical stable application permission catalog and single source of truth after W1.2.
 4. The V1 persistence foundation provides reusable idempotency, durable audit, outbox, transactions and PostgreSQL/MySQL persistence-equivalence infrastructure.
-5. The accepted architecture requires role/permission changes to be durable-audited and treats roles as editable permission compositions, not controller authorization shortcuts.
+5. Role/permission changes are durable-audited and roles remain editable permission compositions, not controller authorization shortcuts.
 6. Role routes resolve organization through the existing `V1OrganizationContextResolver` / `X-Organization-Id` behavior and validate actor company scope.
 
 ## Bounded role model
@@ -129,44 +129,48 @@ The schema is additive and provider-neutral.
 
 ## Executable CI evidence
 
-Clean Architecture Guard run `35487901223` on W1.3 head `006e784c823147bc8f34b79dd88d25da90e4bd9f` passed:
+Exact-head Clean Architecture Guard #614 (`35515593390`) passed on W1.3 head `b74d2c7edf9c9829a4e439f06b41ee861cfb432f` before the later WebApp-only `main` advancement:
 
-- restore;
-- NuGet vulnerability gate;
-- Release build;
-- ArchitectureTests;
-- CrossCuttingTests;
-- legacy UnitTest;
-- complete provider-real PostgreSQL/MySQL persistence integration suite.
+- restore PASS;
+- NuGet vulnerability gate PASS;
+- Release build PASS;
+- ArchitectureTests PASS (`249/249`);
+- CrossCuttingTests PASS;
+- legacy UnitTest PASS;
+- complete provider-real PostgreSQL/MySQL transactional persistence integration PASS.
 
-The persistence test verifies create/update atomicity, canonical permission composition, audit/outbox/idempotency evidence and provider equivalence. A later hardening commit extends this proof with create/update replay, company-scoped normalized-name uniqueness and failed-reservation rollback; the final exact-head guard must pass after that change.
+After `main` advanced through PR #178, W1.3 was reconciled with `main@dcf54ef640bc206ee8c360610b8c4e93f25aab18`. A new exact-head guard is required on the reconciled branch before merge approval.
 
-## Neon schema gate evidence
+## Neon production schema evidence
 
 Neon project: `efactura-demo` (`sparkling-night-24634185`).
 
 Production/default branch: `production` (`br-restless-thunder-a55cu12n`). Database: `efactura_demo`.
 
-Pre-gate production inspection found:
+Pre-promotion production inspection confirmed:
 
 - no `v1_security_roles` table;
 - no `v1_security_role_permissions` table;
 - latest recorded EF migration `20260914123000_V1FiscalCfeDocumentResponseCertificateTrust` (`8.0.30`).
 
-Migration `20260920040000_V1SecurityRoles` was then applied only to temporary Neon branch `br-green-term-a5qqyruf` using the PostgreSQL DDL equivalent of the committed EF migration. Validation confirmed:
+Migration `20260920040000_V1SecurityRoles` was first validated on temporary Neon branches. The final governed migration package used migration ID `8ff99177-cc62-4862-9bb1-c33573262f5a` and temporary branch `br-plain-silence-a530cfw2`.
 
-- exact required columns and nullability;
+Following explicit user approval, that prepared migration was promoted to production. Neon reported successful application to parent branch `br-restless-thunder-a55cu12n` and deleted the temporary branch.
+
+Post-promotion production verification confirmed:
+
+- `v1_security_roles` exists with 9 expected columns;
+- `v1_security_role_permissions` exists with 2 expected columns;
 - `PK_v1_security_roles`;
 - composite `PK_v1_security_role_permissions`;
 - unique `UX_v1_security_role_org_name` on `(OrganizationId, NormalizedName)`;
 - `IX_v1_security_role_org_active`;
 - `IX_v1_security_role_permission_code`;
-- FK `FK_v1_security_role_permission_role` with `ON DELETE CASCADE`;
-- same normalized role name accepted in different organizations;
-- permission rows persist with the expected role association;
+- FK `FK_v1_security_role_permission_role` from `RoleId` to `v1_security_roles.Id` with `ON DELETE CASCADE`;
+- runtime role `efactura_app` has `SELECT/INSERT/UPDATE/DELETE` on both new tables;
 - `__EFMigrationsHistory` records `20260920040000_V1SecurityRoles / 8.0.30`.
 
-The production branch remains unchanged. Promotion of the prepared migration requires explicit user approval through the Neon migration-completion gate.
+The schema promotion is expand-first and additive. No existing production table was altered by the W1.3 migration.
 
 ## Runtime / QA acceptance
 
