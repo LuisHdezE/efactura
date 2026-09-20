@@ -2,7 +2,7 @@
 
 Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_4_CLOSED / W1_5_NEXT`
 
-Current closure reconciliation baseline: `main@eac26a36d53fb54a71a0fabb2dfcbbab9db69b89`, after WebApp-only documentation PR #186. The W1.4 API implementation remains the accepted PR #185 merge `5a939ba251a898ea1dd6a181050fffa20e91324d`; PR #186 does not modify API/Application/Domain/Infrastructure code.
+Current closure reconciliation baseline: `main@ce6f80e42ac993c2b62ee240db5fb13fe7ba0cdb`, after WebApp documentation PRs #186 and #187. The W1.4 API implementation remains the accepted PR #185 merge `5a939ba251a898ea1dd6a181050fffa20e91324d`; those later WebApp commits do not modify API/Application/Domain/Infrastructure code.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
