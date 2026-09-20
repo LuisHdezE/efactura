@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave 1
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_3_ROLES_IMPLEMENTED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_3_CLOSED / W1_4_READINESS_LOCKED`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
@@ -8,20 +8,20 @@ Scope: **Identity + Organization + Reference Data**.
 
 Baseline: **30 operation IDs**, **21 implemented**, **9 non-implemented**.
 
-`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003, W1.1B implemented REF-001/004, W1.1C implemented REF-005/006, and W1.1D implemented REF-007/008. W1.2 implements the current-actor projection and canonical permission catalog without introducing persistence or a second identity model. W1.3 implements company-scoped security-role read/write with canonical permission validation, idempotency, audit/outbox evidence, optimistic concurrency and provider-real PostgreSQL/MySQL persistence coverage.
+`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003, W1.1B implemented REF-001/004, W1.1C implemented REF-005/006, and W1.1D implemented REF-007/008. W1.2 implements the current-actor projection and canonical permission catalog without introducing persistence or a second identity model. W1.3 is formally closed after company-scoped security-role read/write, production schema promotion, deployment, runtime acceptance and Neon evidence. W1.4 readiness is now locked for users + role assignment, but its five HTTP operations remain unimplemented until the bounded implementation slice lands.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
 | `API-IAM-001` | `getCurrentActor` | GET `/api/v1/me` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `IdentityAccessController.GetCurrentActor -> GetCurrentActorUseCase -> IActorContextAccessor` | EXISTING_PATH / regression | 1 | Preserve minimized actor projection over the existing authenticated context |
-| `API-IAM-002` | `listUsers` | GET `/api/v1/users` | `security.users.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | User read model/use case/controller required |
-| `API-IAM-003` | `getUser` | GET `/api/v1/users/{userId}` | `security.users.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | User detail read model/use case/controller required |
-| `API-IAM-004` | `createUser` | POST `/api/v1/users` | `security.users.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Govern identity-linking boundary and idempotent create |
-| `API-IAM-005` | `updateUser` | PATCH `/api/v1/users/{userId}` | `security.users.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Mutable user metadata/status command required |
+| `API-IAM-002` | `listUsers` | GET `/api/v1/users` | `security.users.read` | ACCEPTED | MISSING_HTTP | none | W1_4_READY | 1 | Implement company-scoped deterministic user projection over the new provider-neutral user access model |
+| `API-IAM-003` | `getUser` | GET `/api/v1/users/{userId}` | `security.users.read` | ACCEPTED | MISSING_HTTP | none | W1_4_READY | 1 | Implement scoped user detail with safe identity-link, status, scope and role assignments |
+| `API-IAM-004` | `createUser` | POST `/api/v1/users` | `security.users.manage` | ACCEPTED | MISSING_HTTP | none | W1_4_READY | 1 | Implement idempotent external-identity link creation without API-owned credentials or token lifecycle |
+| `API-IAM-005` | `updateUser` | PATCH `/api/v1/users/{userId}` | `security.users.manage` | ACCEPTED | MISSING_HTTP | none | W1_4_READY | 1 | Implement versioned metadata/status/scope mutation with conditional privilege guard for scope changes |
 | `API-IAM-006` | `listRoles` | GET `/api/v1/roles` | `security.roles.read` | ACCEPTED | IMPLEMENTED | `RolesController.List -> ListRolesUseCase -> ISecurityRoleRepository` | EXISTING_PATH / regression | 1 | Preserve company-scoped deterministic role projection |
 | `API-IAM-007` | `getRole` | GET `/api/v1/roles/{roleId}` | `security.roles.read` | ACCEPTED | IMPLEMENTED | `RolesController.Get -> GetRoleUseCase -> ISecurityRoleRepository` | EXISTING_PATH / regression | 1 | Preserve company-scoped role detail and canonical permission projection |
 | `API-IAM-008` | `createRole` | POST `/api/v1/roles` | `security.manage_roles` | ACCEPTED | IMPLEMENTED | `RolesController.Create -> CreateRoleUseCase -> EfSecurityRoleRepository` | EXISTING_PATH / regression | 1 | Preserve idempotency, normalized-name uniqueness, audit/outbox and canonical permission validation |
 | `API-IAM-009` | `updateRole` | PUT `/api/v1/roles/{roleId}` | `security.manage_roles` | ACCEPTED | IMPLEMENTED | `RolesController.Update -> UpdateRoleUseCase -> EfSecurityRoleRepository` | EXISTING_PATH / regression | 1 | Preserve full replacement semantics, expectedVersion concurrency and idempotent replay |
-| `API-IAM-010` | `assignUserRoles` | PUT `/api/v1/users/{userId}/roles` | `security.manage_roles` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Scoped assignment command required |
+| `API-IAM-010` | `assignUserRoles` | PUT `/api/v1/users/{userId}/roles` | `security.manage_roles` | ACCEPTED | MISSING_HTTP | none | W1_4_READY | 1 | Implement same-organization full replacement of active role references with version/idempotency/audit guards and no copied permission strings |
 | `API-IAM-011` | `listPermissions` | GET `/api/v1/permissions` | `security.roles.read` | ACCEPTED | IMPLEMENTED | `IdentityAccessController.ListPermissions -> ListPermissionsUseCase -> Permissions.All` | EXISTING_PATH / regression | 1 | Preserve the canonical application permission codes without duplicating or inventing metadata |
 | `API-ORG-001` | `getCurrentCompany` | GET `/api/v1/company` | `organization.read` | ACCEPTED | IMPLEMENTED | `CompanyController.Get -> GetCurrentCompanyUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
 | `API-ORG-002` | `updateCurrentCompany` | PATCH `/api/v1/company` | `organization.manage` | ACCEPTED | IMPLEMENTED | `CompanyController.Update -> UpsertCompanyFiscalProfileUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
