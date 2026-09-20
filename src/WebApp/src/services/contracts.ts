@@ -1,16 +1,23 @@
 import type {
   CommercialItemDto,
+  ItemCategoryDto,
   PageResponse,
   PartyDto,
+  ReferenceDataCollectionDto,
   SaleCreateInput,
   SaleDraftUpdateInput,
   SaleDto,
   SaleFiscalPreviewDto,
   SaleValidationDto,
+  TaxProfileDto,
+  UnitOfMeasureDto,
 } from '../contracts/api';
 
 export interface CatalogGateway {
   listItems(search?: string): Promise<PageResponse<CommercialItemDto>>;
+  listCategories(search?: string): Promise<PageResponse<ItemCategoryDto>>;
+  listTaxProfiles(): Promise<PageResponse<TaxProfileDto>>;
+  listUnitsOfMeasure(): Promise<ReferenceDataCollectionDto<UnitOfMeasureDto>>;
 }
 
 export interface PartiesGateway {

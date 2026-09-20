@@ -71,5 +71,23 @@ export const uiCapabilities: UiCapability[] = [
       { apiId: 'API-REF-001', operationId: 'listCountries', method: 'GET', route: '/api/v1/reference-data/countries', permission: 'authenticated' },
       { apiId: 'API-REF-003', operationId: 'listFiscalIdentityTypes', method: 'GET', route: '/api/v1/reference-data/fiscal-identity-types', permission: 'authenticated' }
     ]
+  },
+  {
+    uiId: 'UI-CATALOG-001',
+    label: 'Productos y Servicios',
+    route: '/catalogo',
+    status: 'IMPLEMENTED_API_MOCK_DATA',
+    operations: [
+      { apiId: 'API-CAT-001', operationId: 'listItems', method: 'GET', route: '/api/v1/items', permission: 'catalog.read' },
+      { apiId: 'API-CAT-002', operationId: 'createItem', method: 'POST', route: '/api/v1/items', permission: 'catalog.manage' },
+      { apiId: 'API-CAT-003', operationId: 'getItem', method: 'GET', route: '/api/v1/items/{itemId}', permission: 'catalog.read' },
+      { apiId: 'API-CAT-004', operationId: 'updateItem', method: 'PATCH', route: '/api/v1/items/{itemId}', permission: 'catalog.manage' },
+      { apiId: 'API-CAT-005', operationId: 'deactivateItem', method: 'POST', route: '/api/v1/items/{itemId}/deactivate', permission: 'catalog.manage' },
+      { apiId: 'API-CAT-006', operationId: 'listItemCategories', method: 'GET', route: '/api/v1/item-categories', permission: 'catalog.read' },
+      { apiId: 'API-CAT-007', operationId: 'createItemCategory', method: 'POST', route: '/api/v1/item-categories', permission: 'catalog.manage' },
+      { apiId: 'API-CAT-008', operationId: 'updateItemCategory', method: 'PATCH', route: '/api/v1/item-categories/{categoryId}', permission: 'catalog.manage' },
+      { apiId: 'API-CAT-009', operationId: 'listTaxProfiles', method: 'GET', route: '/api/v1/tax-profiles', permission: 'catalog.read' },
+      { apiId: 'API-REF-008', operationId: 'listUnitsOfMeasure', method: 'GET', route: '/api/v1/reference-data/units-of-measure', permission: 'catalog.read' }
+    ]
   }
 ];
