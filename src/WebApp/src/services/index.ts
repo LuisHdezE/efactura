@@ -16,6 +16,11 @@ function unavailableApiGateways(): AppGateways {
       listTaxProfiles: notIntegrated,
       listUnitsOfMeasure: notIntegrated,
     },
+    inventory: {
+      listPositions: notIntegrated,
+      getPosition: notIntegrated,
+      listMovements: notIntegrated,
+    },
     parties: { listCustomers: notIntegrated, listSuppliers: notIntegrated },
     sales: {
       createSale: notIntegrated,
