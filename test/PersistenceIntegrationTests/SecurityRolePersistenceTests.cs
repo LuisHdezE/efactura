@@ -206,12 +206,13 @@ public sealed class SecurityRolePersistenceTests
 
         Assert.Equal(3, await verification.AuditEvents.CountAsync());
         Assert.Equal(3, await verification.OutboxMessages.CountAsync());
-        Assert.Equal(3, await verification.IdempotencyRecords.CountAsync());
+        var idempotency = await verification.IdempotencyRecords.ToListAsync();
+        Assert.Equal(3, idempotency.Count);
+        Assert.All(idempotency, row => Assert.Equal(1, row.State));
+        Assert.DoesNotContain(idempotency, row => row.RequestHash == "hash-w13-duplicate-role");
+        Assert.DoesNotContain(idempotency, row => row.RequestHash == "hash-w13-invalid-role");
         Assert.Equal(2, await verification.Set<V1SecurityRoleRecord>().CountAsync());
         Assert.Equal(3, await verification.Set<V1SecurityRolePermissionRecord>().CountAsync());
-        Assert.DoesNotContain(
-            await verification.IdempotencyRecords.ToListAsync(),
-            row => row.Key is "w13-duplicate-role" or "w13-invalid-role");
     }
 
     private static CreateRoleUseCase CreateUseCase(
