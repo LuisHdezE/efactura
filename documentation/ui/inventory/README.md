@@ -47,8 +47,9 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | --- | --- | --- | --- | --- |
 | `WEB-001` | Login and Session Entry | `UI-AUTH-001` | `IMPLEMENTED / VISUAL_DEBT_DEFERRED` | `UI-AUTH-001_RECONCILIATION.md`, `../specifications/UI-AUTH-001_LOGIN_SESSION.md`, `../references/approved/UI-AUTH-001/v1-provider-neutral/README.md`, `../reviews/UI-AUTH-001/TECHNICAL_DEBT_DEFERRED_2026-09-19.md`, issue `#154` |
 | `WEB-002` | Operational Dashboard | `UI-DASHBOARD-001` | `VISUAL_APPROVED / BINARY_PRESERVATION_PENDING` | `UI-DASHBOARD-001_RECONCILIATION.md`, `../specifications/UI-DASHBOARD-001_OPERATIONAL_DASHBOARD.md`, `../references/approved/UI-DASHBOARD-001/v1-theme-pair/README.md` |
-| `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
-| `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
+| `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
+| `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
+| `WEB-005` | Suppliers | `UI-SUPPLIER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-SUPPLIER-001_RECONCILIATION.md`, `../specifications/UI-SUPPLIER-001_SUPPLIERS.md`, `../references/approved/UI-SUPPLIER-001/v1-theme-pair/README.md`, `../reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 
 ## UI-DASHBOARD-001 reconciliation and visual note
 
@@ -99,5 +100,24 @@ The corresponding React implementation was merged through PR `#135`, deployed fr
 The visual/runtime implementation lane is therefore closed as `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
 
 The inventory intentionally does not promote the row to final `ACCEPTED` because `UI-CUSTOMER-001_CUSTOMERS.md` records an independent governance prerequisite: no governed `US-*` customer-master artifact and no dedicated `UC-PTY-*`/`UC-CUSTOMER-*` lifecycle are currently evidenced. That traceability gap remains outside the frontend lane and must not be fabricated here.
+
+## UI-SUPPLIER-001 closure note
+
+`UI-SUPPLIER-001 v1-theme-pair` was explicitly approved by Luis on 2026-09-19. Its source fingerprint is governed under `documentation/ui/references/approved/UI-SUPPLIER-001/v1-theme-pair/`; byte-identical binary preservation remains pending and no regenerated substitute is authorized.
+
+The React implementation was merged through PR `#171`. Runtime review in light and dark identified three small presentation issues, which were isolated to PR `#172`: disabled-CTA affordance, detail-tab scrollbar chrome, and dark-mode readability of planned Sidebar items.
+
+`Deploy eFactura Demo #28` successfully published the accepted WebApp commit `525a5be0bee9458220d0e464f0d2df8aa935497b`. Luis then reviewed the deployed light/dark result and explicitly approved closure with:
+
+`Apruebo cierre runtime UI-SUPPLIER-001`
+
+The visual/runtime implementation lane is therefore closed as `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
+
+The inventory does not promote the row to final `ACCEPTED` because two independent governance debts remain:
+
+- no governed `US-*` supplier-master artifact or dedicated `UC-SUPPLIER-*` lifecycle is currently evidenced;
+- the approved source PNG remains `BINARY_PRESERVATION_PENDING`.
+
+Neither debt reopens the accepted runtime lane and neither may be silently invented or represented as resolved.
 
 Reconciliation and future views must continue to use current repository evidence rather than historical unresolved-API notes alone.
