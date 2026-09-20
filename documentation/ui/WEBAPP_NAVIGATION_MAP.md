@@ -12,14 +12,15 @@ Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx` an
 
 The accepted web scope contains `WEB-001..WEB-018` plus additive `WEB-019 Technical Operations Console`.
 
-Current runtime state:
+Current runtime/governance state:
 
 - `WEB-001 / UI-AUTH-001` is standalone at `/acceso`;
 - `WEB-002 / UI-DASHBOARD-001` is active at `/dashboard`;
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
-- `WEB-006..WEB-019` remain planned shell candidates with no executable route yet;
+- `WEB-006` is reconciled as `UI-CATALOG-001`, with `/catalogo` reserved but still `PLANNED_DISABLED` pending visual approval and implementation;
+- `WEB-007..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 4 entries are interactive shell routes;
 - 14 future entries remain visible as disabled/non-clickable options, not fake routes.
@@ -84,7 +85,7 @@ Legend:
 | `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` |
 | `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` |
 | `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` |
-| `WEB-006` | Products and Services Catalog | Comercial | `UI ID pending` | `/catalogo` candidate | `PLANNED_DISABLED` |
+| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `PLANNED_DISABLED` |
 | `WEB-007` | Inventory and Movements | Inventario y Compras | `UI ID pending` | `/inventario` candidate | `PLANNED_DISABLED` |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI ID pending` | `/transferencias` candidate | `PLANNED_DISABLED` |
 | `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI ID pending` | `/compras` candidate | `PLANNED_DISABLED` |
@@ -153,11 +154,19 @@ Accepted evidence:
 
 This does not promote the view to final repository-wide `ACCEPTED`; its specification still records independent traceability and binary-preservation debt.
 
-## 9. Change control
+## 9. Current next-view checkpoint
+
+`WEB-006` has now been reconciled as `UI-CATALOG-001` with reserved route `/catalogo`.
+
+Its first governed scope is the executable commercial-item master supported by `API-CAT-001..009` and `API-REF-008`, without fabricating pricing, images/media or stock quantities absent from the current item contract.
+
+The option remains `PLANNED_DISABLED` until the visual baseline is explicitly approved and the React implementation is merged through the normal governance sequence.
+
+## 10. Change control
 
 Changing product group assignment, route, standalone/shell classification, ordering, visibility rules or Sidebar/mobile grouping requires an explicit navigation-governance update.
 
-## 10. Relationship to shell policy
+## 11. Relationship to shell policy
 
 - `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap and visibility state;
 - `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and activation rules;
