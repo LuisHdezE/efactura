@@ -21,7 +21,7 @@ public sealed class SecurityRolePersistenceTests
     [Theory]
     [InlineData(V1DatabaseProvider.PostgreSql)]
     [InlineData(V1DatabaseProvider.MySql)]
-    public async Task Role_create_and_replace_are_atomic_audited_idempotent_and_provider_equivalent(V1DatabaseProvider provider)
+    public async Task Role_create_replace_replay_and_scoped_uniqueness_are_provider_equivalent(V1DatabaseProvider provider)
     {
         await using var database = await TestDatabase.CreateAsync(provider);
         if (database is null)
@@ -36,7 +36,7 @@ public sealed class SecurityRolePersistenceTests
                 Permissions.SecurityRolesRead,
                 Permissions.SecurityManageRoles
             }, StringComparer.Ordinal),
-            new HashSet<string>(new[] { "company-1" }, StringComparer.Ordinal),
+            new HashSet<string>(new[] { "company-1", "company-2" }, StringComparer.Ordinal),
             new HashSet<string>(StringComparer.Ordinal),
             new HashSet<string>(StringComparer.Ordinal),
             null));
@@ -44,19 +44,12 @@ public sealed class SecurityRolePersistenceTests
             new CorrelationContext("corr-w13", "trace-w13"));
 
         string roleId;
+        string company2RoleId;
 
         await using (var context = database.CreateContext())
         {
             var repository = new EfSecurityRoleRepository(context);
-            var create = new CreateRoleUseCase(
-                repository,
-                new EfTransactionManager(context),
-                new EfUnitOfWork(context),
-                new EfIdempotencyStore(context),
-                new EfAuditWriter(context),
-                new EfOutboxWriter(context),
-                actor,
-                correlation);
+            var create = CreateUseCase(context, repository, actor, correlation);
 
             var created = await create.ExecuteAsync(new CreateRoleCommand(
                 "company-1",
@@ -75,15 +68,25 @@ public sealed class SecurityRolePersistenceTests
         await using (var context = database.CreateContext())
         {
             var repository = new EfSecurityRoleRepository(context);
-            var update = new UpdateRoleUseCase(
-                repository,
-                new EfTransactionManager(context),
-                new EfUnitOfWork(context),
-                new EfIdempotencyStore(context),
-                new EfAuditWriter(context),
-                new EfOutboxWriter(context),
-                actor,
-                correlation);
+            var create = CreateUseCase(context, repository, actor, correlation);
+
+            var replayed = await create.ExecuteAsync(new CreateRoleCommand(
+                "company-1",
+                "Operator",
+                "Initial role",
+                new[] { Permissions.SalesRead, Permissions.CatalogRead, Permissions.SalesRead },
+                "w13-create-role",
+                "hash-w13-create-role"));
+
+            Assert.True(replayed.Replayed);
+            Assert.Equal(roleId, replayed.Role.Id);
+            Assert.Equal(1, replayed.Role.Version);
+        }
+
+        await using (var context = database.CreateContext())
+        {
+            var repository = new EfSecurityRoleRepository(context);
+            var update = UpdateUseCase(context, repository, actor, correlation);
 
             var updated = await update.ExecuteAsync(new UpdateRoleCommand(
                 "company-1",
@@ -105,15 +108,65 @@ public sealed class SecurityRolePersistenceTests
         await using (var context = database.CreateContext())
         {
             var repository = new EfSecurityRoleRepository(context);
-            var create = new CreateRoleUseCase(
-                repository,
-                new EfTransactionManager(context),
-                new EfUnitOfWork(context),
-                new EfIdempotencyStore(context),
-                new EfAuditWriter(context),
-                new EfOutboxWriter(context),
-                actor,
-                correlation);
+            var update = UpdateUseCase(context, repository, actor, correlation);
+
+            var replayed = await update.ExecuteAsync(new UpdateRoleCommand(
+                "company-1",
+                roleId,
+                "Supervisor",
+                "Replacement role",
+                false,
+                new[] { Permissions.AuditRead, Permissions.CatalogRead },
+                1,
+                "w13-update-role",
+                "hash-w13-update-role"));
+
+            Assert.True(replayed.Replayed);
+            Assert.Equal(roleId, replayed.Role.Id);
+            Assert.Equal(2, replayed.Role.Version);
+        }
+
+        await using (var context = database.CreateContext())
+        {
+            var repository = new EfSecurityRoleRepository(context);
+            var create = CreateUseCase(context, repository, actor, correlation);
+
+            var duplicate = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
+                create.ExecuteAsync(new CreateRoleCommand(
+                    "company-1",
+                    "  supervisor  ",
+                    "Duplicate normalized name",
+                    new[] { Permissions.CatalogRead },
+                    "w13-duplicate-role",
+                    "hash-w13-duplicate-role")));
+
+            Assert.Equal(ApplicationProblemKind.Conflict, duplicate.Kind);
+            Assert.Equal("identity.role.name_duplicate", duplicate.Code);
+            Assert.Equal("duplicate_role_name", duplicate.ConflictType);
+        }
+
+        await using (var context = database.CreateContext())
+        {
+            var repository = new EfSecurityRoleRepository(context);
+            var create = CreateUseCase(context, repository, actor, correlation);
+
+            var crossCompany = await create.ExecuteAsync(new CreateRoleCommand(
+                "company-2",
+                " supervisor ",
+                "Same normalized name in another organization",
+                new[] { Permissions.CatalogRead },
+                "w13-company2-role",
+                "hash-w13-company2-role"));
+
+            Assert.False(crossCompany.Replayed);
+            Assert.Equal(1, crossCompany.Role.Version);
+            company2RoleId = crossCompany.Role.Id;
+        }
+
+        await using (var context = database.CreateContext())
+        {
+            var repository = new EfSecurityRoleRepository(context);
+            var create = CreateUseCase(context, repository, actor, correlation);
 
             var invalid = await Assert.ThrowsAsync<ApplicationProblemException>(() =>
                 create.ExecuteAsync(new CreateRoleCommand(
@@ -143,12 +196,53 @@ public sealed class SecurityRolePersistenceTests
             new[] { Permissions.AuditRead, Permissions.CatalogRead },
             role.Permissions.Select(x => x.PermissionCode).OrderBy(x => x, StringComparer.Ordinal));
 
-        Assert.Equal(2, await verification.AuditEvents.CountAsync());
-        Assert.Equal(2, await verification.OutboxMessages.CountAsync());
-        Assert.Equal(2, await verification.IdempotencyRecords.CountAsync());
-        Assert.Equal(1, await verification.Set<V1SecurityRoleRecord>().CountAsync());
-        Assert.Equal(2, await verification.Set<V1SecurityRolePermissionRecord>().CountAsync());
+        var company2Role = await verification.Set<V1SecurityRoleRecord>()
+            .Include(x => x.Permissions)
+            .SingleAsync(x => x.Id == company2RoleId);
+        Assert.Equal("company-2", company2Role.OrganizationId);
+        Assert.Equal("supervisor", company2Role.Name);
+        Assert.Equal("SUPERVISOR", company2Role.NormalizedName);
+        Assert.Equal(new[] { Permissions.CatalogRead }, company2Role.Permissions.Select(x => x.PermissionCode));
+
+        Assert.Equal(3, await verification.AuditEvents.CountAsync());
+        Assert.Equal(3, await verification.OutboxMessages.CountAsync());
+        Assert.Equal(3, await verification.IdempotencyRecords.CountAsync());
+        Assert.Equal(2, await verification.Set<V1SecurityRoleRecord>().CountAsync());
+        Assert.Equal(3, await verification.Set<V1SecurityRolePermissionRecord>().CountAsync());
+        Assert.DoesNotContain(
+            await verification.IdempotencyRecords.ToListAsync(),
+            row => row.Key is "w13-duplicate-role" or "w13-invalid-role");
     }
+
+    private static CreateRoleUseCase CreateUseCase(
+        V1PersistenceDbContext context,
+        EfSecurityRoleRepository repository,
+        IActorContextAccessor actor,
+        ICorrelationContextAccessor correlation) =>
+        new(
+            repository,
+            new EfTransactionManager(context),
+            new EfUnitOfWork(context),
+            new EfIdempotencyStore(context),
+            new EfAuditWriter(context),
+            new EfOutboxWriter(context),
+            actor,
+            correlation);
+
+    private static UpdateRoleUseCase UpdateUseCase(
+        V1PersistenceDbContext context,
+        EfSecurityRoleRepository repository,
+        IActorContextAccessor actor,
+        ICorrelationContextAccessor correlation) =>
+        new(
+            repository,
+            new EfTransactionManager(context),
+            new EfUnitOfWork(context),
+            new EfIdempotencyStore(context),
+            new EfAuditWriter(context),
+            new EfOutboxWriter(context),
+            actor,
+            correlation);
 
     private sealed class FixedActorContextAccessor : IActorContextAccessor
     {
