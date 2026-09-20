@@ -7,10 +7,10 @@ namespace ArchitectureTests;
 public sealed class ApiCompletionMasterMatrixArchitectureTests
 {
     private const int CurrentInventoryCount = 194;
-    private const int CurrentImplementedCount = 51;
-    private const int CurrentMissingHttpCount = 141;
+    private const int CurrentImplementedCount = 55;
+    private const int CurrentMissingHttpCount = 137;
     private const int CurrentContractCollisionCount = 2;
-    private const int CurrentNonImplementedCount = 143;
+    private const int CurrentNonImplementedCount = 139;
     private const int CurrentDistinctRouteSignatureCount = 193;
 
     private static readonly string[] MatrixShardPaths =

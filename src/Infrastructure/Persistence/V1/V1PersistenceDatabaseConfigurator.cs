@@ -31,8 +31,9 @@ public static class V1PersistenceDatabaseConfigurator
         // V1PersistenceLaterStateModelCustomizer -> V1PersistenceEnvelopeModelCustomizer ->
         // V1PersistenceCfeDocumentResponseModelCustomizer ->
         // V1PersistenceCfeDocumentResponseSignatureModelCustomizer ->
-        // V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer.
+        // V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer ->
+        // V1PersistenceSecurityRoleModelCustomizer.
         // Keeping this lineage explicit also makes the architecture guard's continuity invariant visible here.
-        options.ReplaceService<IModelCustomizer, V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer>();
+        options.ReplaceService<IModelCustomizer, V1PersistenceSecurityRoleModelCustomizer>();
     }
 }

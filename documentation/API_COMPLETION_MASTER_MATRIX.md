@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_2_IDENTITY_ACCESS_IMPLEMENTED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_3_ROLES_IMPLEMENTED`
 
-Baseline source: W1.2 branch created from `main@a4b8386ad1eb5ad300f360a68ae5eb322625969f`.
+Baseline source: W1.3 implementation started from accepted backend `main@e669ab6cf12caa8d5c537489ebd35ff8bfaf0241`; final review requires reconciliation against the live `main` before merge approval.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
@@ -47,20 +47,20 @@ The legitimate later `+1` is:
 
 | Wave | Scope | Operation IDs | Implemented | Missing HTTP | Contract collision | Non-implemented |
 |---:|---|---:|---:|---:|---:|---:|
-| 1 | Identity + Organization + Reference Data | 30 | 17 | 13 | 0 | 13 |
+| 1 | Identity + Organization + Reference Data | 30 | 21 | 9 | 0 | 9 |
 | 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 |
-| **Total** |  | **194** | **51** | **141** | **2** | **143** |
+| **Total** |  | **194** | **55** | **137** | **2** | **139** |
 
-Raw operation-ID implementation coverage is `51 / 194 = 26.29%`.
+Raw operation-ID implementation coverage is `55 / 194 = 28.35%`.
 
 This is an operation-count measure only. It is not a product-readiness score and does not diminish deeper Domain/Application/fiscal capabilities that are not yet exposed through the governed public API.
 
-W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. W1.1D completes Reference Data with `API-REF-007 listContactTypes` and `API-REF-008 listUnitsOfMeasure`, preserving configurable party-contact semantics and projecting only active commercial units visible through the actor's company scopes. W1.2 adds `API-IAM-001 getCurrentActor` and `API-IAM-011 listPermissions` by projecting the existing actor context and canonical `Permissions.All` set without introducing a second identity model or persistence boundary.
+W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. W1.1D completes Reference Data with `API-REF-007 listContactTypes` and `API-REF-008 listUnitsOfMeasure`, preserving configurable party-contact semantics and projecting only active commercial units visible through the actor's company scopes. W1.2 adds `API-IAM-001 getCurrentActor` and `API-IAM-011 listPermissions` by projecting the existing actor context and canonical `Permissions.All` set without introducing a second identity model or persistence boundary. W1.3 adds `API-IAM-006..009` through a dedicated company-scoped `SecurityRole` aggregate, canonical permission-code validation, idempotent create/update, optimistic concurrency, audit/outbox evidence and provider-real PostgreSQL/MySQL persistence.
 
 ## 4. Logical matrix shards
 
@@ -114,7 +114,7 @@ Both rows remain represented in Wave 7 and are marked `CONTRACT_COLLISION / BLOC
    - `W1.1C`: implemented `API-REF-005` and `API-REF-006` with fail-closed fiscal document/indicator scope and exact `fiscal.read` authorization.
    - `W1.1D`: implemented `API-REF-007` and `API-REF-008` after closing ContactType compatibility and commercial-unit/DGI boundary semantics.
 2. `W1.2` Current actor + permission catalog: `API-IAM-001`, `API-IAM-011` — implemented by projecting `IActorContextAccessor.Current` and `Permissions.All`.
-3. `W1.3` Roles read/write: `API-IAM-006..009`.
+3. `W1.3` Roles read/write: `API-IAM-006..009` — implemented with company-scoped persistence, canonical permission composition, idempotency and optimistic concurrency.
 4. `W1.4` Users + role assignment: `API-IAM-002..005`, `API-IAM-010`.
 5. `W1.5` Terminals: `API-ORG-007..010`.
 6. `W1.6` Wave reconciliation: exact contract/implementation/test coverage and documentation closeout.
@@ -133,10 +133,10 @@ Every implementation increment must include, as applicable:
 - matrix row/status updates in the same governed increment;
 - no test weakening to obtain green CI.
 
-## 9. Next gate
+## 9. W1.3 deployment gate and next increment
 
-W1.2 keeps identity context provider-neutral and data-minimized. `getCurrentActor` exposes only identity/display metadata plus effective permissions and allowed company/location/terminal scopes from the existing `ActorContext`; `listPermissions` exposes only canonical codes from `Permissions.All` and requires exact permission `security.roles.read`. No database, migration, repository, external identity-provider contract or WebApp runtime change is introduced.
+W1.3 introduces additive persistence tables `v1_security_roles` and `v1_security_role_permissions`. The current Cloud Run deploy workflow builds and deploys the API but does not apply EF migrations automatically. Therefore W1.3 cannot be considered runtime-accepted merely because a new image deploys successfully. Before runtime acceptance, the accepted W1.3 migration must be applied to the Neon demo schema using a secret-safe, explicitly verified schema gate, then the four governed role endpoints must pass authorization, idempotency and persistence smoke tests.
 
-After exact-head CI, merge approval, deployment and runtime acceptance for W1.2, Wave 1 proceeds to **W1.3 Roles read/write** (`API-IAM-006..009`).
+After exact-head CI, live-main reconciliation, explicit merge approval, schema gate, deployment and runtime acceptance for W1.3, Wave 1 proceeds to **W1.4 Users + role assignment** (`API-IAM-002..005`, `API-IAM-010`).
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.
