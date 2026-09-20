@@ -12,19 +12,19 @@ Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx` an
 
 The accepted web scope contains `WEB-001..WEB-018` plus additive `WEB-019 Technical Operations Console`.
 
-Current implementation-branch state:
+Current runtime state:
 
 - `WEB-001 / UI-AUTH-001` is standalone at `/acceso`;
 - `WEB-002 / UI-DASHBOARD-001` is active at `/dashboard`;
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
-- `WEB-005 / UI-SUPPLIER-001` is implemented and active at `/proveedores`, pending CI, merge authorization, deployment and runtime visual review;
+- `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
 - `WEB-006..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
-- 4 entries are interactive in this implementation branch;
+- 4 entries are interactive shell routes;
 - 14 future entries remain visible as disabled/non-clickable options, not fake routes.
 
-Current implementation-branch counts:
+Current counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
@@ -134,13 +134,30 @@ Feature components must not encode their own Sidebar placement.
 
 When a planned view is implemented, the existing navigation item changes from `planned` to `active` after its `WEB-*` scope, `UI-*` identifier, final route, capability evidence and React feature are governed and implemented.
 
+Runtime acceptance is recorded separately from route activation. An active route may still have visual/governance debt, and runtime acceptance must never be inferred merely from implementation.
+
 `/pos` remains `defaultShellRoute` until a separate explicit product decision changes it.
 
-## 8. Change control
+## 8. Runtime acceptance checkpoint
+
+`UI-SUPPLIER-001` is the latest shell route to complete the governed visual/runtime lane.
+
+Accepted evidence:
+
+- approved baseline: `UI-SUPPLIER-001 v1-theme-pair`;
+- implementation PR: `#171`;
+- runtime-polish PR: `#172`;
+- accepted deployed WebApp commit: `525a5be0bee9458220d0e464f0d2df8aa935497b`;
+- human runtime acceptance: `Apruebo cierre runtime UI-SUPPLIER-001` on 2026-09-19;
+- acceptance record: `documentation/ui/reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md`.
+
+This does not promote the view to final repository-wide `ACCEPTED`; its specification still records independent traceability and binary-preservation debt.
+
+## 9. Change control
 
 Changing product group assignment, route, standalone/shell classification, ordering, visibility rules or Sidebar/mobile grouping requires an explicit navigation-governance update.
 
-## 9. Relationship to shell policy
+## 10. Relationship to shell policy
 
 - `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap and visibility state;
 - `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and activation rules;
