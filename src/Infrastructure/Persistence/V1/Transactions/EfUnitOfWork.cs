@@ -27,6 +27,8 @@ public sealed class EfUnitOfWork : IUnitOfWork
         "UX_v1_location_org_branch";
     private const string FiscalContentSnapshotDocumentUniqueIndex =
         "UX_v1_fcs_document";
+    private const string SecurityUserIdentityUniqueIndex =
+        "UX_v1_security_user_org_identity";
 
     private readonly Write.V1PersistenceDbContext _dbContext;
 
@@ -64,6 +66,14 @@ public sealed class EfUnitOfWork : IUnitOfWork
                 "organization.location.branch_code_duplicate",
                 "The DGI branch code is already assigned to another location in this organization.",
                 conflictType: "duplicate_branch_code");
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex, SecurityUserIdentityUniqueIndex, typeof(V1SecurityUserRecord)))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "identity.user.identity_duplicate",
+                "This external identity is already linked inside the organization.",
+                conflictType: "duplicate_identity_link");
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex, CaeArtifactUniqueIndex, typeof(V1CaeAuthorizationRecord)))
         {

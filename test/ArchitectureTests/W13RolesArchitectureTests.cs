@@ -56,14 +56,15 @@ public sealed class W13RolesArchitectureTests
     }
 
     [Fact]
-    public void Security_role_model_customizer_preserves_the_accepted_chain()
+    public void Security_role_model_customizer_preserves_the_accepted_chain_when_extended()
     {
         var customizer = Read("src/Infrastructure/Persistence/V1/V1PersistenceSecurityRoleModelCustomizer.cs");
         var configurator = Read("src/Infrastructure/Persistence/V1/V1PersistenceDatabaseConfigurator.cs");
 
         Assert.Contains("V1PersistenceCfeDocumentResponseCertificateTrustModelCustomizer", customizer, StringComparison.Ordinal);
         Assert.Contains("_baseline.Customize(modelBuilder, context)", customizer, StringComparison.Ordinal);
-        Assert.Contains("ReplaceService<IModelCustomizer, V1PersistenceSecurityRoleModelCustomizer>()", configurator, StringComparison.Ordinal);
+        Assert.Contains("V1PersistenceSecurityRoleModelCustomizer ->", configurator, StringComparison.Ordinal);
+        Assert.Contains("ReplaceService<IModelCustomizer, V1PersistenceSecurityUserModelCustomizer>()", configurator, StringComparison.Ordinal);
         Assert.Contains("UX_v1_security_role_org_name", customizer, StringComparison.Ordinal);
         Assert.Contains("IX_v1_security_role_org_active", customizer, StringComparison.Ordinal);
     }
