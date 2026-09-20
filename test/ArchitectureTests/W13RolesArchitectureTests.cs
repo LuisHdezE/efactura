@@ -101,10 +101,16 @@ public sealed class W13RolesArchitectureTests
     {
         var readiness = Read("documentation/api-completion-matrix/W1_3_ROLES_READINESS.md");
 
-        Assert.Contains("Status: `READY_FOR_IMPLEMENTATION`", readiness, StringComparison.Ordinal);
+        Assert.Contains(
+            "Status: `IMPLEMENTED / CI_GREEN / TEMP_NEON_SCHEMA_VALIDATED / PRODUCTION_SCHEMA_PENDING_APPROVAL`",
+            readiness,
+            StringComparison.Ordinal);
         Assert.Contains("Wave 1: `21 / 30`", readiness, StringComparison.Ordinal);
         Assert.Contains("global public v1: `55 / 194`", readiness, StringComparison.Ordinal);
         Assert.Contains("remaining `MISSING_HTTP`: `137`", readiness, StringComparison.Ordinal);
+        Assert.Contains("remaining contract-collision IDs: `2`", readiness, StringComparison.Ordinal);
+        Assert.Contains("remaining non-implemented IDs: `139`", readiness, StringComparison.Ordinal);
+        Assert.Contains("production branch remains unchanged", readiness, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("W1.4 Users + role assignment", readiness, StringComparison.Ordinal);
     }
 
