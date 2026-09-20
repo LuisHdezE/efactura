@@ -89,5 +89,17 @@ export const uiCapabilities: UiCapability[] = [
       { apiId: 'API-CAT-009', operationId: 'listTaxProfiles', method: 'GET', route: '/api/v1/tax-profiles', permission: 'catalog.read' },
       { apiId: 'API-REF-008', operationId: 'listUnitsOfMeasure', method: 'GET', route: '/api/v1/reference-data/units-of-measure', permission: 'catalog.read' }
     ]
+  },
+  {
+    uiId: 'UI-INVENTORY-001',
+    label: 'Inventario',
+    route: '/inventario',
+    status: 'IMPLEMENTED_API_MOCK_DATA',
+    operations: [
+      { apiId: 'API-INV-001', operationId: 'listInventoryPositions', method: 'GET', route: '/api/v1/inventory/positions', permission: 'inventory.read' },
+      { apiId: 'API-INV-002', operationId: 'getInventoryPosition', method: 'GET', route: '/api/v1/inventory/positions/{positionId}', permission: 'inventory.read' },
+      { apiId: 'API-INV-003', operationId: 'listStockMovements', method: 'GET', route: '/api/v1/inventory/movements', permission: 'inventory.read' },
+      { apiId: 'API-INV-004', operationId: 'createStockAdjustment', method: 'POST', route: '/api/v1/inventory/adjustments', permission: 'inventory.adjust' }
+    ]
   }
 ];
