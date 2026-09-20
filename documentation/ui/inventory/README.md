@@ -51,6 +51,7 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-005` | Suppliers | `UI-SUPPLIER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-SUPPLIER-001_RECONCILIATION.md`, `../specifications/UI-SUPPLIER-001_SUPPLIERS.md`, `../references/approved/UI-SUPPLIER-001/v1-theme-pair/README.md`, `../reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-006` | Products and Services Catalog | `UI-CATALOG-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-CATALOG-001_RECONCILIATION.md`, `../specifications/UI-CATALOG-001_PRODUCTS_SERVICES.md`, `../references/approved/UI-CATALOG-001/v1-theme-pair/README.md`, `../reviews/UI-CATALOG-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
+| `WEB-007` | Inventory and Movements | `UI-INVENTORY-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-INVENTORY-001_RECONCILIATION.md`, `../specifications/UI-INVENTORY-001_INVENTORY_MOVEMENTS.md`, `../references/approved/UI-INVENTORY-001/v1-responsive-suite/README.md`, `../reviews/UI-INVENTORY-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 
 ## UI-DASHBOARD-001 reconciliation and visual note
 
@@ -142,5 +143,31 @@ The inventory does not promote the row to final `ACCEPTED` because independent g
 - the approved source PNG remains `BINARY_PRESERVATION_PENDING`.
 
 These debts do not reopen the accepted runtime lane and none may be silently invented or represented as resolved.
+
+## UI-INVENTORY-001 closure note
+
+`UI-INVENTORY-001 v1-responsive-suite` was explicitly approved by Luis on 2026-09-20. Its desktop/mobile fingerprints and generation metadata are governed under `documentation/ui/references/approved/UI-INVENTORY-001/v1-responsive-suite/`; byte-identical binary preservation remains pending and no regenerated substitute is authorized.
+
+The React implementation was merged through PR `#184` at `45a57dab16d27d6d455aeebef895c495968da63b`. `Deploy eFactura Demo #31` and post-merge `Frontend Demo CI #72` completed successfully; `Clean Architecture Guard #638` also completed successfully, including PostgreSQL/MySQL transactional integration tests.
+
+Deployed desktop runtime evidence was reviewed in both light and dark themes. Luis then explicitly approved closure with:
+
+`Apruebo cierre runtime UI-INVENTORY-001`
+
+The visual/runtime implementation lane is therefore closed as `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
+
+The implementation preserves the inventory contract boundary: it presents authoritative position quantity/version and optional catalog enrichment, does not fabricate reserved/available-to-sell/minimum/EOQ/valuation data, and keeps `Ajustar stock` disabled while live WebApp write integration remains outside the enabled demo lane.
+
+Separate deployed mobile runtime screenshots were not archived in this closure thread. The responsive visual suite remains approved, but the runtime acceptance record explicitly avoids claiming independent mobile pixel review that did not occur here.
+
+The inventory does not promote the row to final `ACCEPTED` because independent governance and execution debts remain:
+
+- no governed dedicated `US-INV-*` story artifact is currently evidenced;
+- `API-INV-003` retains the known non-`Adjustment` movement projection gap;
+- live WebApp write integration for `API-INV-004` remains intentionally disabled in the current demo lane;
+- separate deployed mobile runtime screenshots were not archived in the closure evidence;
+- the approved source PNGs remain `BINARY_PRESERVATION_PENDING`.
+
+These debts and evidence limitations do not reopen the owner-approved runtime lane and none may be silently invented or represented as resolved.
 
 Reconciliation and future views must continue to use current repository evidence rather than historical unresolved-API notes alone.
