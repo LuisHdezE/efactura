@@ -1,12 +1,14 @@
 # UI-SUPPLIER-001 — Proveedores
 
-Status: `VISUAL_APPROVED / IMPLEMENTATION_READY / TRACEABILITY_GAPS_RECORDED`
+Status: `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING`
 
 Upstream interface scope ID: `WEB-005`
 
 Reconciliation: `documentation/ui/inventory/UI-SUPPLIER-001_RECONCILIATION.md`
 
 Governed route: `/proveedores`
+
+Runtime acceptance: `documentation/ui/reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md`
 
 ## 1. Objetivo
 
@@ -50,7 +52,7 @@ El alcance upstream referencia:
 - `FR-071`;
 - `FR-081`.
 
-La primera versión implementable cubre directamente el mantenimiento maestro soportado por `FR-010` y `FR-011`.
+La primera versión implementada cubre directamente el mantenimiento maestro soportado por `FR-010` y `FR-011`.
 
 `FR-067`, `FR-071` y `FR-081` permanecen como trazabilidad de alcance futuro, pero la vista no debe fingir que existen compras, cuentas por pagar o evidencia CFE enlazada mientras sus proyecciones no estén disponibles.
 
@@ -60,6 +62,8 @@ No se evidencia actualmente un lifecycle gobernado `UC-SUPPLIER-*` ni una histor
 
 La especificación registra el hueco y no inventa esas piezas.
 
+Ese hueco no invalida la aceptación visual/runtime, pero impide representar el estado repository-wide como final `ACCEPTED` hasta que la trazabilidad se resuelva en su carril correspondiente.
+
 ## 6. Navegación
 
 Ubicación:
@@ -68,15 +72,13 @@ Ubicación:
 Comercial -> Proveedores
 ```
 
-Ruta gobernada:
+Ruta gobernada y actualmente activa:
 
 ```text
 /proveedores
 ```
 
-Mientras la implementación no exista, la opción permanece visible pero deshabilitada según la política del shell.
-
-Al activarse, reemplaza esa misma entrada `planned` por `active`; no se agrega una segunda opción.
+La opción reutiliza la entrada gobernada `WEB-005 / UI-SUPPLIER-001`; no existe una segunda entrada duplicada.
 
 Relaciones futuras:
 
@@ -156,6 +158,8 @@ Campos soportados:
 
 La operación requiere `Idempotency-Key` según contrato.
 
+La aceptación runtime actual no implica que este write path esté conectado en la WebApp demo. Mientras el gateway siga local/mock, el CTA debe permanecer visualmente deshabilitado y no fingir escritura live.
+
 ### 7.4 Editar proveedor
 
 `API-PTY-004 updateParty` soporta mantenimiento de:
@@ -190,7 +194,7 @@ La API actual ya dispone de:
 - `API-REF-001 listCountries`;
 - `API-REF-003 listFiscalIdentityTypes`.
 
-Por tanto, el diseño puede contemplar selectores alimentados por contratos reales. La implementación WebApp deberá respetar su modo de datos vigente y no fingir integración live si todavía opera con fixtures locales.
+Por tanto, el diseño puede contemplar selectores alimentados por contratos reales. La implementación WebApp debe respetar su modo de datos vigente y no fingir integración live si todavía opera con fixtures locales.
 
 ### 7.6 Roles
 
@@ -239,6 +243,8 @@ Fuentes disponibles:
 
 `API-REF-005` tipos de documento fiscal y `API-REF-006` indicadores de factura existen en el baseline actual, pero pertenecen al alcance fiscal y no son necesarios para el maestro de proveedores v1.
 
+La posterior W1.1D añadió referencias de contacto y unidades de medida al API, pero ese avance no modifica el alcance aceptado de esta vista maestra ni su evidencia visual runtime.
+
 ### Resumen financiero/procurement
 
 No disponible para v1:
@@ -254,11 +260,11 @@ No disponible para v1:
 | --- | --- | --- | --- |
 | Listar/buscar proveedores | `parties.read` | `API-PTY-001` con `role=SUPPLIER` | `SUPPORTED` |
 | Ver detalle | `parties.read` | `API-PTY-003` | `SUPPORTED` |
-| Crear proveedor | `parties.manage` | `API-PTY-002` | `SUPPORTED` |
-| Editar datos generales | `parties.manage` | `API-PTY-004` | `SUPPORTED` |
-| Agregar identidad fiscal | `parties.fiscal.manage` | `API-PTY-005` | `SUPPORTED` |
-| Actualizar identidad fiscal | `parties.fiscal.manage` | `API-PTY-006` | `SUPPORTED` |
-| Gestionar roles | `parties.manage` | `API-PTY-007` | `SUPPORTED` |
+| Crear proveedor | `parties.manage` | `API-PTY-002` | `SUPPORTED_CONTRACT / WEBAPP_NOT_LIVE` |
+| Editar datos generales | `parties.manage` | `API-PTY-004` | `SUPPORTED_CONTRACT / WEBAPP_NOT_LIVE` |
+| Agregar identidad fiscal | `parties.fiscal.manage` | `API-PTY-005` | `SUPPORTED_CONTRACT / WEBAPP_NOT_LIVE` |
+| Actualizar identidad fiscal | `parties.fiscal.manage` | `API-PTY-006` | `SUPPORTED_CONTRACT / WEBAPP_NOT_LIVE` |
+| Gestionar roles | `parties.manage` | `API-PTY-007` | `SUPPORTED_CONTRACT / WEBAPP_NOT_LIVE` |
 | Cargar países | authenticated | `API-REF-001` | `SUPPORTED` |
 | Cargar tipos de identidad | authenticated | `API-REF-003` | `SUPPORTED` |
 | Ver saldo/aging proveedor | `parties.read` | `API-PTY-008` | `PENDING` |
@@ -278,7 +284,7 @@ No disponible para v1:
 
 ## 11. Estados UI
 
-La implementación debe contemplar:
+La especificación funcional contempla:
 
 - `loading_list`;
 - `list_populated`;
@@ -293,6 +299,8 @@ La implementación debe contemplar:
 - `forbidden`;
 - `backend_error`;
 - `network_unavailable`.
+
+La demo runtime aceptada valida principalmente el carril de lectura/master-detail y no debe interpretarse como evidencia de que todos los estados de escritura estén conectados al backend.
 
 ## 12. Estados vacíos
 
@@ -383,7 +391,7 @@ Manifest de fuente:
 documentation/ui/references/approved/UI-SUPPLIER-001/v1-theme-pair/visual-source-manifest.md
 ```
 
-La composición aprobada establece para la implementación:
+La composición aprobada establece:
 
 - desktop light + dark;
 - shell compacto completo;
@@ -401,14 +409,20 @@ El PNG fuente exacto está fingerprinted, pero su preservación binaria en Git p
 
 ## 17. Estado de implementación
 
-Actualmente:
+Estado actual:
 
 ```text
-UI-SUPPLIER-001 = VISUAL_APPROVED / IMPLEMENTATION_READY
-/proveedores = PLANNED_DISABLED
+UI-SUPPLIER-001 = REVIEWED / VISUAL_RUNTIME_ACCEPTED
+/proveedores = ACTIVE
 ```
 
-La aprobación visual por sí sola no modifica `capabilities.ts`, `routes.tsx` ni React Router. La ruta se activa únicamente en el incremento de implementación, después de preservar los contratos funcionales y el shell compartido.
+La implementación frontend fue mergeada mediante PR `#171`, desplegada y luego refinada visualmente mediante PR `#172`.
+
+El runtime final aceptado corresponde al WebApp commit:
+
+`525a5be0bee9458220d0e464f0d2df8aa935497b`
+
+`/pos` permanece como `defaultShellRoute`.
 
 ## 18. Registro de aprobación visual
 
@@ -420,4 +434,21 @@ La aprobación visual por sí sola no modifica `capabilities.ts`, `routes.tsx` n
 - Source dimensions: `1536 x 1024`
 - Binary preservation: `PENDING`
 
-Siguiente gate: implementación frontend de la vista aprobada dentro del shell existente, CI, autorización explícita de merge, deployment y runtime visual review.
+## 19. Registro de aceptación runtime
+
+Luis revisó directamente el deployment en light y dark y aprobó explícitamente su cierre el 2026-09-19 con:
+
+> Apruebo cierre runtime UI-SUPPLIER-001
+
+La evidencia gobernada está en:
+
+`documentation/ui/reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md`
+
+El carril visual/runtime queda cerrado como `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
+
+No se declara final repository-wide `ACCEPTED` porque continúan separados:
+
+- el hueco de trazabilidad `US-*` / `UC-SUPPLIER-*`;
+- `BINARY_PRESERVATION_PENDING` del PNG fuente aprobado.
+
+Esos asuntos no deben reabrir ni reescribir la aceptación runtime aquí registrada.
