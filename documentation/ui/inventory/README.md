@@ -50,7 +50,7 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-005` | Suppliers | `UI-SUPPLIER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-SUPPLIER-001_RECONCILIATION.md`, `../specifications/UI-SUPPLIER-001_SUPPLIERS.md`, `../references/approved/UI-SUPPLIER-001/v1-theme-pair/README.md`, `../reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
-| `WEB-006` | Products and Services Catalog | `UI-CATALOG-001` | `SPECIFIED / VISUAL_DRAFT_PENDING / TRACEABILITY_GAPS_RECORDED` | `UI-CATALOG-001_RECONCILIATION.md`, `../specifications/UI-CATALOG-001_PRODUCTS_SERVICES.md` |
+| `WEB-006` | Products and Services Catalog | `UI-CATALOG-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-CATALOG-001_RECONCILIATION.md`, `../specifications/UI-CATALOG-001_PRODUCTS_SERVICES.md`, `../references/approved/UI-CATALOG-001/v1-theme-pair/README.md`, `../reviews/UI-CATALOG-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 
 ## UI-DASHBOARD-001 reconciliation and visual note
 
@@ -121,18 +121,26 @@ The inventory does not promote the row to final `ACCEPTED` because two independe
 
 Neither debt reopens the accepted runtime lane and neither may be silently invented or represented as resolved.
 
-## UI-CATALOG-001 reconciliation note
+## UI-CATALOG-001 closure note
 
-`WEB-006` is reconciled as `UI-CATALOG-001` with reserved route `/catalogo`.
+`UI-CATALOG-001 v1-theme-pair` was explicitly approved by Luis on 2026-09-20. Its fingerprint and generation metadata are governed under `documentation/ui/references/approved/UI-CATALOG-001/v1-theme-pair/`; byte-identical binary preservation remains pending and no regenerated substitute is authorized.
 
-The current backend exposes the complete first commercial-master surface needed for v1: item list/detail/create/update/deactivate, category list/create/update, read-only tax-profile references and runtime unit-of-measure suggestions.
+The React implementation was merged through PR `#178`. Runtime review in light and dark identified three minor presentation issues, which were isolated to PR `#179`: native detail-tab overflow chrome, underused master-detail viewport height and excessive visual weight on the disabled `Nuevo item` action.
 
-The first governed view intentionally excludes data that the authoritative `CommercialItemDto` does not expose, including catalog price/cost, media, barcode and stock quantity. Sale-line `unitPrice` and POS-local visual images do not become item-master fields by implication.
+`Deploy eFactura Demo #30` successfully published the accepted WebApp commit `f9280214e819a5bc0093972b223da9b828bc779f`. Post-merge `Frontend Demo CI #69` and `Clean Architecture Guard #621` also completed successfully on that commit. Luis then reviewed the deployed light/dark result and explicitly approved closure with:
 
-The unit selector must also preserve the W1.1D semantic boundary: units are configurable commercial text with runtime suggestions, not a fabricated closed DGI enumeration.
+`Apruebo cierre runtime UI-CATALOG-001`
 
-No governed `US-*` catalog-master artifact or dedicated `UC-CATALOG-*` lifecycle is currently evidenced, so the traceability gap remains recorded rather than invented.
+The visual/runtime implementation lane is therefore closed as `REVIEWED / VISUAL_RUNTIME_ACCEPTED`.
 
-The next gate for `UI-CATALOG-001` is an explicit light/dark visual baseline approval. `/catalogo` remains `PLANNED_DISABLED` until implementation is approved and merged.
+The implementation preserves the commercial-master boundary: no authoritative catalog price, cost, numeric stock, barcode/GTIN, media/image or supplier linkage is presented. The WebApp remains explicit about demo/mock data where governed API integration is not enabled, and unavailable write actions remain disabled rather than fabricating live behavior.
+
+The inventory does not promote the row to final `ACCEPTED` because independent governance debts remain:
+
+- no governed dedicated `US-*` catalog-master artifact is currently evidenced;
+- no dedicated governed `UC-CATALOG-*` lifecycle is currently evidenced;
+- the approved source PNG remains `BINARY_PRESERVATION_PENDING`.
+
+These debts do not reopen the accepted runtime lane and none may be silently invented or represented as resolved.
 
 Reconciliation and future views must continue to use current repository evidence rather than historical unresolved-API notes alone.
