@@ -1,0 +1,54 @@
+/* Runtime polish for UI-CATALOG-001 after deployed light/dark review.
+   Scope is intentionally visual-only: no contracts, capabilities, data mode or routing changes. */
+
+/* Keep the selected-item master detail visually anchored to the viewport
+   without introducing its own vertical scrolling surface. */
+.catalog-detail {
+  display: flex;
+  min-height: calc(100dvh - 166px);
+  flex-direction: column;
+}
+
+.catalog-detail > .catalog-detail-body,
+.catalog-detail > .catalog-empty-detail {
+  flex: 1 1 auto;
+}
+
+/* The desktop tab strip fits in the governed panel width. Avoid native
+   overflow chrome that can render as visible arrowed scroll controls. */
+.catalog-detail .catalog-tabs {
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.catalog-detail .catalog-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* A disabled primary write action must read as unavailable, not as the
+   strongest live CTA in the page. */
+.catalog-primary-action:disabled {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-soft);
+  box-shadow: none;
+  opacity: .78;
+}
+
+.catalog-primary-action:disabled span {
+  opacity: .72;
+}
+
+@media (max-width: 1180px) {
+  .catalog-detail {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .catalog-detail .catalog-tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+}
