@@ -1,10 +1,14 @@
 # W1.4 Users + role assignment readiness
 
-Status: `READINESS_LOCKED / IMPLEMENTATION_NOT_STARTED`
+Status: `IMPLEMENTED / MERGED / CI_ACCEPTED / DEPLOYED / PRODUCTION_MIGRATED / RUNTIME_ACCEPTED / CLOSED`
 
 Initial readiness base: `main@60ca8f6b9907c04c4456ed3b3576da6a0c5ea64f` after formal W1.3 runtime closure and WebApp-only PR #181 reconciliation.
 
 Pre-merge reconciliation baseline: `main@74eaf99c417904191c59d8a7e454bed557f35158` after WebApp PR #183. The W1.4 readiness branch was merged forward onto that live base without overwriting WebApp changes.
+
+Implementation merge: PR #185 -> `5a939ba251a898ea1dd6a181050fffa20e91324d`.
+
+Closure reconciliation baseline: `main@ce6f80e42ac993c2b62ee240db5fb13fe7ba0cdb` after WebApp documentation PRs #186 and #187. Those parallel changes are confined to WebApp/UI governance documentation and do not change the W1.4 API, Application, Domain or Infrastructure implementation.
 
 Scope: `API-IAM-002..005` and `API-IAM-010` only.
 
@@ -24,13 +28,13 @@ The accepted API inventory remains authoritative for method, route and primary p
 
 ## Readiness findings
 
-1. There is no application user aggregate, user repository, V1 user record, user-role assignment record or user migration in the current backend.
-2. Neon production contains `v1_security_roles` and `v1_security_role_permissions` from W1.3, but no public-schema table whose name contains `user` or application identity state.
-3. `Permissions.All` already contains `security.users.read`, `security.users.manage`, `security.roles.read` and `security.manage_roles`; W1.4 must reuse those exact canonical codes.
-4. W1.3 already provides the company-scoped `SecurityRole` aggregate and repository plus provider-real PostgreSQL/MySQL persistence, idempotency, audit, outbox, transactions and optimistic-concurrency patterns that W1.4 can extend without creating a parallel security stack.
-5. Current runtime authorization is derived from the validated JWT actor context. W1.4 must not silently combine persisted role assignments with JWT claims inside request authorization. That would create an undocumented dual source of authority.
-6. Authentication/session lifecycle remains an identity-provider/deployment concern. W1.4 stores an application access link to an external identity, never passwords, refresh tokens, provider secrets or signing material.
-7. Users are managed in resolved organization context. Cross-company access through a known user ID is denied rather than trusting the identifier itself.
+The readiness audit established the implementation constraints that remain authoritative after closure:
+
+1. The application user model must remain provider-neutral and company-scoped.
+2. W1.4 reuses the existing W1.3 security-role model and canonical `Permissions.All` codes rather than creating a parallel security stack.
+3. Runtime authorization remains derived from the validated JWT actor context. Persisted role assignments are application state and do not silently rewrite the permissions of the JWT executing a request.
+4. Authentication/session lifecycle remains an identity-provider/deployment concern. W1.4 stores an external identity link, never passwords, refresh tokens, provider secrets or signing material.
+5. Users are managed in resolved organization context. Cross-company access through a known user ID is denied rather than trusting the identifier itself.
 
 ## Bounded user model
 
@@ -75,7 +79,7 @@ Location and terminal scope assignments are subordinate to that organization:
 - an assigned location/terminal must belong to the resolved organization;
 - cross-company scope IDs fail closed;
 - request bodies cannot grant a company outside the current organization context;
-- scope mutations are security-sensitive and must be durably audited with before/after composition.
+- scope mutations are security-sensitive and are durably audited with before/after composition.
 
 `security.users.manage` is the primary contract permission for create/update. If an update changes location/terminal scope composition, the application additionally requires `security.manage_roles` so an ordinary user-profile administrator cannot use `updateUser` as a privilege-escalation path. Metadata/status-only updates do not require this additional permission.
 
@@ -167,7 +171,7 @@ Identity-provider key, external subject and organization are immutable through `
 - stale expected version -> `409 concurrency_conflict`, `conflictType=stale_version`;
 - failed validation/authorization cannot leave a completed success audit/outbox record or orphan idempotency reservation.
 
-Proposed idempotency scopes:
+Accepted idempotency scopes:
 
 - `identity.user.create:{organizationId}`;
 - `identity.user.update:{organizationId}:{userId}`;
@@ -181,13 +185,17 @@ Accepted semantic audit mappings remain:
 - `updateUser` -> `security.user.updated`;
 - `assignUserRoles` -> `security.user_roles.changed`.
 
-Implementation may retain the existing V1 uppercase event-name convention, but the semantic mapping above must remain traceable and tests must verify target user, acting administrator, organization, version and before/after security composition without copying JWTs or secrets into metadata.
+The implementation retains the existing V1 uppercase event-name convention:
 
-Outbox events should distinguish ordinary user mutation from role-assignment mutation so downstream identity/session integration can react without parsing audit metadata.
+- `SECURITY_USER_CREATED`;
+- `SECURITY_USER_UPDATED`;
+- `SECURITY_USER_ROLES_CHANGED`.
+
+Outbox events distinguish ordinary user mutation from role-assignment mutation through `SecurityUserChangedIntegrationEvent` and `SecurityUserRolesChangedIntegrationEvent`.
 
 ## Persistence slice
 
-Additive provider-neutral V1 tables are expected:
+The additive provider-neutral V1 tables are:
 
 - `v1_security_users`;
 - `v1_security_user_location_scopes`;
@@ -196,7 +204,7 @@ Additive provider-neutral V1 tables are expected:
 
 `v1_security_users` owns the user record and application-managed version. Scope/role tables use composite primary keys and foreign keys back to the user. `v1_security_user_roles.RoleId` references the existing `v1_security_roles.Id` table from W1.3.
 
-Required persistence invariants:
+Persistence invariants:
 
 - unique external identity link within one organization;
 - lookup index by `(OrganizationId, Active)`;
@@ -205,11 +213,11 @@ Required persistence invariants:
 - no destructive modification of W1.3 role tables;
 - no credential/secret columns.
 
-The schema is expand-first and additive. Production migration remains a separately approved gate after implementation and provider-real validation.
+The schema is expand-first and additive.
 
-## Error contract candidates
+## Stable error contract
 
-W1.4 should use stable RFC 9457 codes, including:
+W1.4 uses stable RFC 9457 codes including:
 
 - `identity.user.not_found` -> 404;
 - `identity.user.identity_duplicate` -> 409 with `conflictType=duplicate_identity_link`;
@@ -220,31 +228,103 @@ W1.4 should use stable RFC 9457 codes, including:
 
 No error response may disclose provider secrets, token contents or unnecessary cross-company existence information.
 
-## QA / executable evidence required
+## Implementation and CI evidence
 
-Before W1.4 can close, executable evidence must prove at least:
+W1.4 implementation landed through PR #185 and merge commit `5a939ba251a898ea1dd6a181050fffa20e91324d`.
 
-1. OpenAPI exposes exactly the five accepted operation IDs, methods, paths and primary permissions.
-2. 401/403 behavior for read, user-management and role-assignment operations.
-3. organization isolation and multi-company header behavior.
-4. create user persists a provider-neutral identity link without credential material.
-5. duplicate identity link inside one organization is rejected; the same external identity in a different organization remains valid.
-6. list/get projections are deterministic and do not expose secrets.
-7. PATCH metadata/status update increments version and preserves immutable provider/subject/org identity.
-8. location/terminal scope replacement validates organization ownership and blocks self-escalation.
-9. role assignment rejects unknown, inactive and cross-company roles.
-10. role replacement is deterministic and increments version.
-11. stale expected versions are rejected for update and role assignment.
-12. create/update/role-assignment idempotent replay is deterministic; payload mismatch conflicts.
-13. durable audit/outbox/idempotency evidence is atomic with successful mutations and absent for rolled-back failures.
-14. PostgreSQL provider-real persistence/transaction tests pass.
-15. MySQL provider-real persistence/transaction tests pass.
-16. regression: W1.3 roles, W1.2 `/me` + `/permissions`, W1.1 reference data and `/parties` remain green.
-17. Clean Architecture Guard passes on the exact reconciled head before merge approval.
+The exact merged API head passed the governed Clean Architecture Guard before/around merge, and Deploy API Demo run `35534908414` completed successfully from that same source commit.
 
-## Expected completion accounting
+Cloud Run deployment evidence:
 
-W1.4 implements five currently missing HTTP operations. When all five are executable and accepted, expected accounting becomes:
+- accepted revision: `efactura-api-d22-5a939ba-53-1`;
+- immutable registry digest: `sha256:81591ce316fcd2628473d76414ebff506e6b7512169917af7f7913fb8f5f0059`;
+- public service promotion: 100% traffic to the accepted revision;
+- canary smoke: PASS;
+- public post-promotion smoke: PASS.
+
+## Neon production migration evidence
+
+Production database: `efactura_demo` on branch `br-restless-thunder-a55cu12n`.
+
+Migration `20260920183000_V1SecurityUsers` was applied only after explicit approval. Post-migration verification proved:
+
+- `__EFMigrationsHistory` contains `20260920183000_V1SecurityUsers` with `ProductVersion=8.0.30`;
+- all four W1.4 tables exist;
+- all five expected indexes exist;
+- user -> location scopes uses `ON DELETE CASCADE`;
+- user -> terminal scopes uses `ON DELETE CASCADE`;
+- user -> role assignments uses `ON DELETE CASCADE`;
+- role -> user-role assignments uses `ON DELETE RESTRICT`;
+- `efactura_app` has `SELECT`, `INSERT`, `UPDATE`, `DELETE` on all four W1.4 tables;
+- production schema compared equal to the previously validated temporary migration schema.
+
+No destructive modification of W1.3 role tables occurred.
+
+## Runtime / QA closure evidence
+
+Runtime acceptance stamp: `20260920220501`.
+
+The public Cloud Run runtime passed all W1.4 acceptance checks:
+
+1. Swagger HTTP `200` and OpenAPI HTTP `200`.
+2. OpenAPI exposed exactly `listUsers`, `getUser`, `createUser`, `updateUser` and `assignUserRoles` with `updateUser` as `PATCH`, never `PUT`.
+3. `GET /api/v1/users` returned `401` without JWT, `403` without `security.users.read`, and `200` with the accepted permission and organization scope.
+4. `createUser` returned `201`, persisted a provider-neutral external identity link and started at version `1`.
+5. deterministic create replay returned `201`, `Idempotent-Replayed=true` and did not increment version.
+6. same idempotency key with changed payload returned `409 idempotency_key_reused / payload_mismatch`.
+7. duplicate external identity returned `409 identity.user.identity_duplicate / duplicate_identity_link`.
+8. get/list projections returned `200` and exposed the created user deterministically.
+9. PATCH metadata/status update returned `200`, incrementing version `1 -> 2`; replay did not increment again.
+10. stale update returned `409 concurrency_conflict / stale_version`.
+11. invalid scope composition returned `422 identity.user.scope_invalid`.
+12. inactive role assignment returned `422 identity.user.role_invalid`.
+13. valid role full replacement returned `200`, incrementing version `2 -> 3`; replay did not increment again.
+14. changed role-assignment payload under the same key returned `409 idempotency_key_reused`.
+15. self scope escalation returned `403 identity.user.self_escalation_forbidden`.
+16. organization escape attempt returned `403 organization_scope_denied`.
+17. role full replacement to empty returned `200`, incrementing version `3 -> 4`.
+18. W1.3 roles, W1.2 `/me` + `/permissions`, W1.1 reference-data endpoints and `/parties` all remained HTTP `200` under the accepted runtime actor.
+
+QA runtime resource evidence:
+
+- user ID `ae87c4338e604e7cb8febf0b79bf513b` finished active at version `4`;
+- final user has zero location scopes, zero terminal scopes and zero role assignments;
+- QA role ID `77fc171cfe2d43109a0aa4c6aa0e9ee9` finished inactive at version `2`;
+- the pre-existing W1.3 inactive role `8fdc4eff1b1349829146b0601956414d` remained inactive at version `3`.
+
+## Independent Neon post-runtime verification
+
+Read-only production queries after HTTP acceptance independently confirmed atomic durable evidence.
+
+For the four successful W1.4 user mutations there are exactly four matching triplets keyed by `CorrelationId`:
+
+- completed idempotency record;
+- successful security audit event;
+- durable outbox message.
+
+The four accepted W1.4 triplets correspond to:
+
+- create user, version `1`;
+- update user, version `2`;
+- assign role set, version `3`;
+- replace role set with empty, version `4`.
+
+Aggregate verification for the runtime window returned:
+
+- QA external identity rows: `1`;
+- forbidden self-target user rows: `0`;
+- W1.4 user idempotency records: `4`;
+- W1.4 user audit events: `4`;
+- W1.4 user outbox messages: `4`;
+- final user-role rows: `0`;
+- final location-scope rows: `0`;
+- final terminal-scope rows: `0`.
+
+Rejected duplicate, stale-version, invalid-scope, inactive-role, idempotency-mismatch, self-escalation and organization-isolation paths left no successful audit/outbox/idempotency residue. The W1.3 QA role create/deactivate mutations formed their own matching durable triplets and are not counted as W1.4 user mutations.
+
+## Completion accounting
+
+W1.4 implements five previously missing HTTP operations. The accepted accounting is now:
 
 - Wave 1: `26 / 30` implemented (`86.67%`);
 - global public v1: `60 / 194` implemented (`30.93%`);
@@ -252,19 +332,19 @@ W1.4 implements five currently missing HTTP operations. When all five are execut
 - remaining contract-collision IDs: `2`;
 - remaining non-implemented IDs: `134`.
 
-These numbers are projections only until the five endpoints exist and pass the governed merge/deployment/runtime gates.
+These are current counts after W1.4 closure, not projections.
 
-## Implementation gate
+## Closure and next gate
 
-Readiness is complete, but implementation has not started in this document increment.
+All governed W1.4 gates are satisfied: implementation, exact contract, merge, CI, deployment, explicitly approved production schema promotion, production schema audit, HTTP runtime acceptance, durable Neon verification and documentation reconciliation.
 
-Before implementation work begins from this branch lineage:
+W1.4 is formally closed by the merge of this reconciliation increment.
 
-1. re-read live `main` because the WebApp lane is active in parallel;
-2. reconcile any new main commits without overwriting WebApp changes;
-3. implement the bounded Domain/Application/persistence/WebApi/test slice;
-4. validate the additive migration on temporary/provider-real databases;
-5. run exact-head CI;
-6. obtain explicit merge approval;
-7. separately obtain explicit approval before applying the W1.4 schema migration to Neon production;
-8. deploy and complete runtime acceptance before declaring W1.4 closed.
+The next bounded Wave 1 increment is `W1.5` Terminals:
+
+- `API-ORG-007 listTerminals`;
+- `API-ORG-008 registerTerminal`;
+- `API-ORG-009 getTerminal`;
+- `API-ORG-010 updateTerminal`.
+
+W1.5 must begin with a fresh readiness audit against live `main`; it must not assume that existing organization/location persistence automatically defines terminal lifecycle, registration, status or concurrency semantics.
