@@ -20,7 +20,8 @@ Current runtime/governance state:
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
 - `WEB-006 / UI-CATALOG-001` is active at `/catalogo` and its light/dark deployed runtime was explicitly accepted on 2026-09-20; explicit demo/mock data and disabled write affordances remain in place until the governed API-integration lane enables them;
-- `WEB-007..WEB-019` remain planned shell candidates with no executable route yet;
+- `WEB-007 / UI-INVENTORY-001` is reconciled and reserved for `/inventario`, but remains `PLANNED_DISABLED` until visual approval and implementation;
+- `WEB-008..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 5 entries are interactive shell routes;
 - 13 future entries remain visible as disabled/non-clickable options, not fake routes.
@@ -86,7 +87,7 @@ Legend:
 | `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` |
 | `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` |
 | `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` |
-| `WEB-007` | Inventory and Movements | Inventario y Compras | `UI ID pending` | `/inventario` candidate | `PLANNED_DISABLED` |
+| `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` reserved | `PLANNED_DISABLED` |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI ID pending` | `/transferencias` candidate | `PLANNED_DISABLED` |
 | `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI ID pending` | `/compras` candidate | `PLANNED_DISABLED` |
 | `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI ID pending` | `/cuentas-por-cobrar` candidate | `PLANNED_DISABLED` |
@@ -160,11 +161,13 @@ This does not promote the view to final repository-wide `ACCEPTED`; its specific
 
 ## 9. Current next-view checkpoint
 
-With `WEB-006 / UI-CATALOG-001` visually/runtime closed, `WEB-007 / Inventory and Movements` is the next planned shell candidate in product order.
+`WEB-007` is now reconciled as `UI-INVENTORY-001` with governed route reserved at `/inventario`.
 
-It remains `PLANNED_DISABLED` at `/inventario` candidate and has no governed stable `UI-*` identifier yet. Reconciliation must precede any visual baseline, route activation or implementation, and it must derive its boundary from current repository/API evidence rather than assuming catalog stock fields that do not exist.
+Its first-version boundary is limited to executable inventory positions, immutable movement inspection and authorized manual adjustment. `WEB-008` retains transfer workflows; replenishment/EOQ remains non-executable while `API-RPL-001/002` are `MISSING_HTTP`.
 
-Closing `UI-CATALOG-001` does not enable any future route, does not enable catalog write integration and does not alter the 5-active / 13-planned shell counts.
+The specification and reconciliation also record a current backend projection gap: the Domain can persist `SaleConsumption`, while the current inventory HTTP mapper only projects `Adjustment`. Frontend work must not fabricate complete movement-kind support around that dependency.
+
+`/inventario` remains `PLANNED_DISABLED`. The next gate is explicit approval of a governed light/dark visual baseline, followed by React implementation and capability registration. No runtime route is activated by reconciliation alone, so shell counts remain 5 active / 13 planned.
 
 ## 10. Change control
 
