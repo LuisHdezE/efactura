@@ -79,6 +79,7 @@ using EFactura.Application.Fiscal;
 using EFactura.Application.IdentityAccess;
 using EFactura.Application.Parties;
 using Infrastructure.Persistence.V1;
+using Infrastructure.Persistence.V1.Write.Repositories;
 using Infrastructure.ReferenceData;
 using WebApi.CrossCutting.Authorization;
 using WebApi.CrossCutting.Context;
@@ -242,6 +243,11 @@ builder.Services.AddV1Persistence(v1DatabaseProvider, v1ConnectionString);
 builder.Services.AddReferenceDataFoundation();
 builder.Services.AddScoped<GetCurrentActorUseCase>();
 builder.Services.AddScoped<ListPermissionsUseCase>();
+builder.Services.AddScoped<ISecurityRoleRepository, EfSecurityRoleRepository>();
+builder.Services.AddScoped<ListRolesUseCase>();
+builder.Services.AddScoped<GetRoleUseCase>();
+builder.Services.AddScoped<CreateRoleUseCase>();
+builder.Services.AddScoped<UpdateRoleUseCase>();
 builder.Services.AddScoped<V1OrganizationContextResolver>();
 builder.Services.AddScoped<CollectFiscalCfeEnvelopeDocumentResponseEvidenceByEnvelopeIdUseCase>();
 
@@ -370,4 +376,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
