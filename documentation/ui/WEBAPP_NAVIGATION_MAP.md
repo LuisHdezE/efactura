@@ -18,9 +18,9 @@ Current runtime/governance state:
 - `WEB-002 / UI-DASHBOARD-001` is active at `/dashboard`;
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
-- `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores`;
-- `WEB-006 / UI-CATALOG-001` is active at `/catalogo`;
-- `WEB-007 / UI-INVENTORY-001` is active at `/inventario` and its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
+- `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
+- `WEB-006 / UI-CATALOG-001` is active at `/catalogo` and its light/dark deployed runtime was explicitly accepted on 2026-09-20; explicit demo/mock data and disabled write affordances remain in place until the governed API-integration lane enables them;
+- `WEB-007 / UI-INVENTORY-001` is active at `/inventario` with explicit demo/mock data, read-only inventory positions/movements and disabled write affordance until the governed integration/permission lane enables `inventory.adjust`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
 - `WEB-008 / UI-TRANSFER-001` is reconciled and reserved for `/transferencias`, but remains `PLANNED_DISABLED` because `API-TRF-001..007` are accepted contracts with `MISSING_HTTP` implementation state;
 - `WEB-009..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
@@ -150,6 +150,7 @@ Runtime acceptance is recorded separately from route activation. An active route
 Accepted evidence includes:
 
 - approved baseline: `UI-INVENTORY-001 v1-responsive-suite`;
+- visual-governance PR: `#183`;
 - implementation PR: `#184`;
 - accepted deployed WebApp commit: `45a57dab16d27d6d455aeebef895c495968da63b`;
 - `Deploy eFactura Demo #31`: `SUCCESS`;
@@ -157,6 +158,7 @@ Accepted evidence includes:
 - post-merge `Clean Architecture Guard #638`: `SUCCESS`;
 - desktop light/dark runtime review: accepted;
 - explicit owner closure: `Apruebo cierre runtime UI-INVENTORY-001`;
+- acceptance record: `documentation/ui/reviews/UI-INVENTORY-001/RUNTIME_VISUAL_ACCEPTANCE.md`;
 - closure documentation merged through PR `#186`.
 
 Separate deployed mobile runtime screenshots were not independently reviewed in that closure. Approved visual PNG binaries remain `BINARY_PRESERVATION_PENDING`, and the view is not promoted to repository-wide `ACCEPTED`.
