@@ -2,7 +2,7 @@
 
 Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_3_CLOSED / W1_4_READINESS_LOCKED`
 
-Current readiness baseline: `main@60ca8f6b9907c04c4456ed3b3576da6a0c5ea64f`. W1.4 implementation must re-read live `main` before code work and again before protected merge because the WebApp lane advances in parallel.
+Current readiness baseline: `main@74eaf99c417904191c59d8a7e454bed557f35158`, reconciled after WebApp PR #183. W1.4 implementation must re-read live `main` before code work and again before protected merge because the WebApp lane advances in parallel.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
