@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { CatalogPage } from '../features/catalog/CatalogPage';
 import { CustomersPage } from '../features/customers/CustomersPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { PosPage } from '../features/pos/PosPage';
@@ -58,7 +59,7 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-003', state: 'active', capability: requireCapability('UI-POS-001'), icon: '▣', navigationGroup: 'Comercial', element: <PosPage /> },
   { webId: 'WEB-004', state: 'active', capability: requireCapability('UI-CUSTOMER-001'), icon: '●', navigationGroup: 'Comercial', element: <CustomersPage /> },
   { webId: 'WEB-005', state: 'active', capability: requireCapability('UI-SUPPLIER-001'), icon: '◆', navigationGroup: 'Comercial', element: <SuppliersPage /> },
-  { webId: 'WEB-006', state: 'planned', label: 'Productos y Servicios', icon: '▤', navigationGroup: 'Comercial' },
+  { webId: 'WEB-006', state: 'active', capability: requireCapability('UI-CATALOG-001'), icon: '▤', navigationGroup: 'Comercial', element: <CatalogPage /> },
   { webId: 'WEB-007', state: 'planned', label: 'Inventario', icon: '▥', navigationGroup: 'Inventario y Compras' },
   { webId: 'WEB-008', state: 'planned', label: 'Transferencias', icon: '⇄', navigationGroup: 'Inventario y Compras' },
   { webId: 'WEB-009', state: 'planned', label: 'Órdenes de compra y Recepciones', icon: '↓', navigationGroup: 'Inventario y Compras' },
