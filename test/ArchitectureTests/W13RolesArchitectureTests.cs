@@ -97,12 +97,12 @@ public sealed class W13RolesArchitectureTests
     }
 
     [Fact]
-    public void W1_3_readiness_locks_expected_completion_accounting()
+    public void W1_3_closure_locks_completion_accounting_and_runtime_evidence()
     {
         var readiness = Read("documentation/api-completion-matrix/W1_3_ROLES_READINESS.md");
 
         Assert.Contains(
-            "Status: `IMPLEMENTED / NEON_PRODUCTION_SCHEMA_APPLIED / MERGE_GATE_PENDING`",
+            "Status: `CLOSED / MERGED / NEON_PRODUCTION_SCHEMA_APPLIED / RUNTIME_ACCEPTED`",
             readiness,
             StringComparison.Ordinal);
         Assert.Contains("Wave 1: `21 / 30`", readiness, StringComparison.Ordinal);
@@ -112,6 +112,8 @@ public sealed class W13RolesArchitectureTests
         Assert.Contains("remaining non-implemented IDs: `139`", readiness, StringComparison.Ordinal);
         Assert.Contains("Post-promotion production verification confirmed", readiness, StringComparison.Ordinal);
         Assert.Contains("20260920040000_V1SecurityRoles / 8.0.30", readiness, StringComparison.Ordinal);
+        Assert.Contains("Cloud Run revision `efactura-api-d22-29011a9-52-1`", readiness, StringComparison.Ordinal);
+        Assert.Contains("Runtime acceptance on that exact revision proved", readiness, StringComparison.Ordinal);
         Assert.Contains("W1.4 Users + role assignment", readiness, StringComparison.Ordinal);
     }
 
