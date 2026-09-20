@@ -1,6 +1,6 @@
 # UI-CATALOG-001 — Productos y Servicios
 
-Status: `SPECIFIED / VISUAL_DRAFT_PENDING / TRACEABILITY_GAPS_RECORDED`
+Status: `VISUAL_APPROVED / IMPLEMENTATION_READY / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING`
 
 Upstream interface scope ID: `WEB-006`
 
@@ -66,7 +66,7 @@ Ruta gobernada:
 /catalogo
 ```
 
-Hasta completar baseline visual e implementación, la opción permanece visible pero deshabilitada según la política del shell.
+Aunque el baseline visual ya está aprobado, la opción permanece visible pero deshabilitada según la política del shell hasta completar la implementación.
 
 Al activarse, se convierte la misma entrada `planned` en `active`; no se crea una opción duplicada.
 
@@ -136,6 +136,8 @@ Secciones recomendadas:
 3. `Categoría`.
 
 No mostrar cifras de stock dentro de esta vista. El límite entre catálogo e inventario debe seguir siendo visible.
+
+Los campos `Creado` y `Última actualización` visibles en el baseline aprobado son contenido visual ilustrativo. No forman parte del `CommercialItemDto` actualmente evidenciado y no deben implementarse como datos autoritativos salvo que un contrato ejecutable posterior los incorpore explícitamente.
 
 ### 7.3 Crear item
 
@@ -385,21 +387,40 @@ El POS puede seguir usando metadata visual local e introducir `unitPrice` al con
 
 La vista reutiliza el shell compacto ya aceptado.
 
-Dirección recomendada:
+Luis aprobó explícitamente `UI-CATALOG-001 v1-theme-pair` el 2026-09-20 con la instrucción:
+
+> Úsalo como baseline visual UI-CATALOG-001
+
+Registro de autoridad:
+
+```text
+documentation/ui/references/approved/UI-CATALOG-001/v1-theme-pair/README.md
+```
+
+Manifest de fuente:
+
+```text
+documentation/ui/references/approved/UI-CATALOG-001/v1-theme-pair/visual-source-manifest.md
+```
+
+La composición aprobada establece:
 
 - desktop light + dark;
+- shell compacto completo;
+- `Productos y Servicios` activo visualmente;
 - tabla/lista densa como superficie principal;
-- master-detail con panel derecho;
+- master-detail de item;
 - filtros compactos arriba;
-- badge `Producto` / `Servicio`;
-- badge `Controla stock` únicamente como comportamiento, no cantidad;
-- categoría y perfil fiscal legibles sin convertir la tabla en una sábana de texto;
-- acciones de mantenimiento concentradas en header/drawer;
-- categorías en drawer/subpanel, no navegación paralela;
-- sin tarjetas grandes decorativas;
-- sin fotografías de producto como eje visual, porque no existe contrato de media.
+- distinción `Producto` / `Servicio`;
+- categoría, unidad, comportamiento de inventario, perfil fiscal y estado;
+- acciones concentradas y densidad propia de una aplicación operativa;
+- ausencia de precio/costo/stock/barcode/media/supplier-link como datos autoritativos.
 
 La jerarquía debe favorecer administración de catálogo, no replicar el grid visual del POS.
+
+El baseline aprobado es autoridad visual, no contractual. Elementos ilustrativos que excedan el `CommercialItemDto`, incluidos timestamps de creación/actualización, no se convierten en campos ejecutables por aparecer en el mockup.
+
+El PNG fuente exacto está fingerprinted, pero su preservación binaria en Git permanece pendiente por limitación del conector actual. Esto no autoriza sustituirlo por una regeneración distinta.
 
 ## 15. Responsive
 
@@ -437,10 +458,22 @@ La jerarquía debe favorecer administración de catálogo, no replicar el grid v
 Actualmente:
 
 ```text
-UI-CATALOG-001 = SPECIFIED / VISUAL_DRAFT_PENDING / TRACEABILITY_GAPS_RECORDED
+UI-CATALOG-001 = VISUAL_APPROVED / IMPLEMENTATION_READY / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING
 /catalogo = PLANNED_DISABLED
 ```
 
-Esta especificación no modifica `capabilities.ts`, `routes.tsx` ni React Router.
+La aprobación visual no modifica `capabilities.ts`, `routes.tsx` ni React Router. La ruta se activa únicamente en el incremento de implementación, después de preservar los contratos funcionales y el shell compartido.
 
-Siguiente gate: producir y revisar un baseline visual light/dark antes de cualquier implementación frontend.
+## 18. Registro de aprobación visual
+
+- Approved version: `UI-CATALOG-001 v1-theme-pair`
+- Approval date: `2026-09-20`
+- Approval statement: `Úsalo como baseline visual UI-CATALOG-001`
+- Generation id: `2ceda7fa-b758-4301-a072-099ff4d5c8cb`
+- Source filename: `a_clean_split_screen_ui_design_mockup_with_two_si.png`
+- Source SHA-256: `74aa441961fea09473d59b1f29237fdc2d5155940f1b22905a4ff1defc9a4364`
+- Source dimensions: `1536 x 1024`
+- Source bytes: `1629592`
+- Binary preservation: `PENDING`
+
+Siguiente gate: implementación frontend de la vista aprobada dentro del shell existente, CI, autorización explícita de merge, deployment y runtime visual review.
