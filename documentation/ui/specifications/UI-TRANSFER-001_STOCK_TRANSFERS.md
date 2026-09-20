@@ -1,6 +1,6 @@
-# UI-TRANSFER-001 — Stock Transfers
+# UI-TRANSFER-001 - Stock Transfers
 
-Status: `FUNCTIONAL_SPECIFICATION / VISUAL_DRAFT_READY / EXECUTION_BLOCKED_BY_API`
+Status: `FUNCTIONAL_SPECIFICATION / VISUAL_APPROVED / EXECUTION_BLOCKED_BY_API / BINARY_PRESERVATION_PENDING`
 
 Mapping:
 
@@ -20,16 +20,16 @@ Navigation state: `PLANNED_DISABLED`
 
 Provide the governed WebApp surface for inter-location stock transfers, covering the target lifecycle from transfer request through approval, dispatch, receipt and explicit discrepancy reconciliation.
 
-This specification is authoritative for visual drafting only until `API-TRF-001..007` have executable WebApi evidence. The frontend must not activate `/transferencias` or present mock data/actions as live server behavior before that gate.
+This specification is authoritative for visual design while `API-TRF-001..007` remain non-executable through WebApi. The frontend must not activate `/transferencias` or present mock data/actions as live server behavior before that gate.
 
 ## 2. Functional authority
 
 The view is derived from:
 
-- `WEB-008 — Stock Transfers`;
-- `FR-061` — transfer is an explicit inventory movement source;
-- `FR-063` — transfer/dispatch/receipt workflow with discrepancy handling;
-- `UC-INV-002 — Transfer stock between locations`;
+- `WEB-008 - Stock Transfers`;
+- `FR-061` - transfer is an explicit inventory movement source;
+- `FR-063` - transfer/dispatch/receipt workflow with discrepancy handling;
+- `UC-INV-002 - Transfer stock between locations`;
 - accepted `API-TRF-001..007` contracts;
 - `UI-TRANSFER-001_RECONCILIATION.md`.
 
@@ -63,16 +63,16 @@ Until API execution exists, any rendered prototype button is illustrative/disabl
 
 ### 4.2 Transfer list
 
-The first visual baseline should provide an operational list/table with columns or responsive equivalents for:
+The approved visual baseline provides an operational list/table with columns or responsive equivalents for:
 
 - transfer reference/ID;
 - source location;
 - destination location;
 - lifecycle state;
-- line count or compact item summary only when present in the visual mock data;
+- line count or compact item summary only when present in visual/mock data;
 - last relevant lifecycle timestamp only as illustrative presentation unless the executable DTO later exposes it.
 
-The visual must avoid inventing contractual fields such as carrier, ETA, freight cost or monetary transfer value.
+The UI must avoid inventing contractual fields such as carrier, ETA, freight cost or monetary transfer value.
 
 ### 4.3 Detail panel / detail surface
 
@@ -116,7 +116,7 @@ For the current visual-only phase, all such controls are non-authoritative and s
 
 ## 5. Create-transfer visual flow
 
-The visual draft may include a drawer/modal/page composition containing:
+The approved visual direction may be extended with a drawer/modal/page composition containing:
 
 - source location;
 - destination location;
@@ -160,11 +160,11 @@ The future executable UI must:
 - surface `409`-style conflict outcomes rather than silently overwriting newer state;
 - refresh/reconcile server state before retrying a transition.
 
-The visual baseline should leave room for non-destructive conflict/error feedback.
+The approved visual grammar should leave room for non-destructive conflict/error feedback.
 
 ## 9. States
 
-The governed visual suite should cover at least:
+The governed UI should ultimately cover at least:
 
 - populated list;
 - selected transfer detail;
@@ -200,7 +200,7 @@ Mobile:
 
 ## 11. Light/dark requirements
 
-The visual baseline must provide light and dark parity with the established eFactura shell.
+The approved baseline provides light and dark parity with the established eFactura shell across desktop, tablet and mobile representations.
 
 Status/lifecycle meaning must not depend on color alone. Use labels, icons and/or shape in addition to color.
 
@@ -217,7 +217,7 @@ Required design properties:
 
 ## 13. Explicit exclusions for v1 visual authority
 
-The visual baseline must not authorize:
+The visual baseline does not authorize:
 
 - procurement or goods-receipt workflow;
 - EOQ/ROP/replenishment;
@@ -230,8 +230,40 @@ The visual baseline must not authorize:
 - unrestricted location access;
 - any live API claim while `API-TRF-*` remains `MISSING_HTTP`.
 
-## 14. Visual baseline gate
+## 14. Approved visual baseline
 
-The next governed artifact is a responsive visual candidate for `UI-TRANSFER-001`.
+Luis explicitly approved the exact visual candidate on 2026-09-20 with:
 
-Approval of that candidate will authorize preservation of the visual reference only. It will **not** authorize route activation. React implementation/activation remains blocked until the transfer API lane provides executable evidence and this specification is reconciled again against that implementation.
+> Apruebo UI-TRANSFER-001 v1-responsive-suite como baseline visual
+
+Approved artifact:
+
+`documentation/ui/references/approved/UI-TRANSFER-001/v1-responsive-suite/`
+
+Source identity:
+
+- generation id: `1015b786-078d-4aec-b0af-b560e26352ea`;
+- source filename: `a_clean_ui_ux_dashboard_screenshot_collage_showing.png`;
+- dimensions: `1312 x 1199`;
+- source bytes: `1586620`;
+- SHA-256: `1c6826ce147e7fe4a4dd009c67ebdbd41275ed43bc6040be2cd81ac1dd8272ed`.
+
+The prior candidate record under `references/drafts/UI-TRANSFER-001/v1-responsive-suite/` is preserved as governance history.
+
+The generated source is fingerprinted, but physical byte-identical storage in Git remains `BINARY_PRESERVATION_PENDING` because the current repository connector cannot directly insert the generated PNG from the chat runtime.
+
+This approval authorizes the visual direction only. It does not authorize React route activation or live integration.
+
+## 15. Implementation gate
+
+`/transferencias` remains `PLANNED_DISABLED` while `API-TRF-001..007` are `MISSING_HTTP`.
+
+The next executable implementation gate requires:
+
+- transfer HTTP operations to become executable;
+- a fresh reconciliation against the implemented DTO/state/transition surface;
+- permission/location-scope handling;
+- shared-shell React implementation;
+- normal merge, deployment and runtime-review gates.
+
+Any disagreement between illustrative baseline details and later executable API truth is resolved in favor of the functional/API contract while preserving the approved visual grammar where compatible.
