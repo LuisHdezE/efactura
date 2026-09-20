@@ -1,4 +1,5 @@
 import type { AppGateways } from '../contracts';
+import { mockItemCategories, mockTaxProfiles, mockUnitsOfMeasure } from './catalogReferenceData';
 import { mockItems, mockParties } from './data';
 import { mockSalesGateway } from './mockSales';
 import { mockSupplierParties } from './supplierData';
@@ -23,7 +24,18 @@ export const mockGateways: AppGateways = {
       const term = search.trim().toLowerCase();
       const items = mockItems.filter((item) => !term || item.code.toLowerCase().includes(term) || item.name.toLowerCase().includes(term));
       return pause({ items, page: 1, pageSize: 50, total: items.length });
-    }
+    },
+    async listCategories(search = '') {
+      const term = search.trim().toLowerCase();
+      const items = mockItemCategories.filter((item) => !term || item.code.toLowerCase().includes(term) || item.name.toLowerCase().includes(term));
+      return pause({ items, page: 1, pageSize: 50, total: items.length });
+    },
+    async listTaxProfiles() {
+      return pause({ items: mockTaxProfiles, page: 1, pageSize: 50, total: mockTaxProfiles.length });
+    },
+    async listUnitsOfMeasure() {
+      return pause(mockUnitsOfMeasure);
+    },
   },
   parties: {
     async listCustomers(search = '') {
