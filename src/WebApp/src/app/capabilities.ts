@@ -54,5 +54,22 @@ export const uiCapabilities: UiCapability[] = [
       { apiId: 'API-PTY-006', operationId: 'updatePartyFiscalIdentity', method: 'PUT', route: '/api/v1/parties/{partyId}/fiscal-identities/{identityId}', permission: 'parties.fiscal.manage' },
       { apiId: 'API-PTY-007', operationId: 'setPartyRoles', method: 'PUT', route: '/api/v1/parties/{partyId}/roles', permission: 'parties.manage' }
     ]
+  },
+  {
+    uiId: 'UI-SUPPLIER-001',
+    label: 'Proveedores',
+    route: '/proveedores',
+    status: 'IMPLEMENTED_API_MOCK_DATA',
+    operations: [
+      { apiId: 'API-PTY-001', operationId: 'listParties', method: 'GET', route: '/api/v1/parties', permission: 'parties.read' },
+      { apiId: 'API-PTY-002', operationId: 'createParty', method: 'POST', route: '/api/v1/parties', permission: 'parties.manage' },
+      { apiId: 'API-PTY-003', operationId: 'getParty', method: 'GET', route: '/api/v1/parties/{partyId}', permission: 'parties.read' },
+      { apiId: 'API-PTY-004', operationId: 'updateParty', method: 'PATCH', route: '/api/v1/parties/{partyId}', permission: 'parties.manage' },
+      { apiId: 'API-PTY-005', operationId: 'addPartyFiscalIdentity', method: 'POST', route: '/api/v1/parties/{partyId}/fiscal-identities', permission: 'parties.fiscal.manage' },
+      { apiId: 'API-PTY-006', operationId: 'updatePartyFiscalIdentity', method: 'PUT', route: '/api/v1/parties/{partyId}/fiscal-identities/{identityId}', permission: 'parties.fiscal.manage' },
+      { apiId: 'API-PTY-007', operationId: 'setPartyRoles', method: 'PUT', route: '/api/v1/parties/{partyId}/roles', permission: 'parties.manage' },
+      { apiId: 'API-REF-001', operationId: 'listCountries', method: 'GET', route: '/api/v1/reference-data/countries', permission: 'authenticated' },
+      { apiId: 'API-REF-003', operationId: 'listFiscalIdentityTypes', method: 'GET', route: '/api/v1/reference-data/fiscal-identity-types', permission: 'authenticated' }
+    ]
   }
 ];

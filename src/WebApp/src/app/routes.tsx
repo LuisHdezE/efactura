@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { CustomersPage } from '../features/customers/CustomersPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { PosPage } from '../features/pos/PosPage';
+import { SuppliersPage } from '../features/suppliers/SuppliersPage';
 import { uiCapabilities, type UiCapability } from './capabilities';
 
 export type NavigationGroup =
@@ -56,7 +57,7 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-002', state: 'active', capability: requireCapability('UI-DASHBOARD-001'), icon: '▦', navigationGroup: 'Inicio', element: <DashboardPage /> },
   { webId: 'WEB-003', state: 'active', capability: requireCapability('UI-POS-001'), icon: '▣', navigationGroup: 'Comercial', element: <PosPage /> },
   { webId: 'WEB-004', state: 'active', capability: requireCapability('UI-CUSTOMER-001'), icon: '●', navigationGroup: 'Comercial', element: <CustomersPage /> },
-  { webId: 'WEB-005', state: 'planned', label: 'Proveedores', icon: '◆', navigationGroup: 'Comercial' },
+  { webId: 'WEB-005', state: 'active', capability: requireCapability('UI-SUPPLIER-001'), icon: '◆', navigationGroup: 'Comercial', element: <SuppliersPage /> },
   { webId: 'WEB-006', state: 'planned', label: 'Productos y Servicios', icon: '▤', navigationGroup: 'Comercial' },
   { webId: 'WEB-007', state: 'planned', label: 'Inventario', icon: '▥', navigationGroup: 'Inventario y Compras' },
   { webId: 'WEB-008', state: 'planned', label: 'Transferencias', icon: '⇄', navigationGroup: 'Inventario y Compras' },
