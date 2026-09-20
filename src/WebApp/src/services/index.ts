@@ -10,7 +10,12 @@ function unavailableApiGateways(): AppGateways {
     throw new Error('API mode is intentionally unavailable until the governed integration lane is enabled.');
   };
   return {
-    catalog: { listItems: notIntegrated },
+    catalog: {
+      listItems: notIntegrated,
+      listCategories: notIntegrated,
+      listTaxProfiles: notIntegrated,
+      listUnitsOfMeasure: notIntegrated,
+    },
     parties: { listCustomers: notIntegrated, listSuppliers: notIntegrated },
     sales: {
       createSale: notIntegrated,
