@@ -2,7 +2,9 @@
 
 Status: `READINESS_LOCKED / IMPLEMENTATION_NOT_STARTED`
 
-Accepted base: `main@60ca8f6b9907c04c4456ed3b3576da6a0c5ea64f` after formal W1.3 runtime closure and the WebApp-only PR #181 reconciliation.
+Initial readiness base: `main@60ca8f6b9907c04c4456ed3b3576da6a0c5ea64f` after formal W1.3 runtime closure and WebApp-only PR #181 reconciliation.
+
+Pre-merge reconciliation baseline: `main@74eaf99c417904191c59d8a7e454bed557f35158` after WebApp PR #183. The W1.4 readiness branch was merged forward onto that live base without overwriting WebApp changes.
 
 Scope: `API-IAM-002..005` and `API-IAM-010` only.
 
