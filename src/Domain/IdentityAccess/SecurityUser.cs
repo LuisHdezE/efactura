@@ -174,7 +174,7 @@ public sealed class SecurityUser
             return null;
 
         var normalized = value.Trim();
-        if (normalized.Length > 320 || !normalized.Contains('@', StringComparison.Ordinal))
+        if (normalized.Length > 320 || !normalized.Contains('@'))
             throw Rule("identity.user.email_invalid", "User email metadata is invalid.");
 
         return normalized;
