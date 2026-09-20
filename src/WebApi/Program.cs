@@ -248,6 +248,12 @@ builder.Services.AddScoped<ListRolesUseCase>();
 builder.Services.AddScoped<GetRoleUseCase>();
 builder.Services.AddScoped<CreateRoleUseCase>();
 builder.Services.AddScoped<UpdateRoleUseCase>();
+builder.Services.AddScoped<ISecurityUserRepository, EfSecurityUserRepository>();
+builder.Services.AddScoped<ListUsersUseCase>();
+builder.Services.AddScoped<GetUserUseCase>();
+builder.Services.AddScoped<CreateUserUseCase>();
+builder.Services.AddScoped<UpdateUserUseCase>();
+builder.Services.AddScoped<AssignUserRolesUseCase>();
 builder.Services.AddScoped<V1OrganizationContextResolver>();
 builder.Services.AddScoped<CollectFiscalCfeEnvelopeDocumentResponseEvidenceByEnvelopeIdUseCase>();
 
