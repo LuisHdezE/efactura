@@ -19,6 +19,40 @@ export interface CommercialItemDto {
   categoryId: string | null;
 }
 
+export interface ItemCategoryDto {
+  id: string;
+  version: number;
+  active: boolean;
+  code: string;
+  name: string;
+}
+
+export interface TaxProfileDto {
+  id: string;
+  version: number;
+  code: string;
+  name: string;
+  treatmentCode: string;
+  ratePercent: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  sourceName: string;
+  sourceReference: string;
+  sourceVersion: string;
+  active: boolean;
+}
+
+export interface ReferenceDataCollectionDto<T> {
+  sourceName: string;
+  sourceVersion: string;
+  items: T[];
+}
+
+export interface UnitOfMeasureDto {
+  code: string;
+  dgiCfe25_2Compatible: boolean;
+}
+
 export interface PartyFiscalIdentityDto {
   id: string;
   typeCode: string;
