@@ -19,7 +19,7 @@ Current runtime/governance state:
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
-- `WEB-006 / UI-CATALOG-001` is implemented and active at `/catalogo`, using explicit local demo data until the governed API-integration lane is enabled;
+- `WEB-006 / UI-CATALOG-001` is active at `/catalogo` and its light/dark deployed runtime was explicitly accepted on 2026-09-20; explicit demo/mock data and disabled write affordances remain in place until the governed API-integration lane enables them;
 - `WEB-007..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 5 entries are interactive shell routes;
@@ -141,28 +141,30 @@ Runtime acceptance is recorded separately from route activation. An active route
 
 ## 8. Runtime acceptance checkpoint
 
-`UI-SUPPLIER-001` is the latest shell route to complete the governed visual/runtime lane.
+`UI-CATALOG-001` is the latest shell route to complete the governed visual/runtime lane.
 
 Accepted evidence:
 
-- approved baseline: `UI-SUPPLIER-001 v1-theme-pair`;
-- implementation PR: `#171`;
-- runtime-polish PR: `#172`;
-- accepted deployed WebApp commit: `525a5be0bee9458220d0e464f0d2df8aa935497b`;
-- human runtime acceptance: `Apruebo cierre runtime UI-SUPPLIER-001` on 2026-09-19;
-- acceptance record: `documentation/ui/reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md`.
+- approved baseline: `UI-CATALOG-001 v1-theme-pair`;
+- visual-governance PR: `#176`;
+- implementation PR: `#178`;
+- runtime-polish PR: `#179`;
+- accepted deployed WebApp commit: `f9280214e819a5bc0093972b223da9b828bc779f`;
+- `Deploy eFactura Demo #30`: `SUCCESS`;
+- post-merge `Frontend Demo CI #69`: `SUCCESS`;
+- post-merge `Clean Architecture Guard #621`: `SUCCESS`;
+- human runtime acceptance: `Apruebo cierre runtime UI-CATALOG-001` on 2026-09-20;
+- acceptance record: `documentation/ui/reviews/UI-CATALOG-001/RUNTIME_VISUAL_ACCEPTANCE.md`.
 
-This does not promote the view to final repository-wide `ACCEPTED`; its specification still records independent traceability and binary-preservation debt.
+This does not promote the view to final repository-wide `ACCEPTED`; its specification still records independent `US-*` / `UC-CATALOG-*` traceability gaps and `BINARY_PRESERVATION_PENDING`.
 
 ## 9. Current next-view checkpoint
 
-`WEB-006 / UI-CATALOG-001` is now implemented as an active shell route at `/catalogo` against the approved `v1-theme-pair` visual authority.
+With `WEB-006 / UI-CATALOG-001` visually/runtime closed, `WEB-007 / Inventory and Movements` is the next planned shell candidate in product order.
 
-The first executable frontend increment uses the existing WebApp mock-data mode and contract-shaped fixtures for commercial items, item categories, tax profiles and unit-of-measure references. API mode remains deliberately unavailable until the separate governed integration lane enables it.
+It remains `PLANNED_DISABLED` at `/inventario` candidate and has no governed stable `UI-*` identifier yet. Reconciliation must precede any visual baseline, route activation or implementation, and it must derive its boundary from current repository/API evidence rather than assuming catalog stock fields that do not exist.
 
-The implementation preserves the catalog boundary: it does not expose authoritative price, cost, stock quantity, barcode/GTIN, media or supplier linkage. Write actions remain disabled in the demo runtime even though their backend operations are registered as capability evidence.
-
-The next gate is applicable Frontend Demo CI and Clean Architecture Guard, explicit merge authorization, deployment, then light/dark runtime visual review against `UI-CATALOG-001 v1-theme-pair`.
+Closing `UI-CATALOG-001` does not enable any future route, does not enable catalog write integration and does not alter the 5-active / 13-planned shell counts.
 
 ## 10. Change control
 

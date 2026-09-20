@@ -1,12 +1,14 @@
 # UI-CATALOG-001 — Productos y Servicios
 
-Status: `VISUAL_APPROVED / IMPLEMENTATION_READY / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING`
+Status: `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING`
 
 Upstream interface scope ID: `WEB-006`
 
 Reconciliation: `documentation/ui/inventory/UI-CATALOG-001_RECONCILIATION.md`
 
 Governed route: `/catalogo`
+
+Runtime acceptance: `documentation/ui/reviews/UI-CATALOG-001/RUNTIME_VISUAL_ACCEPTANCE.md`
 
 ## 1. Objetivo
 
@@ -66,9 +68,9 @@ Ruta gobernada:
 /catalogo
 ```
 
-Aunque el baseline visual ya está aprobado, la opción permanece visible pero deshabilitada según la política del shell hasta completar la implementación.
+La opción está activa dentro del shell gobernado desde la implementación de `UI-CATALOG-001`. Su activación reutiliza la misma entrada de navegación reconciliada; no existe una opción duplicada ni un enlace futuro ficticio.
 
-Al activarse, se convierte la misma entrada `planned` en `active`; no se crea una opción duplicada.
+La aceptación runtime de la ruta no habilita por sí sola escritura live. Las acciones de mantenimiento permanecen visualmente deshabilitadas en el runtime demo hasta que la integración gobernada habilite esa capacidad.
 
 Relaciones futuras:
 
@@ -458,11 +460,13 @@ El PNG fuente exacto está fingerprinted, pero su preservación binaria en Git p
 Actualmente:
 
 ```text
-UI-CATALOG-001 = VISUAL_APPROVED / IMPLEMENTATION_READY / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING
-/catalogo = PLANNED_DISABLED
+UI-CATALOG-001 = REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING
+/catalogo = ACTIVE
 ```
 
-La aprobación visual no modifica `capabilities.ts`, `routes.tsx` ni React Router. La ruta se activa únicamente en el incremento de implementación, después de preservar los contratos funcionales y el shell compartido.
+La implementación frontend fue mergeada mediante PR `#178` y el polish runtime mediante PR `#179`. La ruta activa reutiliza el shell gobernado y mantiene las acciones de escritura deshabilitadas mientras la integración live no esté habilitada en su lane correspondiente.
+
+La aceptación runtime no modifica la autoridad del contrato ni convierte datos demo/mock en fuente live.
 
 ## 18. Registro de aprobación visual
 
@@ -476,4 +480,16 @@ La aprobación visual no modifica `capabilities.ts`, `routes.tsx` ni React Route
 - Source bytes: `1629592`
 - Binary preservation: `PENDING`
 
-Siguiente gate: implementación frontend de la vista aprobada dentro del shell existente, CI, autorización explícita de merge, deployment y runtime visual review.
+## 19. Registro de aceptación runtime
+
+- Implementation PR: `#178`
+- Runtime-polish PR: `#179`
+- Accepted deployed WebApp commit: `f9280214e819a5bc0093972b223da9b828bc779f`
+- Deploy workflow: `Deploy eFactura Demo #30` — `SUCCESS`
+- Post-merge Frontend Demo CI: `#69` — `SUCCESS`
+- Post-merge Clean Architecture Guard: `#621` — `SUCCESS`
+- Runtime acceptance date: `2026-09-20`
+- Runtime acceptance statement: `Apruebo cierre runtime UI-CATALOG-001`
+- Acceptance record: `documentation/ui/reviews/UI-CATALOG-001/RUNTIME_VISUAL_ACCEPTANCE.md`
+
+El cierre runtime no equivale a `ACCEPTED` final del repositorio. Permanecen abiertos el hueco de trazabilidad gobernada `US-*` / `UC-CATALOG-*` y `BINARY_PRESERVATION_PENDING`; ninguno debe representarse como resuelto por este cierre visual.
