@@ -1,6 +1,7 @@
 import type { AppGateways } from '../contracts';
 import { mockItemCategories, mockTaxProfiles, mockUnitsOfMeasure } from './catalogReferenceData';
 import { mockItems, mockParties } from './data';
+import { mockInventoryPositions, mockStockMovements } from './inventoryData';
 import { mockSalesGateway } from './mockSales';
 import { mockSupplierParties } from './supplierData';
 
@@ -35,6 +36,28 @@ export const mockGateways: AppGateways = {
     },
     async listUnitsOfMeasure() {
       return pause(mockUnitsOfMeasure);
+    },
+  },
+  inventory: {
+    async listPositions(query = {}) {
+      const items = mockInventoryPositions.filter((position) =>
+        (!query.itemId || position.itemId === query.itemId)
+        && (!query.locationId || position.locationId === query.locationId)
+      );
+      return pause({ items, page: 1, pageSize: 50, total: items.length });
+    },
+    async getPosition(positionId) {
+      const position = mockInventoryPositions.find((item) => item.id === positionId);
+      if (!position) throw new Error('Mock inventory position not found.');
+      return pause(position);
+    },
+    async listMovements(query = {}) {
+      const items = mockStockMovements.filter((movement) =>
+        (!query.itemId || movement.itemId === query.itemId)
+        && (!query.locationId || movement.locationId === query.locationId)
+        && (!query.positionId || movement.positionId === query.positionId)
+      );
+      return pause({ items, page: 1, pageSize: 50, total: items.length });
     },
   },
   parties: {
