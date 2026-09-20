@@ -8,6 +8,7 @@ import './navigation-compact.css';
 import './runtime-product-images';
 import './features/dashboard/dashboard-density.css';
 import './features/dashboard/dashboard-icons.css';
+import './features/suppliers/supplier-runtime-polish.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
