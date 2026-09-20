@@ -1,10 +1,10 @@
 # W1.3 Roles read/write readiness
 
-Status: `IMPLEMENTED / NEON_PRODUCTION_SCHEMA_APPLIED / MERGE_GATE_PENDING`
+Status: `CLOSED / MERGED / NEON_PRODUCTION_SCHEMA_APPLIED / RUNTIME_ACCEPTED`
 
 Accepted backend base: `e669ab6cf12caa8d5c537489ebd35ff8bfaf0241` (`main` after W1.2 closure).
 
-Live-main reconciliation: W1.3 is reconciled with `main@dcf54ef640bc206ee8c360610b8c4e93f25aab18`, which includes the approved WebApp `UI-CATALOG-001` implementation. The reconciliation preserves both lanes and leaves the W1.3 branch `0` commits behind that main checkpoint.
+Final W1.3 merge: PR #177, merge commit `29011a9a490ae836efd06f8b7a991a9a54cd64d4`, with accepted W1.3 head `47be8165841c58c3e600365d6225a35b0fef2f37` reconciled against the then-live WebApp-inclusive base `dcf54ef640bc206ee8c360610b8c4e93f25aab18`.
 
 Scope: `API-IAM-006..009` only.
 
@@ -17,20 +17,20 @@ Scope: `API-IAM-006..009` only.
 | `API-IAM-008` | `createRole` | POST `/api/v1/roles` | `security.manage_roles` | REQUIRED |
 | `API-IAM-009` | `updateRole` | PUT `/api/v1/roles/{roleId}` | `security.manage_roles` | REQUIRED |
 
-No endpoint outside this set is introduced in W1.3.
+No endpoint outside this set was introduced in W1.3.
 
 ## Readiness findings
 
 1. There was no prior IAM security-role aggregate, repository, EF record, mapping or migration in the V1 persistence model.
-2. Existing `PartyRole` / `v1_party_roles` belongs to the Parties bounded context (`CUSTOMER` / `SUPPLIER`) and is not reused for security authorization.
+2. Existing `PartyRole` / `v1_party_roles` belongs to the Parties bounded context (`CUSTOMER` / `SUPPLIER`) and was not reused for security authorization.
 3. `Permissions.All` remains the canonical stable application permission catalog and single source of truth after W1.2.
-4. The V1 persistence foundation provides reusable idempotency, durable audit, outbox, transactions and PostgreSQL/MySQL persistence-equivalence infrastructure.
+4. The V1 persistence foundation supplied reusable idempotency, durable audit, outbox, transactions and PostgreSQL/MySQL persistence-equivalence infrastructure.
 5. Role/permission changes are durable-audited and roles remain editable permission compositions, not controller authorization shortcuts.
 6. Role routes resolve organization through the existing `V1OrganizationContextResolver` / `X-Organization-Id` behavior and validate actor company scope.
 
 ## Bounded role model
 
-W1.3 introduces a company-scoped security role definition with:
+W1.3 introduced a company-scoped security role definition with:
 
 - opaque role ID;
 - organization ID;
@@ -41,7 +41,7 @@ W1.3 introduces a company-scoped security role definition with:
 - deterministic set of canonical permission codes;
 - created/updated UTC timestamps in persistence.
 
-Role names are unique within one organization using normalized case-insensitive comparison at the application/persistence boundary. The same normalized name is valid in a different organization. No role delete endpoint is introduced. Deactivation is represented by the replacement semantics of `updateRole`.
+Role names are unique within one organization using normalized case-insensitive comparison at the application/persistence boundary. The same normalized name is valid in a different organization. No role delete endpoint was introduced. Deactivation is represented by the replacement semantics of `updateRole`.
 
 ## Permission composition
 
@@ -129,17 +129,18 @@ The schema is additive and provider-neutral.
 
 ## Executable CI evidence
 
-Exact-head Clean Architecture Guard #614 (`35515593390`) passed on W1.3 head `b74d2c7edf9c9829a4e439f06b41ee861cfb432f` before the later WebApp-only `main` advancement:
+Pre-merge exact-head Clean Architecture Guard #618 passed on W1.3 head `47be8165841c58c3e600365d6225a35b0fef2f37`.
 
-- restore PASS;
-- NuGet vulnerability gate PASS;
+Post-merge Clean Architecture Guard #619 passed on merge commit `29011a9a490ae836efd06f8b7a991a9a54cd64d4`.
+
+Both gates preserved:
+
 - Release build PASS;
-- ArchitectureTests PASS (`249/249`);
-- CrossCuttingTests PASS;
-- legacy UnitTest PASS;
-- complete provider-real PostgreSQL/MySQL transactional persistence integration PASS.
-
-After `main` advanced through PR #178, W1.3 was reconciled with `main@dcf54ef640bc206ee8c360610b8c4e93f25aab18`. A new exact-head guard is required on the reconciled branch before merge approval.
+- architecture tests PASS;
+- API cross-cutting tests PASS;
+- legacy unit tests PASS;
+- provider-real PostgreSQL transaction/persistence integration PASS;
+- provider-real MySQL transaction/persistence integration PASS.
 
 ## Neon production schema evidence
 
@@ -147,15 +148,9 @@ Neon project: `efactura-demo` (`sparkling-night-24634185`).
 
 Production/default branch: `production` (`br-restless-thunder-a55cu12n`). Database: `efactura_demo`.
 
-Pre-promotion production inspection confirmed:
+Migration `20260920040000_V1SecurityRoles` was first validated on temporary Neon branches. The final governed migration package used migration ID `8ff99177-cc62-4862-9bb1-c33573262f5a`.
 
-- no `v1_security_roles` table;
-- no `v1_security_role_permissions` table;
-- latest recorded EF migration `20260914123000_V1FiscalCfeDocumentResponseCertificateTrust` (`8.0.30`).
-
-Migration `20260920040000_V1SecurityRoles` was first validated on temporary Neon branches. The final governed migration package used migration ID `8ff99177-cc62-4862-9bb1-c33573262f5a` and temporary branch `br-plain-silence-a530cfw2`.
-
-Following explicit user approval, that prepared migration was promoted to production. Neon reported successful application to parent branch `br-restless-thunder-a55cu12n` and deleted the temporary branch.
+Following explicit user approval, that prepared migration was promoted to production.
 
 Post-promotion production verification confirmed:
 
@@ -170,31 +165,54 @@ Post-promotion production verification confirmed:
 - runtime role `efactura_app` has `SELECT/INSERT/UPDATE/DELETE` on both new tables;
 - `__EFMigrationsHistory` records `20260920040000_V1SecurityRoles / 8.0.30`.
 
-The schema promotion is expand-first and additive. No existing production table was altered by the W1.3 migration.
+The schema promotion was expand-first and additive. No existing production table was altered by the W1.3 migration.
 
-## Runtime / QA acceptance
+## Runtime / QA closure evidence
 
-Minimum executable proof before formal W1.3 closure:
+Deploy API Demo #52 completed successfully and promoted Cloud Run revision `efactura-api-d22-29011a9-52-1` to the public service.
 
-1. OpenAPI exposes exactly the four operation IDs with the accepted methods/routes.
-2. 401/403 behavior for read and mutation endpoints.
-3. company-scope isolation and multi-company organization-header behavior.
-4. create role succeeds with canonical permission composition.
-5. unknown permission is rejected.
-6. duplicate permission input returns one deterministic code in the result.
-7. duplicate normalized role name is rejected inside the same organization but allowed in another organization.
-8. `listRoles` and `getRole` return deterministic permission ordering.
-9. `updateRole` fully replaces mutable metadata/permission composition and increments version.
-10. stale `expectedVersion` is rejected.
-11. create/update idempotent replay is deterministic and payload mismatch conflicts.
-12. durable audit/outbox evidence is written atomically with mutation.
-13. PostgreSQL transaction/persistence integration passes.
-14. MySQL transaction/persistence integration passes.
-15. regression: W1.2 `/me` + `/permissions`, W1.1 reference-data and `/parties` remain green.
+Runtime acceptance on that exact revision proved:
+
+1. Swagger final HTTP 200 and OpenAPI HTTP 200 after the expected `/swagger` redirect.
+2. OpenAPI exposes exactly `listRoles`, `getRole`, `createRole`, `updateRole` on the accepted methods/routes.
+3. missing JWT -> 401 and missing role-read permission -> 403.
+4. multi-company organization-context behavior is enforced.
+5. create role succeeds with canonical de-duplicated permission composition.
+6. create replay returns deterministic prior result and replay header.
+7. same idempotency key + changed payload -> 409 payload mismatch.
+8. unknown permission -> 422.
+9. duplicate normalized name -> 409.
+10. `getRole` returns the created role.
+11. `updateRole` replaces mutable state and increments version 1 -> 2.
+12. update replay is deterministic.
+13. stale expected version -> 409 concurrency conflict with current version.
+14. final deactivation increments version 2 -> 3 and leaves the QA role inactive.
+15. `/me`, `/permissions` (68/68), eight W1.1 reference-data endpoints and `/parties` regressions remain green.
+
+Runtime QA role:
+
+- ID `8fdc4eff1b1349829146b0601956414d`;
+- final name `QA-W13-20260920160620-1577-UPDATED`;
+- final state inactive;
+- final version `3`;
+- final permissions `audit.read`, `catalog.read`.
+
+Independent Neon post-runtime verification confirmed exactly:
+
+- 1 security role;
+- 2 final role-permission rows;
+- 3 role audit events (`CREATED`, `UPDATED`, `UPDATED`);
+- 3 `RoleChangedIntegrationEvent` outbox rows;
+- 3 completed role idempotency rows;
+- 0 non-completed role idempotency rows;
+- 0 invalid-role rows;
+- 0 duplicate-role rows.
+
+This proves successful state/evidence atomicity and rollback of the negative test paths.
 
 ## Completion accounting
 
-W1.3 implementation accounting in the governed branch is:
+W1.3 closed accounting is:
 
 - Wave 1: `21 / 30` implemented (`70.00%`);
 - global public v1: `55 / 194` implemented (`28.35%`);
@@ -202,4 +220,4 @@ W1.3 implementation accounting in the governed branch is:
 - remaining contract-collision IDs: `2`;
 - remaining non-implemented IDs: `139`.
 
-The next bounded Wave 1 increment is W1.4 Users + role assignment (`API-IAM-002..005`, `API-IAM-010`), but it MUST NOT start before formal W1.3 closure.
+W1.3 is formally closed. The next bounded Wave 1 increment is W1.4 Users + role assignment (`API-IAM-002..005`, `API-IAM-010`).
