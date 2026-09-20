@@ -19,18 +19,18 @@ Current runtime/governance state:
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
-- `WEB-006 / UI-CATALOG-001` is visual-approved for reserved route `/catalogo`, but remains `PLANNED_DISABLED` pending implementation;
+- `WEB-006 / UI-CATALOG-001` is implemented and active at `/catalogo`, using explicit local demo data until the governed API-integration lane is enabled;
 - `WEB-007..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
-- 4 entries are interactive shell routes;
-- 14 future entries remain visible as disabled/non-clickable options, not fake routes.
+- 5 entries are interactive shell routes;
+- 13 future entries remain visible as disabled/non-clickable options, not fake routes.
 
 Current counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
-- active shell routes: **4**;
-- planned disabled shell options: **14**.
+- active shell routes: **5**;
+- planned disabled shell options: **13**.
 
 ## 3. Sidebar information architecture
 
@@ -85,7 +85,7 @@ Legend:
 | `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` |
 | `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` |
 | `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` |
-| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `PLANNED_DISABLED` |
+| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` |
 | `WEB-007` | Inventory and Movements | Inventario y Compras | `UI ID pending` | `/inventario` candidate | `PLANNED_DISABLED` |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI ID pending` | `/transferencias` candidate | `PLANNED_DISABLED` |
 | `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI ID pending` | `/compras` candidate | `PLANNED_DISABLED` |
@@ -156,13 +156,13 @@ This does not promote the view to final repository-wide `ACCEPTED`; its specific
 
 ## 9. Current next-view checkpoint
 
-`WEB-006` has now been reconciled as `UI-CATALOG-001` with reserved route `/catalogo`.
+`WEB-006 / UI-CATALOG-001` is now implemented as an active shell route at `/catalogo` against the approved `v1-theme-pair` visual authority.
 
-Its first governed scope is the executable commercial-item master supported by `API-CAT-001..009` and `API-REF-008`, without fabricating pricing, images/media or stock quantities absent from the current item contract.
+The first executable frontend increment uses the existing WebApp mock-data mode and contract-shaped fixtures for commercial items, item categories, tax profiles and unit-of-measure references. API mode remains deliberately unavailable until the separate governed integration lane enables it.
 
-`UI-CATALOG-001 v1-theme-pair` was explicitly approved by Luis on 2026-09-20. Its exact generated source is fingerprinted under `documentation/ui/references/approved/UI-CATALOG-001/v1-theme-pair/`, with byte-identical binary preservation still pending through the current repository connector.
+The implementation preserves the catalog boundary: it does not expose authoritative price, cost, stock quantity, barcode/GTIN, media or supplier linkage. Write actions remain disabled in the demo runtime even though their backend operations are registered as capability evidence.
 
-The option remains `PLANNED_DISABLED` until the React implementation is completed, capability registration is added, applicable CI is green and merge is explicitly authorized.
+The next gate is applicable Frontend Demo CI and Clean Architecture Guard, explicit merge authorization, deployment, then light/dark runtime visual review against `UI-CATALOG-001 v1-theme-pair`.
 
 ## 10. Change control
 
