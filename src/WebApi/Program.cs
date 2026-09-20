@@ -76,6 +76,7 @@ using ApplicationCore.Services.Supplier;
 using EFactura.Application.Catalog;
 using EFactura.Application.Common.Context;
 using EFactura.Application.Fiscal;
+using EFactura.Application.IdentityAccess;
 using EFactura.Application.Parties;
 using Infrastructure.Persistence.V1;
 using Infrastructure.ReferenceData;
@@ -239,6 +240,8 @@ var v1ConnectionString = builder.Configuration.GetConnectionString(v1ConnectionS
 
 builder.Services.AddV1Persistence(v1DatabaseProvider, v1ConnectionString);
 builder.Services.AddReferenceDataFoundation();
+builder.Services.AddScoped<GetCurrentActorUseCase>();
+builder.Services.AddScoped<ListPermissionsUseCase>();
 builder.Services.AddScoped<V1OrganizationContextResolver>();
 builder.Services.AddScoped<CollectFiscalCfeEnvelopeDocumentResponseEvidenceByEnvelopeIdUseCase>();
 
