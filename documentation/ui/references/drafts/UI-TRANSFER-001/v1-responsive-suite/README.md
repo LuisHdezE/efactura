@@ -1,12 +1,20 @@
-# UI-TRANSFER-001 v1-responsive-suite — Governed visual candidate
+# UI-TRANSFER-001 v1-responsive-suite - Governed visual candidate history
 
-Status: `VISUAL_CANDIDATE / SOURCE_FINGERPRINTED / NOT_APPROVED / BINARY_PRESERVATION_PENDING`
+Status: `VISUAL_CANDIDATE_HISTORY / PROMOTED_TO_APPROVED / SOURCE_FINGERPRINTED / BINARY_PRESERVATION_PENDING`
 
-Registered by Luis on 2026-09-20 with the explicit instruction:
+Originally registered by Luis on 2026-09-20 with the explicit instruction:
 
 > Registra esta suite como candidato visual gobernado
 
-This instruction registers the presented suite as the governed visual candidate for `UI-TRANSFER-001`. It does **not** approve the candidate, promote it to `references/approved`, authorize React route activation, or authorize any live transfer behavior.
+Luis later approved this exact candidate on 2026-09-20 with:
+
+> Apruebo UI-TRANSFER-001 v1-responsive-suite como baseline visual
+
+This file preserves the candidate-stage history. The approved authority now lives at:
+
+`documentation/ui/references/approved/UI-TRANSFER-001/v1-responsive-suite/README.md`
+
+The promotion does not change the candidate source identity.
 
 ## Candidate source
 
@@ -17,9 +25,9 @@ This instruction registers the presented suite as the governed visual candidate 
 - source bytes: `1586620`
 - SHA-256: `1c6826ce147e7fe4a4dd009c67ebdbd41275ed43bc6040be2cd81ac1dd8272ed`
 
-The exact generated PNG is the candidate visual source. It must not be silently regenerated, recompressed, substituted or represented as byte-identical evidence under the same version.
+The exact generated PNG is the source that was reviewed and approved. It must not be silently regenerated, recompressed, substituted or represented as byte-identical evidence under the same version.
 
-The current GitHub connector in this lane cannot directly insert the generated binary from the chat runtime into the repository. Therefore the candidate is source-fingerprinted but physical byte-identical preservation remains `BINARY_PRESERVATION_PENDING`. This debt must remain explicit until the exact PNG is stored in repository evidence.
+The current GitHub connector in this lane cannot directly insert the generated binary from the chat runtime into the repository. Therefore physical byte-identical preservation remains `BINARY_PRESERVATION_PENDING`.
 
 ## Candidate visual scope
 
@@ -32,7 +40,7 @@ The suite presents one responsive composition covering:
 - tablet dark mode;
 - mobile dark mode.
 
-The candidate establishes the intended visual grammar for:
+The candidate established the intended visual grammar for:
 
 - the existing reusable eFactura shell rather than a forked transfer shell;
 - `Transferencias` as the active visual context inside `Inventario y Compras`;
@@ -48,7 +56,7 @@ The candidate establishes the intended visual grammar for:
 
 ## Functional authority and restrictions
 
-This image is a visual candidate, not backend authority. Functional truth remains governed by:
+This visual never becomes backend authority. Functional truth remains governed by:
 
 - `documentation/ui/specifications/UI-TRANSFER-001_STOCK_TRANSFERS.md`;
 - `documentation/ui/transfers/UI-TRANSFER-001_RECONCILIATION.md`;
@@ -58,31 +66,13 @@ This image is a visual candidate, not backend authority. Functional truth remain
 
 - `/transferencias` remains `PLANNED_DISABLED`;
 - the visual list content is illustrative/mock data;
-- lifecycle labels shown in the candidate are visual concepts and are not final wire enum guarantees;
+- lifecycle labels shown are visual concepts and are not final wire enum guarantees;
 - `Nueva transferencia` must not be enabled as a live action;
 - no approve/dispatch/receive/reconcile action may be presented as server-backed behavior;
 - no visual element may be used to invent unsupported transport, ETA, valuation, cancellation, reservation or discrepancy policy.
 
-## Candidate-specific review notes
+## Promotion outcome
 
-The candidate intentionally demonstrates:
+This exact candidate was promoted to the approved visual baseline without changing its version, generation id, dimensions, byte count or SHA-256 fingerprint.
 
-- clear transfer identity such as `TRF-0012`;
-- source-to-destination directional reading;
-- status segmentation such as draft, pending approval, approved, dispatched, received and discrepancy;
-- selected detail context with tabs/sections;
-- explicit discrepancy alerting;
-- a compact responsive mobile representation;
-- consistent light/dark shell treatment.
-
-Elements such as counts, dates, operator names, exact state labels and sample locations are illustrative presentation data until executable transfer DTOs define authoritative values.
-
-## Approval gate
-
-This version is **not approved**.
-
-If Luis explicitly approves this exact candidate, it may be promoted under:
-
-`documentation/ui/references/approved/UI-TRANSFER-001/v1-responsive-suite/`
-
-Approval must identify this exact version and source fingerprint. Promotion must preserve the candidate history and must not imply route activation while the transfer HTTP surface remains non-executable.
+The draft history remains intentionally preserved so the repository records both the candidate stage and the later human approval event.
