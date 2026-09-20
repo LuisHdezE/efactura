@@ -2,6 +2,8 @@
 
 Status: `FULLY_RECONCILED / W1_4_USERS_CLOSED / W1_5_NEXT`
 
+Closure reconciliation PR: **#188**.
+
 This companion ledger prevents the public-v1 denominator, implementation count and wave ownership from drifting while the completion program proceeds.
 
 Current public-v1 inventory denominator: **194 operation IDs**.
