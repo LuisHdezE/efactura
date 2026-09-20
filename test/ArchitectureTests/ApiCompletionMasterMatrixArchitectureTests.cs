@@ -7,10 +7,10 @@ namespace ArchitectureTests;
 public sealed class ApiCompletionMasterMatrixArchitectureTests
 {
     private const int CurrentInventoryCount = 194;
-    private const int CurrentImplementedCount = 49;
-    private const int CurrentMissingHttpCount = 143;
+    private const int CurrentImplementedCount = 51;
+    private const int CurrentMissingHttpCount = 141;
     private const int CurrentContractCollisionCount = 2;
-    private const int CurrentNonImplementedCount = 145;
+    private const int CurrentNonImplementedCount = 143;
     private const int CurrentDistinctRouteSignatureCount = 193;
 
     private static readonly string[] MatrixShardPaths =
@@ -45,7 +45,6 @@ public sealed class ApiCompletionMasterMatrixArchitectureTests
         Assert.Contains("193 unique public v1 operations", acceptance, StringComparison.Ordinal);
         Assert.Contains("original commercial/fiscal/administrative design: **171** operations", acceptance, StringComparison.Ordinal);
         Assert.Contains("Technical Operations Console amendment: **22** operations", acceptance, StringComparison.Ordinal);
-
         Assert.Contains("current inventory total: **194 operations**", matrix, StringComparison.Ordinal);
         Assert.Contains("API-FIS-010", matrix, StringComparison.Ordinal);
         Assert.Contains("historical accepted total: `193` operations", matrix, StringComparison.Ordinal);
@@ -55,10 +54,7 @@ public sealed class ApiCompletionMasterMatrixArchitectureTests
     [Fact]
     public void Wave_ledger_assigns_every_inventory_operation_exactly_once()
     {
-        var inventoryIds = InventoryContractRows()
-            .Select(row => row.Id)
-            .ToHashSet(StringComparer.Ordinal);
-
+        var inventoryIds = InventoryContractRows().Select(row => row.Id).ToHashSet(StringComparer.Ordinal);
         var ledger = Read("documentation/API_COMPLETION_MASTER_MATRIX_WAVE_COUNTS.md");
         var rows = Regex.Matches(
             ledger,
@@ -129,15 +125,12 @@ public sealed class ApiCompletionMasterMatrixArchitectureTests
     [Fact]
     public void Master_matrix_contains_every_inventory_operation_exactly_once_and_reconciles_status_totals()
     {
-        var inventoryIds = InventoryContractRows()
-            .Select(row => row.Id)
-            .ToHashSet(StringComparer.Ordinal);
+        var inventoryIds = InventoryContractRows().Select(row => row.Id).ToHashSet(StringComparer.Ordinal);
         var rows = MatrixOperationRows();
 
         Assert.Equal(CurrentInventoryCount, rows.Length);
         Assert.Equal(CurrentInventoryCount, rows.Select(row => row.Id).Distinct(StringComparer.Ordinal).Count());
         Assert.True(inventoryIds.SetEquals(rows.Select(row => row.Id)), "Matrix shards must cover the exact public-v1 inventory.");
-
         Assert.Equal(CurrentImplementedCount, rows.Count(row => row.Implementation == "IMPLEMENTED"));
         Assert.Equal(CurrentMissingHttpCount, rows.Count(row => row.Implementation == "MISSING_HTTP"));
         Assert.Equal(CurrentContractCollisionCount, rows.Count(row => row.Implementation == "CONTRACT_COLLISION"));
