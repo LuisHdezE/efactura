@@ -8,7 +8,7 @@ Pre-merge reconciliation baseline: `main@74eaf99c417904191c59d8a7e454bed557f3515
 
 Implementation merge: PR #185 -> `5a939ba251a898ea1dd6a181050fffa20e91324d`.
 
-Closure reconciliation baseline: `main@eac26a36d53fb54a71a0fabb2dfcbbab9db69b89` after WebApp-only documentation PR #186. PR #186 changes only `documentation/ui/inventory/**`; it does not change the W1.4 API, Application, Domain or Infrastructure implementation.
+Closure reconciliation baseline: `main@ce6f80e42ac993c2b62ee240db5fb13fe7ba0cdb` after WebApp documentation PRs #186 and #187. Those parallel changes are confined to WebApp/UI governance documentation and do not change the W1.4 API, Application, Domain or Infrastructure implementation.
 
 Scope: `API-IAM-002..005` and `API-IAM-010` only.
 
