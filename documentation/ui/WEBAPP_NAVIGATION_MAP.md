@@ -19,7 +19,7 @@ Current runtime/governance state:
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
-- `WEB-006` is reconciled as `UI-CATALOG-001`, with `/catalogo` reserved but still `PLANNED_DISABLED` pending visual approval and implementation;
+- `WEB-006 / UI-CATALOG-001` is visual-approved for reserved route `/catalogo`, but remains `PLANNED_DISABLED` pending implementation;
 - `WEB-007..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 4 entries are interactive shell routes;
@@ -160,7 +160,9 @@ This does not promote the view to final repository-wide `ACCEPTED`; its specific
 
 Its first governed scope is the executable commercial-item master supported by `API-CAT-001..009` and `API-REF-008`, without fabricating pricing, images/media or stock quantities absent from the current item contract.
 
-The option remains `PLANNED_DISABLED` until the visual baseline is explicitly approved and the React implementation is merged through the normal governance sequence.
+`UI-CATALOG-001 v1-theme-pair` was explicitly approved by Luis on 2026-09-20. Its exact generated source is fingerprinted under `documentation/ui/references/approved/UI-CATALOG-001/v1-theme-pair/`, with byte-identical binary preservation still pending through the current repository connector.
+
+The option remains `PLANNED_DISABLED` until the React implementation is completed, capability registration is added, applicable CI is green and merge is explicitly authorized.
 
 ## 10. Change control
 
