@@ -1,13 +1,17 @@
 using EFactura.Application.Catalog;
 using EFactura.Application.Common.Errors;
 using EFactura.Application.Common.Results;
+using EFactura.Application.ReferenceData;
 using EFactura.Domain.Catalog;
 using Infrastructure.Persistence.V1.Write.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.V1.Write.Repositories;
 
-public sealed class EfCommercialItemRepository : ICommercialItemRepository, ICommercialItemMaintenanceRepository
+public sealed class EfCommercialItemRepository :
+    ICommercialItemRepository,
+    ICommercialItemMaintenanceRepository,
+    IUnitOfMeasureReferenceReader
 {
     private readonly V1PersistenceDbContext _dbContext;
 
@@ -130,6 +134,34 @@ public sealed class EfCommercialItemRepository : ICommercialItemRepository, ICom
                  && x.Code == normalizedCode
                  && (!excludingItemId.HasValue || x.Id != excludingItemId.Value),
             cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> ListActiveDistinctUnitsAsync(
+        IReadOnlyCollection<string> organizationIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (organizationIds.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var scopes = organizationIds
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (scopes.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        return await _dbContext.CommercialItems
+            .AsNoTracking()
+            .Where(x => x.Active && scopes.Contains(x.OrganizationId))
+            .Select(x => x.Unit)
+            .Distinct()
+            .OrderBy(unit => unit)
+            .ToArrayAsync(cancellationToken);
     }
 
     private static V1CommercialItemRecord MapRecord(CommercialItem item, DateTime createdAtUtc, DateTime updatedAtUtc) =>

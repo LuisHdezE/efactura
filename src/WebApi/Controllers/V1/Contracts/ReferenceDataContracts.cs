@@ -35,3 +35,11 @@ public sealed record InvoiceIndicatorDto(
     int Code,
     string Name,
     string TaxTreatment);
+
+public sealed record ContactTypeDto(
+    string Code,
+    string Name);
+
+public sealed record UnitOfMeasureDto(
+    string Code,
+    bool DgiCfe25_2Compatible);
