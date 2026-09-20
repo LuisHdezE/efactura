@@ -119,15 +119,28 @@ public sealed class EfSecurityRoleRepository : ISecurityRoleRepository
         record.Version = role.Version;
         record.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
-        permissions.RemoveRange(record.Permissions);
-        record.Permissions = role.Permissions
-            .Select(permission => new V1SecurityRolePermissionRecord
+        var desiredCodes = role.Permissions.ToHashSet(StringComparer.Ordinal);
+        var existingByCode = record.Permissions.ToDictionary(x => x.PermissionCode, StringComparer.Ordinal);
+
+        var removed = record.Permissions
+            .Where(permission => !desiredCodes.Contains(permission.PermissionCode))
+            .ToArray();
+        permissions.RemoveRange(removed);
+        foreach (var permission in removed)
+            record.Permissions.Remove(permission);
+
+        foreach (var permissionCode in desiredCodes.OrderBy(code => code, StringComparer.Ordinal))
+        {
+            if (existingByCode.ContainsKey(permissionCode))
+                continue;
+
+            record.Permissions.Add(new V1SecurityRolePermissionRecord
             {
                 RoleId = role.Id,
-                PermissionCode = permission,
+                PermissionCode = permissionCode,
                 Role = record
-            })
-            .ToList();
+            });
+        }
     }
 
     private static SecurityRole Map(V1SecurityRoleRecord record) =>
