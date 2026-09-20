@@ -50,6 +50,7 @@ The mapping must be recorded in the view specification and inventory entry. The 
 | `WEB-003` | POS Sale | `UI-POS-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-POS-001_RECONCILIATION.md`, `../specifications/UI-POS-001_POS.md`, `../references/approved/UI-POS-001/v3-theme-pair/`, `../reviews/UI-POS-001/D1_5_RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-004` | Customers and Parties | `UI-CUSTOMER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED` | `UI-CUSTOMER-001_RECONCILIATION.md`, `../specifications/UI-CUSTOMER-001_CUSTOMERS.md`, `../references/approved/UI-CUSTOMER-001/v2-theme-pair/README.md`, `../reviews/UI-CUSTOMER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
 | `WEB-005` | Suppliers | `UI-SUPPLIER-001` | `REVIEWED / VISUAL_RUNTIME_ACCEPTED / TRACEABILITY_GAPS_RECORDED / BINARY_PRESERVATION_PENDING` | `UI-SUPPLIER-001_RECONCILIATION.md`, `../specifications/UI-SUPPLIER-001_SUPPLIERS.md`, `../references/approved/UI-SUPPLIER-001/v1-theme-pair/README.md`, `../reviews/UI-SUPPLIER-001/RUNTIME_VISUAL_ACCEPTANCE.md` |
+| `WEB-006` | Products and Services Catalog | `UI-CATALOG-001` | `SPECIFIED / VISUAL_DRAFT_PENDING / TRACEABILITY_GAPS_RECORDED` | `UI-CATALOG-001_RECONCILIATION.md`, `../specifications/UI-CATALOG-001_PRODUCTS_SERVICES.md` |
 
 ## UI-DASHBOARD-001 reconciliation and visual note
 
@@ -119,5 +120,19 @@ The inventory does not promote the row to final `ACCEPTED` because two independe
 - the approved source PNG remains `BINARY_PRESERVATION_PENDING`.
 
 Neither debt reopens the accepted runtime lane and neither may be silently invented or represented as resolved.
+
+## UI-CATALOG-001 reconciliation note
+
+`WEB-006` is reconciled as `UI-CATALOG-001` with reserved route `/catalogo`.
+
+The current backend exposes the complete first commercial-master surface needed for v1: item list/detail/create/update/deactivate, category list/create/update, read-only tax-profile references and runtime unit-of-measure suggestions.
+
+The first governed view intentionally excludes data that the authoritative `CommercialItemDto` does not expose, including catalog price/cost, media, barcode and stock quantity. Sale-line `unitPrice` and POS-local visual images do not become item-master fields by implication.
+
+The unit selector must also preserve the W1.1D semantic boundary: units are configurable commercial text with runtime suggestions, not a fabricated closed DGI enumeration.
+
+No governed `US-*` catalog-master artifact or dedicated `UC-CATALOG-*` lifecycle is currently evidenced, so the traceability gap remains recorded rather than invented.
+
+The next gate for `UI-CATALOG-001` is an explicit light/dark visual baseline approval. `/catalogo` remains `PLANNED_DISABLED` until implementation is approved and merged.
 
 Reconciliation and future views must continue to use current repository evidence rather than historical unresolved-API notes alone.
