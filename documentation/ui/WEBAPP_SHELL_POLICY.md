@@ -22,10 +22,17 @@ Feature pages must not recreate their own global sidebar, topbar or bottom bar.
 
 Product-navigation metadata and executable route binding are centralized in `src/WebApp/src/app/routes.tsx`.
 
-The registry has two states:
+The registry has two execution states:
 
 - `active`: the feature exists and is executable;
 - `planned`: the product option belongs in the governed information architecture but has no executable route yet.
+
+A `planned` entry may also carry optional product-facing progress metadata:
+
+- `governed` renders as `En diseño` after the `WEB-* -> UI-*` boundary has been reconciled and specified;
+- `visual-approved` renders as `Diseño listo` after the exact governed visual baseline has been explicitly approved.
+
+Progress metadata is informational only. It never changes an item's execution state, never creates a route target and never proves backend/API readiness.
 
 `Sidebar` and `MobileNavigation` consume the complete grouped registry. `shellRoutes` is derived only from `active` entries and drives React Router.
 
@@ -50,6 +57,8 @@ Runtime rules:
 - no dead links;
 - no candidate route is exposed merely because it exists in planning;
 - planned modules are visible but disabled/non-clickable;
+- planned modules may expose a compact progress badge when governance has advanced beyond roadmap-only state;
+- a progress badge must not imply that the module is executable or that its backend exists;
 - planned modules must not pretend to have an implemented page or backend capability;
 - only active entries receive a route target and active-link behavior;
 - only active entries are present in `shellRoutes`.
@@ -61,6 +70,8 @@ A disabled future module is a product-architecture cue, not a placeholder page.
 `src/WebApp/src/app/capabilities.ts` remains authoritative for implemented UI-to-API capability bindings.
 
 Only implemented/active shell entries require a governed `UiCapability`. Planned navigation entries must not invent `UiCapability` identifiers, operations or backend contracts merely to appear in the Sidebar.
+
+Progress metadata on a planned item is not a capability binding.
 
 ## New-view Definition of Done
 
@@ -79,6 +90,8 @@ For every planned WebApp view transitioning to active:
 11. Deploy and perform runtime visual review.
 12. Update Navigation Map progress accounting.
 
+Planned progress changes (`roadmap -> governed -> visual-approved`) may occur before executable activation and must keep the entry non-clickable throughout.
+
 ## Shell visual-change rule
 
 The shell is shared infrastructure. Changes to Sidebar, Topbar, BottomBar, mobile navigation, shell width, global spacing, brand treatment or theme behavior are shell-wide changes and must be reviewed across all implemented views.
@@ -93,6 +106,7 @@ Therefore:
 - icons remain subordinate to labels and must not dominate row height;
 - group headings remain visible and stable;
 - planned entries use the same rhythm but reduced emphasis and no click behavior;
+- advanced planned entries may use a compact progress badge without becoming visually equivalent to active routes;
 - the Sidebar may scroll independently when viewport height cannot contain the full map;
 - planned modules must not inflate navigation into oversized cards.
 
@@ -108,8 +122,10 @@ Standalone routes must be deliberate and documented.
 
 - total accepted Web interfaces: **19**;
 - implemented standalone views: **1**;
-- active shell routes: **3**;
-- planned disabled shell options: **15**.
+- active shell routes: **6**;
+- planned disabled shell options: **12**;
+- planned with approved visual baseline: **2** (`WEB-008`, `WEB-009`);
+- planned with governed/specification-ready boundary: **1** (`WEB-010`).
 
 `/pos` remains the default shell route until a separate explicit product decision changes it.
 
