@@ -1,6 +1,6 @@
 # UI-RECEIVABLE-001 — Governed UI Inventory Entry
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / EXECUTION_BLOCKED_BY_API`
+Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / ACTIVE_VISUAL_PREVIEW`
 
 Mapping:
 
@@ -8,9 +8,9 @@ Mapping:
 WEB-010 -> UI-RECEIVABLE-001
 ```
 
-Reserved route: `/cuentas-por-cobrar`
+Route: `/cuentas-por-cobrar`
 
-Navigation state: `PLANNED_DISABLED`
+Navigation state: `ACTIVE_VISUAL_PREVIEW`
 
 ## Evidence
 
@@ -21,6 +21,7 @@ Navigation state: `PLANNED_DISABLED`
 - reconciliation: `documentation/ui/receivables/UI-RECEIVABLE-001_RECONCILIATION.md`;
 - specification: `documentation/ui/specifications/UI-RECEIVABLE-001_ACCOUNTS_RECEIVABLE_COLLECTIONS.md`;
 - approved visual reference: `documentation/ui/references/approved/UI-RECEIVABLE-001/v1-approved-view/README.md`;
+- preview-route authority: `documentation/ui/PREVIEW_ROUTE_POLICY_AMENDMENT.md`;
 - route/navigation authority: `documentation/ui/WEBAPP_NAVIGATION_MAP.md`.
 
 ## Approved visual baseline
@@ -35,7 +36,7 @@ Approved artifact identity:
 - image generation id: `1fad639a-815f-431b-8c1c-7e6a50cdae77`;
 - scope: the exact approved accounts-receivable composition showing aging KPIs, receivable list, selected-account detail, collection history, disabled/demo collection composer and the mobile inset represented in the approved image.
 
-This approval is visual authority only. It does not activate `/cuentas-por-cobrar` and does not authorize any server-owned financial mutation.
+The approved composition is visual authority. The implementation may adapt responsively inside the shared eFactura shell and global theme, but it must not reinterpret financial policy or imply live API readiness.
 
 ## Accepted API dependency
 
@@ -51,35 +52,51 @@ The view depends on:
 
 Wave 3 currently records all seven as `MISSING_HTTP` with no WebApi evidence and `NOT_YET_AUDITED` deep readiness.
 
+## Visual-preview boundary
+
+The active preview is allowed to provide:
+
+- explicit local demonstration fixtures;
+- client-side search and status filtering;
+- selection of a receivable fixture;
+- master/detail navigation;
+- visual aging/KPI cards clearly marked as demonstration values;
+- visual collection/allocation composition with disabled controls;
+- light/dark adaptation through the existing global shell theme;
+- responsive desktop/tablet/mobile layout.
+
+The preview does not register any `API-AR-*` or `API-COL-*` operation as executable.
+
 ## Financial-history boundary
 
 The governed view preserves:
 
 - original obligation amount as historical fact;
 - allocations and adjustments as append-only evidence;
-- open balance as derived/server-authoritative state;
+- open balance as derived/server-authoritative state when live integration exists;
 - partial/full collection history;
 - explicit overpayment/advance policy results;
 - compensating reversal instead of destructive deletion.
 
+Demo fixtures are presentation examples only and are never authoritative financial state.
+
 ## Execution gate
 
-This inventory entry currently authorizes the approved visual baseline only. It does not authorize:
+Route activation as `IMPLEMENTED_VISUAL_PREVIEW` does **not** authorize:
 
-- React route activation;
 - server-backed receivable/aging claims;
 - collection posting;
 - receivable adjustment;
 - collection reversal;
-- local balance mutation;
+- local authoritative balance mutation;
 - silent overpayment truncation;
 - cash-shift reconciliation;
 - supplier-payment behavior.
 
+All server-owned mutation controls remain disabled.
+
 ## Next gate
 
-Reconcile `UI-RECEIVABLE-001` against the active visual-preview route policy before any React preview implementation or route activation.
+After merge and deployment, perform runtime visual review of `/cuentas-por-cobrar` in the canonical `https://efactura.eliasworks.uy/` WebApp.
 
-The existing `PREVIEW_ROUTE_POLICY_AMENDMENT.md` established a general visual-preview model but its explicit supersession scope currently names only `UI-TRANSFER-001` and `UI-PROCUREMENT-001`. `UI-RECEIVABLE-001` therefore remains `PLANNED_DISABLED` until that governance boundary is explicitly reconciled.
-
-When executable receivables/collections APIs become available, live integration will still require fresh DTO/error/permission/idempotency/concurrency reconciliation.
+When executable receivables/collections APIs become available, live integration will require fresh DTO/error/permission/idempotency/concurrency reconciliation before promotion away from `IMPLEMENTED_VISUAL_PREVIEW`.
