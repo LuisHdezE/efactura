@@ -211,6 +211,19 @@ An already-inactive terminal may remain readable when its historical/current loc
 
 An active terminal cannot be newly assigned or reactivated onto an inactive location.
 
+### Location deactivation invariant
+
+W1.5 must not permit creation of the inverse inconsistent state: an inactive location with active terminals left behind by a later location update.
+
+The proposal therefore selects a fail-closed dependency rule for the existing `API-ORG-006 updateLocation` behavior:
+
+- changing a fiscal location from active to inactive is rejected while one or more active terminals remain assigned to that location;
+- the administrator must first deactivate or reassign those terminals through `updateTerminal`;
+- terminal records are never silently cascade-deactivated;
+- terminal records are never hard-deleted when a location is deactivated.
+
+This is a related invariant extension to the existing location update use case, not a new public endpoint or request schema. It must be covered as a W1.5 regression/compatibility change if this proposal is accepted.
+
 ## 8. Proposed stable problem semantics
 
 | Situation | HTTP | code | conflictType |
@@ -218,6 +231,7 @@ An active terminal cannot be newly assigned or reactivated onto an inactive loca
 | terminal not found in resolved organization | 404 | `organization.terminal_not_found` | n/a |
 | location missing/cross-organization | 404 | existing `organization.location_not_found` | n/a |
 | target location inactive when an active binding is required | 409 | `organization.terminal.location_inactive` | `inactive_location` |
+| attempt to deactivate a location that still owns active terminals | 409 | `organization.location.active_terminals_exist` | `active_terminal_dependency` |
 | duplicate normalized terminal code in organization | 409 | `organization.terminal.code_duplicate` | `duplicate_terminal_code` |
 | stale `expectedVersion` | 409 | existing `concurrency_conflict` | `stale_version` |
 | same idempotency key with changed payload | 409 | existing `idempotency_key_reused` | `payload_mismatch` |
@@ -306,6 +320,8 @@ The expected additive master-data persistence would need to represent at least:
 
 The exact table/index/FK names remain implementation details to derive after contract acceptance. Production schema promotion remains a separate explicit approval gate.
 
+The terminal repository must also support an efficient check for active-terminal dependencies before a fiscal location can be deactivated.
+
 ## 13. Required QA after contract acceptance
 
 The refreshed W1.5 readiness/implementation plan must prove at minimum:
@@ -318,9 +334,10 @@ The refreshed W1.5 readiness/implementation plan must prove at minimum:
 - create/update idempotent replay and payload mismatch;
 - location missing, cross-organization and inactive-location behavior;
 - location reassignment and reactivation rules;
+- location deactivation blocked while active terminal dependencies remain;
 - stale-version rejection;
 - deterministic list filtering/order;
-- no hard delete;
+- no hard delete or cascade terminal deactivation;
 - terminal/device boundary;
 - audit/outbox/idempotency atomicity;
 - provider-real PostgreSQL/MySQL behavior;
