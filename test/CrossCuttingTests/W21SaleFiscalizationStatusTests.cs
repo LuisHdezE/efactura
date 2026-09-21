@@ -122,16 +122,57 @@ public sealed class W21SaleFiscalizationStatusTests
     }
 
     [Fact]
+    public async Task Identity_created_with_document_for_different_sale_fails_closed()
+    {
+        var sale = SaleOf(SaleStatus.Confirmed);
+        var otherSale = SaleOf(SaleStatus.Confirmed);
+        var request = RequestFor(sale);
+        var mismatchedDocument = DocumentFor(otherSale, request);
+        request.MarkIdentityCreated(mismatchedDocument.Id, mismatchedDocument.IdentityCreatedAtUtc, request.Version);
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(
+            () => UseCase(sale, request, mismatchedDocument).ExecuteAsync(OrganizationId, sale.Id));
+
+        Assert.Equal(ApplicationProblemKind.Conflict, error.Kind);
+        Assert.Equal("fiscalization.inconsistent_state", error.Code);
+    }
+
+    [Fact]
     public async Task Missing_sales_read_permission_is_forbidden()
     {
         var sale = SaleOf(SaleStatus.Draft);
-        var actor = Actor(OrganizationId, permissions: Array.Empty<string>());
+        var actor = Actor(OrganizationId);
 
         var error = await Assert.ThrowsAsync<ApplicationProblemException>(
             () => UseCase(sale, actor: actor).ExecuteAsync(OrganizationId, sale.Id));
 
         Assert.Equal(ApplicationProblemKind.Forbidden, error.Kind);
         Assert.Equal("permission_denied", error.Code);
+    }
+
+    [Fact]
+    public async Task Actor_outside_resolved_organization_scope_is_forbidden()
+    {
+        var sale = SaleOf(SaleStatus.Draft);
+        var actor = Actor("org-b", Permissions.SalesRead);
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(
+            () => UseCase(sale, actor: actor).ExecuteAsync(OrganizationId, sale.Id));
+
+        Assert.Equal(ApplicationProblemKind.Forbidden, error.Kind);
+        Assert.Equal("organization_scope_denied", error.Code);
+    }
+
+    [Fact]
+    public async Task Unknown_sale_is_not_found()
+    {
+        var sale = SaleOf(SaleStatus.Draft);
+
+        var error = await Assert.ThrowsAsync<ApplicationProblemException>(
+            () => UseCase(sale).ExecuteAsync(OrganizationId, Guid.NewGuid()));
+
+        Assert.Equal(ApplicationProblemKind.NotFound, error.Kind);
+        Assert.Equal("sales.not_found", error.Code);
     }
 
     [Fact]
