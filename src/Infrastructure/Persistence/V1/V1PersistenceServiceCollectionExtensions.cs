@@ -228,6 +228,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<ListSalesUseCase>();
         services.AddScoped<IUiAmountConverter, Release1UiAmountConverter>();
         services.AddScoped<GetSaleFiscalPreviewUseCase>();
+        services.AddScoped<GetSaleFiscalizationStatusUseCase>();
         services.AddScoped<ValidateSaleUseCase>();
         services.AddSingleton<SaleConfirmationPlanner>();
         services.AddSingleton<SaleSettlementPlanner>();
