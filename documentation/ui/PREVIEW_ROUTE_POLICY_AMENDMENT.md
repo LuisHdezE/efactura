@@ -36,7 +36,10 @@ This amendment applies to:
 
 - `WEB-008 / UI-TRANSFER-001` at `/transferencias`;
 - `WEB-009 / UI-PROCUREMENT-001` at `/compras`;
-- `WEB-010 / UI-RECEIVABLE-001` at `/cuentas-por-cobrar`.
+- `WEB-010 / UI-RECEIVABLE-001` at `/cuentas-por-cobrar`;
+- `WEB-011 / UI-PAYABLE-001` at `/cuentas-por-pagar`.
+
+### Receivables boundary
 
 For `UI-RECEIVABLE-001`, the approved visual authority is `v1-approved-view`, image generation id `1fad639a-815f-431b-8c1c-7e6a50cdae77`.
 
@@ -52,9 +55,33 @@ Its preview implementation may provide client-side search/filter/selection/detai
 
 `API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`; therefore `UI-RECEIVABLE-001` registers no executable API operations in `capabilities.ts` while it is a visual preview.
 
+### Payables boundary
+
+For `UI-PAYABLE-001`, the approved visual authority is `v1-responsive-suite`:
+
+- desktop gen_id `764a3a30-08a6-4f4f-8bda-2bdaf245b8c2`;
+- mobile gen_id `06ffefef-b352-4967-9585-8012b03e7c6a`.
+
+Its preview implementation may provide client-side supplier/document search, status/due-date filtering, row/card selection, payable detail and a local demonstration history. It may visually reserve supplier-payment controls.
+
+The following remain non-executable while the authoritative HTTP surface is absent:
+
+- supplier-payment posting/allocation;
+- payable adjustment;
+- supplier-payment reversal;
+- creation of authoritative payable balances;
+- local authoritative balance mutation;
+- cash/bank posting or reconciliation;
+- silent payment capping/truncation;
+- invented unapplied-payment/advance policy.
+
+`API-AP-001..004` and `API-PAY-001..003` remain `MISSING_HTTP`; therefore `UI-PAYABLE-001` registers `operations: []` in `capabilities.ts` while it is a visual preview.
+
+The `UC-AP-001` invariant remains binding: a payment that exceeds allocatable balance may not be silently truncated. The preview displays this boundary but does not calculate a policy outcome.
+
 ## Supersession scope
 
-For `UI-TRANSFER-001`, `UI-PROCUREMENT-001` and `UI-RECEIVABLE-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
+For `UI-TRANSFER-001`, `UI-PROCUREMENT-001`, `UI-RECEIVABLE-001` and `UI-PAYABLE-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
 
 It does **not** supersede any requirement concerning:
 
