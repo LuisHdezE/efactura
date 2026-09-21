@@ -1,6 +1,6 @@
 # UI-RECEIVABLE-001 — Governed UI Inventory Entry
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_PENDING / EXECUTION_BLOCKED_BY_API`
+Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / EXECUTION_BLOCKED_BY_API`
 
 Mapping:
 
@@ -20,7 +20,22 @@ Navigation state: `PLANNED_DISABLED`
 - collection lifecycle: `UC-AR-001 — Record customer collection and allocate payment`;
 - reconciliation: `documentation/ui/receivables/UI-RECEIVABLE-001_RECONCILIATION.md`;
 - specification: `documentation/ui/specifications/UI-RECEIVABLE-001_ACCOUNTS_RECEIVABLE_COLLECTIONS.md`;
+- approved visual reference: `documentation/ui/references/approved/UI-RECEIVABLE-001/v1-approved-view/README.md`;
 - route/navigation authority: `documentation/ui/WEBAPP_NAVIGATION_MAP.md`.
+
+## Approved visual baseline
+
+Luis explicitly approved the generated `Cuentas por cobrar` view on 2026-09-21 with:
+
+> correcto, aprobada esta vista
+
+Approved artifact identity:
+
+- baseline: `UI-RECEIVABLE-001 / v1-approved-view`;
+- image generation id: `1fad639a-815f-431b-8c1c-7e6a50cdae77`;
+- scope: the exact approved accounts-receivable composition showing aging KPIs, receivable list, selected-account detail, collection history, disabled/demo collection composer and the mobile inset represented in the approved image.
+
+This approval is visual authority only. It does not activate `/cuentas-por-cobrar` and does not authorize any server-owned financial mutation.
 
 ## Accepted API dependency
 
@@ -49,7 +64,7 @@ The governed view preserves:
 
 ## Execution gate
 
-This inventory entry authorizes visual-baseline work only. It does not authorize:
+This inventory entry currently authorizes the approved visual baseline only. It does not authorize:
 
 - React route activation;
 - server-backed receivable/aging claims;
@@ -63,6 +78,8 @@ This inventory entry authorizes visual-baseline work only. It does not authorize
 
 ## Next gate
 
-Create and review a responsive light/dark visual candidate for `UI-RECEIVABLE-001`.
+Reconcile `UI-RECEIVABLE-001` against the active visual-preview route policy before any React preview implementation or route activation.
 
-Visual approval remains separate from route activation. Before implementation, executable receivables/collections HTTP evidence and fresh UI/API reconciliation are required.
+The existing `PREVIEW_ROUTE_POLICY_AMENDMENT.md` established a general visual-preview model but its explicit supersession scope currently names only `UI-TRANSFER-001` and `UI-PROCUREMENT-001`. `UI-RECEIVABLE-001` therefore remains `PLANNED_DISABLED` until that governance boundary is explicitly reconciled.
+
+When executable receivables/collections APIs become available, live integration will still require fresh DTO/error/permission/idempotency/concurrency reconciliation.
