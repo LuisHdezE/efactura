@@ -1,6 +1,6 @@
 # UI-PROCUREMENT-001 — Purchase Orders and Receipts
 
-Status: `FUNCTIONAL_SPECIFICATION / VISUAL_DRAFT_READY / EXECUTION_BLOCKED_BY_API`
+Status: `FUNCTIONAL_SPECIFICATION / VISUAL_APPROVED / EXECUTION_BLOCKED_BY_API / BINARY_PRESERVATION_PENDING`
 
 Mapping:
 
@@ -20,7 +20,7 @@ Navigation state: `PLANNED_DISABLED`
 
 Provide the governed WebApp surface for purchase-order lifecycle and goods receipt, preserving supplier, inventory, costing and payable evidence boundaries without moving those backend rules into the frontend.
 
-This specification is authoritative for visual drafting only until `API-PRC-001..006` and `API-GRC-001..004` have executable WebApi evidence. The frontend must not activate `/compras` or present mock operations as live server behavior before that gate.
+This specification now has an explicitly approved visual working baseline, but implementation/activation remains blocked until `API-PRC-001..006` and `API-GRC-001..004` have executable WebApi evidence. The frontend must not activate `/compras` or present mock operations as live server behavior before that gate.
 
 ## 2. Functional authority
 
@@ -32,7 +32,7 @@ The view is derived from:
 - accepted `API-PRC-*` and `API-GRC-*` contracts;
 - `documentation/ui/procurement/UI-PROCUREMENT-001_RECONCILIATION.md`.
 
-The API completion matrix remains the execution authority. Accepted contract design does not by itself prove executable capability.
+The API completion matrix remains the execution authority. Accepted contract design and visual approval do not by themselves prove executable capability.
 
 ## 3. Intended operators
 
@@ -66,7 +66,7 @@ Until API execution exists, any prototype action is illustrative/disabled in a r
 
 ### 4.2 Purchase-order list
 
-The first baseline should provide a dense operational list/table with responsive equivalents for:
+The approved baseline provides a dense operational list/table with responsive equivalents for:
 
 - purchase-order reference/ID;
 - supplier context;
@@ -123,7 +123,7 @@ The UI must not silently normalize quantity/cost mismatches.
 
 ## 5. Purchase-order editing visual flow
 
-A visual candidate may reserve a drawer/modal/page composition for:
+The approved visual baseline reserves the interaction language for a future drawer/modal/page composition covering:
 
 - supplier selection;
 - currency;
@@ -137,7 +137,7 @@ Because the HTTP implementation is missing, final required fields, validation co
 
 ## 6. Approval flow
 
-The visual may reserve a contextual approval action, but eventual availability must depend on `procurement.approve`, current order state and executable backend rules.
+The approved baseline may reserve contextual approval affordances, but eventual availability must depend on `procurement.approve`, current order state and executable backend rules.
 
 The frontend must not calculate or assume approval thresholds/workflow levels that are not exposed by backend policy.
 
@@ -172,11 +172,11 @@ Mutation operations are idempotent where contracted. The future executable UI mu
 - surface conflict outcomes instead of silently overwriting newer state;
 - refresh/reconcile authoritative server state before retrying.
 
-The visual baseline should leave room for conflict/error feedback without destructive UI recovery.
+The visual baseline leaves room for conflict/error feedback without destructive UI recovery.
 
 ## 10. States
 
-The governed visual suite should cover at least:
+The governed visual authority covers the visual language for:
 
 - populated purchase-order list;
 - selected purchase-order detail;
@@ -214,7 +214,7 @@ Mobile:
 
 ## 12. Light/dark requirements
 
-The baseline must provide light/dark parity with the established eFactura shell.
+The approved baseline provides light/dark parity with the established eFactura shell.
 
 Lifecycle, discrepancy and approval meaning must not depend on color alone.
 
@@ -231,7 +231,7 @@ Required design properties:
 
 ## 14. Explicit exclusions for v1 visual authority
 
-The visual baseline must not authorize:
+The visual baseline does not authorize:
 
 - EOQ/ROP execution or proposal management inside this route;
 - supplier payment/allocation;
@@ -247,8 +247,33 @@ The visual baseline must not authorize:
 - export actions not contracted by the API;
 - any live API claim while `API-PRC-*` and `API-GRC-*` remain `MISSING_HTTP`.
 
-## 15. Visual baseline gate
+## 15. Approved visual baseline
 
-The next governed artifact is a responsive light/dark visual candidate for `UI-PROCUREMENT-001`.
+Luis explicitly approved the exact governed candidate with:
 
-Approval of that candidate will authorize preservation of the visual reference only. It will not authorize `/compras` activation. React implementation/activation remains blocked until the procurement/receipt API lane provides executable evidence and this specification is reconciled again against that implementation.
+> Apruebo UI-PROCUREMENT-001 v1-responsive-suite como baseline visual
+
+Approved version:
+
+```text
+UI-PROCUREMENT-001 v1-responsive-suite
+```
+
+Approved visual authority:
+
+`documentation/ui/references/approved/UI-PROCUREMENT-001/v1-responsive-suite/`
+
+Immutable source identity:
+
+- generation id: `4ee17308-4cac-4f95-b3f6-84c8f8ff1f6c`;
+- dimensions: `1312 x 1199`;
+- bytes: `1666762`;
+- SHA-256: `a0f59fcc7b4a54f9bf9cd966b8dffad7165178ff9861cfe7f6d13266a797c6a5`.
+
+The original candidate history remains under:
+
+`documentation/ui/references/drafts/UI-PROCUREMENT-001/v1-responsive-suite/`
+
+The PNG binary is not yet byte-identically preserved in Git, therefore `BINARY_PRESERVATION_PENDING` remains explicit and substitution/regeneration is forbidden.
+
+Visual approval authorizes preservation of the visual reference only. It does not authorize `/compras` activation. React implementation/activation remains blocked until the procurement/receipt API lane provides executable evidence and this specification is reconciled again against that implementation.
