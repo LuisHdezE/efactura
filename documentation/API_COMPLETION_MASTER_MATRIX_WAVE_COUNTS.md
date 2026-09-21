@@ -1,8 +1,10 @@
 # API Completion Master Matrix — Wave Count Ledger
 
-Status: `FULLY_RECONCILED / WAVE_1_CLOSED / W2.1_IMPLEMENTED_PRE_MERGE`
+Status: `FULLY_RECONCILED / WAVE_1_CLOSED / W2.1_CLOSED`
 
 Implementation reconciliation PR: **#208**.
+
+W2.1 operational closure: `documentation/api-completion-matrix/W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
 This companion ledger prevents the public-v1 denominator, implementation count and wave ownership from drifting while the completion program proceeds.
 
@@ -79,6 +81,10 @@ Architecture tests require those seven shards to contain the exact 194 inventory
 
 Wave 1 is formally closed at `30 / 30` after the W1.5 Terminals merge, deployment, explicitly approved production migration, production runtime acceptance and independent Neon verification.
 
-Wave 2 opened with a governed readiness audit. W2.1 owner-locked the field-level contract for `API-SAL-009 getSaleFiscalizationStatus` in PR #207. PR #208 now implements that exact bounded read-only surface using existing Sale, FiscalizationRequest and FiscalDocument persistence. This ledger counts the HTTP surface as implemented in the candidate branch; exact-head CI, owner-approved merge, deployment and runtime acceptance remain separate gates and are not implied by these counts.
+Wave 2 opened with a governed readiness audit. W2.1 owner-locked the field-level contract for `API-SAL-009 getSaleFiscalizationStatus` in PR #207 and implemented the exact bounded read-only surface in PR #208 using existing Sale, FiscalizationRequest and FiscalDocument persistence.
+
+W2.1 is now closed after pre-merge Guard #695, owner-approved PR #208 merge, post-merge Guard #696, Deploy API Demo #55, promotion of Cloud Run revision `efactura-api-d22-9989c0f-55-1`, and read-only production runtime acceptance run `35643849728`. Production had zero Sale rows, so no artificial fixture was created; successful 200 state projections remain covered by accepted automated QA.
 
 The three remaining Wave 2 gaps stay unchanged: `API-SAL-008 cancelSale`, `API-POS-001 getPosBootstrap`, and `API-PTY-008 getPartyAccountSummary` each retain their explicit prerequisites from `W2_READINESS_AUDIT.md`.
+
+The next governed frontier is W2.2 `API-SAL-008 cancelSale`, beginning with lifecycle/irreversible-boundary contract closure before any implementation.
