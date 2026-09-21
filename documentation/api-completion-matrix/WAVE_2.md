@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_CONTRACT_CANDIDATE`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
@@ -13,6 +13,8 @@ Detailed readiness evidence for the original four missing operations is recorded
 W2.1 field-level contract: `W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`.
 
 W2.1 operational closure: `W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
+
+W2.2 lifecycle contract candidate: `W2_2_SALE_CANCELLATION_CONTRACT.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -40,5 +42,5 @@ W2.1 operational closure: `W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 | `API-SAL-005` | `validateSale` | POST `/api/v1/sales/{saleId}/validate` | `sales.create` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-006` | `getSaleFiscalPreview` | GET `/api/v1/sales/{saleId}/fiscal-preview` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-007` | `confirmSale` | POST `/api/v1/sales/{saleId}/confirm` | `sales.confirm` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
-| `API-SAL-008` | `cancelSale` | POST `/api/v1/sales/{saleId}/cancel` | `sales.cancel` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 2 | Lock Cancelled lifecycle, cancellable states, irreversible confirmation boundary, request/version/reason and durable evidence semantics |
+| `API-SAL-008` | `cancelSale` | POST `/api/v1/sales/{saleId}/cancel` | `sales.cancel` | ACCEPTED | MISSING_HTTP | none | CONTRACT_CANDIDATE_PENDING_OWNER_LOCK | 2 | Candidate contract locks Draft/Validated -> Cancelled, Confirmed irreversible boundary, version/reason/idempotency and durable audit/outbox semantics; implementation remains unauthorized until owner-approved contract merge |
 | `API-SAL-009` | `getSaleFiscalizationStatus` | GET `/api/v1/sales/{saleId}/fiscalization` | `sales.read` | ACCEPTED | IMPLEMENTED | `SaleFiscalizationController` | EXISTING_PATH / regression | 2 | W2.1 closed after PR #208 merge, Guard #695/#696, Deploy #55 and read-only production runtime acceptance run `35643849728`; see closure evidence |
