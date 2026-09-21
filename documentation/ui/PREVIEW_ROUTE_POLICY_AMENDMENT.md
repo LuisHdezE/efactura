@@ -37,7 +37,8 @@ This amendment applies to:
 - `WEB-008 / UI-TRANSFER-001` at `/transferencias`;
 - `WEB-009 / UI-PROCUREMENT-001` at `/compras`;
 - `WEB-010 / UI-RECEIVABLE-001` at `/cuentas-por-cobrar`;
-- `WEB-011 / UI-PAYABLE-001` at `/cuentas-por-pagar`.
+- `WEB-011 / UI-PAYABLE-001` at `/cuentas-por-pagar`;
+- `WEB-012 / UI-CASH-001` at `/caja`.
 
 ### Receivables boundary
 
@@ -79,9 +80,30 @@ The following remain non-executable while the authoritative HTTP surface is abse
 
 The `UC-AP-001` invariant remains binding: a payment that exceeds allocatable balance may not be silently truncated. The preview displays this boundary but does not calculate a policy outcome.
 
+### Cash boundary
+
+For `UI-CASH-001`, the approved visual authority is `v1-responsive-composite`, image generation id `4af42487-0a36-43aa-832e-ef96c7f11a61`.
+
+Its preview implementation may provide client-side movement search/filter/selection, informational tabs, deterministic demonstration expected/count/variance examples and responsive movement cards.
+
+The following remain non-executable while the authoritative HTTP surface is absent:
+
+- canonical shift opening;
+- manual cash posting;
+- canonical shift closing;
+- variance reconciliation or approval;
+- persistence of counted values;
+- mutation/reversal of historical cash movements;
+- invented tolerance decisions;
+- authoritative bank-account or balance claims.
+
+`API-CSH-001..007` remain `MISSING_HTTP`; therefore `UI-CASH-001` registers `operations: []` in `capabilities.ts` while it is a visual preview.
+
+The approved visual contains generic bank/account wording. That visual wording is not product authority. The implementation maps it to source-backed cash-shift/payment-medium concepts while preserving the approved composition.
+
 ## Supersession scope
 
-For `UI-TRANSFER-001`, `UI-PROCUREMENT-001`, `UI-RECEIVABLE-001` and `UI-PAYABLE-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
+For `UI-TRANSFER-001`, `UI-PROCUREMENT-001`, `UI-RECEIVABLE-001`, `UI-PAYABLE-001` and `UI-CASH-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
 
 It does **not** supersede any requirement concerning:
 
@@ -89,7 +111,7 @@ It does **not** supersede any requirement concerning:
 - permissions;
 - idempotency;
 - concurrency/version handling;
-- server-authoritative balances, inventory, costing, payable or receivable effects;
+- server-authoritative balances, inventory, costing, payable, receivable or cash effects;
 - discrepancy handling;
 - mutation restrictions;
 - runtime acceptance;
