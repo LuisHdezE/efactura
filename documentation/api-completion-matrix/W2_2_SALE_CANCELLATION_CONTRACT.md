@@ -163,6 +163,15 @@ The stale-version check applies before the first state transition. A completed r
 
 ## 8. Irreversible-boundary and invalid-state conflicts
 
+For a newly acquired cancellation command, conflict precedence is locked as follows after Sale lookup and organization masking:
+
+1. `CONFIRMED` -> irreversible-boundary conflict;
+2. `CANCELLED` -> already-cancelled invalid-state conflict;
+3. otherwise (`DRAFT` or `VALIDATED`), compare `expectedVersion` and return stale-version when it differs;
+4. only then execute the allowed transition.
+
+This precedence is intentional. A confirmed Sale must never appear potentially cancellable merely because a caller supplies a different version, and a terminal cancelled Sale must not invite another command by returning only a concurrency hint. Completed idempotent replay remains resolved before these new-command state checks.
+
 ### Confirmed Sale
 
 A confirmed Sale MUST fail closed:
@@ -320,6 +329,7 @@ Before implementation merge approval, automated evidence must cover at least:
 - required reason and length bounds;
 - idempotency acquisition/completion/replay/payload-mismatch/in-progress behavior;
 - exact irreversible-boundary and already-cancelled conflict codes;
+- conflict precedence for Confirmed, Cancelled and stale-version states;
 - atomic audit + outbox + idempotency completion;
 - no confirmation-effect repositories/gateways are used for reversal.
 
