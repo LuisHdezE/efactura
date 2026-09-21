@@ -21,8 +21,9 @@ Current runtime/governance state:
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
 - `WEB-006 / UI-CATALOG-001` is active at `/catalogo` and its light/dark deployed runtime was explicitly accepted on 2026-09-20; explicit demo/mock data and disabled write affordances remain in place until the governed API-integration lane enables them;
 - `WEB-007 / UI-INVENTORY-001` is active at `/inventario` with explicit demo/mock data, read-only inventory positions/movements and disabled write affordance until the governed integration/permission lane enables `inventory.adjust`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
-- `WEB-008 / UI-TRANSFER-001` is reconciled and reserved for `/transferencias`, but remains `PLANNED_DISABLED` because `API-TRF-001..007` are accepted contracts with `MISSING_HTTP` implementation state;
-- `WEB-009..WEB-019` remain planned shell candidates with no executable route yet;
+- `WEB-008 / UI-TRANSFER-001` is reconciled, has approved visual baseline `v1-responsive-suite`, and is reserved for `/transferencias`, but remains `PLANNED_DISABLED` because `API-TRF-001..007` are accepted contracts with `MISSING_HTTP` implementation state;
+- `WEB-009 / UI-PROCUREMENT-001` is reconciled and reserved for `/compras`, but remains `PLANNED_DISABLED` because `API-PRC-001..006` and `API-GRC-001..004` are accepted contracts with `MISSING_HTTP` implementation state;
+- `WEB-010..WEB-019` remain planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 6 entries are interactive shell routes;
 - 12 future entries remain visible as disabled/non-clickable options, not fake routes.
@@ -90,7 +91,7 @@ Legend:
 | `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` |
 | `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` | `ACTIVE` |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` reserved | `PLANNED_DISABLED` |
-| `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI ID pending` | `/compras` candidate | `PLANNED_DISABLED` |
+| `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` reserved | `PLANNED_DISABLED` |
 | `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI ID pending` | `/cuentas-por-cobrar` candidate | `PLANNED_DISABLED` |
 | `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI ID pending` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` |
 | `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` |
@@ -165,23 +166,28 @@ Separate deployed mobile runtime screenshots were not independently reviewed in 
 
 ## 9. Current next-view checkpoint
 
-`WEB-008 / UI-TRANSFER-001` is the next governed WebApp view.
+`WEB-009 / UI-PROCUREMENT-001` is the next governed WebApp view.
 
-Its target lifecycle is bounded by `FR-061`, `FR-063` and `UC-INV-002`: create a transfer, approve, dispatch, receive and reconcile explicit discrepancies while preserving traceable stock movements.
+`WEB-008 / UI-TRANSFER-001` already has approved visual baseline `v1-responsive-suite`, but implementation remains blocked because all seven `API-TRF-*` operations are still `MISSING_HTTP`.
+
+The `WEB-009` target lifecycle is bounded primarily by `FR-067`, `FR-068`, `FR-071` and `UC-PROC-002`: create/manage a purchase order, approve it, receive goods, expose discrepancies, and preserve downstream inventory/costing/payable evidence boundaries.
 
 The accepted API contract assigns:
 
-- `API-TRF-001` list transfers;
-- `API-TRF-002` create transfer;
-- `API-TRF-003` transfer detail;
-- `API-TRF-004` approve;
-- `API-TRF-005` dispatch;
-- `API-TRF-006` receive;
-- `API-TRF-007` reconcile discrepancy.
+- `API-PRC-001` list purchase orders;
+- `API-PRC-002` create purchase order;
+- `API-PRC-003` purchase-order detail;
+- `API-PRC-004` update purchase-order draft;
+- `API-PRC-005` approve purchase order;
+- `API-PRC-006` cancel purchase order;
+- `API-GRC-001` list goods receipts;
+- `API-GRC-002` create goods receipt;
+- `API-GRC-003` goods-receipt detail;
+- `API-GRC-004` post goods receipt.
 
-Wave 4 currently records all seven operations as `MISSING_HTTP`. Therefore this checkpoint authorizes functional specification and visual drafting only.
+Wave 4 currently records all ten operations as `MISSING_HTTP`. Therefore this checkpoint authorizes functional specification and visual drafting only.
 
-The route `/transferencias` remains `PLANNED_DISABLED`; no React route activation, fake live action or invented server state is authorized until the transfer API lane provides executable evidence and the UI is reconciled again.
+The route `/compras` remains `PLANNED_DISABLED`; no React route activation, fake live action, local inventory mutation, costing calculation or payable mutation is authorized until the procurement/receipt API lane provides executable evidence and the UI is reconciled again.
 
 Shell counts remain 6 active / 12 planned.
 
