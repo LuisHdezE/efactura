@@ -237,9 +237,9 @@ public sealed class CreateFiscalLocationUseCase
 
 public sealed class UpdateFiscalLocationUseCase
 {
-    private readonly IFiscalLocationRepository _locations; private readonly ITransactionManager _transactions; private readonly IUnitOfWork _unitOfWork; private readonly IIdempotencyStore _idempotency; private readonly IAuditWriter _audit; private readonly IOutboxWriter _outbox; private readonly IActorContextAccessor _actors; private readonly ICorrelationContextAccessor _correlations;
-    public UpdateFiscalLocationUseCase(IFiscalLocationRepository locations, ITransactionManager transactions, IUnitOfWork unitOfWork, IIdempotencyStore idempotency, IAuditWriter audit, IOutboxWriter outbox, IActorContextAccessor actors, ICorrelationContextAccessor correlations)
-    { _locations = locations; _transactions = transactions; _unitOfWork = unitOfWork; _idempotency = idempotency; _audit = audit; _outbox = outbox; _actors = actors; _correlations = correlations; }
+    private readonly IFiscalLocationRepository _locations; private readonly ITerminalRepository _terminals; private readonly ITransactionManager _transactions; private readonly IUnitOfWork _unitOfWork; private readonly IIdempotencyStore _idempotency; private readonly IAuditWriter _audit; private readonly IOutboxWriter _outbox; private readonly IActorContextAccessor _actors; private readonly ICorrelationContextAccessor _correlations;
+    public UpdateFiscalLocationUseCase(IFiscalLocationRepository locations, ITerminalRepository terminals, ITransactionManager transactions, IUnitOfWork unitOfWork, IIdempotencyStore idempotency, IAuditWriter audit, IOutboxWriter outbox, IActorContextAccessor actors, ICorrelationContextAccessor correlations)
+    { _locations = locations; _terminals = terminals; _transactions = transactions; _unitOfWork = unitOfWork; _idempotency = idempotency; _audit = audit; _outbox = outbox; _actors = actors; _correlations = correlations; }
 
     public Task<OrganizationMutationResult> ExecuteAsync(UpdateFiscalLocationCommand command, CancellationToken cancellationToken = default)
     {
@@ -255,6 +255,8 @@ public sealed class UpdateFiscalLocationUseCase
             }
             UpsertCompanyFiscalProfileUseCase.EnsureNewReservation(reservation); await _unitOfWork.SaveChangesAsync(ct);
             var location = await _locations.GetAsync(command.OrganizationId, command.LocationId, ct) ?? throw new ApplicationProblemException(ApplicationProblemKind.NotFound, "organization.location_not_found", "The requested fiscal location was not found.");
+            if (location.Active && !command.Active && await _terminals.HasActiveAtLocationAsync(command.OrganizationId, command.LocationId, ct))
+                throw new ApplicationProblemException(ApplicationProblemKind.Conflict, "organization.location.active_terminals_exist", "The fiscal location cannot be deactivated while active terminals remain assigned.", conflictType: "active_terminal_dependency");
             if (await _locations.BranchCodeExistsAsync(command.OrganizationId, command.DgiBranchCode, command.LocationId, ct)) throw CreateFiscalLocationUseCase.DuplicateBranch();
             try { location.Update(command.Name, command.DgiBranchCode, command.FiscalAddress, command.City, command.Department, command.Active, command.ExpectedVersion); }
             catch (DomainRuleException ex)
