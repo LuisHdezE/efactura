@@ -115,5 +115,12 @@ export const uiCapabilities: UiCapability[] = [
     route: '/compras',
     status: 'IMPLEMENTED_VISUAL_PREVIEW',
     operations: []
+  },
+  {
+    uiId: 'UI-RECEIVABLE-001',
+    label: 'Cuentas por cobrar',
+    route: '/cuentas-por-cobrar',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];
