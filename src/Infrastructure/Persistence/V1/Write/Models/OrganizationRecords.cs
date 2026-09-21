@@ -24,4 +24,5 @@ public sealed class V1FiscalLocationRecord
     public long Version { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
+    public ICollection<V1TerminalRecord> Terminals { get; set; } = new List<V1TerminalRecord>();
 }
