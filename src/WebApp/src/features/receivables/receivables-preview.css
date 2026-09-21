@@ -1,0 +1,147 @@
+.receivables-preview-page { padding:14px; padding-bottom:88px; }
+.receivables-heading { display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+.receivables-breadcrumb { color:var(--accent); font-size:9px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+.receivables-heading h1 { margin:3px 0 0; color:var(--text); font-size:24px; line-height:1.12; letter-spacing:-.03em; }
+.receivables-heading p { margin:4px 0 0; color:var(--text-soft); font-size:11px; line-height:1.45; max-width:700px; }
+.receivables-heading-actions { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+.receivables-preview-badge,.receivables-demo-pill { display:inline-flex; align-items:center; width:max-content; border:1px solid var(--warning-border); background:var(--warning-bg); color:var(--warning-text); border-radius:999px; padding:5px 8px; font-size:9px; font-weight:850; white-space:nowrap; }
+.receivables-primary { border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:9px; padding:9px 12px; font-size:10px; font-weight:850; }
+.receivables-primary span,.receivables-submit span { margin-left:5px; border-radius:5px; padding:2px 5px; background:rgba(255,255,255,.18); font-size:8px; }
+.receivables-primary:disabled { opacity:.5; }
+.receivables-demo-note { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-soft); border-radius:10px; padding:8px 10px; font-size:9.5px; line-height:1.45; }
+.receivables-demo-note strong { color:var(--accent-strong); }
+.receivables-summary { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.receivables-summary-card { display:flex; min-width:0; align-items:center; gap:9px; border:1px solid var(--border); background:var(--surface); border-radius:12px; padding:10px; box-shadow:0 8px 24px rgba(2,17,34,.05); }
+.receivables-summary-icon { display:grid; width:34px; height:34px; flex:0 0 34px; place-items:center; border-radius:9px; background:var(--accent-soft); color:var(--accent-strong); font-size:16px; font-weight:900; }
+.receivables-summary-card.is-open .receivables-summary-icon { background:color-mix(in srgb,var(--success) 11%,var(--surface)); color:var(--success); }
+.receivables-summary-card.is-overdue .receivables-summary-icon { background:#fff0f2; color:#d84558; }
+:root[data-theme='dark'] .receivables-summary-card.is-overdue .receivables-summary-icon { background:#35151d; color:#ff95a5; }
+.receivables-summary-card > div:last-child { min-width:0; }
+.receivables-summary-card span { display:block; color:var(--text-soft); font-size:8.5px; font-weight:750; }
+.receivables-summary-card strong { display:block; margin-top:2px; color:var(--text); font-size:15px; line-height:1.15; letter-spacing:-.02em; }
+.receivables-summary-card strong small { font-size:8px; color:var(--text-soft); letter-spacing:0; }
+.receivables-summary-card em { display:block; margin-top:3px; color:var(--text-soft); font-size:8px; font-style:normal; }
+.receivables-workspace { display:grid; gap:10px; align-items:start; }
+.receivables-panel { min-width:0; border:1px solid var(--border); background:var(--surface); border-radius:12px; overflow:hidden; box-shadow:0 8px 24px rgba(2,17,34,.05); }
+.receivables-filters { display:grid; grid-template-columns:minmax(0,1fr); gap:7px; padding:9px; border-bottom:1px solid var(--border); }
+.receivables-search { display:flex; align-items:center; gap:6px; border:1px solid var(--border-strong); background:var(--surface-2); border-radius:8px; padding:0 8px; color:var(--text-soft); }
+.receivables-search input { width:100%; border:0; outline:0; background:transparent; color:var(--text); padding:8px 0; font-size:10px; }
+.receivables-search:focus-within,.receivables-filter-field select:focus { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent); }
+.receivables-filter-field { display:grid; gap:3px; }
+.receivables-filter-field > span,.receivables-form-stack label > span,.receivables-section-label { color:var(--text-soft); font-size:8px; font-weight:800; }
+.receivables-filter-field select,.receivables-form-stack select,.receivables-form-stack input { width:100%; border:1px solid var(--border); background:var(--surface-2); color:var(--text); border-radius:7px; padding:7px 8px; font-size:9.5px; outline:0; }
+.receivables-filter-field select:disabled,.receivables-form-stack select:disabled,.receivables-form-stack input:disabled { opacity:.65; }
+.receivables-clear { align-self:end; border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border)); background:var(--surface); color:var(--accent-strong); border-radius:7px; padding:7px 9px; font-size:9px; font-weight:800; }
+.receivables-table-wrap { display:none; overflow-x:auto; }
+.receivables-table { width:100%; border-collapse:collapse; min-width:850px; }
+.receivables-table th { padding:7px 8px; background:var(--surface-2); color:var(--text-soft); border-bottom:1px solid var(--border); font-size:7.5px; font-weight:850; letter-spacing:.04em; text-align:left; text-transform:uppercase; }
+.receivables-table td { padding:8px; border-bottom:1px solid var(--border); color:var(--text-soft); font-size:8.5px; vertical-align:middle; }
+.receivables-table tbody tr { cursor:pointer; outline:0; transition:.14s ease; }
+.receivables-table tbody tr:hover,.receivables-table tbody tr:focus { background:var(--surface-2); }
+.receivables-table tbody tr.is-selected { background:var(--accent-soft); box-shadow:inset 3px 0 0 var(--accent); }
+.receivables-table td strong,.receivables-table td span { display:block; }
+.receivables-table td strong { color:var(--text); font-size:9px; }
+.receivables-table td:first-child span { margin-top:2px; }
+.receivables-table td.is-overdue-date { color:#d84558; font-weight:800; }
+:root[data-theme='dark'] .receivables-table td.is-overdue-date { color:#ff95a5; }
+.receivables-status { display:inline-flex !important; width:max-content; align-items:center; border:1px solid var(--border); background:var(--surface-2); color:var(--text-soft); border-radius:999px; padding:4px 7px; font-size:8px; font-weight:850; white-space:nowrap; }
+.receivables-status.is-por-vencer { border-color:var(--warning-border); background:var(--warning-bg); color:var(--warning-text); }
+.receivables-status.is-vencido { border-color:#f2bdc4; background:#fff0f2; color:#c7374a; }
+:root[data-theme='dark'] .receivables-status.is-vencido { border-color:#71303c; background:#35151d; color:#ff9cab; }
+.receivables-status.is-parcial { border-color:color-mix(in srgb,var(--accent) 35%,var(--border)); background:var(--accent-soft); color:var(--accent-strong); }
+.receivables-status.is-cobrado { border-color:color-mix(in srgb,var(--success) 35%,var(--border)); background:color-mix(in srgb,var(--success) 10%,var(--surface)); color:var(--success); }
+.receivables-mobile-list { display:grid; gap:6px; padding:8px; }
+.receivables-mobile-card { width:100%; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:9px; padding:8px; text-align:left; }
+.receivables-mobile-card.is-selected { border-color:var(--accent); background:var(--accent-soft); }
+.receivables-mobile-head,.receivables-mobile-values { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.receivables-mobile-head > span:first-child strong,.receivables-mobile-head > span:first-child small { display:block; }
+.receivables-mobile-head > span:first-child strong { font-size:10px; }
+.receivables-mobile-head > span:first-child small { margin-top:2px; color:var(--text-soft); font-size:8px; }
+.receivables-mobile-values { margin-top:8px; color:var(--text-soft); font-size:8px; }
+.receivables-mobile-values span strong { display:block; margin-top:2px; color:var(--text); font-size:9px; }
+.receivables-list-footer { display:flex; flex-direction:column; gap:7px; padding:8px 9px; color:var(--text-soft); font-size:8.5px; }
+.receivables-pagination { display:flex; gap:4px; }
+.receivables-pagination button { min-width:26px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-soft); border-radius:6px; padding:5px; font-size:8px; font-weight:800; }
+.receivables-pagination button.is-current { border-color:var(--accent); background:var(--accent); color:#fff; opacity:1; }
+.receivables-detail,.receivables-collection { height:fit-content; }
+.receivables-detail-head,.receivables-collection-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:10px; border-bottom:1px solid var(--border); }
+.receivables-detail-head > div > span,.receivables-collection-head > div > span { color:var(--text-soft); font-size:8px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.receivables-detail-head h2,.receivables-collection-head h2 { margin:2px 0 0; color:var(--text); font-size:15px; }
+.receivables-detail-head p { margin:2px 0 0; color:var(--text-soft); font-size:8.5px; }
+.receivables-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin:0; padding:5px 10px 9px; }
+.receivables-detail-grid > div { display:grid; grid-template-columns:minmax(72px,.8fr) minmax(0,1.2fr); gap:6px; grid-column:1/-1; padding:4px 0; }
+.receivables-detail-grid dt { color:var(--text-soft); font-size:8px; }
+.receivables-detail-grid dd { margin:0; color:var(--text); font-size:8.5px; font-weight:650; text-align:right; }
+.receivables-tabs { display:flex; gap:2px; padding:0 9px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow-x:auto; }
+.receivables-tabs span { padding:8px 6px 6px; color:var(--text-soft); font-size:8px; font-weight:750; white-space:nowrap; }
+.receivables-tabs span.is-active { color:var(--accent-strong); border-bottom:2px solid var(--accent); }
+.receivables-history { padding:10px; }
+.receivables-history-entry { display:grid; grid-template-columns:10px minmax(0,1fr); gap:7px; position:relative; padding-bottom:11px; }
+.receivables-history-entry:not(:last-child)::before { content:""; position:absolute; left:4px; top:10px; bottom:0; width:1px; background:var(--border); }
+.receivables-history-dot { width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.receivables-history-entry time { display:block; color:var(--text-soft); font-size:7.5px; }
+.receivables-history-entry strong { display:block; margin-top:2px; color:var(--text); font-size:8.5px; }
+.receivables-history-entry p { margin:2px 0 0; color:var(--text-soft); font-size:8px; line-height:1.35; }
+.receivables-info-box,.receivables-collection-note,.receivables-policy-box { display:flex; flex-direction:column; gap:2px; margin:0 10px 10px; border:1px solid color-mix(in srgb,var(--accent) 35%,var(--border)); background:var(--accent-soft); color:var(--accent-strong); border-radius:8px; padding:8px; }
+.receivables-info-box strong,.receivables-collection-note strong { font-size:8.5px; }
+.receivables-info-box span,.receivables-collection-note span { font-size:8px; line-height:1.4; }
+.receivables-detail-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:9px 10px 10px; border-top:1px solid var(--border); background:var(--surface-2); }
+.receivables-detail-actions button,.receivables-allocation-box button,.receivables-cancel { border:1px solid var(--border-strong); background:var(--surface); color:var(--text-soft); border-radius:7px; padding:7px 8px; font-size:8.5px; font-weight:800; }
+.receivables-detail-actions button:disabled,.receivables-allocation-box button:disabled,.receivables-cancel:disabled,.receivables-submit:disabled { opacity:.48; }
+.receivables-collection-note { margin-top:10px; }
+.receivables-form-stack { display:grid; gap:8px; padding:0 10px 10px; }
+.receivables-form-stack label { display:grid; gap:3px; }
+.receivables-money-input { display:grid; grid-template-columns:minmax(0,1fr) 42px; }
+.receivables-money-input input { border-radius:7px 0 0 7px; }
+.receivables-money-input b { display:grid; place-items:center; border:1px solid var(--border); border-left:0; background:var(--surface-3); color:var(--text-soft); border-radius:0 7px 7px 0; font-size:8px; }
+.receivables-allocation-box { margin:0 10px 10px; border:1px solid var(--border); background:var(--surface-2); border-radius:8px; padding:8px; }
+.receivables-allocation-line { display:grid; grid-template-columns:18px minmax(0,1fr) auto; align-items:center; gap:6px; margin-top:6px; border:1px solid var(--border); background:var(--surface); border-radius:7px; padding:7px; }
+.receivables-checkbox { display:grid; width:16px; height:16px; place-items:center; border-radius:4px; background:var(--accent); color:white; font-size:8px; }
+.receivables-allocation-line div strong,.receivables-allocation-line div small { display:block; }
+.receivables-allocation-line div strong { color:var(--text); font-size:8.5px; }
+.receivables-allocation-line div small { margin-top:1px; color:var(--text-soft); font-size:7.5px; }
+.receivables-allocation-line > b { color:var(--text); font-size:8.5px; }
+.receivables-allocation-box button { width:100%; margin-top:6px; }
+.receivables-policy-box { border-color:var(--border); background:var(--surface-2); color:var(--text-soft); }
+.receivables-policy-box > span { font-size:8px; font-weight:800; }
+.receivables-policy-box strong { margin-top:2px; color:var(--text); font-size:14px; }
+.receivables-policy-box p { margin:3px 0 0; font-size:8px; line-height:1.4; }
+.receivables-submit { width:calc(100% - 20px); margin:0 10px 6px; border:1px solid var(--accent); background:var(--accent); color:white; border-radius:8px; padding:8px; font-size:9px; font-weight:850; }
+.receivables-cancel { width:calc(100% - 20px); margin:0 10px 10px; }
+.receivables-preview-footer { display:flex; flex-direction:column; gap:3px; margin-top:10px; border:1px solid color-mix(in srgb,var(--accent) 30%,var(--border)); background:var(--accent-soft); color:var(--text-soft); border-radius:10px; padding:9px 10px; font-size:8.5px; line-height:1.4; }
+.receivables-preview-footer strong { color:var(--accent-strong); font-size:9px; }
+.receivables-preview-footer code { align-self:flex-start; border-radius:5px; background:color-mix(in srgb,var(--accent) 10%,var(--surface)); color:var(--accent-strong); padding:3px 5px; font-size:7.5px; }
+
+@media (min-width: 640px) {
+  .receivables-preview-page { padding:16px; }
+  .receivables-heading { flex-direction:row; align-items:flex-end; justify-content:space-between; }
+  .receivables-summary { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .receivables-filters { grid-template-columns:minmax(220px,1fr) 130px 100px auto; align-items:end; }
+  .receivables-table-wrap { display:block; }
+  .receivables-mobile-list { display:none; }
+  .receivables-list-footer { flex-direction:row; align-items:center; justify-content:space-between; }
+  .receivables-preview-footer { flex-direction:row; align-items:center; }
+  .receivables-preview-footer span { flex:1; }
+}
+
+@media (min-width: 1020px) {
+  .receivables-workspace { grid-template-columns:minmax(0,1.5fr) minmax(285px,.7fr); }
+  .receivables-list-panel { grid-row:span 2; }
+  .receivables-detail { position:sticky; top:68px; }
+  .receivables-collection { grid-column:2; }
+}
+
+@media (min-width: 1420px) {
+  .receivables-workspace { grid-template-columns:minmax(0,1.45fr) minmax(285px,.58fr) minmax(310px,.62fr); }
+  .receivables-list-panel { grid-row:auto; }
+  .receivables-detail,.receivables-collection { position:sticky; top:68px; }
+  .receivables-collection { grid-column:auto; }
+}
+
+@media (max-width: 639px) {
+  .receivables-summary-card { align-items:flex-start; }
+  .receivables-summary-card strong { font-size:13px; }
+  .receivables-detail-grid { grid-template-columns:1fr; }
+  .receivables-heading-actions { align-items:stretch; }
+  .receivables-primary { flex:1; }
+}
