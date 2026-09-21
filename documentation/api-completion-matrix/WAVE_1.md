@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave 1
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_4_CLOSED / W1_5_NEXT`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_4_CLOSED / W1_5_CONTRACT_PREREQUISITE`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
@@ -8,7 +8,7 @@ Scope: **Identity + Organization + Reference Data**.
 
 Baseline: **30 operation IDs**, **26 implemented**, **4 non-implemented**.
 
-`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003, W1.1B implemented REF-001/004, W1.1C implemented REF-005/006, and W1.1D implemented REF-007/008. W1.2 implements the current-actor projection and canonical permission catalog without introducing persistence or a second identity model. W1.3 is formally closed after company-scoped security-role read/write, production schema promotion, deployment, runtime acceptance and Neon evidence. W1.4 is formally closed after the five users/role-assignment HTTP operations were implemented, merged, deployed, schema-promoted under explicit approval, runtime-accepted and independently verified in Neon. W1.5 Terminals is the next bounded readiness audit.
+`Deep readiness` is intentionally conservative. Missing HTTP rows remain `NOT_YET_AUDITED` until their bounded readiness audit is complete. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003, W1.1B implemented REF-001/004, W1.1C implemented REF-005/006, and W1.1D implemented REF-007/008. W1.2 implements the current-actor projection and canonical permission catalog without introducing persistence or a second identity model. W1.3 is formally closed after company-scoped security-role read/write, production schema promotion, deployment, runtime acceptance and Neon evidence. W1.4 is formally closed after the five users/role-assignment HTTP operations were implemented, merged, deployed, schema-promoted under explicit approval, runtime-accepted and independently verified in Neon. W1.5 Terminals has completed its bounded readiness audit and is blocked on a field-level public contract prerequisite; all four rows remain `MISSING_HTTP` and are not implementation-authorized.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -29,10 +29,10 @@ Baseline: **30 operation IDs**, **26 implemented**, **4 non-implemented**.
 | `API-ORG-004` | `createLocation` | POST `/api/v1/locations` | `organization.manage` | ACCEPTED | IMPLEMENTED | `LocationsController.Create -> CreateFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
 | `API-ORG-005` | `getLocation` | GET `/api/v1/locations/{locationId}` | `organization.read` | ACCEPTED | IMPLEMENTED | `LocationsController.Get -> GetFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
 | `API-ORG-006` | `updateLocation` | PATCH `/api/v1/locations/{locationId}` | `organization.manage` | ACCEPTED | IMPLEMENTED | `LocationsController.Update -> UpdateFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
-| `API-ORG-007` | `listTerminals` | GET `/api/v1/terminals` | `organization.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal aggregate/read model boundary required; W1.5 readiness next |
-| `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal registration command required; W1.5 readiness next |
-| `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal detail read required; W1.5 readiness next |
-| `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | NOT_YET_AUDITED | 1 | Terminal status/location update required; W1.5 readiness next |
+| `API-ORG-007` | `listTerminals` | GET `/api/v1/terminals` | `organization.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Field-level terminal read projection/list contract is not governed; see `W1_5_TERMINALS_READINESS.md` |
+| `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Registration payload, canonical identity and uniqueness boundary require contract lock before implementation |
+| `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Terminal detail/status DTO is not yet governed; implementation must not invent fields |
+| `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 1 | Mutable fields, status model, location reassignment and expectedVersion payload require contract lock |
 | `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListCountries -> ListCountriesUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated provider-neutral 249-entry ISO 3166-1 alpha-2 snapshot |
 | `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListUruguayDepartments -> ListUruguayDepartmentsUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated-only, provider-neutral reference projection |
 | `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListFiscalIdentityTypes -> ListFiscalIdentityTypesUseCase` | EXISTING_PATH / regression | 1 | Preserve versioned DGI identity metadata projection |
