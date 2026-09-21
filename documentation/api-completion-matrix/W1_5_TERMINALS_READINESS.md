@@ -1,10 +1,10 @@
 # W1.5 Terminals readiness and implementation evidence
 
-Status: `IMPLEMENTED_PRE_MERGE / PROVIDER_REAL_QA_PASS / PRODUCTION_PROMOTION_NOT_AUTHORIZED / RUNTIME_ACCEPTANCE_PENDING`
-
-Implementation baseline: PR #195 (`feat/w1-5-terminals`), reconciled with `main@59a286185e242dcd59fb1b946a7d19aae07a54b1` before documentation closeout.
+Status: `IMPLEMENTED / MERGED / CI_ACCEPTED / DEPLOYED / PRODUCTION_MIGRATED / RUNTIME_ACCEPTED / CLOSED`
 
 Accepted field-level authority: `W1_5_TERMINAL_CONTRACT_PROPOSAL.md`, explicitly approved by Luis on 2026-09-20.
+
+Operational closure evidence: `W1_5_TERMINALS_RUNTIME_CLOSURE.md`.
 
 Scope: `API-ORG-007..010` only, plus the accepted active-terminal dependency invariant for existing `API-ORG-006 updateLocation`.
 
@@ -12,18 +12,18 @@ No endpoint outside this set is introduced by W1.5.
 
 ## Contract and implementation inventory
 
-| API ID | operationId | Method / path | Permission | Idempotency | Current implementation |
+| API ID | operationId | Method / path | Permission | Idempotency | Final state |
 |---|---|---|---|---|---|
-| `API-ORG-007` | `listTerminals` | GET `/api/v1/terminals` | `organization.read` | NO | `IMPLEMENTED` |
-| `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | REQUIRED | `IMPLEMENTED` |
-| `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | NO | `IMPLEMENTED` |
-| `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | REQUIRED | `IMPLEMENTED` |
+| `API-ORG-007` | `listTerminals` | GET `/api/v1/terminals` | `organization.read` | NO | `CLOSED` |
+| `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | REQUIRED | `CLOSED` |
+| `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | NO | `CLOSED` |
+| `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | REQUIRED | `CLOSED` |
 
-The matching public v1 HTTP surfaces now exist in PR #195. Therefore the four rows move from `MISSING_HTTP` to `IMPLEMENTED` in the completion matrix. This is HTTP implementation accounting only and does not imply production acceptance or formal W1.5 closure.
+The four governed public v1 HTTP surfaces are implemented and production-accepted. Wave 1 therefore remains `30 / 30` implemented with no non-implemented operation in this wave.
 
-## Implementation evidence
+## Governed implementation evidence
 
-PR #195 contains the bounded W1.5 implementation:
+Implementation PR #195 delivered the bounded W1.5 slice:
 
 - `Domain.Organizations.Terminal` aggregate with immutable server-owned identity, immutable normalized business code, active/inactive lifecycle and application-managed versioning;
 - Application list/get/register/update use cases with `OrganizationAuthorization`, location validation, idempotency, optimistic concurrency, audit and transactional outbox evidence;
@@ -33,9 +33,11 @@ PR #195 contains the bounded W1.5 implementation:
 - dedicated architecture tests;
 - dedicated provider-real PostgreSQL and MySQL persistence/use-case integration tests.
 
-Clean Architecture Guard #658 passed on implementation HEAD `7983df48a51e9e0f2a5dc11b63552cef6ab43a1b`, including build, architecture, API v1 cross-cutting, legacy unit tests, and PostgreSQL/MySQL transaction integration tests. The implementation blobs were then reconciled unchanged onto live `main` UI-only history. Final exact-head CI after documentation reconciliation remains the authoritative pre-merge gate.
+Approved implementation HEAD: `f954c7e21268bf9fc1a6e3f3fbcdb0cd87850c71`.
 
-No production migration, Neon production write, Cloud Run deployment or public runtime mutation was performed by this implementation increment.
+Implementation merge commit: `11139c7c4adf4037c2c2c279dedd302a6b4c7958`.
+
+Post-merge Clean Architecture Guard #675, run `35560423073`, passed on `bc138d6076a6d9f2f8f948171082511e9385b39f`.
 
 ## Accepted public Terminal contract
 
@@ -71,27 +73,27 @@ TerminalUpdateRequest
 - expectedVersion: long
 ```
 
-Key accepted rules:
+Accepted rules:
 
 - server-generated opaque immutable `id`;
 - server-resolved immutable `organizationId`;
 - immutable normalized uppercase business `code`, maximum 64 characters;
 - organization-level uniqueness on normalized code;
 - mutable `name`, `locationId` and `active` only;
-- two-state lifecycle, active/inactive;
+- active/inactive lifecycle;
 - registration starts active at version 1;
 - PATCH requires `expectedVersion` and increments application-managed version;
-- no public delete;
-- terminal/device/sync boundaries remain separate.
+- no public DELETE;
+- Terminal and Device remain separate concepts.
 
 ## Read behavior
 
-`listTerminals` accepts bounded optional filters:
+`listTerminals` supports:
 
-- `active`, defaulting to active-only;
-- `locationId`.
+- `active`, nullable and defaulting to active-only;
+- `locationId`, optional.
 
-The result is deterministic by normalized code then terminal ID. No pagination is introduced by W1.5.
+Ordering is deterministic by normalized code then terminal ID.
 
 `getTerminal` returns the canonical projection inside the resolved organization or the governed not-found behavior.
 
@@ -102,11 +104,11 @@ The result is deterministic by normalized code then terminal ID. No pagination i
 - reactivation requires an active requested location;
 - inactive terminals may remain readable on a later-inactive location;
 - an active terminal cannot be created, assigned or reactivated onto an inactive location;
-- an existing fiscal location cannot be deactivated while active terminals remain assigned;
+- a fiscal location cannot be deactivated while active terminals remain assigned;
 - administrators must first deactivate or reassign those terminals;
 - no cascade terminal deactivation or hard delete occurs.
 
-The last rule extends existing `API-ORG-006 updateLocation` compatibility behavior but introduces no new public endpoint or request schema.
+The last rule extends existing `API-ORG-006 updateLocation` behavior but introduces no new endpoint or request schema.
 
 ## Stable conflict/error semantics
 
@@ -122,9 +124,63 @@ The last rule extends existing `API-ORG-006 updateLocation` compatibility behavi
 
 Validation remains HTTP 400 through the existing RFC 9457 Problem Details pipeline.
 
-## Preserved architecture
+## Persistence and mutation evidence
 
-The implementation extends the current Organization slice and preserves:
+Accepted idempotency scopes:
+
+```text
+organization.terminal.register:{organizationId}
+organization.terminal.update:{organizationId}:{terminalId}
+```
+
+A successful register/update mutation atomically persists:
+
+- the business mutation;
+- completed idempotency evidence;
+- durable audit evidence;
+- transactional outbox evidence.
+
+Production migration `20260921024500_V1Terminals` was explicitly approved and promoted to Neon production. Independent verification confirmed the migration row, exact governed schema shape, expected FK/index set, role permissions and ProductVersion `8.0.30`.
+
+## Accepted deployment and runtime
+
+Accepted Cloud Run revision: `efactura-api-d22-11139c7-54-1`.
+
+Deployment workflow run: `35560340904`.
+
+Final production runtime acceptance run: `35612527016`, SUCCESS.
+
+The runtime acceptance proved:
+
+- Swagger/OpenAPI availability;
+- exact 4/4 Terminal operationIds and no DELETE;
+- 401 and 403 boundaries;
+- organization-scope isolation;
+- Company Fiscal Profile and Location prerequisites through public HTTP;
+- registration, code normalization and deterministic ordering;
+- deterministic idempotent replay;
+- payload-mismatch conflicts;
+- duplicate code conflicts;
+- missing/cross-organization Location masking;
+- cross-organization Terminal masking;
+- inactive-location restrictions;
+- reassignment and reactivation rules;
+- stale-version concurrency;
+- inactive Terminal rename while its Location is inactive;
+- location-deactivation dependency protection;
+- final active/inactive list behavior;
+- Wave 1 regression reads.
+
+Final accepted QA Terminal state:
+
+- T1 `6ea871509b4f4fc68d22eb6544ad44a7`, code `W15.35612527016.B`, inactive, Location A2, version 4;
+- T2 `f60bb7666b9342abbd022f4d0072d2a5`, code `W15.35612527016.A`, inactive, Location A1, version 2.
+
+Independent Neon verification confirmed exactly 6 successful Terminal mutations, 6 Terminal audit events, 6 Terminal outbox messages, 6 completed Terminal idempotency records, zero non-completed Terminal idempotency residue, and zero Terminal evidence in the isolated organization B.
+
+## Architecture preserved
+
+W1.5 preserves:
 
 - `OrganizationAuthorization.EnsureRead/EnsureManage`;
 - `V1OrganizationContextResolver`;
@@ -135,80 +191,16 @@ The implementation extends the current Organization slice and preserves:
 - durable audit writer;
 - transactional outbox;
 - PostgreSQL/MySQL neutrality;
-- current Clean Architecture dependency direction.
+- Clean Architecture dependency direction.
 
-`LocationsController` remains the closest structural precedent for organization resolution, permissions, idempotent POST/PATCH, request hashing, replay header, `CreatedAtAction` and canonical projection after mutation. Fiscal-location fields were not copied into Terminal beyond the accepted relationship through `locationId`.
+Terminal remains organization/POS operational master data under `organization.read/manage`. Device remains offline/sync registration under its separate sync permissions and identity model.
 
-## Terminal vs Device boundary
+## Final closure
 
-Terminal remains organization/POS operational master data under `organization.read/manage`.
+W1.5 is formally closed as:
 
-Device remains offline/sync registration under its separate sync permissions and identity model.
+`IMPLEMENTED / MERGED / CI_ACCEPTED / DEPLOYED / PRODUCTION_MIGRATED / RUNTIME_ACCEPTED / CLOSED`
 
-W1.5 does not absorb device IDs, client operation identity, device secrets, bearer/refresh tokens, offline grants, MAC/IP addresses, hardware fingerprints, printer configuration, CAE configuration, arbitrary metadata or heartbeat telemetry.
+Wave 1 is formally closed at `30 / 30` implemented operations.
 
-## Persistence implementation
-
-The additive provider-neutral terminal master persistence contains:
-
-- terminal ID;
-- organization ID;
-- original and normalized code;
-- name;
-- location ID;
-- active flag;
-- version;
-- normal V1 persistence timestamps.
-
-The implementation enforces deterministic organization-level normalized-code uniqueness and supports the active-terminal dependency check before location deactivation. Dedicated integration tests exercise the model against PostgreSQL and MySQL.
-
-Production schema promotion remains a separate explicit approval gate. The migration source is present but has not been applied to Neon production by this PR.
-
-## Mutation evidence
-
-Accepted internal idempotency scopes:
-
-```text
-organization.terminal.register:{organizationId}
-organization.terminal.update:{organizationId}:{terminalId}
-```
-
-A successful register/update mutation atomically includes:
-
-- business mutation;
-- completed idempotency record;
-- durable audit evidence;
-- transactional outbox evidence.
-
-Accepted audit semantics remain `organization.terminal.registered` and `organization.terminal.updated`.
-
-## QA coverage
-
-The implementation increment covers, at source/architecture/provider-real layers as applicable:
-
-- exact methods/routes/operationIds for all four operations;
-- exact DTO/request contract placement;
-- organization permissions and scope boundary wiring;
-- server-owned ID/organization/active/version creation behavior;
-- code normalization and uniqueness;
-- deterministic list filters/order;
-- create/update idempotent replay;
-- same-key changed-payload conflict;
-- stale-version conflict;
-- missing/cross-organization/inactive location behavior;
-- reassignment/reactivation rules;
-- location deactivation dependency protection;
-- no public delete/cascade behavior;
-- audit/outbox/idempotency durability;
-- PostgreSQL and MySQL persistence behavior;
-- existing architecture/cross-cutting/unit regression suites.
-
-Public deployed HTTP acceptance still must explicitly prove OpenAPI, 401/403 behavior, runtime Problem Details, idempotency/conflict semantics, organization isolation and required regressions after the accepted deployment.
-
-## Remaining implementation gate
-
-The field-level contract prerequisite is closed and the bounded implementation exists.
-
-Before PR #195 can be merge-approved, its final exact HEAD must pass the complete Clean Architecture Guard after matrix/documentation reconciliation. After merge, a post-merge Guard must also pass.
-
-Production schema promotion, deployment and runtime acceptance remain separate protected steps. No production database write or deployment is authorized by an implementation merge alone.
+The next API-completion work begins from Wave 2. The global public v1 accounting remains `64 / 194` implemented (`32.99%`), `128` missing HTTP, `2` contract collisions and `130` non-implemented operations.
