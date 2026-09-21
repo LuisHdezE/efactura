@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   groupShellNavigationItems,
   navigationLabel,
+  plannedNavigationProgressLabel,
   type ShellNavigationItem
 } from '../app/routes';
 
@@ -34,15 +35,19 @@ export function Sidebar({ items }: SidebarProps) {
                 );
               }
 
+              const progressLabel = plannedNavigationProgressLabel(item);
+
               return (
                 <div
                   key={item.webId}
                   className="ef-nav-item-disabled"
+                  data-progress={item.progress ?? 'roadmap'}
                   aria-disabled="true"
-                  title={`${label} · En preparación`}
+                  title={`${label} · ${progressLabel ?? 'En preparación'} · No disponible todavía`}
                 >
                   <span className="ef-nav-icon" aria-hidden="true">{item.icon}</span>
                   <span className="ef-nav-label">{label}</span>
+                  {progressLabel ? <span className="ef-nav-progress">{progressLabel}</span> : null}
                 </div>
               );
             })}

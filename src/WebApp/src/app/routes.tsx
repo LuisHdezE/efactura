@@ -4,7 +4,9 @@ import { CustomersPage } from '../features/customers/CustomersPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { InventoryPage } from '../features/inventory/InventoryPage';
 import { PosPage } from '../features/pos/PosPage';
+import { ProcurementPage } from '../features/procurement/ProcurementPage';
 import { SuppliersPage } from '../features/suppliers/SuppliersPage';
+import { TransfersPage } from '../features/transfers/TransfersPage';
 import { uiCapabilities, type UiCapability } from './capabilities';
 
 export type NavigationGroup =
@@ -15,6 +17,8 @@ export type NavigationGroup =
   | 'Fiscal'
   | 'Reportes'
   | 'Administración';
+
+export type PlannedNavigationProgress = 'governed' | 'visual-approved';
 
 interface ShellNavigationBase {
   webId: string;
@@ -31,6 +35,7 @@ export interface ActiveShellNavigationItem extends ShellNavigationBase {
 export interface PlannedShellNavigationItem extends ShellNavigationBase {
   state: 'planned';
   label: string;
+  progress?: PlannedNavigationProgress;
 }
 
 export type ShellNavigationItem = ActiveShellNavigationItem | PlannedShellNavigationItem;
@@ -55,6 +60,18 @@ export function navigationLabel(item: ShellNavigationItem): string {
   return item.state === 'active' ? item.capability.label : item.label;
 }
 
+export function plannedNavigationProgressLabel(item: PlannedShellNavigationItem): string | null {
+  if (item.progress === 'visual-approved') {
+    return 'Diseño listo';
+  }
+
+  if (item.progress === 'governed') {
+    return 'En diseño';
+  }
+
+  return null;
+}
+
 export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-002', state: 'active', capability: requireCapability('UI-DASHBOARD-001'), icon: '▦', navigationGroup: 'Inicio', element: <DashboardPage /> },
   { webId: 'WEB-003', state: 'active', capability: requireCapability('UI-POS-001'), icon: '▣', navigationGroup: 'Comercial', element: <PosPage /> },
@@ -62,9 +79,9 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-005', state: 'active', capability: requireCapability('UI-SUPPLIER-001'), icon: '◆', navigationGroup: 'Comercial', element: <SuppliersPage /> },
   { webId: 'WEB-006', state: 'active', capability: requireCapability('UI-CATALOG-001'), icon: '▤', navigationGroup: 'Comercial', element: <CatalogPage /> },
   { webId: 'WEB-007', state: 'active', capability: requireCapability('UI-INVENTORY-001'), icon: '▥', navigationGroup: 'Inventario y Compras', element: <InventoryPage /> },
-  { webId: 'WEB-008', state: 'planned', label: 'Transferencias', icon: '⇄', navigationGroup: 'Inventario y Compras' },
-  { webId: 'WEB-009', state: 'planned', label: 'Órdenes de compra y Recepciones', icon: '↓', navigationGroup: 'Inventario y Compras' },
-  { webId: 'WEB-010', state: 'planned', label: 'Cuentas por cobrar', icon: '↗', navigationGroup: 'Finanzas' },
+  { webId: 'WEB-008', state: 'active', capability: requireCapability('UI-TRANSFER-001'), icon: '⇄', navigationGroup: 'Inventario y Compras', element: <TransfersPage /> },
+  { webId: 'WEB-009', state: 'active', capability: requireCapability('UI-PROCUREMENT-001'), icon: '↓', navigationGroup: 'Inventario y Compras', element: <ProcurementPage /> },
+  { webId: 'WEB-010', state: 'planned', label: 'Cuentas por cobrar', icon: '↗', navigationGroup: 'Finanzas', progress: 'governed' },
   { webId: 'WEB-011', state: 'planned', label: 'Cuentas por pagar', icon: '↙', navigationGroup: 'Finanzas' },
   { webId: 'WEB-012', state: 'planned', label: 'Caja y conciliación', icon: '▰', navigationGroup: 'Finanzas' },
   { webId: 'WEB-013', state: 'planned', label: 'Documentos fiscales', icon: '≡', navigationGroup: 'Fiscal' },

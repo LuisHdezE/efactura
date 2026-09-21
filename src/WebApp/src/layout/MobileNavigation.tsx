@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   groupShellNavigationItems,
   navigationLabel,
+  plannedNavigationProgressLabel,
   type ShellNavigationItem
 } from '../app/routes';
 
@@ -35,15 +36,19 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
                   );
                 }
 
+                const progressLabel = plannedNavigationProgressLabel(item);
+
                 return (
                   <span
                     key={item.webId}
                     className="ef-mobile-link is-disabled inline-flex items-center gap-1.5"
+                    data-progress={item.progress ?? 'roadmap'}
                     aria-disabled="true"
-                    title={`${label} · En preparación`}
+                    title={`${label} · ${progressLabel ?? 'En preparación'} · No disponible todavía`}
                   >
                     <span aria-hidden="true">{item.icon}</span>
                     <span>{label}</span>
+                    {progressLabel ? <span className="ef-mobile-progress">{progressLabel}</span> : null}
                   </span>
                 );
               })}
