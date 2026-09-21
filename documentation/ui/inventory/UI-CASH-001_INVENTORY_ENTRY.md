@@ -1,6 +1,6 @@
 # UI-CASH-001 — Governed UI Inventory Entry
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / ROUTE_PLANNED_DISABLED`
+Status: `IMPLEMENTED_VISUAL_PREVIEW / RUNTIME_REVIEW_PENDING`
 
 Mapping:
 
@@ -8,9 +8,9 @@ Mapping:
 WEB-012 -> UI-CASH-001
 ```
 
-Reserved route candidate: `/caja`
+Route: `/caja`
 
-Navigation state: `PLANNED_DISABLED`
+Navigation state: `ACTIVE_VISUAL_PREVIEW`
 
 ## Evidence
 
@@ -20,7 +20,10 @@ Navigation state: `PLANNED_DISABLED`
 - API matrix: `documentation/api-completion-matrix/WAVE_3.md`;
 - reconciliation: `documentation/ui/cash/UI-CASH-001_RECONCILIATION.md`;
 - specification: `documentation/ui/specifications/UI-CASH-001_CASH_SHIFT_RECONCILIATION.md`;
-- approved visual reference: `documentation/ui/references/approved/UI-CASH-001/v1-responsive-composite/README.md`.
+- approved visual reference: `documentation/ui/references/approved/UI-CASH-001/v1-responsive-composite/README.md`;
+- preview policy: `documentation/ui/PREVIEW_ROUTE_POLICY_AMENDMENT.md`;
+- React implementation: `src/WebApp/src/features/cash/CashPage.tsx`;
+- source-level guard: `src/WebApp/scripts/verify-cash-preview.mjs`.
 
 ## Approved visual baseline
 
@@ -47,19 +50,22 @@ The view depends on:
 
 All seven remain `MISSING_HTTP` in Wave 3.
 
-## Current execution boundary
+## Preview execution boundary
 
-The route remains planned/disabled. This inventory approval does **not** authorize:
+The active preview is authorized to use deterministic local fixtures for client-side inspection only. It does **not** authorize:
 
 - canonical shift opening/closing;
 - manual cash posting;
 - variance reconciliation;
 - persistence of counted values;
 - invented tolerance/approval decisions;
-- authoritative balance or bank-account claims.
+- authoritative balance or bank-account claims;
+- mutation of historical cash state.
 
-A future preview may use explicit deterministic local fixtures only after preview-route governance is reconciled and a real responsive React surface is implemented.
+`UI-CASH-001` therefore remains `IMPLEMENTED_VISUAL_PREVIEW` with `operations: []` until fresh API evidence exists.
 
-## Next gate
+The React implementation intentionally maps unsupported generic bank/account wording from the approved visual artifact onto source-backed cash-shift/payment-medium concepts while preserving the approved hierarchy and composition.
 
-Reconcile `UI-CASH-001` with `PREVIEW_ROUTE_POLICY_AMENDMENT.md`, then implement `/caja` as `IMPLEMENTED_VISUAL_PREVIEW` with `operations: []`, disabled cash commands and a dedicated source-level CI guard.
+## Runtime review
+
+After merge/deploy, desktop and mobile behavior must be inspected separately. Search/filter/selection, tab switching, responsive movement cards and disabled authoritative controls are part of runtime acceptance.
