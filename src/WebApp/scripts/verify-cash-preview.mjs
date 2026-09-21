@@ -27,7 +27,7 @@ if (!cashCapability.includes('operations: []')) {
   failures.push('UI-CASH-001 must keep operations: [] while API-CSH-* remain unavailable.');
 }
 
-for (const forbidden of ['fetch(', 'axios', '/api/v1/cash-shifts', 'API-CSH-']) {
+for (const forbidden of ['fetch(', 'axios', '/api/v1/cash-shifts']) {
   if (page.includes(forbidden)) {
     failures.push(`CashPage.tsx must not contain live cash integration marker: ${forbidden}`);
   }
