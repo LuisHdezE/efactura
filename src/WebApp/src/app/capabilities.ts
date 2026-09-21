@@ -17,18 +17,9 @@ export interface UiCapability {
 }
 
 export const uiCapabilities: UiCapability[] = [
+  { uiId: 'UI-DASHBOARD-001', label: 'Dashboard', route: '/dashboard', status: 'IMPLEMENTED_API_MOCK_DATA', operations: [] },
   {
-    uiId: 'UI-DASHBOARD-001',
-    label: 'Dashboard',
-    route: '/dashboard',
-    status: 'IMPLEMENTED_API_MOCK_DATA',
-    operations: []
-  },
-  {
-    uiId: 'UI-POS-001',
-    label: 'Punto de Venta',
-    route: '/pos',
-    status: 'IMPLEMENTED_API_MOCK_DATA',
+    uiId: 'UI-POS-001', label: 'Punto de Venta', route: '/pos', status: 'IMPLEMENTED_API_MOCK_DATA',
     operations: [
       { apiId: 'API-CAT-001', operationId: 'listItems', method: 'GET', route: '/api/v1/items', permission: 'catalog.read' },
       { apiId: 'API-PTY-001', operationId: 'listParties', method: 'GET', route: '/api/v1/parties', permission: 'parties.read' },
@@ -41,10 +32,7 @@ export const uiCapabilities: UiCapability[] = [
     ]
   },
   {
-    uiId: 'UI-CUSTOMER-001',
-    label: 'Clientes',
-    route: '/clientes',
-    status: 'IMPLEMENTED_API_MOCK_DATA',
+    uiId: 'UI-CUSTOMER-001', label: 'Clientes', route: '/clientes', status: 'IMPLEMENTED_API_MOCK_DATA',
     operations: [
       { apiId: 'API-PTY-001', operationId: 'listParties', method: 'GET', route: '/api/v1/parties', permission: 'parties.read' },
       { apiId: 'API-PTY-002', operationId: 'createParty', method: 'POST', route: '/api/v1/parties', permission: 'parties.manage' },
@@ -56,10 +44,7 @@ export const uiCapabilities: UiCapability[] = [
     ]
   },
   {
-    uiId: 'UI-SUPPLIER-001',
-    label: 'Proveedores',
-    route: '/proveedores',
-    status: 'IMPLEMENTED_API_MOCK_DATA',
+    uiId: 'UI-SUPPLIER-001', label: 'Proveedores', route: '/proveedores', status: 'IMPLEMENTED_API_MOCK_DATA',
     operations: [
       { apiId: 'API-PTY-001', operationId: 'listParties', method: 'GET', route: '/api/v1/parties', permission: 'parties.read' },
       { apiId: 'API-PTY-002', operationId: 'createParty', method: 'POST', route: '/api/v1/parties', permission: 'parties.manage' },
@@ -73,10 +58,7 @@ export const uiCapabilities: UiCapability[] = [
     ]
   },
   {
-    uiId: 'UI-CATALOG-001',
-    label: 'Productos y Servicios',
-    route: '/catalogo',
-    status: 'IMPLEMENTED_API_MOCK_DATA',
+    uiId: 'UI-CATALOG-001', label: 'Productos y Servicios', route: '/catalogo', status: 'IMPLEMENTED_API_MOCK_DATA',
     operations: [
       { apiId: 'API-CAT-001', operationId: 'listItems', method: 'GET', route: '/api/v1/items', permission: 'catalog.read' },
       { apiId: 'API-CAT-002', operationId: 'createItem', method: 'POST', route: '/api/v1/items', permission: 'catalog.manage' },
@@ -91,10 +73,7 @@ export const uiCapabilities: UiCapability[] = [
     ]
   },
   {
-    uiId: 'UI-INVENTORY-001',
-    label: 'Inventario',
-    route: '/inventario',
-    status: 'IMPLEMENTED_API_MOCK_DATA',
+    uiId: 'UI-INVENTORY-001', label: 'Inventario', route: '/inventario', status: 'IMPLEMENTED_API_MOCK_DATA',
     operations: [
       { apiId: 'API-INV-001', operationId: 'listInventoryPositions', method: 'GET', route: '/api/v1/inventory/positions', permission: 'inventory.read' },
       { apiId: 'API-INV-002', operationId: 'getInventoryPosition', method: 'GET', route: '/api/v1/inventory/positions/{positionId}', permission: 'inventory.read' },
@@ -102,32 +81,9 @@ export const uiCapabilities: UiCapability[] = [
       { apiId: 'API-INV-004', operationId: 'createStockAdjustment', method: 'POST', route: '/api/v1/inventory/adjustments', permission: 'inventory.adjust' }
     ]
   },
-  {
-    uiId: 'UI-TRANSFER-001',
-    label: 'Transferencias',
-    route: '/transferencias',
-    status: 'IMPLEMENTED_VISUAL_PREVIEW',
-    operations: []
-  },
-  {
-    uiId: 'UI-PROCUREMENT-001',
-    label: 'Órdenes de compra y Recepciones',
-    route: '/compras',
-    status: 'IMPLEMENTED_VISUAL_PREVIEW',
-    operations: []
-  },
-  {
-    uiId: 'UI-RECEIVABLE-001',
-    label: 'Cuentas por cobrar',
-    route: '/cuentas-por-cobrar',
-    status: 'IMPLEMENTED_VISUAL_PREVIEW',
-    operations: []
-  },
-  {
-    uiId: 'UI-PAYABLE-001',
-    label: 'Cuentas por pagar',
-    route: '/cuentas-por-pagar',
-    status: 'IMPLEMENTED_VISUAL_PREVIEW',
-    operations: []
-  }
+  { uiId: 'UI-TRANSFER-001', label: 'Transferencias', route: '/transferencias', status: 'IMPLEMENTED_VISUAL_PREVIEW', operations: [] },
+  { uiId: 'UI-PROCUREMENT-001', label: 'Órdenes de compra y Recepciones', route: '/compras', status: 'IMPLEMENTED_VISUAL_PREVIEW', operations: [] },
+  { uiId: 'UI-RECEIVABLE-001', label: 'Cuentas por cobrar', route: '/cuentas-por-cobrar', status: 'IMPLEMENTED_VISUAL_PREVIEW', operations: [] },
+  { uiId: 'UI-PAYABLE-001', label: 'Cuentas por pagar', route: '/cuentas-por-pagar', status: 'IMPLEMENTED_VISUAL_PREVIEW', operations: [] },
+  { uiId: 'UI-CASH-001', label: 'Caja y conciliación', route: '/caja', status: 'IMPLEMENTED_VISUAL_PREVIEW', operations: [] }
 ];
