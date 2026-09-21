@@ -119,36 +119,36 @@ jobs:
             local permission="$1"
             local company_scope="$2"
             PERMISSION="$permission" COMPANY_SCOPE="$company_scope" python3 - <<'PY'
-import base64
-import hashlib
-import hmac
-import json
-import os
-import time
+          import base64
+          import hashlib
+          import hmac
+          import json
+          import os
+          import time
 
-def b64(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+          def b64(data: bytes) -> str:
+              return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
-now = int(time.time())
-header = {"alg": "HS256", "typ": "JWT"}
-payload = {
-    "sub": "w21-readonly-runtime",
-    "iss": os.environ["JWT_ISSUER"],
-    "aud": os.environ["JWT_AUDIENCE"],
-    "iat": now,
-    "nbf": now - 5,
-    "exp": now + 600,
-    "company_scope": os.environ["COMPANY_SCOPE"],
-}
-permission = os.environ.get("PERMISSION", "")
-if permission:
-    payload["permission"] = permission
-encoded_header = b64(json.dumps(header, separators=(",", ":")).encode())
-encoded_payload = b64(json.dumps(payload, separators=(",", ":")).encode())
-unsigned = f"{encoded_header}.{encoded_payload}"
-signature = hmac.new(os.environ["JWT_KEY"].encode(), unsigned.encode(), hashlib.sha256).digest()
-print(f"{unsigned}.{b64(signature)}")
-PY
+          now = int(time.time())
+          header = {"alg": "HS256", "typ": "JWT"}
+          payload = {
+              "sub": "w21-readonly-runtime",
+              "iss": os.environ["JWT_ISSUER"],
+              "aud": os.environ["JWT_AUDIENCE"],
+              "iat": now,
+              "nbf": now - 5,
+              "exp": now + 600,
+              "company_scope": os.environ["COMPANY_SCOPE"],
+          }
+          permission = os.environ.get("PERMISSION", "")
+          if permission:
+              payload["permission"] = permission
+          encoded_header = b64(json.dumps(header, separators=(",", ":")).encode())
+          encoded_payload = b64(json.dumps(payload, separators=(",", ":")).encode())
+          unsigned = f"{encoded_header}.{encoded_payload}"
+          signature = hmac.new(os.environ["JWT_KEY"].encode(), unsigned.encode(), hashlib.sha256).digest()
+          print(f"{unsigned}.{b64(signature)}")
+          PY
           }
 
           no_permission_token="$(mint_token '' 'w21-runtime-readonly')"
