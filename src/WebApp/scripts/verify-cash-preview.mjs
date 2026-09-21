@@ -19,7 +19,7 @@ if (!capabilities.includes("uiId: 'UI-CASH-001'")) {
   failures.push('UI-CASH-001 capability registration is missing.');
 }
 
-const cashCapability = capabilities.match(/\{\s*uiId: 'UI-CASH-001'[\s\S]*?\n\s*\}/m)?.[0] ?? '';
+const cashCapability = capabilities.match(/\{\s*uiId: 'UI-CASH-001'[\s\S]*?operations:\s*\[\]\s*\}/m)?.[0] ?? '';
 if (!cashCapability.includes("status: 'IMPLEMENTED_VISUAL_PREVIEW'")) {
   failures.push('UI-CASH-001 must remain IMPLEMENTED_VISUAL_PREVIEW.');
 }
