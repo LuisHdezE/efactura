@@ -14,9 +14,9 @@ A contracted-but-not-implemented endpoint does not authorize an apparently funct
 
 ## Hosting boundary
 
-The canonical public hosting target is `https://eliasworks.uy/efactura/` and serves **only the compiled WebApp static bundle**.
+The canonical public hosting target is `https://efactura.eliasworks.uy/` and serves **only the compiled WebApp static bundle**.
 
-The production WebApp is therefore hosted below the `/efactura/` path prefix. The production Vite bundle MUST be built with base `/efactura/`, and React Router MUST consume the same base through `import.meta.env.BASE_URL`. Local development may continue to use `/`.
+The hosting control panel maps that subdomain root to the physical FTP directory `public_html/efactura/`. The physical directory name is not part of the browser-visible route base. Therefore the production Vite bundle MUST be built with root base `/`, while React Router continues to consume `import.meta.env.BASE_URL`. Local development also uses `/`.
 
 The eFactura .NET API is explicitly outside this hosting/deployment increment:
 
@@ -79,13 +79,13 @@ API mode intentionally fails closed until an HTTP adapter is explicitly implemen
 
 ## Deployment target
 
-Target public URL: `https://eliasworks.uy/efactura/`.
+Target public URL: `https://efactura.eliasworks.uy/`.
 
-Expected document root: `public_html/efactura/`.
+Physical FTP document root: `public_html/efactura/`.
 
-GitHub Actions builds `src/WebApp` with production base `/efactura/` and uploads **only** the static `src/WebApp/dist/` output over FTP, following the deployment pattern already used by `erp_eliasworks`.
+GitHub Actions builds `src/WebApp` with browser-visible base `/` and uploads **only** the static `src/WebApp/dist/` output to `public_html/efactura/` over FTP.
 
-The bundled `.htaccess` preserves direct SPA routes such as `/efactura/transferencias` and `/efactura/compras` by rewriting non-file/non-directory requests to `index.html` inside the deployed application directory.
+The bundled `.htaccess` preserves direct SPA routes such as `/transferencias`, `/compras` and `/inventario` by rewriting non-file/non-directory requests to `index.html` inside the deployed application directory.
 
 Repository prerequisite before the first successful automatic deploy:
 
