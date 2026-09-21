@@ -1,6 +1,6 @@
 # UI-RECEIVABLE-001 — Accounts Receivable and Collections
 
-Status: `FUNCTIONAL_SPECIFICATION / VISUAL_DRAFT_READY / EXECUTION_BLOCKED_BY_API`
+Status: `FUNCTIONAL_SPECIFICATION / VISUAL_BASELINE_APPROVED / ACTIVE_VISUAL_PREVIEW / API_INTEGRATION_BLOCKED`
 
 Mapping:
 
@@ -8,19 +8,19 @@ Mapping:
 WEB-010 -> UI-RECEIVABLE-001
 ```
 
-Reserved route:
+Route:
 
 ```text
 /cuentas-por-cobrar
 ```
 
-Navigation state: `PLANNED_DISABLED`
+Navigation state: `ACTIVE_VISUAL_PREVIEW`
 
 ## 1. Purpose
 
 Provide the governed WebApp surface for customer receivables, aging and collections while preserving immutable financial history, allocation-derived balances and explicit overpayment policy boundaries.
 
-This specification authorizes visual drafting only while `API-AR-001..004` and `API-COL-001..003` remain non-executable.
+The exact visual baseline is approved and the route may be exposed under `PREVIEW_ROUTE_POLICY_AMENDMENT.md` as an explicit local-data visual preview. `API-AR-001..004` and `API-COL-001..003` remain non-executable, so live receivable/collection integration and all server-owned financial mutations remain blocked.
 
 ## 2. Functional authority
 
@@ -31,9 +31,10 @@ The view is derived from:
 - `UC-SALE-003 — Confirm credit sale and create receivable`;
 - `UC-AR-001 — Record customer collection and allocate payment`;
 - accepted `API-AR-*` and `API-COL-*` contracts;
-- `documentation/ui/receivables/UI-RECEIVABLE-001_RECONCILIATION.md`.
+- `documentation/ui/receivables/UI-RECEIVABLE-001_RECONCILIATION.md`;
+- `documentation/ui/PREVIEW_ROUTE_POLICY_AMENDMENT.md`.
 
-The API completion matrix remains execution authority. Contract acceptance alone does not prove runtime capability.
+The API completion matrix remains execution authority. Contract acceptance or visual route availability does not prove runtime backend capability.
 
 ## 3. Intended operators and permissions
 
@@ -49,7 +50,7 @@ Permissions:
 - `receivables.adjust` for append-only receivable adjustments;
 - `receivables.collect` for collections, allocations and compensating reversals.
 
-Role labels are presentation context, not authorization shortcuts.
+Role labels are presentation context, not authorization shortcuts. The visual preview does not enforce or simulate server authorization outcomes.
 
 ## 4. Information architecture
 
@@ -59,61 +60,59 @@ Show:
 
 - title: `Cuentas por cobrar`;
 - concise subtitle focused on saldos, vencimientos y cobranzas;
-- optional API/demo availability indicator while execution is unavailable;
+- explicit preview/API-pending indicator;
 - visually reserved `Registrar cobro` action.
 
-Until executable API evidence exists, prototype actions remain illustrative/disabled in a running WebApp.
+While executable API evidence is absent, collection/adjustment/reversal controls remain visibly disabled.
 
 ### 4.2 Aging summary
 
-The visual baseline may reserve an aging summary backed eventually by `API-AR-003`.
+The approved visual reserves an aging summary backed eventually by `API-AR-003`.
 
-Possible presentation dimensions include:
+Presentation dimensions include:
 
 - total open balance;
 - current/not-yet-due;
-- overdue groups/buckets;
-- count of obligations.
+- overdue amount;
+- customers/documents represented by the demonstration fixture.
 
-Exact bucket boundaries, labels and totals are backend authority and must not be invented as contract facts before the executable DTO exists.
+All preview totals must be explicitly described as demonstration values. Exact backend bucket boundaries, labels and totals remain server authority until an executable aging DTO exists.
 
 ### 4.3 Receivables list
 
-The primary operational list should support responsive presentation of:
+The primary operational list supports responsive presentation of:
 
 - receivable identity/reference;
 - customer context;
 - source-sale/fiscal reference when exposed;
-- issue/origin date when exposed;
+- issue/origin date;
 - due date;
 - currency;
 - original amount;
-- allocated amount when exposed;
 - derived open balance;
 - lifecycle/aging status concept.
 
-The frontend must not derive authoritative balance by editing or overwriting the original amount.
+In visual-preview mode these values come only from explicit local fixtures. The frontend must not present them as live financial state and must not derive authoritative balance by editing or overwriting the original amount.
 
 ### 4.4 Receivable detail
 
-Selecting an obligation should provide space for:
+Selecting an obligation provides space for:
 
 - receivable identity;
 - customer identity/context;
-- source evidence references when exposed;
+- source evidence references;
 - original amount/currency;
-- due date and aging/status;
-- allocation history;
-- adjustments;
-- current derived balance;
-- linked collections;
-- version/concurrency metadata only when the executable contract exposes it.
+- due date and visual status;
+- demonstration allocation/history entries;
+- current demonstration open balance;
+- linked collection context when represented;
+- version/concurrency metadata only after the executable contract exposes it.
 
 ### 4.5 Collection history
 
 Collection history should distinguish:
 
-- collection/payment identity;
+- collection/payment identity when exposed;
 - date/time;
 - payment medium/reference when exposed;
 - gross collection amount;
@@ -121,11 +120,11 @@ Collection history should distinguish:
 - unapplied/advance outcome only when returned by backend policy;
 - reversal state/evidence when applicable.
 
-A reversal is a compensating financial fact, never visual deletion of the original collection.
+A reversal is a compensating financial fact, never visual deletion of the original collection. Preview history entries are explicitly illustrative and do not claim persisted collection facts.
 
 ## 5. Register collection visual flow
 
-A visual candidate may reserve a drawer/modal/page for:
+The approved visual reserves a collection composer for:
 
 - customer context;
 - collection amount/currency;
@@ -136,48 +135,48 @@ A visual candidate may reserve a drawer/modal/page for:
 - remaining/unapplied amount area;
 - validation/conflict/policy result area.
 
-The eventual executable flow must submit through `API-COL-001` with the governed idempotency mechanism.
+In `IMPLEMENTED_VISUAL_PREVIEW` this composer is non-executable. Inputs/actions that would imply financial mutation remain disabled.
 
-The UI must never silently truncate an entered amount to the currently selected open balance.
+The eventual executable flow must submit through `API-COL-001` with the governed idempotency mechanism. The UI must never silently truncate an entered amount to the currently selected open balance.
 
 ## 6. Partial/full allocation behavior
 
 The interface must clearly communicate:
 
 - original obligation amount;
-- already allocated amount/history;
+- already allocated amount/history when available;
 - current open balance;
 - amount being allocated now;
-- resulting server-authoritative balance after success.
+- resulting server-authoritative balance after successful live execution.
 
-A collection may allocate to one or multiple receivables according to backend policy. The visual may demonstrate the concept, but final allocation constraints remain contract/implementation authority.
+A collection may allocate to one or multiple receivables according to backend policy. The preview may demonstrate the concept with local fixture values, but final allocation constraints remain contract/implementation authority.
 
 ## 7. Overpayment and advance policy
 
 `FR-072` and `FR-073` prohibit silent truncation and require explicit business policy.
 
-Therefore the visual baseline should reserve an explicit result/decision area for cases where entered collection exceeds allocated open balances.
+The visual baseline therefore reserves an explicit result/decision area for cases where an entered collection exceeds allocated open balances.
 
-The UI must not invent whether the excess becomes:
+The preview must not invent whether the excess becomes:
 
 - customer advance/credit;
 - unapplied payment;
 - rejected amount;
 - another policy outcome.
 
-Only the executable backend may decide and return that result.
+Only the executable backend may decide and return that result. Preview copy must state this boundary explicitly.
 
 ## 8. Receivable adjustments
 
-The visual may reserve a permission-gated adjustment action backed eventually by `API-AR-004`.
+The visual reserves a permission-gated adjustment action backed eventually by `API-AR-004`.
 
 Adjustments are append-only financial evidence. The UI must not rewrite historical original amounts or allocation history.
 
-Final reason codes, allowed adjustment types, validation rules and concurrency semantics remain backend authority.
+In visual-preview mode the adjustment action remains disabled. Final reason codes, allowed adjustment types, validation rules and concurrency semantics remain backend authority.
 
 ## 9. Collection reversal
 
-The visual may reserve a permission-gated reversal action backed eventually by `API-COL-003`.
+The visual reserves a permission-gated reversal action backed eventually by `API-COL-003`.
 
 A reversal must:
 
@@ -186,7 +185,7 @@ A reversal must:
 - require backend policy/authorization;
 - never masquerade as deletion.
 
-Exact reason requirements and reversal eligibility remain backend authority.
+In visual-preview mode the reversal action remains disabled. Exact reason requirements and reversal eligibility remain backend authority.
 
 ## 10. Cash-shift relationship
 
@@ -199,7 +198,7 @@ This view may show linked cash/terminal evidence only when exposed by backend DT
 - variance calculation;
 - cash reconciliation.
 
-Those belong to `WEB-012`.
+Those belong to `WEB-012`. The preview does not simulate cash-shift effects.
 
 ## 11. Projected cash-flow relationship
 
@@ -211,16 +210,18 @@ Those belong to `WEB-012`.
 
 Future executable mutation flows for adjustment, collection and reversal must use the shared idempotency infrastructure.
 
-The UI must:
+The live UI must:
 
 - preserve client operation identity across safe retries;
 - surface `409`/conflict outcomes without destructive recovery;
 - refresh authoritative receivable/allocation state before retrying where required;
 - avoid double-posting a collection after transport uncertainty.
 
+The visual preview does not simulate successful mutation, conflict or retry execution as persisted outcomes.
+
 ## 13. States
 
-The governed visual suite should cover at least:
+The governed product design covers or reserves:
 
 - populated receivables list;
 - selected receivable detail;
@@ -241,7 +242,7 @@ The governed visual suite should cover at least:
 - validation-error state;
 - narrow responsive layout.
 
-Exact server error copy remains non-authoritative until HTTP implementation exists.
+The initial visual preview is not required to fabricate unavailable server error/permission/conflict states. Those become executable acceptance scope only after the HTTP contracts are implemented and freshly reconciled.
 
 ## 14. Responsive behavior
 
@@ -253,7 +254,7 @@ Desktop:
 Tablet:
 
 - list/detail sections may stack;
-- collection composer remains usable for treasury workflows.
+- collection composer remains readable and explicitly non-executable.
 
 Mobile:
 
@@ -265,24 +266,26 @@ Mobile:
 
 ## 15. Light/dark requirements
 
-The baseline must provide light/dark parity with the established eFactura shell.
+The implementation adapts to the established eFactura global light/dark shell theme.
 
-Aging, overdue, partial, settled, reversed and policy-result states must not depend on color alone.
+The exact approved baseline authority is `v1-approved-view`; dark-mode adaptation follows shared theme tokens and remains subject to deployed runtime review. Aging, overdue, partial, settled, reversed and policy-result states must not depend on color alone.
 
 ## 16. Accessibility
 
 Required design properties:
 
-- keyboard-operable filters/list/detail/forms/actions;
+- keyboard-operable filters/list/detail controls;
 - accessible currency and balance representation;
 - programmatic labels for amounts, dates, references and payment media;
 - non-color-only status indicators;
 - visible focus states;
-- validation/conflict/policy feedback associated with the relevant control/context.
+- validation/conflict/policy feedback associated with the relevant control/context once those states become executable.
+
+Disabled preview actions must remain identifiable as unavailable and must not appear to post financial state.
 
 ## 17. Explicit exclusions for v1 visual authority
 
-The visual baseline must not authorize:
+The visual baseline and preview do not authorize:
 
 - customer master editing;
 - supplier payables/payment workflows;
@@ -297,10 +300,22 @@ The visual baseline must not authorize:
 - full cash-flow reporting/forecasting;
 - any live API claim while the seven required operations remain `MISSING_HTTP`.
 
-## 18. Visual baseline gate
+## 18. Approved baseline and preview gate
 
-The next governed artifact is a responsive light/dark visual candidate for `UI-RECEIVABLE-001`.
+Approved visual authority:
 
-Visual approval will preserve visual authority only. It will not activate `/cuentas-por-cobrar`.
+- baseline: `UI-RECEIVABLE-001 / v1-approved-view`;
+- image generation id: `1fad639a-815f-431b-8c1c-7e6a50cdae77`;
+- owner approval: `correcto, aprobada esta vista` on 2026-09-21.
 
-React implementation/activation remains blocked until the receivables/collections API lane provides executable evidence and this specification is reconciled again against actual DTOs, error contracts, permissions and mutation semantics.
+Under `PREVIEW_ROUTE_POLICY_AMENDMENT.md`, the route `/cuentas-por-cobrar` may be activated as `IMPLEMENTED_VISUAL_PREVIEW` when the React implementation:
+
+1. remains inside the shared AppShell;
+2. uses explicit local demonstration data only;
+3. marks KPI/list/detail values as non-authoritative demo content;
+4. keeps all collection, adjustment and reversal mutations disabled;
+5. registers no missing `API-AR-*` or `API-COL-*` operation as executable;
+6. passes repository CI/gates;
+7. undergoes separate deployed runtime review.
+
+Live API integration remains blocked until receivables/collections HTTP evidence exists and this UI is freshly reconciled against the executable DTOs, errors, permissions, idempotency and concurrency semantics.
