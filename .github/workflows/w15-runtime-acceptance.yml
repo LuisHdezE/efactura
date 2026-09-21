@@ -3,7 +3,7 @@ name: W1.5 Runtime Acceptance
 on:
   push:
     branches:
-      - ops/w15-runtime-acceptance-20260921
+      - main
     paths:
       - '.github/workflows/w15-runtime-acceptance.yml'
       - 'scripts/ops/w15_runtime_acceptance.py'
