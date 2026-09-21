@@ -19,7 +19,7 @@ env:
   WIF_PROVIDER: projects/195831190862/locations/global/workloadIdentityPools/github-actions/providers/efactura-main
   DEPLOY_SERVICE_ACCOUNT: efactura-deploy@efactura-demo-0916-9b93.iam.gserviceaccount.com
   JWT_SECRET: efactura-jwt-key
-  ACCEPTED_MAIN_SHA: bc138d6076a6d9f2f8f948171082511e9385b39f
+  ACCEPTED_MAIN_SHA: 0ff3083547a2d9bf727b6d80ca994c96ddf0481b
   ACCEPTED_REVISION: efactura-api-d22-11139c7-54-1
 
 jobs:
