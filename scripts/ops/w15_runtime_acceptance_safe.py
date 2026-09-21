@@ -79,8 +79,71 @@ def openapi_gate():
     print("PASS OpenAPI terminal surface: 4/4 exact operations, no DELETE")
 
 
+_configured_companies = set()
+_original_create_location = original.create_location
+
+
+def ensure_company_profile(org: str, bearer: str):
+    if org in _configured_companies:
+        return
+
+    status, _, body = request("GET", "/api/v1/company", bearer=bearer, org=org)
+    if status == 200:
+        if not isinstance(body, dict) or body.get("organizationId") != org:
+            original.fail(f"existing company profile for {org}: unexpected projection {body}")
+        _configured_companies.add(org)
+        print(f"PASS company prerequisite already configured for {org}")
+        return
+
+    if (
+        status != 404
+        or not isinstance(body, dict)
+        or body.get("code") != "organization.company_not_configured"
+    ):
+        original.fail(
+            f"company prerequisite lookup for {org}: expected 200 or company_not_configured 404, "
+            f"got HTTP {status}, body={body}"
+        )
+
+    suffix = "01" if org == original.ORG_A else "02"
+    digits = "".join(ch for ch in original.STAMP if ch.isdigit())
+    ruc = f"{digits[-10:].rjust(10, '0')}{suffix}"
+    profile_request = {
+        "ruc": ruc,
+        "legalName": f"W1.5 QA Issuer {suffix}",
+        "commercialName": f"W15 QA {suffix}",
+    }
+    _, _, profile = original.expect_status(
+        f"configure company prerequisite {org}",
+        request(
+            "PATCH",
+            "/api/v1/company",
+            bearer=bearer,
+            org=org,
+            body=profile_request,
+            idem=f"w15-{original.STAMP}-company-{suffix}",
+        ),
+        200,
+    )
+    if (
+        not isinstance(profile, dict)
+        or profile.get("organizationId") != org
+        or profile.get("ruc") != ruc
+        or profile.get("version") != 1
+    ):
+        original.fail(f"configure company prerequisite {org}: unexpected projection {profile}")
+
+    _configured_companies.add(org)
+
+
+def create_location(org, bearer, name, branch_code, key):
+    ensure_company_profile(org, bearer)
+    return _original_create_location(org, bearer, name, branch_code, key)
+
+
 original.request = request
 original.openapi_gate = openapi_gate
+original.create_location = create_location
 
 
 if __name__ == "__main__":
