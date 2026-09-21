@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_4_CLOSED / W1_5_IMPLEMENTATION_READY_PENDING_MERGE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / W1_4_CLOSED / W1_5_IMPLEMENTED_PRE_MERGE`
 
-Current readiness baseline: `main@04fd00362f7535e15be8b9de8f10649eeac84192`. W1.5 readiness is audited and its field-level Terminal contract was explicitly approved by Luis on 2026-09-20. The four W1.5 operations remain `MISSING_HTTP`; contract acceptance changes readiness only and does not change implementation counts.
+Current implementation baseline: PR #195 (`feat/w1-5-terminals`) reconciled with `main@59a286185e242dcd59fb1b946a7d19aae07a54b1`. W1.5 readiness and its owner-approved field-level Terminal contract are closed prerequisites, and the four W1.5 public HTTP operations now exist in the implementation branch. This changes HTTP implementation accounting but does not mean W1.5 is production-accepted: final exact-head CI, governed merge, separately approved schema promotion, deployment and runtime acceptance remain open.
 
 This document is the governed index for the public v1 API completion program after D2 backend operational closure. The operation-level matrix is physically split into seven wave shards under `documentation/api-completion-matrix/`, but those shards are one logical matrix and are validated together by `ApiCompletionMasterMatrixArchitectureTests`.
 
@@ -47,20 +47,20 @@ The legitimate later `+1` is:
 
 | Wave | Scope | Operation IDs | Implemented | Missing HTTP | Contract collision | Non-implemented |
 |---:|---|---:|---:|---:|---:|---:|
-| 1 | Identity + Organization + Reference Data | 30 | 26 | 4 | 0 | 4 |
+| 1 | Identity + Organization + Reference Data | 30 | 30 | 0 | 0 | 0 |
 | 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 |
-| **Total** |  | **194** | **60** | **132** | **2** | **134** |
+| **Total** |  | **194** | **64** | **128** | **2** | **130** |
 
-Raw operation-ID implementation coverage is `60 / 194 = 30.93%`.
+Raw operation-ID implementation coverage is `64 / 194 = 32.99%`.
 
 This is an operation-count measure only. It is not a product-readiness score and does not diminish deeper Domain/Application/fiscal capabilities that are not yet exposed through the governed public API.
 
-W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. W1.1D completes Reference Data with `API-REF-007 listContactTypes` and `API-REF-008 listUnitsOfMeasure`, preserving configurable party-contact semantics and projecting only active commercial units visible through the actor's company scopes. W1.2 adds `API-IAM-001 getCurrentActor` and `API-IAM-011 listPermissions` by projecting the existing actor context and canonical `Permissions.All` set without introducing a second identity model or persistence boundary. W1.3 adds `API-IAM-006..009` through a dedicated company-scoped `SecurityRole` aggregate, canonical permission-code validation, idempotent create/update, optimistic concurrency, audit/outbox evidence and provider-real PostgreSQL/MySQL persistence, and is formally closed after production schema promotion, Cloud Run deployment and runtime acceptance. W1.4 adds `API-IAM-002..005` and `API-IAM-010` through the provider-neutral `SecurityUser` model, organization-scoped user management, idempotent/versioned mutation, scope/self-escalation protections, role replacement and durable audit/outbox evidence. W1.4 is formally closed after PR #185 merge, accepted deployment, explicitly approved production migration, runtime acceptance and independent Neon verification. W1.5 owns the remaining four Wave 1 `MISSING_HTTP` operations; its bounded readiness audit is complete and its field-level Terminal contract is owner-approved. The operations are implementation-ready after this contract-lock PR merges and passes the normal exact-head/post-merge gates.
+W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. W1.1D completes Reference Data with `API-REF-007 listContactTypes` and `API-REF-008 listUnitsOfMeasure`, preserving configurable party-contact semantics and projecting only active commercial units visible through the actor's company scopes. W1.2 adds `API-IAM-001 getCurrentActor` and `API-IAM-011 listPermissions` by projecting the existing actor context and canonical `Permissions.All` set without introducing a second identity model or persistence boundary. W1.3 adds `API-IAM-006..009` through a dedicated company-scoped `SecurityRole` aggregate, canonical permission-code validation, idempotent create/update, optimistic concurrency, audit/outbox evidence and provider-real PostgreSQL/MySQL persistence, and is formally closed after production schema promotion, Cloud Run deployment and runtime acceptance. W1.4 adds `API-IAM-002..005` and `API-IAM-010` through the provider-neutral `SecurityUser` model, organization-scoped user management, idempotent/versioned mutation, scope/self-escalation protections, role replacement and durable audit/outbox evidence. W1.4 is formally closed after PR #185 merge, accepted deployment, explicitly approved production migration, runtime acceptance and independent Neon verification. W1.5 adds the remaining four Wave 1 operations `API-ORG-007..010` through the governed Terminal aggregate, organization/location invariants, idempotent/versioned mutation, durable audit/outbox evidence and provider-neutral PostgreSQL/MySQL persistence. The HTTP surfaces are implemented in PR #195; W1.5 remains open for final exact-head CI, merge, production schema promotion, deployment and runtime acceptance.
 
 ## 4. Logical matrix shards
 
@@ -91,8 +91,8 @@ Deep-readiness markers are deliberately separate from HTTP status:
 - `EXISTING_PATH / regression`: current public surface exists; preserve and regression-test it.
 - `NOT_YET_AUDITED`: do not assume Application, persistence or test readiness from the API contract alone.
 - historical `W1_4_READY`: the bounded W1.4 readiness audit was locked before implementation; all five rows are now `IMPLEMENTED / EXISTING_PATH / regression` after closure.
+- historical `IMPLEMENTATION_READY_PENDING_MERGE`: prerequisite was owner-approved before the bounded W1.5 implementation started.
 - `PREREQUISITE_REQUIRED`: bounded audit found a concrete prerequisite that must close before HTTP implementation.
-- `IMPLEMENTATION_READY_PENDING_MERGE`: prerequisite is owner-approved and the bounded implementation may begin after its contract/readiness PR merges and exact-head/post-merge gates are green.
 - `BLOCKED_BY_CONTRACT`: contract reconciliation must occur before implementation.
 
 ## 6. Contract collision audit
@@ -118,8 +118,8 @@ Both rows remain represented in Wave 7 and are marked `CONTRACT_COLLISION / BLOC
 2. `W1.2` Current actor + permission catalog: `API-IAM-001`, `API-IAM-011` — implemented by projecting `IActorContextAccessor.Current` and `Permissions.All`.
 3. `W1.3` Roles read/write: `API-IAM-006..009` — implemented, merged, schema-promoted, deployed, runtime-accepted and formally closed.
 4. `W1.4` Users + role assignment: `API-IAM-002..005`, `API-IAM-010` — implemented, merged, schema-promoted, deployed, runtime-accepted and formally closed.
-5. `W1.5` Terminals: `API-ORG-007..010` — readiness audited and field-level contract owner-approved; implementation may begin after the contract-lock PR merges and passes exact-head/post-merge gates.
-6. `W1.6` Wave reconciliation: exact contract/implementation/test coverage and documentation closeout.
+5. `W1.5` Terminals: `API-ORG-007..010` — implemented in PR #195 with provider-real persistence QA; final exact-head CI, merge, schema promotion, deployment and runtime acceptance remain.
+6. `W1.6` Wave reconciliation: exact contract/implementation/test coverage and documentation closeout after W1.5 runtime closure.
 
 Before each bounded implementation increment, the affected rows receive a deeper readiness audit covering Application use cases, persistence, permission enforcement and tests. `NOT_YET_AUDITED` is never treated as implementation readiness.
 
@@ -135,7 +135,7 @@ Every implementation increment must include, as applicable:
 - matrix row/status updates in the same governed increment;
 - no test weakening to obtain green CI.
 
-## 9. Closed W1.4 gate and accepted W1.5 contract
+## 9. Closed W1.4 gate and W1.5 implementation gate
 
 W1.4 closure evidence is recorded in `documentation/api-completion-matrix/W1_4_USERS_READINESS.md`.
 
@@ -145,6 +145,8 @@ HTTP runtime acceptance `20260920220501` passed the exact five-operation OpenAPI
 
 Independent production Neon verification then confirmed exactly four W1.4 successful user mutation triplets keyed by correlation ID, each containing completed idempotency + successful audit + durable outbox evidence. Failed validation/authorization/conflict paths left no successful durable residue. The runtime QA user finished at version `4` with no residual scopes/roles, and the QA role finished inactive.
 
-W1.5 owns the four remaining Wave 1 `MISSING_HTTP` rows: `API-ORG-007..010`. The bounded audit in `documentation/api-completion-matrix/W1_5_TERMINALS_READINESS.md` identified the missing field-level Terminal contract. Luis explicitly approved that contract on 2026-09-20. The accepted contract locks server-owned identity/organization, normalized immutable terminal code, mutable name/location/active state, optimistic concurrency, organization-level uniqueness, deterministic list semantics, location reassignment/reactivation rules, the active-terminal dependency invariant for location deactivation, stable conflict semantics, idempotency/audit/outbox boundaries and a strict Terminal-vs-Device separation. The four rows remain `MISSING_HTTP` until implementation exists and passes governed acceptance.
+W1.5 owns `API-ORG-007..010`. Its bounded audit and owner-approved Terminal contract are recorded in `documentation/api-completion-matrix/W1_5_TERMINALS_READINESS.md`. PR #195 now implements the four routes, accepted DTOs, organization authorization, deterministic list/filter behavior, immutable normalized code, optimistic concurrency, idempotency, stable conflict semantics, same-organization active-location validation, terminal reassignment/reactivation rules, the active-terminal dependency invariant for location deactivation, audit/outbox evidence and additive provider-neutral terminal persistence. Dedicated architecture and PostgreSQL/MySQL integration tests were added. The migration exists as source only and no production database write is authorized by this implementation state.
+
+W1.5 is not formally closed until the implementation PR is merged, the production schema promotion is separately approved and verified, the accepted API revision is deployed, and HTTP runtime acceptance proves OpenAPI/auth/permission/idempotency/concurrency/location invariants plus required regressions.
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.
