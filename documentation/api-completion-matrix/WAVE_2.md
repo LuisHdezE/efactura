@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_IMPLEMENTED_PRE_MERGE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
@@ -11,6 +11,8 @@ Baseline: **26 operation IDs**, **23 implemented**, **3 non-implemented**.
 Detailed readiness evidence for the original four missing operations is recorded in `W2_READINESS_AUDIT.md`.
 
 W2.1 field-level contract: `W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`.
+
+W2.1 operational closure: `W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -39,4 +41,4 @@ W2.1 field-level contract: `W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`.
 | `API-SAL-006` | `getSaleFiscalPreview` | GET `/api/v1/sales/{saleId}/fiscal-preview` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-007` | `confirmSale` | POST `/api/v1/sales/{saleId}/confirm` | `sales.confirm` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-008` | `cancelSale` | POST `/api/v1/sales/{saleId}/cancel` | `sales.cancel` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 2 | Lock Cancelled lifecycle, cancellable states, irreversible confirmation boundary, request/version/reason and durable evidence semantics |
-| `API-SAL-009` | `getSaleFiscalizationStatus` | GET `/api/v1/sales/{saleId}/fiscalization` | `sales.read` | ACCEPTED | IMPLEMENTED | `SaleFiscalizationController` | IMPLEMENTED_PENDING_MERGE | 2 | Owner-locked local-workflow contract implemented read-only in PR #208; exact-head CI, merge, deploy and runtime acceptance remain separate gates |
+| `API-SAL-009` | `getSaleFiscalizationStatus` | GET `/api/v1/sales/{saleId}/fiscalization` | `sales.read` | ACCEPTED | IMPLEMENTED | `SaleFiscalizationController` | EXISTING_PATH / regression | 2 | W2.1 closed after PR #208 merge, Guard #695/#696, Deploy #55 and read-only production runtime acceptance run `35643849728`; see closure evidence |
