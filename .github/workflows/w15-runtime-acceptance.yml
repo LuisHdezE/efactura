@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/w15-runtime-acceptance.yml'
       - 'scripts/ops/w15_runtime_acceptance.py'
+      - 'scripts/ops/w15_runtime_acceptance_safe.py'
 
 permissions:
   contents: read
@@ -55,7 +56,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/ops/w15_runtime_acceptance.py
+          python3 -m py_compile scripts/ops/w15_runtime_acceptance.py scripts/ops/w15_runtime_acceptance_safe.py
           echo "W1.5 acceptance runner syntax PASS"
 
       - name: Authenticate to Google Cloud
@@ -99,7 +100,7 @@ jobs:
           export JWT_ISSUER="$(jq -r '.Jwt.Issuer' src/WebApi/appsettings.json)"
           export JWT_AUDIENCE="$(jq -r '.Jwt.Audience' src/WebApi/appsettings.json)"
 
-          python3 scripts/ops/w15_runtime_acceptance.py
+          python3 scripts/ops/w15_runtime_acceptance_safe.py
 
           unset JWT_KEY JWT_ISSUER JWT_AUDIENCE
           echo "### W1.5 Runtime Acceptance" >> "$GITHUB_STEP_SUMMARY"
