@@ -4,9 +4,9 @@ Status: `ACTIVE / GOVERNED PLANNING`
 
 ## 1. Purpose
 
-Maintain one explicit product-level map of the complete WebApp navigation scope so implemented views, planned views and Sidebar visibility never drift apart.
+Maintain one explicit product-level map of the complete WebApp navigation scope so implemented views, visual previews, planned views and Sidebar visibility never drift apart.
 
-Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx` and distinguishes `active` executable entries from `planned` visible-but-disabled entries. Planned options are not routes and must never produce dead links. Planned entries may also expose compact product-facing progress metadata without changing execution state.
+Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx`. `active` means a real React route exists; `planned` means the item is visible but disabled. Backend/API readiness is tracked separately so a navigable visual preview can exist without pretending that missing HTTP operations are executable.
 
 ## 2. Current navigation facts
 
@@ -19,22 +19,23 @@ Current runtime/governance state:
 - `WEB-003 / UI-POS-001` is active at `/pos`;
 - `WEB-004 / UI-CUSTOMER-001` is active at `/clientes`;
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
-- `WEB-006 / UI-CATALOG-001` is active at `/catalogo` and its light/dark deployed runtime was explicitly accepted on 2026-09-20; explicit demo/mock data and disabled write affordances remain in place until the governed API-integration lane enables them;
-- `WEB-007 / UI-INVENTORY-001` is active at `/inventario` with explicit demo/mock data, read-only inventory positions/movements and disabled write affordance until the governed integration/permission lane enables `inventory.adjust`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
-- `WEB-008 / UI-TRANSFER-001` is reconciled, has approved visual baseline `v1-responsive-suite`, is reserved for `/transferencias`, remains `PLANNED_DISABLED` because `API-TRF-001..007` are `MISSING_HTTP`, and is represented in planned navigation with progress `visual-approved` / `Diseño listo`;
-- `WEB-009 / UI-PROCUREMENT-001` is reconciled, has approved visual baseline `v1-responsive-suite`, is reserved for `/compras`, remains `PLANNED_DISABLED` because `API-PRC-001..006` and `API-GRC-001..004` are `MISSING_HTTP`, and is represented in planned navigation with progress `visual-approved` / `Diseño listo`;
-- `WEB-010 / UI-RECEIVABLE-001` is reconciled and reserved for `/cuentas-por-cobrar`, remains `PLANNED_DISABLED` because `API-AR-001..004` and `API-COL-001..003` are `MISSING_HTTP`, and is represented in planned navigation with progress `governed` / `En diseño`;
+- `WEB-006 / UI-CATALOG-001` is active at `/catalogo` with explicit demo/mock behavior where integration is not yet authoritative;
+- `WEB-007 / UI-INVENTORY-001` is active at `/inventario`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
+- `WEB-008 / UI-TRANSFER-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/transferencias` as `IMPLEMENTED_VISUAL_PREVIEW`; the route is navigable, uses explicit local demonstration data and keeps server-owned transfer commands disabled because `API-TRF-001..007` remain `MISSING_HTTP`;
+- `WEB-009 / UI-PROCUREMENT-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/compras` as `IMPLEMENTED_VISUAL_PREVIEW`; the route is navigable, uses explicit local demonstration data and keeps purchase/receipt commands disabled because `API-PRC-001..006` and `API-GRC-001..004` remain `MISSING_HTTP`;
+- `WEB-010 / UI-RECEIVABLE-001` is reconciled and reserved for `/cuentas-por-cobrar`, remains `PLANNED_DISABLED`, and is represented as `governed` / `En diseño` until its visual baseline is approved and a real React surface exists;
 - `WEB-011..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
-- 6 entries are interactive shell routes;
-- 12 future entries remain visible as disabled/non-clickable options, not fake routes.
+- 8 entries are interactive shell routes, of which 2 are explicit visual previews;
+- 10 future entries remain visible as disabled/non-clickable options.
 
 Current counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
-- active shell routes: **6**;
-- planned disabled shell options: **12**.
+- active shell routes: **8**;
+- active visual-preview routes: **2**;
+- planned disabled shell options: **10**.
 
 ## 3. Sidebar information architecture
 
@@ -76,26 +77,24 @@ These groups are product-navigation concepts and do not alter backend bounded co
 
 Legend:
 
-- `ACTIVE`: executable route derived from the unified navigation registry and rendered as a link;
-- `PLANNED_DISABLED`: visible product-navigation option with no executable route and no click behavior;
+- `ACTIVE`: real React route derived from the unified registry and rendered as a link;
+- `ACTIVE_VISUAL_PREVIEW`: active React route built from an approved visual baseline, using explicit local demo data while authoritative HTTP operations remain unavailable;
+- `PLANNED_DISABLED`: visible product-navigation option with no React route and no click behavior;
 - `STANDALONE`: intentionally outside the application shell;
-- `UI ID pending`: no stable `UI-*` identifier is assigned until reconciliation proves the view boundary;
-- candidate routes are planning values only;
-- `En diseño`: planned entry has a governed/specification-ready `UI-*` boundary but no approved visual baseline yet;
-- `Diseño listo`: planned entry has an explicitly approved governed visual baseline;
-- planned progress labels are informational only and never authorize route activation.
+- `UI ID pending`: no stable `UI-*` identifier is assigned yet;
+- `En diseño`: governed/specification-ready planned item without an approved visual baseline.
 
-| WEB | Interface | Product group | Governed UI ID | Candidate / current route | Navigation state | Visible progress |
+| WEB | Interface | Product group | Governed UI ID | Current / candidate route | Navigation state | Runtime mode |
 | --- | --- | --- | --- | --- | --- | --- |
-| `WEB-001` | Login and Session Entry | Standalone | `UI-AUTH-001` | `/acceso` | `STANDALONE` | — |
-| `WEB-002` | Operational Dashboard | Inicio | `UI-DASHBOARD-001` | `/dashboard` | `ACTIVE` | — |
-| `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` | — |
-| `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` | — |
-| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` | — |
-| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` | — |
-| `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` | `ACTIVE` | — |
-| `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` reserved | `PLANNED_DISABLED` | `Diseño listo` |
-| `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` reserved | `PLANNED_DISABLED` | `Diseño listo` |
+| `WEB-001` | Login and Session Entry | Standalone | `UI-AUTH-001` | `/acceso` | `STANDALONE` | implemented |
+| `WEB-002` | Operational Dashboard | Inicio | `UI-DASHBOARD-001` | `/dashboard` | `ACTIVE` | API/mock boundary |
+| `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` | API/mock boundary |
+| `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` | API/mock boundary |
+| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` | API/mock boundary |
+| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` | API/mock boundary |
+| `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` | `ACTIVE` | API/mock boundary |
+| `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
+| `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` reserved | `PLANNED_DISABLED` | `En diseño` |
 | `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI ID pending` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` | — |
 | `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` | — |
@@ -110,15 +109,15 @@ Legend:
 ## 5. Visibility and activation rule
 
 1. Every accepted shell-hosted `WEB-*` option appears in the complete product navigation from the beginning.
-2. An unimplemented option is rendered disabled/non-clickable and does not receive a live route target.
-3. Candidate/reserved routes in this document must never be used as fake links.
-4. An option becomes `active` only after reconciliation, stable `UI-*` assignment, route confirmation, visual approval when required, executable capability evidence, React implementation and capability registration.
-5. Only `active` entries are derived into `shellRoutes` and React Router.
-6. Sidebar and mobile navigation consume the same grouped registry.
-7. Disabled entries communicate roadmap structure only and do not imply backend/API readiness.
-8. Optional planned progress (`governed` or `visual-approved`) may improve visibility of product progress, but it must not change click behavior, route registration, capability binding or API readiness semantics.
+2. An unimplemented option is rendered disabled/non-clickable and does not receive a route target.
+3. Candidate/reserved routes must never become fake links.
+4. A page with an approved visual baseline may become `ACTIVE_VISUAL_PREVIEW` once a real responsive React surface is implemented and visibly marked as preview/demo.
+5. A visual preview must not claim backend readiness, must not fabricate server state and must keep server-owned mutations disabled while required HTTP operations are missing.
+6. API-backed activation remains a separate integration gate.
+7. Only `active` registry entries are derived into `shellRoutes` and React Router.
+8. Sidebar and mobile navigation consume the same grouped registry.
 
-This preserves the no-dead-links rule while keeping the full application architecture and its governed progress visible.
+This preserves the no-dead-links rule while allowing approved frontend work to be inspected and used before backend integration is complete.
 
 ## 6. Unified registry requirement
 
@@ -138,69 +137,41 @@ progress: governed | visual-approved (planned only, optional)
 element (active only)
 ```
 
-Feature components must not encode their own Sidebar placement or planned progress independently.
+`capabilities.ts` distinguishes `IMPLEMENTED_API_MOCK_DATA` from `IMPLEMENTED_VISUAL_PREVIEW`.
 
 ## 7. Activation progression
 
-When a planned view is implemented, the existing navigation item changes from `planned` to `active` only after its `WEB-*` scope, `UI-*` identifier, final route, executable capability evidence and React feature are governed and implemented.
+A visual-preview route requires a reconciled `UI-*`, confirmed route, approved visual baseline, implemented React surface, explicit demo state, disabled server-owned actions, successful repository gates and runtime visual review.
 
-Visual approval alone does not authorize route activation when the required backend/API capability is non-executable.
+Promotion from `IMPLEMENTED_VISUAL_PREVIEW` to API-integrated behavior requires fresh executable API evidence, permission reconciliation and a separate integration review. It must not be inferred from route availability.
 
-Runtime acceptance is recorded separately from route activation. An active route may still have visual/governance debt, and runtime acceptance must never be inferred merely from implementation.
+Runtime acceptance is recorded separately from route implementation.
 
 `/pos` remains `defaultShellRoute` until a separate explicit product decision changes it.
 
-## 8. Latest runtime acceptance checkpoint
+## 8. Latest accepted runtime checkpoint
 
-`UI-INVENTORY-001` is the latest shell route to complete the governed WebApp runtime-review lane.
+`UI-INVENTORY-001` remains the latest shell route to complete the governed WebApp runtime-review lane.
 
-Accepted evidence includes:
+Accepted evidence includes approved baseline `UI-INVENTORY-001 v1-responsive-suite`, implementation PR `#184`, closure PR `#186`, successful deployment/CI gates and explicit owner runtime closure. Separate deployed mobile screenshots were not independently reviewed, and approved PNG binaries remain `BINARY_PRESERVATION_PENDING`.
 
-- approved baseline: `UI-INVENTORY-001 v1-responsive-suite`;
-- visual-governance PR: `#183`;
-- implementation PR: `#184`;
-- accepted deployed WebApp commit: `45a57dab16d27d6d455aeebef895c495968da63b`;
-- `Deploy eFactura Demo #31`: `SUCCESS`;
-- post-merge `Frontend Demo CI #72`: `SUCCESS`;
-- post-merge `Clean Architecture Guard #638`: `SUCCESS`;
-- desktop light/dark runtime review: accepted;
-- explicit owner closure: `Apruebo cierre runtime UI-INVENTORY-001`;
-- acceptance record: `documentation/ui/reviews/UI-INVENTORY-001/RUNTIME_VISUAL_ACCEPTANCE.md`;
-- closure documentation merged through PR `#186`.
-
-Separate deployed mobile runtime screenshots were not independently reviewed in that closure. Approved visual PNG binaries remain `BINARY_PRESERVATION_PENDING`, and the view is not promoted to repository-wide `ACCEPTED`.
+`UI-TRANSFER-001` and `UI-PROCUREMENT-001` are newly implemented visual previews in PR `#196`; they are not runtime-accepted until that PR is merged, deployed and visually reviewed.
 
 ## 9. Current next-view checkpoint
 
-`WEB-010 / UI-RECEIVABLE-001` is the next governed WebApp view and is represented in planned navigation as `En diseño`.
+`WEB-010 / UI-RECEIVABLE-001` remains the next governed WebApp view. It is represented in planned navigation as `En diseño`.
 
-`WEB-008 / UI-TRANSFER-001` and `WEB-009 / UI-PROCUREMENT-001` already have approved `v1-responsive-suite` visual baselines and are represented as `Diseño listo`, but executable implementation remains blocked because their required Wave 4 HTTP operations are still `MISSING_HTTP`.
+The accepted receivables/collections contracts are `API-AR-001..004` and `API-COL-001..003`, all currently `MISSING_HTTP`. The route `/cuentas-por-cobrar` therefore remains `PLANNED_DISABLED` until at least its exact visual baseline is approved and a governed React preview is implemented. No fake live collection, local balance mutation, destructive history rewrite, silent overpayment truncation or invented advance policy is authorized.
 
-The `WEB-010` target boundary is supported by `FR-023`, `FR-026`, `FR-027`, `FR-070`, `FR-072`, `FR-073`, `FR-074`, `UC-SALE-003` and `UC-AR-001`: expose receivables/aging, preserve allocation-derived balances, register partial/full collections, and handle overpayment/advance only through explicit backend policy.
-
-The accepted API contract assigns:
-
-- `API-AR-001` list receivables;
-- `API-AR-002` receivable detail;
-- `API-AR-003` authoritative aging projection;
-- `API-AR-004` append receivable adjustment;
-- `API-COL-001` create collection/allocation;
-- `API-COL-002` collection detail;
-- `API-COL-003` compensating collection reversal.
-
-Wave 3 currently records all seven operations as `MISSING_HTTP` with no WebApi evidence. Therefore this checkpoint authorizes functional specification and visual drafting only.
-
-The route `/cuentas-por-cobrar` remains `PLANNED_DISABLED`; no React route activation, fake live collection, local balance mutation, destructive history rewrite, silent overpayment truncation or invented advance policy is authorized until the receivables/collections API lane provides executable evidence and the UI is reconciled again.
-
-Shell counts remain 6 active / 12 planned.
+Shell counts are now **8 active / 10 planned**, with **2 active visual previews**.
 
 ## 10. Change control
 
-Changing product group assignment, route, standalone/shell classification, ordering, visibility rules, progress metadata or Sidebar/mobile grouping requires an explicit navigation-governance update.
+Changing product group assignment, route, standalone/shell classification, ordering, visibility rules, preview status, progress metadata or Sidebar/mobile grouping requires an explicit navigation-governance update.
 
 ## 11. Relationship to shell policy
 
-- `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap, visibility and progress state;
-- `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and activation rules;
-- `capabilities.ts`: implemented UI capability bindings only;
+- `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap, visibility and runtime mode;
+- `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and preview/activation rules;
+- `capabilities.ts`: implemented UI capability mode and route bindings;
 - `routes.tsx`: unified product-navigation registry plus derived executable `shellRoutes`.
