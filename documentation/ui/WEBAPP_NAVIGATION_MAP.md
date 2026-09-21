@@ -21,21 +21,21 @@ Current runtime/governance state:
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
 - `WEB-006 / UI-CATALOG-001` is active at `/catalogo` with explicit demo/mock behavior where integration is not yet authoritative;
 - `WEB-007 / UI-INVENTORY-001` is active at `/inventario`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
-- `WEB-008 / UI-TRANSFER-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/transferencias` as `IMPLEMENTED_VISUAL_PREVIEW`; the route is navigable, uses explicit local demonstration data and keeps server-owned transfer commands disabled because `API-TRF-001..007` remain `MISSING_HTTP`;
-- `WEB-009 / UI-PROCUREMENT-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/compras` as `IMPLEMENTED_VISUAL_PREVIEW`; the route is navigable, uses explicit local demonstration data and keeps purchase/receipt commands disabled because `API-PRC-001..006` and `API-GRC-001..004` remain `MISSING_HTTP`;
-- `WEB-010 / UI-RECEIVABLE-001` is reconciled and reserved for `/cuentas-por-cobrar`, remains `PLANNED_DISABLED`, and is represented as `governed` / `En diseño` until its visual baseline is approved and a real React surface exists;
+- `WEB-008 / UI-TRANSFER-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/transferencias` as `IMPLEMENTED_VISUAL_PREVIEW`; server-owned transfer commands remain disabled because `API-TRF-001..007` remain `MISSING_HTTP`;
+- `WEB-009 / UI-PROCUREMENT-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/compras` as `IMPLEMENTED_VISUAL_PREVIEW`; purchase/receipt commands remain disabled because `API-PRC-001..006` and `API-GRC-001..004` remain `MISSING_HTTP`;
+- `WEB-010 / UI-RECEIVABLE-001` has approved visual baseline `v1-approved-view` and is implemented at `/cuentas-por-cobrar` as `IMPLEMENTED_VISUAL_PREVIEW`; it uses explicit local demonstration fixtures and keeps collection/adjustment/reversal controls disabled because `API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`;
 - `WEB-011..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
-- 8 entries are interactive shell routes, of which 2 are explicit visual previews;
-- 10 future entries remain visible as disabled/non-clickable options.
+- 9 entries are interactive shell routes, of which 3 are explicit visual previews;
+- 9 future entries remain visible as disabled/non-clickable options.
 
 Current counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
-- active shell routes: **8**;
-- active visual-preview routes: **2**;
-- planned disabled shell options: **10**.
+- active shell routes: **9**;
+- active visual-preview routes: **3**;
+- planned disabled shell options: **9**.
 
 ## 3. Sidebar information architecture
 
@@ -81,8 +81,7 @@ Legend:
 - `ACTIVE_VISUAL_PREVIEW`: active React route built from an approved visual baseline, using explicit local demo data while authoritative HTTP operations remain unavailable;
 - `PLANNED_DISABLED`: visible product-navigation option with no React route and no click behavior;
 - `STANDALONE`: intentionally outside the application shell;
-- `UI ID pending`: no stable `UI-*` identifier is assigned yet;
-- `En diseño`: governed/specification-ready planned item without an approved visual baseline.
+- `UI ID pending`: no stable `UI-*` identifier is assigned yet.
 
 | WEB | Interface | Product group | Governed UI ID | Current / candidate route | Navigation state | Runtime mode |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -95,7 +94,7 @@ Legend:
 | `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` | `ACTIVE` | API/mock boundary |
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
-| `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` reserved | `PLANNED_DISABLED` | `En diseño` |
+| `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI ID pending` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` | — |
 | `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` | — |
 | `WEB-013` | Fiscal Documents | Fiscal | `UI ID pending` | `/documentos-fiscales` candidate | `PLANNED_DISABLED` | — |
@@ -151,19 +150,21 @@ Runtime acceptance is recorded separately from route implementation.
 
 ## 8. Latest accepted runtime checkpoint
 
-`UI-INVENTORY-001` remains the latest shell route to complete the governed WebApp runtime-review lane.
+`UI-INVENTORY-001` remains the latest shell route whose deployed visual runtime was explicitly accepted in the governed review lane.
 
-Accepted evidence includes approved baseline `UI-INVENTORY-001 v1-responsive-suite`, implementation PR `#184`, closure PR `#186`, successful deployment/CI gates and explicit owner runtime closure. Separate deployed mobile screenshots were not independently reviewed, and approved PNG binaries remain `BINARY_PRESERVATION_PENDING`.
+`UI-TRANSFER-001` and `UI-PROCUREMENT-001` are implemented visual previews and have since been deployed; their server operations remain unavailable.
 
-`UI-TRANSFER-001` and `UI-PROCUREMENT-001` are newly implemented visual previews in PR `#196`; they are not runtime-accepted until that PR is merged, deployed and visually reviewed.
+`UI-RECEIVABLE-001` has approved baseline `v1-approved-view` and is implemented as a visual-preview candidate in the current change. Runtime acceptance of `/cuentas-por-cobrar` remains a separate post-deployment gate.
 
 ## 9. Current next-view checkpoint
 
-`WEB-010 / UI-RECEIVABLE-001` remains the next governed WebApp view. It is represented in planned navigation as `En diseño`.
+`WEB-010 / UI-RECEIVABLE-001` is the current implementation checkpoint.
 
-The accepted receivables/collections contracts are `API-AR-001..004` and `API-COL-001..003`, all currently `MISSING_HTTP`. The route `/cuentas-por-cobrar` therefore remains `PLANNED_DISABLED` until at least its exact visual baseline is approved and a governed React preview is implemented. No fake live collection, local balance mutation, destructive history rewrite, silent overpayment truncation or invented advance policy is authorized.
+The accepted receivables/collections contracts are `API-AR-001..004` and `API-COL-001..003`, all currently `MISSING_HTTP`. The route may be exposed only as `ACTIVE_VISUAL_PREVIEW` under `PREVIEW_ROUTE_POLICY_AMENDMENT.md`. No fake live collection, local authoritative balance mutation, destructive history rewrite, silent overpayment truncation or invented advance policy is authorized.
 
-Shell counts are now **8 active / 10 planned**, with **2 active visual previews**.
+After runtime acceptance of this preview, the next product view returns to `WEB-011 — Cuentas por pagar`, which remains planned and has no governed `UI-*` baseline yet.
+
+Shell counts are **9 active / 9 planned**, with **3 active visual previews**.
 
 ## 10. Change control
 
@@ -173,5 +174,6 @@ Changing product group assignment, route, standalone/shell classification, order
 
 - `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap, visibility and runtime mode;
 - `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and preview/activation rules;
+- `PREVIEW_ROUTE_POLICY_AMENDMENT.md`: explicit boundary for navigable visual previews without executable HTTP operations;
 - `capabilities.ts`: implemented UI capability mode and route bindings;
 - `routes.tsx`: unified product-navigation registry plus derived executable `shellRoutes`.
