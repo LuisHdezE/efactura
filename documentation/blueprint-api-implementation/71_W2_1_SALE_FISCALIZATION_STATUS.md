@@ -1,6 +1,6 @@
 # 71 — W2.1 Sale fiscalization status
 
-Status: `IMPLEMENTATION_CANDIDATE_PRE_MERGE`
+Status: `IMPLEMENTED / MERGED / CI_ACCEPTED / DEPLOYED / RUNTIME_ACCEPTED_READ_ONLY / CLOSED`
 
 API ID: `API-SAL-009`
 
@@ -17,6 +17,8 @@ idempotency: NO
 Contract authority: `documentation/api-completion-matrix/W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`, owner-locked on `main` by PR #207.
 
 Implementation PR: #208.
+
+Operational closure: `documentation/api-completion-matrix/W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
 ## Purpose
 
@@ -82,7 +84,9 @@ W2.1 does not use or introduce:
 
 The existing EF repositories used by the read path already issue no-tracking reads for fiscal-document lookup.
 
-## Automated evidence in PR #208
+## Automated evidence
+
+PR #208 included architecture and CrossCutting coverage for the accepted contract.
 
 Architecture coverage protects:
 
@@ -106,11 +110,39 @@ CrossCutting coverage proves:
 - missing `sales.read` -> forbidden;
 - cross-organization Sale -> masked not-found.
 
-The completion-matrix architecture constants are advanced in the same candidate from 64 to 65 implemented public operations and from 128 to 127 `MISSING_HTTP` operations.
+Pre-merge Clean Architecture Guard #695 completed SUCCESS on implementation HEAD `186fc617b29f658e804c3fa75a08dfebb93ffbd4`.
+
+PR #208 was merged as `9989c0f15d76423f76e25e1cfdc1ab1337586849`, and post-merge Clean Architecture Guard #696 completed SUCCESS including PostgreSQL/MySQL transactional persistence integration.
+
+## Deployment and runtime evidence
+
+Deploy API Demo #55 completed SUCCESS and promoted Cloud Run revision:
+
+```text
+efactura-api-d22-9989c0f-55-1
+```
+
+to 100% traffic after canary and public post-promotion smoke.
+
+The one-shot read-only acceptance harness was merged by PR #210 and executed as run `35643849728`, job `106479398308`, with SUCCESS.
+
+Production observations:
+
+- OpenAPI HTTP 200;
+- exact GET-only W2.1 surface PASS;
+- no JWT -> 401;
+- malformed JWT -> 401;
+- missing `sales.read` -> 403;
+- organization scope escape -> 403 `organization_scope_denied`;
+- authenticated unknown Sale -> 404 `sales.not_found`;
+- production writes -> NONE;
+- fixture creation -> NONE.
+
+A read-only Neon inspection confirmed production had zero rows in `v1_sales`, so successful 200 business-state projections were not exercised in production. Creating a fixture solely for acceptance was intentionally avoided. Those success-state projections remain covered by the accepted automated QA above.
 
 ## Completion accounting
 
-Candidate branch accounting:
+W2.1 closes with:
 
 - Wave 2: `23 / 26` implemented, `3` missing HTTP;
 - global public v1: `65 / 194` implemented = `33.51%`;
@@ -118,15 +150,15 @@ Candidate branch accounting:
 - contract-collision IDs: `2`;
 - total non-implemented IDs: `129`.
 
-These numbers describe HTTP implementation presence in PR #208 only. They do not claim governed merge, deployment or runtime acceptance.
-
 ## Operational impact
 
-Expected schema impact: none.
+Schema impact: none.
 
-Expected production migration: none.
+Production migration: none.
 
-Deployment remains the normal API deployment gate after an owner-approved merge. Runtime acceptance for the new endpoint is read-only; any fixture creation needed to exercise `PENDING` or `IDENTITY_CREATED` in production would be a separate protected mutation and is not authorized by this implementation PR.
+Production business-data writes during runtime acceptance: none.
+
+The temporary one-shot workflow is removed by the W2.1 closure increment after evidence capture.
 
 ## Remaining Wave 2 gaps
 
@@ -136,4 +168,4 @@ W2.1 does not alter the prerequisites already recorded for:
 - `API-POS-001 getPosBootstrap`;
 - `API-PTY-008 getPartyAccountSummary`.
 
-Those remain separate governed increments.
+Those remain separate governed increments. The next frontier is W2.2 `API-SAL-008 cancelSale` contract/lifecycle prerequisite closure.
