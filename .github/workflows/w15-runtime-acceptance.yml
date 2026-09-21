@@ -19,7 +19,7 @@ env:
   WIF_PROVIDER: projects/195831190862/locations/global/workloadIdentityPools/github-actions/providers/efactura-main
   DEPLOY_SERVICE_ACCOUNT: efactura-deploy@efactura-demo-0916-9b93.iam.gserviceaccount.com
   JWT_SECRET: efactura-jwt-key
-  ACCEPTED_MAIN_SHA: 0ff3083547a2d9bf727b6d80ca994c96ddf0481b
+  ACCEPTED_API_SHA: bc138d6076a6d9f2f8f948171082511e9385b39f
   ACCEPTED_REVISION: efactura-api-d22-11139c7-54-1
 
 jobs:
@@ -32,17 +32,24 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          fetch-depth: 8
+          fetch-depth: 0
 
-      - name: Verify isolated operational delta
+      - name: Verify accepted API baseline remains unchanged
         shell: bash
         run: |
           set -euo pipefail
-          merge_base="$(git merge-base HEAD "$ACCEPTED_MAIN_SHA")"
-          [[ "$merge_base" == "$ACCEPTED_MAIN_SHA" ]]
-          unexpected="$(git diff --name-only "$ACCEPTED_MAIN_SHA"..HEAD | grep -Ev '^(\.github/workflows/w15-runtime-acceptance\.yml|scripts/ops/w15_runtime_acceptance\.py)$' || true)"
-          [[ -z "$unexpected" ]]
-          echo "Acceptance harness is isolated from accepted API baseline $ACCEPTED_MAIN_SHA"
+          git merge-base --is-ancestor "$ACCEPTED_API_SHA" HEAD
+
+          changed="$(git diff --name-only "$ACCEPTED_API_SHA"..HEAD)"
+          backend_changed="$(printf '%s\n' "$changed" | grep -E '^(src/(WebApi|Application|Domain|Infrastructure|Shared)/|test/(ArchitectureTests|CrossCuttingTests|PersistenceIntegrationTests|UnitTest|UnitTests)/|api-accounting\.sln$|Directory\.(Build|Packages)\.|global\.json$)' || true)"
+
+          if [[ -n "$backend_changed" ]]; then
+            echo "Backend-sensitive changes detected after accepted API baseline:"
+            printf '%s\n' "$backend_changed"
+            exit 1
+          fi
+
+          echo "Accepted API baseline remains unchanged; WebApp/frontend-only movement is tolerated."
 
       - name: Validate acceptance runner syntax
         shell: bash
