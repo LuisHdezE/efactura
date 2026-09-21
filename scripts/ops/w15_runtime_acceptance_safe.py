@@ -43,7 +43,44 @@ def request(method: str, path: str, *, bearer=None, org=None, body=None, idem=No
         return error.code, error.headers, parsed
 
 
+def openapi_gate():
+    swagger_status, _, _ = request("GET", "/swagger")
+    if swagger_status != 200:
+        original.fail(f"Swagger expected 200, got {swagger_status}")
+
+    _, _, doc = original.expect_status(
+        "OpenAPI",
+        request("GET", "/swagger/v1/swagger.json"),
+        200,
+    )
+    if not isinstance(doc, dict):
+        original.fail("OpenAPI expected JSON object")
+
+    paths = doc.get("paths", {})
+    collection = paths.get("/api/v1/terminals", {})
+    resource = paths.get("/api/v1/terminals/{terminalId}", {})
+    expected = [
+        (collection, "get", "listTerminals"),
+        (collection, "post", "registerTerminal"),
+        (resource, "get", "getTerminal"),
+        (resource, "patch", "updateTerminal"),
+    ]
+
+    for node, method, operation_id in expected:
+        actual = node.get(method, {}).get("operationId")
+        if actual != operation_id:
+            original.fail(
+                f"OpenAPI {method} expected operationId {operation_id}, got {actual}"
+            )
+
+    if "delete" in collection or "delete" in resource:
+        original.fail("OpenAPI unexpectedly exposes DELETE for terminals")
+
+    print("PASS OpenAPI terminal surface: 4/4 exact operations, no DELETE")
+
+
 original.request = request
+original.openapi_gate = openapi_gate
 
 
 if __name__ == "__main__":
