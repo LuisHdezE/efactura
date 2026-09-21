@@ -95,6 +95,12 @@ Route activation as `IMPLEMENTED_VISUAL_PREVIEW` does **not** authorize:
 
 All server-owned mutation controls remain disabled.
 
+## Integration refresh checkpoint
+
+Before merge approval, the preview branch was revalidated after concurrent API/operations work advanced `main` to `6ecbb26db8f769ebcd5b9b42cae59633b46ef96f` (PR #205). The intervening mainline changes are confined to Wave 1/API completion and W1.5 operations/documentation paths and do not overlap the WebApp or `UI-RECEIVABLE-001` files changed by this preview branch.
+
+A fresh pull-request synchronize event is required after this checkpoint so Frontend Demo CI and Clean Architecture Guard validate the current branch against the latest `main` merge-ref.
+
 ## Next gate
 
 After merge and deployment, perform runtime visual review of `/cuentas-por-cobrar` in the canonical `https://efactura.eliasworks.uy/` WebApp.
