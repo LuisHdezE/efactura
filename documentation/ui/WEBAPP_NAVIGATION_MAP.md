@@ -23,8 +23,9 @@ Current runtime/governance state:
 - `WEB-007 / UI-INVENTORY-001` is active at `/inventario`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
 - `WEB-008 / UI-TRANSFER-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/transferencias` as `IMPLEMENTED_VISUAL_PREVIEW`; server-owned transfer commands remain disabled because `API-TRF-001..007` remain `MISSING_HTTP`;
 - `WEB-009 / UI-PROCUREMENT-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/compras` as `IMPLEMENTED_VISUAL_PREVIEW`; purchase/receipt commands remain disabled because `API-PRC-001..006` and `API-GRC-001..004` remain `MISSING_HTTP`;
-- `WEB-010 / UI-RECEIVABLE-001` has approved visual baseline `v1-approved-view` and is implemented at `/cuentas-por-cobrar` as `IMPLEMENTED_VISUAL_PREVIEW`; it uses explicit local demonstration fixtures and keeps collection/adjustment/reversal controls disabled because `API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`;
-- `WEB-011..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
+- `WEB-010 / UI-RECEIVABLE-001` has approved visual baseline `v1-approved-view` and is implemented at `/cuentas-por-cobrar` as `IMPLEMENTED_VISUAL_PREVIEW`; its deployed desktop runtime was visually accepted on 2026-09-21 and collection/adjustment/reversal controls remain disabled because `API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`;
+- `WEB-011 / UI-PAYABLE-001` has approved visual baseline `v1-responsive-suite` covering separately reviewed desktop and mobile compositions, but remains `PLANNED_DISABLED` with no executable route yet;
+- `WEB-012..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 9 entries are interactive shell routes, of which 3 are explicit visual previews;
 - 9 future entries remain visible as disabled/non-clickable options.
@@ -95,7 +96,7 @@ Legend:
 | `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
-| `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI ID pending` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` | — |
+| `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI-PAYABLE-001` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` | visual baseline approved |
 | `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` | — |
 | `WEB-013` | Fiscal Documents | Fiscal | `UI ID pending` | `/documentos-fiscales` candidate | `PLANNED_DISABLED` | — |
 | `WEB-014` | CAE Administration | Fiscal | `UI ID pending` | `/cae` candidate | `PLANNED_DISABLED` | — |
@@ -150,21 +151,19 @@ Runtime acceptance is recorded separately from route implementation.
 
 ## 8. Latest accepted runtime checkpoint
 
-`UI-INVENTORY-001` remains the latest shell route whose deployed visual runtime was explicitly accepted in the governed review lane.
+`UI-RECEIVABLE-001` at `/cuentas-por-cobrar` is the latest shell route whose deployed visual runtime was explicitly accepted in the governed review lane on 2026-09-21.
 
-`UI-TRANSFER-001` and `UI-PROCUREMENT-001` are implemented visual previews and have since been deployed; their server operations remain unavailable.
-
-`UI-RECEIVABLE-001` has approved baseline `v1-approved-view` and is implemented as a visual-preview candidate in the current change. Runtime acceptance of `/cuentas-por-cobrar` remains a separate post-deployment gate.
+Its accepted runtime remains an `IMPLEMENTED_VISUAL_PREVIEW`; server-owned collection, adjustment and reversal operations remain unavailable.
 
 ## 9. Current next-view checkpoint
 
-`WEB-010 / UI-RECEIVABLE-001` is the current implementation checkpoint.
+`WEB-011 / UI-PAYABLE-001 — Cuentas por pagar` is the current next-view checkpoint.
 
-The accepted receivables/collections contracts are `API-AR-001..004` and `API-COL-001..003`, all currently `MISSING_HTTP`. The route may be exposed only as `ACTIVE_VISUAL_PREVIEW` under `PREVIEW_ROUTE_POLICY_AMENDMENT.md`. No fake live collection, local authoritative balance mutation, destructive history rewrite, silent overpayment truncation or invented advance policy is authorized.
+Approved baseline: `v1-responsive-suite`, with separately reviewed desktop and mobile artifacts.
 
-After runtime acceptance of this preview, the next product view returns to `WEB-011 — Cuentas por pagar`, which remains planned and has no governed `UI-*` baseline yet.
+The accepted payables/supplier-payment contracts are `API-AP-001..004` and `API-PAY-001..003`, all currently `MISSING_HTTP`. The route remains `PLANNED_DISABLED` until a separate preview-governance promotion and React implementation. No fake live supplier payment, local authoritative balance mutation, destructive history rewrite, silent payment truncation, invented unapplied-payment policy or cash/bank side effect is authorized.
 
-Shell counts are **9 active / 9 planned**, with **3 active visual previews**.
+Shell counts remain **9 active / 9 planned**, with **3 active visual previews**.
 
 ## 10. Change control
 
