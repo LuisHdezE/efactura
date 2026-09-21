@@ -11,9 +11,13 @@ import './features/dashboard/dashboard-icons.css';
 import './features/suppliers/supplier-runtime-polish.css';
 import './features/catalog/catalog-runtime-polish.css';
 
+const routerBasename = import.meta.env.BASE_URL === '/'
+  ? '/'
+  : import.meta.env.BASE_URL.replace(/\/+$/, '');
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename}>
       <App />
     </BrowserRouter>
   </StrictMode>,
