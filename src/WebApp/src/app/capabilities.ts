@@ -122,5 +122,12 @@ export const uiCapabilities: UiCapability[] = [
     route: '/cuentas-por-cobrar',
     status: 'IMPLEMENTED_VISUAL_PREVIEW',
     operations: []
+  },
+  {
+    uiId: 'UI-PAYABLE-001',
+    label: 'Cuentas por pagar',
+    route: '/cuentas-por-pagar',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];
