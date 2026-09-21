@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / READINESS_AUDIT_COMPLETE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CONTRACT_LOCKED`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
@@ -9,6 +9,8 @@ Scope: **Parties + Catalog + Sales Completion**.
 Baseline: **26 operation IDs**, **22 implemented**, **4 non-implemented**.
 
 Detailed readiness evidence for the four missing operations is recorded in `W2_READINESS_AUDIT.md`.
+
+W2.1 field-level contract: `W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -37,4 +39,4 @@ Detailed readiness evidence for the four missing operations is recorded in `W2_R
 | `API-SAL-006` | `getSaleFiscalPreview` | GET `/api/v1/sales/{saleId}/fiscal-preview` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-007` | `confirmSale` | POST `/api/v1/sales/{saleId}/confirm` | `sales.confirm` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-008` | `cancelSale` | POST `/api/v1/sales/{saleId}/cancel` | `sales.cancel` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 2 | Lock Cancelled lifecycle, cancellable states, irreversible confirmation boundary, request/version/reason and durable evidence semantics |
-| `API-SAL-009` | `getSaleFiscalizationStatus` | GET `/api/v1/sales/{saleId}/fiscalization` | `sales.read` | ACCEPTED | MISSING_HTTP | none | IMPLEMENTATION_READY_PENDING_CONTRACT_LOCK | 2 | Existing sale-scoped fiscalization request/document persistence is sufficient foundation; lock exact safe read projection without implying DGI acceptance |
+| `API-SAL-009` | `getSaleFiscalizationStatus` | GET `/api/v1/sales/{saleId}/fiscalization` | `sales.read` | ACCEPTED | MISSING_HTTP | none | CONTRACT_LOCKED_IMPLEMENTATION_READY | 2 | Field-level local-workflow contract locked in `W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`; bounded read-only implementation pending |
