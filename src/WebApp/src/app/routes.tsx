@@ -4,7 +4,9 @@ import { CustomersPage } from '../features/customers/CustomersPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { InventoryPage } from '../features/inventory/InventoryPage';
 import { PosPage } from '../features/pos/PosPage';
+import { ProcurementPage } from '../features/procurement/ProcurementPage';
 import { SuppliersPage } from '../features/suppliers/SuppliersPage';
+import { TransfersPage } from '../features/transfers/TransfersPage';
 import { uiCapabilities, type UiCapability } from './capabilities';
 
 export type NavigationGroup =
@@ -77,8 +79,8 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-005', state: 'active', capability: requireCapability('UI-SUPPLIER-001'), icon: '◆', navigationGroup: 'Comercial', element: <SuppliersPage /> },
   { webId: 'WEB-006', state: 'active', capability: requireCapability('UI-CATALOG-001'), icon: '▤', navigationGroup: 'Comercial', element: <CatalogPage /> },
   { webId: 'WEB-007', state: 'active', capability: requireCapability('UI-INVENTORY-001'), icon: '▥', navigationGroup: 'Inventario y Compras', element: <InventoryPage /> },
-  { webId: 'WEB-008', state: 'planned', label: 'Transferencias', icon: '⇄', navigationGroup: 'Inventario y Compras', progress: 'visual-approved' },
-  { webId: 'WEB-009', state: 'planned', label: 'Órdenes de compra y Recepciones', icon: '↓', navigationGroup: 'Inventario y Compras', progress: 'visual-approved' },
+  { webId: 'WEB-008', state: 'active', capability: requireCapability('UI-TRANSFER-001'), icon: '⇄', navigationGroup: 'Inventario y Compras', element: <TransfersPage /> },
+  { webId: 'WEB-009', state: 'active', capability: requireCapability('UI-PROCUREMENT-001'), icon: '↓', navigationGroup: 'Inventario y Compras', element: <ProcurementPage /> },
   { webId: 'WEB-010', state: 'planned', label: 'Cuentas por cobrar', icon: '↗', navigationGroup: 'Finanzas', progress: 'governed' },
   { webId: 'WEB-011', state: 'planned', label: 'Cuentas por pagar', icon: '↙', navigationGroup: 'Finanzas' },
   { webId: 'WEB-012', state: 'planned', label: 'Caja y conciliación', icon: '▰', navigationGroup: 'Finanzas' },
