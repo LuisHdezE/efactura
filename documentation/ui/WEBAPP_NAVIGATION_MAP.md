@@ -25,7 +25,8 @@ Current runtime/governance state:
 - `WEB-009 / UI-PROCUREMENT-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/compras` as `IMPLEMENTED_VISUAL_PREVIEW`; purchase/receipt commands remain disabled because `API-PRC-001..006` and `API-GRC-001..004` remain `MISSING_HTTP`;
 - `WEB-010 / UI-RECEIVABLE-001` has approved visual baseline `v1-approved-view` and is implemented at `/cuentas-por-cobrar` as `IMPLEMENTED_VISUAL_PREVIEW`; its deployed desktop runtime was visually accepted on 2026-09-21 and collection/adjustment/reversal controls remain disabled because `API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`;
 - `WEB-011 / UI-PAYABLE-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/cuentas-por-pagar` as `IMPLEMENTED_VISUAL_PREVIEW`; all supplier-payment mutations remain disabled because `API-AP-001..004` and `API-PAY-001..003` remain `MISSING_HTTP`;
-- `WEB-012..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
+- `WEB-012 / UI-CASH-001` has approved visual baseline `v1-responsive-composite`; `/caja` remains `PLANNED_DISABLED` because no React preview is implemented yet and `API-CSH-001..007` remain `MISSING_HTTP`;
+- `WEB-013..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture.
 
 Current counts:
@@ -95,7 +96,7 @@ Legend:
 | `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI-PAYABLE-001` | `/cuentas-por-pagar` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
-| `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` | — |
+| `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI-CASH-001` | `/caja` candidate | `PLANNED_DISABLED` | approved visual baseline, implementation pending |
 | `WEB-013` | Fiscal Documents | Fiscal | `UI ID pending` | `/documentos-fiscales` candidate | `PLANNED_DISABLED` | — |
 | `WEB-014` | CAE Administration | Fiscal | `UI ID pending` | `/cae` candidate | `PLANNED_DISABLED` | — |
 | `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI ID pending` | `/contingencia` candidate | `PLANNED_DISABLED` | — |
@@ -137,15 +138,15 @@ Promotion from `IMPLEMENTED_VISUAL_PREVIEW` to API-integrated behavior requires 
 
 ## 9. Current next-view checkpoint
 
-Current implementation checkpoint: `WEB-011 / UI-PAYABLE-001 — Cuentas por pagar`.
+Current implementation checkpoint: `WEB-012 / UI-CASH-001 — Caja y conciliación`.
 
-Approved baseline: `v1-responsive-suite`, with separately reviewed desktop and mobile artifacts.
+Approved baseline: `v1-responsive-composite`, containing desktop and mobile responsive compositions in one approved artifact.
 
-The accepted payables/supplier-payment contracts are `API-AP-001..004` and `API-PAY-001..003`, all currently `MISSING_HTTP`. The route is therefore limited to `ACTIVE_VISUAL_PREVIEW`: local demo inspection is allowed; supplier-payment posting, adjustment, reversal, authoritative balance mutation, silent payment truncation, invented unapplied-payment policy and cash/bank side effects remain prohibited.
+The accepted cash contracts are `API-CSH-001..007`, all currently `MISSING_HTTP`. `/caja` therefore remains `PLANNED_DISABLED` at this checkpoint. The visual baseline authorizes presentation only; canonical shift opening, manual movement posting, close, reconciliation, counted-value persistence and tolerance/approval decisions remain prohibited without server authority.
 
-After runtime acceptance of this preview, the next product view returns to `WEB-012 — Caja y conciliación`, which remains planned and has no governed `UI-*` baseline yet.
+The next gate is preview-policy reconciliation plus a real responsive React implementation using explicit local fixtures and disabled server-owned actions. Only after that gate may `/caja` become `ACTIVE_VISUAL_PREVIEW`.
 
-Shell counts are **10 active / 8 planned**, with **4 active visual previews**.
+Shell counts remain **10 active / 8 planned**, with **4 active visual previews**.
 
 ## 10. Change control
 
