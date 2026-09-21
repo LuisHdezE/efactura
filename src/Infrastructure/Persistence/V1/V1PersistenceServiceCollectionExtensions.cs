@@ -45,12 +45,17 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddScoped<EfOrganizationRepository>();
         services.AddScoped<ICompanyFiscalProfileRepository>(sp => sp.GetRequiredService<EfOrganizationRepository>());
         services.AddScoped<IFiscalLocationRepository>(sp => sp.GetRequiredService<EfOrganizationRepository>());
+        services.AddScoped<ITerminalRepository, EfTerminalRepository>();
         services.AddScoped<GetCurrentCompanyUseCase>();
         services.AddScoped<UpsertCompanyFiscalProfileUseCase>();
         services.AddScoped<ListFiscalLocationsUseCase>();
         services.AddScoped<GetFiscalLocationUseCase>();
         services.AddScoped<CreateFiscalLocationUseCase>();
         services.AddScoped<UpdateFiscalLocationUseCase>();
+        services.AddScoped<ListTerminalsUseCase>();
+        services.AddScoped<GetTerminalUseCase>();
+        services.AddScoped<RegisterTerminalUseCase>();
+        services.AddScoped<UpdateTerminalUseCase>();
 
         services.AddScoped<EfPartyRepository>();
         services.AddScoped<IPartyRepository>(sp => sp.GetRequiredService<EfPartyRepository>());
