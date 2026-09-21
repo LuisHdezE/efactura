@@ -6,7 +6,7 @@ Status: `ACTIVE / GOVERNED PLANNING`
 
 Maintain one explicit product-level map of the complete WebApp navigation scope so implemented views, planned views and Sidebar visibility never drift apart.
 
-Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx` and distinguishes `active` executable entries from `planned` visible-but-disabled entries. Planned options are not routes and must never produce dead links.
+Runtime navigation metadata is centralized in `src/WebApp/src/app/routes.tsx` and distinguishes `active` executable entries from `planned` visible-but-disabled entries. Planned options are not routes and must never produce dead links. Planned entries may also expose compact product-facing progress metadata without changing execution state.
 
 ## 2. Current navigation facts
 
@@ -21,10 +21,10 @@ Current runtime/governance state:
 - `WEB-005 / UI-SUPPLIER-001` is active at `/proveedores` and its light/dark deployed runtime was explicitly accepted on 2026-09-19;
 - `WEB-006 / UI-CATALOG-001` is active at `/catalogo` and its light/dark deployed runtime was explicitly accepted on 2026-09-20; explicit demo/mock data and disabled write affordances remain in place until the governed API-integration lane enables them;
 - `WEB-007 / UI-INVENTORY-001` is active at `/inventario` with explicit demo/mock data, read-only inventory positions/movements and disabled write affordance until the governed integration/permission lane enables `inventory.adjust`; its desktop light/dark deployed runtime was explicitly accepted on 2026-09-20;
-- `WEB-008 / UI-TRANSFER-001` is reconciled, has approved visual baseline `v1-responsive-suite`, and is reserved for `/transferencias`, but remains `PLANNED_DISABLED` because `API-TRF-001..007` are accepted contracts with `MISSING_HTTP` implementation state;
-- `WEB-009 / UI-PROCUREMENT-001` is reconciled, has approved visual baseline `v1-responsive-suite`, and is reserved for `/compras`, but remains `PLANNED_DISABLED` because `API-PRC-001..006` and `API-GRC-001..004` are accepted contracts with `MISSING_HTTP` implementation state;
-- `WEB-010 / UI-RECEIVABLE-001` is reconciled and reserved for `/cuentas-por-cobrar`, but remains `PLANNED_DISABLED` because `API-AR-001..004` and `API-COL-001..003` are accepted contracts with `MISSING_HTTP` implementation state;
-- `WEB-011..WEB-019` remain planned shell candidates with no executable route yet;
+- `WEB-008 / UI-TRANSFER-001` is reconciled, has approved visual baseline `v1-responsive-suite`, is reserved for `/transferencias`, remains `PLANNED_DISABLED` because `API-TRF-001..007` are `MISSING_HTTP`, and is represented in planned navigation with progress `visual-approved` / `Diseño listo`;
+- `WEB-009 / UI-PROCUREMENT-001` is reconciled, has approved visual baseline `v1-responsive-suite`, is reserved for `/compras`, remains `PLANNED_DISABLED` because `API-PRC-001..006` and `API-GRC-001..004` are `MISSING_HTTP`, and is represented in planned navigation with progress `visual-approved` / `Diseño listo`;
+- `WEB-010 / UI-RECEIVABLE-001` is reconciled and reserved for `/cuentas-por-cobrar`, remains `PLANNED_DISABLED` because `API-AR-001..004` and `API-COL-001..003` are `MISSING_HTTP`, and is represented in planned navigation with progress `governed` / `En diseño`;
+- `WEB-011..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture;
 - 6 entries are interactive shell routes;
 - 12 future entries remain visible as disabled/non-clickable options, not fake routes.
@@ -80,29 +80,32 @@ Legend:
 - `PLANNED_DISABLED`: visible product-navigation option with no executable route and no click behavior;
 - `STANDALONE`: intentionally outside the application shell;
 - `UI ID pending`: no stable `UI-*` identifier is assigned until reconciliation proves the view boundary;
-- candidate routes are planning values only.
+- candidate routes are planning values only;
+- `En diseño`: planned entry has a governed/specification-ready `UI-*` boundary but no approved visual baseline yet;
+- `Diseño listo`: planned entry has an explicitly approved governed visual baseline;
+- planned progress labels are informational only and never authorize route activation.
 
-| WEB | Interface | Product group | Governed UI ID | Candidate / current route | Navigation state |
-| --- | --- | --- | --- | --- | --- |
-| `WEB-001` | Login and Session Entry | Standalone | `UI-AUTH-001` | `/acceso` | `STANDALONE` |
-| `WEB-002` | Operational Dashboard | Inicio | `UI-DASHBOARD-001` | `/dashboard` | `ACTIVE` |
-| `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` |
-| `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` |
-| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` |
-| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` |
-| `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` | `ACTIVE` |
-| `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` reserved | `PLANNED_DISABLED` |
-| `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` reserved | `PLANNED_DISABLED` |
-| `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` reserved | `PLANNED_DISABLED` |
-| `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI ID pending` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` |
-| `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` |
-| `WEB-013` | Fiscal Documents | Fiscal | `UI ID pending` | `/documentos-fiscales` candidate | `PLANNED_DISABLED` |
-| `WEB-014` | CAE Administration | Fiscal | `UI ID pending` | `/cae` candidate | `PLANNED_DISABLED` |
-| `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI ID pending` | `/contingencia` candidate | `PLANNED_DISABLED` |
-| `WEB-016` | Received CFE and XML Validation | Fiscal | `UI ID pending` | `/cfe-recibidos` candidate | `PLANNED_DISABLED` |
-| `WEB-017` | Reports and Fiscal Calendar | Reportes | `UI ID pending` | `/reportes` candidate | `PLANNED_DISABLED` |
-| `WEB-018` | Audit, Security and Configuration | Administración | `UI ID pending` | `/administracion` candidate | `PLANNED_DISABLED` |
-| `WEB-019` | Technical Operations Console | Administración | `UI ID pending` | `/operaciones` candidate | `PLANNED_DISABLED` |
+| WEB | Interface | Product group | Governed UI ID | Candidate / current route | Navigation state | Visible progress |
+| --- | --- | --- | --- | --- | --- | --- |
+| `WEB-001` | Login and Session Entry | Standalone | `UI-AUTH-001` | `/acceso` | `STANDALONE` | — |
+| `WEB-002` | Operational Dashboard | Inicio | `UI-DASHBOARD-001` | `/dashboard` | `ACTIVE` | — |
+| `WEB-003` | POS Sale | Comercial | `UI-POS-001` | `/pos` | `ACTIVE` | — |
+| `WEB-004` | Customers and Parties | Comercial | `UI-CUSTOMER-001` | `/clientes` | `ACTIVE` | — |
+| `WEB-005` | Suppliers | Comercial | `UI-SUPPLIER-001` | `/proveedores` | `ACTIVE` | — |
+| `WEB-006` | Products and Services Catalog | Comercial | `UI-CATALOG-001` | `/catalogo` | `ACTIVE` | — |
+| `WEB-007` | Inventory and Movements | Inventario y Compras | `UI-INVENTORY-001` | `/inventario` | `ACTIVE` | — |
+| `WEB-008` | Stock Transfers | Inventario y Compras | `UI-TRANSFER-001` | `/transferencias` reserved | `PLANNED_DISABLED` | `Diseño listo` |
+| `WEB-009` | Purchase Orders and Receipts | Inventario y Compras | `UI-PROCUREMENT-001` | `/compras` reserved | `PLANNED_DISABLED` | `Diseño listo` |
+| `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` reserved | `PLANNED_DISABLED` | `En diseño` |
+| `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI ID pending` | `/cuentas-por-pagar` candidate | `PLANNED_DISABLED` | — |
+| `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI ID pending` | `/caja` candidate | `PLANNED_DISABLED` | — |
+| `WEB-013` | Fiscal Documents | Fiscal | `UI ID pending` | `/documentos-fiscales` candidate | `PLANNED_DISABLED` | — |
+| `WEB-014` | CAE Administration | Fiscal | `UI ID pending` | `/cae` candidate | `PLANNED_DISABLED` | — |
+| `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI ID pending` | `/contingencia` candidate | `PLANNED_DISABLED` | — |
+| `WEB-016` | Received CFE and XML Validation | Fiscal | `UI ID pending` | `/cfe-recibidos` candidate | `PLANNED_DISABLED` | — |
+| `WEB-017` | Reports and Fiscal Calendar | Reportes | `UI ID pending` | `/reportes` candidate | `PLANNED_DISABLED` | — |
+| `WEB-018` | Audit, Security and Configuration | Administración | `UI ID pending` | `/administracion` candidate | `PLANNED_DISABLED` | — |
+| `WEB-019` | Technical Operations Console | Administración | `UI ID pending` | `/operaciones` candidate | `PLANNED_DISABLED` | — |
 
 ## 5. Visibility and activation rule
 
@@ -113,8 +116,9 @@ Legend:
 5. Only `active` entries are derived into `shellRoutes` and React Router.
 6. Sidebar and mobile navigation consume the same grouped registry.
 7. Disabled entries communicate roadmap structure only and do not imply backend/API readiness.
+8. Optional planned progress (`governed` or `visual-approved`) may improve visibility of product progress, but it must not change click behavior, route registration, capability binding or API readiness semantics.
 
-This preserves the no-dead-links rule while keeping the full application architecture visible.
+This preserves the no-dead-links rule while keeping the full application architecture and its governed progress visible.
 
 ## 6. Unified registry requirement
 
@@ -130,10 +134,11 @@ state: active | planned
 label/capability
 icon
 navigationGroup
+progress: governed | visual-approved (planned only, optional)
 element (active only)
 ```
 
-Feature components must not encode their own Sidebar placement.
+Feature components must not encode their own Sidebar placement or planned progress independently.
 
 ## 7. Activation progression
 
@@ -167,9 +172,9 @@ Separate deployed mobile runtime screenshots were not independently reviewed in 
 
 ## 9. Current next-view checkpoint
 
-`WEB-010 / UI-RECEIVABLE-001` is the next governed WebApp view.
+`WEB-010 / UI-RECEIVABLE-001` is the next governed WebApp view and is represented in planned navigation as `En diseño`.
 
-`WEB-008 / UI-TRANSFER-001` and `WEB-009 / UI-PROCUREMENT-001` already have approved `v1-responsive-suite` visual baselines, but executable implementation remains blocked because their required Wave 4 HTTP operations are still `MISSING_HTTP`.
+`WEB-008 / UI-TRANSFER-001` and `WEB-009 / UI-PROCUREMENT-001` already have approved `v1-responsive-suite` visual baselines and are represented as `Diseño listo`, but executable implementation remains blocked because their required Wave 4 HTTP operations are still `MISSING_HTTP`.
 
 The `WEB-010` target boundary is supported by `FR-023`, `FR-026`, `FR-027`, `FR-070`, `FR-072`, `FR-073`, `FR-074`, `UC-SALE-003` and `UC-AR-001`: expose receivables/aging, preserve allocation-derived balances, register partial/full collections, and handle overpayment/advance only through explicit backend policy.
 
@@ -191,11 +196,11 @@ Shell counts remain 6 active / 12 planned.
 
 ## 10. Change control
 
-Changing product group assignment, route, standalone/shell classification, ordering, visibility rules or Sidebar/mobile grouping requires an explicit navigation-governance update.
+Changing product group assignment, route, standalone/shell classification, ordering, visibility rules, progress metadata or Sidebar/mobile grouping requires an explicit navigation-governance update.
 
 ## 11. Relationship to shell policy
 
-- `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap and visibility state;
+- `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap, visibility and progress state;
 - `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and activation rules;
 - `capabilities.ts`: implemented UI capability bindings only;
 - `routes.tsx`: unified product-navigation registry plus derived executable `shellRoutes`.
