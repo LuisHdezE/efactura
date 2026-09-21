@@ -1,6 +1,6 @@
-# UI-PROCUREMENT-001 v1-responsive-suite — Governed visual candidate
+# UI-PROCUREMENT-001 v1-responsive-suite — Governed visual candidate history
 
-Status: `VISUAL_CANDIDATE / SOURCE_FINGERPRINTED / NOT_APPROVED / BINARY_PRESERVATION_PENDING`
+Status: `VISUAL_CANDIDATE_HISTORY / PROMOTED_TO_APPROVED / SOURCE_FINGERPRINTED / BINARY_PRESERVATION_PENDING`
 
 ## Governance identity
 
@@ -62,9 +62,21 @@ It does not authorize live behavior for:
 
 Those behaviors remain blocked while `API-PRC-001..006` and `API-GRC-001..004` remain `MISSING_HTTP`.
 
+## Promotion record
+
+Luis explicitly approved this exact candidate with:
+
+> Apruebo UI-PROCUREMENT-001 v1-responsive-suite como baseline visual
+
+The exact same fingerprint is now promoted to:
+
+`documentation/ui/references/approved/UI-PROCUREMENT-001/v1-responsive-suite/`
+
+This file remains as immutable candidate-history evidence and must not be interpreted as a second visual version.
+
 ## Scope constraints preserved
 
-The candidate must continue to be interpreted together with:
+The promoted baseline must continue to be interpreted together with:
 
 - `documentation/ui/procurement/UI-PROCUREMENT-001_RECONCILIATION.md`;
 - `documentation/ui/specifications/UI-PROCUREMENT-001_PURCHASE_ORDERS_RECEIPTS.md`;
@@ -73,15 +85,9 @@ The candidate must continue to be interpreted together with:
 In particular:
 
 - `/compras` remains `PLANNED_DISABLED`;
-- visual approval, if later granted, will preserve a visual authority only;
+- visual approval preserves visual authority only;
 - React route activation requires executable procurement/receipt API evidence and a fresh reconciliation;
 - the frontend must not become authority for stock, costing or accounts-payable effects.
-
-## Approval state
-
-This artifact is **not approved**.
-
-It is a governed candidate awaiting explicit owner approval. A later approval must identify this exact `UI-PROCUREMENT-001 v1-responsive-suite` candidate or otherwise provide unambiguous reference to this exact fingerprint.
 
 ## Binary preservation
 
