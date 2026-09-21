@@ -31,15 +31,17 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          fetch-depth: 2
+          fetch-depth: 4
 
-      - name: Verify operational branch derives from accepted main
+      - name: Verify operational branch derives only from accepted main
         shell: bash
         run: |
           set -euo pipefail
-          parent="$(git rev-parse HEAD^)"
-          echo "Operational branch parent: $parent"
-          [[ "$parent" == "$ACCEPTED_MAIN_SHA" ]]
+          merge_base="$(git merge-base HEAD "$ACCEPTED_MAIN_SHA")"
+          [[ "$merge_base" == "$ACCEPTED_MAIN_SHA" ]]
+          unexpected="$(git diff --name-only "$ACCEPTED_MAIN_SHA"..HEAD | grep -v '^.github/workflows/w15-runtime-acceptance.yml$' || true)"
+          [[ -z "$unexpected" ]]
+          echo "Operational harness is isolated from accepted main $ACCEPTED_MAIN_SHA"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -83,31 +85,33 @@ jobs:
           JWT_AUDIENCE="$(jq -r '.Jwt.Audience' src/WebApi/appsettings.json)"
 
           TOKEN="$(JWT_KEY="$JWT_KEY" JWT_ISSUER="$JWT_ISSUER" JWT_AUDIENCE="$JWT_AUDIENCE" python3 - <<'PY'
-import base64, hashlib, hmac, json, os, time
+          import base64, hashlib, hmac, json, os, time
 
-def b64(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b'=').decode()
-now = int(time.time())
-header = {'alg':'HS256','typ':'JWT'}
-payload = {
-    'sub':'w15-runtime-probe',
-    'iss':os.environ['JWT_ISSUER'],
-    'aud':os.environ['JWT_AUDIENCE'],
-    'iat':now,
-    'nbf':now-5,
-    'exp':now+600,
-    'permission':'organization.read',
-    'company_scope':'w15-runtime-probe-org'
-}
-encoded_header=b64(json.dumps(header,separators=(',',':')).encode())
-encoded_payload=b64(json.dumps(payload,separators=(',',':')).encode())
-unsigned=f'{encoded_header}.{encoded_payload}'
-sig=hmac.new(os.environ['JWT_KEY'].encode(),unsigned.encode(),hashlib.sha256).digest()
-print(f'{unsigned}.{b64(sig)}')
-PY
-)"
+          def b64(data: bytes) -> str:
+              return base64.urlsafe_b64encode(data).rstrip(b'=').decode()
+
+          now = int(time.time())
+          header = {'alg': 'HS256', 'typ': 'JWT'}
+          payload = {
+              'sub': 'w15-runtime-probe',
+              'iss': os.environ['JWT_ISSUER'],
+              'aud': os.environ['JWT_AUDIENCE'],
+              'iat': now,
+              'nbf': now - 5,
+              'exp': now + 600,
+              'permission': 'organization.read',
+              'company_scope': 'w15-runtime-probe-org'
+          }
+          encoded_header = b64(json.dumps(header, separators=(',', ':')).encode())
+          encoded_payload = b64(json.dumps(payload, separators=(',', ':')).encode())
+          unsigned = f'{encoded_header}.{encoded_payload}'
+          signature = hmac.new(os.environ['JWT_KEY'].encode(), unsigned.encode(), hashlib.sha256).digest()
+          print(f'{unsigned}.{b64(signature)}')
+          PY
+          )"
           unset JWT_KEY
           echo "::add-mask::$TOKEN"
+
           auth_code="$(curl -sS -H "Authorization: Bearer $TOKEN" -o "$work/terminals-auth.json" -w '%{http_code}' "$base_url/api/v1/terminals")"
           unset TOKEN
           echo "TerminalsWithJwt=$auth_code"
