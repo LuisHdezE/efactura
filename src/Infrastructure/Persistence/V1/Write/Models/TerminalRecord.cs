@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Persistence.V1.Write.Models;
 
+[EntityTypeConfiguration(typeof(V1TerminalRecordConfiguration))]
 public sealed class V1TerminalRecord
 {
     public string Id { get; set; } = string.Empty;
@@ -12,4 +15,5 @@ public sealed class V1TerminalRecord
     public long Version { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
+    public V1FiscalLocationRecord Location { get; set; } = null!;
 }
