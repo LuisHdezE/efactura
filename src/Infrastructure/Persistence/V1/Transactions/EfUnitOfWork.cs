@@ -25,6 +25,8 @@ public sealed class EfUnitOfWork : IUnitOfWork
         "UX_v1_fd_res";
     private const string FiscalLocationBranchUniqueIndex =
         "UX_v1_location_org_branch";
+    private const string TerminalCodeUniqueIndex =
+        "UX_v1_terminal_org_code";
     private const string FiscalContentSnapshotDocumentUniqueIndex =
         "UX_v1_fcs_document";
     private const string SecurityUserIdentityUniqueIndex =
@@ -66,6 +68,14 @@ public sealed class EfUnitOfWork : IUnitOfWork
                 "organization.location.branch_code_duplicate",
                 "The DGI branch code is already assigned to another location in this organization.",
                 conflictType: "duplicate_branch_code");
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex, TerminalCodeUniqueIndex, typeof(V1TerminalRecord)))
+        {
+            throw new ApplicationProblemException(
+                ApplicationProblemKind.Conflict,
+                "organization.terminal.code_duplicate",
+                "The terminal code is already assigned inside this organization.",
+                conflictType: "duplicate_terminal_code");
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex, SecurityUserIdentityUniqueIndex, typeof(V1SecurityUserRecord)))
         {

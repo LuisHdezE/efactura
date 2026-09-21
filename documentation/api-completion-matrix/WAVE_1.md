@@ -1,14 +1,14 @@
 # API Completion Master Matrix — Wave 1
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_4_CLOSED / W1_5_IMPLEMENTATION_READY_PENDING_MERGE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W1_4_CLOSED / W1_5_IMPLEMENTED_PRE_MERGE / RUNTIME_ACCEPTANCE_PENDING`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Identity + Organization + Reference Data**.
 
-Baseline: **30 operation IDs**, **26 implemented**, **4 non-implemented**.
+Baseline: **30 operation IDs**, **30 implemented**, **0 non-implemented**.
 
-`Deep readiness` is intentionally conservative. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003, W1.1B implemented REF-001/004, W1.1C implemented REF-005/006, and W1.1D implemented REF-007/008. W1.2 implements the current-actor projection and canonical permission catalog. W1.3 and W1.4 are formally closed. W1.5 Terminals completed its bounded readiness audit and its field-level public contract was explicitly approved by Luis on 2026-09-20. The four terminal rows remain `MISSING_HTTP`; contract acceptance changes readiness, not implementation counts. Implementation becomes authorized after the contract-lock PR is merged and its CI gates are green.
+`Deep readiness` is intentionally conservative. `API-REF-001..008` completed the W1.1 readiness audit; W1.1A implemented REF-002/003, W1.1B implemented REF-001/004, W1.1C implemented REF-005/006, and W1.1D implemented REF-007/008. W1.2 implements the current-actor projection and canonical permission catalog. W1.3 and W1.4 are formally closed. W1.5 Terminals completed its bounded readiness audit and owner-approved field-level contract, and PR #195 now contains the four governed HTTP surfaces plus provider-neutral persistence and dedicated QA. Provider-real PostgreSQL/MySQL evidence passed on the implementation code before live-main reconciliation; the final exact-head Clean Architecture Guard remains the required pre-merge gate. Production migration, deployment and HTTP runtime acceptance remain separate gates and W1.5 is not yet formally closed.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -28,11 +28,11 @@ Baseline: **30 operation IDs**, **26 implemented**, **4 non-implemented**.
 | `API-ORG-003` | `listLocations` | GET `/api/v1/locations` | `organization.read` | ACCEPTED | IMPLEMENTED | `LocationsController.List -> ListFiscalLocationsUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
 | `API-ORG-004` | `createLocation` | POST `/api/v1/locations` | `organization.manage` | ACCEPTED | IMPLEMENTED | `LocationsController.Create -> CreateFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
 | `API-ORG-005` | `getLocation` | GET `/api/v1/locations/{locationId}` | `organization.read` | ACCEPTED | IMPLEMENTED | `LocationsController.Get -> GetFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve and regression-test |
-| `API-ORG-006` | `updateLocation` | PATCH `/api/v1/locations/{locationId}` | `organization.manage` | ACCEPTED | IMPLEMENTED | `LocationsController.Update -> UpdateFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve and extend regression coverage for accepted active-terminal dependency invariant |
-| `API-ORG-007` | `listTerminals` | GET `/api/v1/terminals` | `organization.read` | ACCEPTED | MISSING_HTTP | none | IMPLEMENTATION_READY_PENDING_MERGE | 1 | Field-level read projection/list contract owner-approved in `W1_5_TERMINAL_CONTRACT_PROPOSAL.md` |
-| `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | IMPLEMENTATION_READY_PENDING_MERGE | 1 | Registration payload, server-owned identity and normalized-code uniqueness are governed |
-| `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | MISSING_HTTP | none | IMPLEMENTATION_READY_PENDING_MERGE | 1 | Canonical terminal detail/status DTO is governed |
-| `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | MISSING_HTTP | none | IMPLEMENTATION_READY_PENDING_MERGE | 1 | Mutable fields, active lifecycle, location reassignment and expectedVersion contract are governed |
+| `API-ORG-006` | `updateLocation` | PATCH `/api/v1/locations/{locationId}` | `organization.manage` | ACCEPTED | IMPLEMENTED | `LocationsController.Update -> UpdateFiscalLocationUseCase` | EXISTING_PATH / regression | 1 | Preserve accepted active-terminal dependency invariant and regression coverage |
+| `API-ORG-007` | `listTerminals` | GET `/api/v1/terminals` | `organization.read` | ACCEPTED | IMPLEMENTED | `TerminalsController.List -> ListTerminalsUseCase -> ITerminalRepository` | EXISTING_PATH / regression | 1 | Final exact-head CI, merge, deployment and runtime acceptance remain |
+| `API-ORG-008` | `registerTerminal` | POST `/api/v1/terminals` | `organization.manage` | ACCEPTED | IMPLEMENTED | `TerminalsController.Register -> RegisterTerminalUseCase -> EfTerminalRepository` | EXISTING_PATH / regression | 1 | Preserve idempotency, server-owned identity, normalized-code uniqueness and durable evidence |
+| `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | ACCEPTED | IMPLEMENTED | `TerminalsController.Get -> GetTerminalUseCase -> ITerminalRepository` | EXISTING_PATH / regression | 1 | Preserve organization isolation and canonical terminal projection |
+| `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | ACCEPTED | IMPLEMENTED | `TerminalsController.Update -> UpdateTerminalUseCase -> EfTerminalRepository` | EXISTING_PATH / regression | 1 | Preserve optimistic concurrency, location reassignment/reactivation rules and idempotency |
 | `API-REF-001` | `listCountries` | GET `/api/v1/reference-data/countries` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListCountries -> ListCountriesUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated provider-neutral 249-entry ISO 3166-1 alpha-2 snapshot |
 | `API-REF-002` | `listUruguayDepartments` | GET `/api/v1/reference-data/uruguay-departments` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListUruguayDepartments -> ListUruguayDepartmentsUseCase` | EXISTING_PATH / regression | 1 | Preserve authenticated-only, provider-neutral reference projection |
 | `API-REF-003` | `listFiscalIdentityTypes` | GET `/api/v1/reference-data/fiscal-identity-types` | `AUTHENTICATED` | ACCEPTED | IMPLEMENTED | `ReferenceDataController.ListFiscalIdentityTypes -> ListFiscalIdentityTypesUseCase` | EXISTING_PATH / regression | 1 | Preserve versioned DGI identity metadata projection |

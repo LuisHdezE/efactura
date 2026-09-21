@@ -5,3 +5,6 @@ public sealed record CompanyFiscalProfileDto(string OrganizationId, string Ruc, 
 public sealed record FiscalLocationCreateRequest(string Name, string DgiBranchCode, string FiscalAddress, string City, string Department);
 public sealed record FiscalLocationUpdateRequest(string Name, string DgiBranchCode, string FiscalAddress, string City, string Department, bool Active, long ExpectedVersion);
 public sealed record FiscalLocationDto(string Id, string OrganizationId, string Name, string DgiBranchCode, string FiscalAddress, string City, string Department, bool Active, long Version);
+public sealed record TerminalCreateRequest(string Code, string Name, string LocationId);
+public sealed record TerminalUpdateRequest(string Name, string LocationId, bool Active, long ExpectedVersion);
+public sealed record TerminalDto(string Id, string OrganizationId, string Code, string Name, string LocationId, bool Active, long Version);
