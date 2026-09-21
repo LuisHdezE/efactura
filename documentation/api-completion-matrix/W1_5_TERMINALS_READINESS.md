@@ -1,12 +1,14 @@
 # W1.5 Terminals readiness
 
-Status: `READINESS_AUDITED / CONTRACT_PREREQUISITE_REQUIRED / IMPLEMENTATION_NOT_AUTHORIZED`
+Status: `READINESS_AUDITED / CONTRACT_ACCEPTED / IMPLEMENTATION_READY_PENDING_MERGE`
 
-Readiness baseline: `main@330cb411e1de90244c793adff906dea13325d65f` after formal W1.4 closure through PR #188.
+Readiness baseline: `main@04fd00362f7535e15be8b9de8f10649eeac84192`.
+
+Accepted field-level authority: `W1_5_TERMINAL_CONTRACT_PROPOSAL.md`, explicitly approved by Luis on 2026-09-20.
 
 Scope: `API-ORG-007..010` only.
 
-No endpoint outside this set is introduced by W1.5 readiness work.
+No endpoint outside this set is introduced by W1.5.
 
 ## Contract inventory
 
@@ -17,132 +19,190 @@ No endpoint outside this set is introduced by W1.5 readiness work.
 | `API-ORG-009` | `getTerminal` | GET `/api/v1/terminals/{terminalId}` | `organization.read` | NO | `MISSING_HTTP` |
 | `API-ORG-010` | `updateTerminal` | PATCH `/api/v1/terminals/{terminalId}` | `organization.manage` | REQUIRED | `MISSING_HTTP` |
 
-The accepted endpoint inventory defines the public purpose as listing POS/server terminal registrations, registering an operational terminal, reading terminal metadata/status, and updating terminal status/location metadata.
+The four operations remain unimplemented. Contract acceptance changes readiness only and does not change Wave 1 or global implementation counts.
 
 ## Readiness conclusion
 
-W1.5 is **not yet implementation-ready**.
+The previously identified field-level contract prerequisite is now closed by the owner-approved Terminal contract.
 
-The repository has an accepted endpoint-level contract for the four terminal operations, but it does not currently contain an accepted field-level public contract for terminal registration or terminal projection. No governed `TerminalDto`, `TerminalCreateRequest`, `TerminalUpdateRequest`, equivalent OpenAPI schema, or other authoritative payload definition exists on the audited baseline.
+W1.5 is therefore **implementation-ready once this contract-lock PR is merged**, subject to the normal bounded implementation PR, exact-head CI, migration approval, deployment and runtime-acceptance gates.
 
-Implementation must therefore not guess whether a terminal has fields such as name, code, description, hardware identity, fiscal identity, arbitrary metadata, or a particular status enum. It must also not guess which fields are mutable or what uniqueness rule identifies a terminal.
+No production migration or production database write is authorized by this readiness state alone.
 
-The next W1.5 step is a bounded terminal-contract decision, followed by a refreshed readiness audit. Only then may the four rows become implementation-authorized.
+## Accepted public Terminal contract
 
-## Findings that are already locked
+Canonical projection:
 
-The following constraints are supported by existing governed artifacts and do not require invention:
+```text
+TerminalDto
+- id: string
+- organizationId: string
+- code: string
+- name: string
+- locationId: string
+- active: boolean
+- version: long
+```
 
-1. A terminal is organization operational master data, not an authentication credential.
-2. `organization.read` is the existing permission for company/location/terminal metadata reads.
-3. `organization.manage` is the existing permission for company/location/terminal operational metadata mutations.
-4. Every terminal request remains inside the resolved company scope. A body-level company override must not bypass `V1OrganizationContextResolver` behavior.
-5. Location/terminal scope remains part of the authorization model where applicable.
-6. `registerTerminal` and `updateTerminal` require `Idempotency-Key`.
-7. Mutable terminal state must use optimistic concurrency where the accepted mutable-resource rules apply; stale writes use the existing `409 concurrency_conflict / stale_version` shape rather than silent last-write-wins.
-8. Successful registration/update must emit durable `organization.terminal.registered|updated` evidence and must participate in the same transactionally coupled business/audit/outbox/idempotency boundary used by the current V1 architecture.
-9. Terminal registration is distinct from offline/sync device registration. W1.5 must not absorb `registerDevice`, `revokeDevice`, device credentials, offline grants, or sync operation identity.
-10. The implementation must remain provider-neutral for PostgreSQL and MySQL and preserve current Clean Architecture boundaries.
+Registration:
+
+```text
+TerminalCreateRequest
+- code: string
+- name: string
+- locationId: string
+```
+
+Update:
+
+```text
+TerminalUpdateRequest
+- name: string
+- locationId: string
+- active: boolean
+- expectedVersion: long
+```
+
+Key accepted rules:
+
+- server-generated opaque immutable `id`;
+- server-resolved immutable `organizationId`;
+- immutable normalized uppercase business `code`, maximum 64 characters;
+- organization-level uniqueness on normalized code;
+- mutable `name`, `locationId` and `active` only;
+- two-state lifecycle, active/inactive;
+- registration starts active at version 1;
+- PATCH requires `expectedVersion` and increments application-managed version;
+- no public delete;
+- terminal/device/sync boundaries remain separate.
+
+## Read behavior
+
+`listTerminals` accepts bounded optional filters:
+
+- `active`, defaulting to active-only;
+- `locationId`.
+
+The result is deterministic by normalized code then terminal ID. No pagination is introduced by W1.5.
+
+`getTerminal` returns the canonical projection inside the resolved organization or the governed not-found behavior.
+
+## Location invariants
+
+- registration requires an existing active fiscal location in the same organization;
+- reassignment requires an existing active destination location and current `expectedVersion`;
+- reactivation requires an active requested location;
+- inactive terminals may remain readable on a later-inactive location;
+- an active terminal cannot be created, assigned or reactivated onto an inactive location;
+- an existing fiscal location cannot be deactivated while active terminals remain assigned;
+- administrators must first deactivate or reassign those terminals;
+- no cascade terminal deactivation or hard delete occurs.
+
+The last rule extends existing `API-ORG-006 updateLocation` compatibility behavior but introduces no new public endpoint or request schema.
+
+## Stable conflict/error semantics
+
+| Situation | HTTP | code | conflictType |
+|---|---:|---|---|
+| terminal not found | 404 | `organization.terminal_not_found` | n/a |
+| location missing/cross-organization | 404 | `organization.location_not_found` | n/a |
+| inactive target location for active binding | 409 | `organization.terminal.location_inactive` | `inactive_location` |
+| location deactivation blocked by active terminals | 409 | `organization.location.active_terminals_exist` | `active_terminal_dependency` |
+| duplicate normalized terminal code | 409 | `organization.terminal.code_duplicate` | `duplicate_terminal_code` |
+| stale update | 409 | `concurrency_conflict` | `stale_version` |
+| idempotency payload mismatch | 409 | `idempotency_key_reused` | `payload_mismatch` |
+
+Validation remains HTTP 400 through the existing RFC 9457 Problem Details pipeline.
 
 ## Existing architecture to reuse
 
-### Organization domain/application
+The implementation must extend the current Organization slice and preserve:
 
-The current organization slice already provides the implementation pattern for company-scoped mutable master data:
-
-- `CompanyFiscalProfile`;
-- `FiscalLocation`;
 - `OrganizationAuthorization.EnsureRead/EnsureManage`;
-- application-managed `version`;
-- repository interfaces in Application;
-- transaction manager + unit of work;
+- `V1OrganizationContextResolver`;
+- provider-neutral repository interfaces;
+- application-managed optimistic concurrency;
+- transaction manager and unit of work;
 - request-hash idempotency store;
 - durable audit writer;
 - transactional outbox;
-- RFC 9457 conflict/validation mapping.
+- PostgreSQL/MySQL neutrality;
+- current Clean Architecture dependency direction.
 
-W1.5 should extend this slice rather than introduce a parallel organization-management subsystem.
+`LocationsController` remains the closest HTTP structural precedent for organization resolution, permissions, idempotent POST/PATCH, request hashing, replay header, `CreatedAtAction` and canonical projection after mutation. Fiscal-location fields must not be copied into Terminal beyond the accepted relationship through `locationId`.
 
-### Presentation
+## Terminal vs Device boundary
 
-`LocationsController` is the closest current HTTP pattern:
+Terminal remains organization/POS operational master data under `organization.read/manage`.
 
-- organization resolved from the request context;
-- `organization.read/manage` permission enforcement;
-- POST/PATCH idempotency key requirement;
-- deterministic request hash;
-- `Idempotent-Replayed: true` on completed replay;
-- `CreatedAtAction` for create;
-- canonical resource projection after mutation.
+Device remains offline/sync registration under its separate sync permissions and identity model.
 
-This is a structural precedent only. It does not authorize copying fiscal-location fields into the terminal contract.
-
-### Existing terminal references
-
-`TerminalId` and terminal scopes already appear in actor context, sales, CAE/fiscal and persistence records. These are references to an operational terminal identity, not evidence that an authoritative terminal master currently exists.
-
-The W1.4 user model can persist terminal-scope identifiers. That capability must not be misread as a terminal registry.
-
-## Terminal vs device boundary
-
-The accepted API program distinguishes two resources:
-
-- **Terminal**: organization/POS operational master data under `organization.read/manage`.
-- **Device**: offline/sync registration under `sync.device.manage`, with device/client-operation identity and offline capability concerns.
-
-W1.5 must not place device secrets, bearer tokens, offline grants or sync replay identity into the terminal table or public DTO merely because a physical machine may play both roles in some deployments.
-
-Any future association between a registered terminal and a registered sync device must be an explicit contract, not an inferred one.
-
-## Contract prerequisite that must close
-
-Before implementation begins, the repository must accept a bounded field-level contract defining at least:
-
-- the canonical terminal identifier strategy and whether it is server-generated;
-- the minimum registration inputs;
-- the terminal-to-location relationship and whether reassignment is permitted;
-- the exact status model and allowed transitions;
-- the safe read projection;
-- fields mutable through `updateTerminal`;
-- optimistic concurrency input (`expectedVersion`) for updates;
-- the duplicate/uniqueness boundary and stable conflict code;
-- behavior when the referenced location is missing, cross-organization or inactive;
-- list filtering semantics, if any;
-- whether deactivation is represented through status and whether physical deletion is forbidden;
-- audit metadata that is material without leaking secrets or device credentials.
-
-Until this decision exists, W1.5 remains `CONTRACT_PREREQUISITE_REQUIRED` and all four operations remain `MISSING_HTTP`.
+W1.5 must not absorb device IDs, client operation identity, device secrets, bearer/refresh tokens, offline grants, MAC/IP addresses, hardware fingerprints, printer configuration, CAE configuration, arbitrary metadata or heartbeat telemetry.
 
 ## Persistence readiness
 
-No authoritative terminal-registration table or aggregate was found on the audited baseline. Existing migrations contain terminal references for other aggregates and W1.4 terminal-scope assignments, but those references do not constitute master-data persistence.
+The accepted contract authorizes an additive provider-neutral terminal master persistence design containing at least:
 
-Once the contract prerequisite closes, W1.5 is expected to require an additive V1 persistence slice for the terminal master. The exact columns and unique indexes must be derived from the accepted field-level contract, not decided by the migration itself.
+- terminal ID;
+- organization ID;
+- normalized code;
+- name;
+- location ID;
+- active flag;
+- version;
+- normal V1 persistence timestamps where appropriate.
 
-No production migration is authorized by this readiness document.
+The implementation must enforce deterministic organization-level normalized-code uniqueness and support an efficient active-terminal dependency check before location deactivation.
+
+Exact table/index/FK names are implementation details to derive in the bounded implementation increment.
+
+Production schema promotion remains a separate explicit approval gate.
+
+## Mutation evidence
+
+Accepted internal idempotency scopes:
+
+```text
+organization.terminal.register:{organizationId}
+organization.terminal.update:{organizationId}:{terminalId}
+```
+
+A successful register/update mutation must atomically include:
+
+- business mutation;
+- completed idempotency record;
+- durable audit evidence;
+- transactional outbox evidence.
+
+Accepted audit semantics remain `organization.terminal.registered` and `organization.terminal.updated`.
 
 ## Test readiness
 
-No dedicated `registerTerminal` or `listTerminals` tests exist on the audited baseline.
+The implementation increment must add at minimum:
 
-The implementation increment must add, at minimum, coverage for:
-
-- exact four-operation OpenAPI surface and operation IDs;
+- exact OpenAPI methods/routes/operationIds for all four operations;
 - 401 without JWT;
-- 403 without `organization.read/manage` as applicable;
+- 403 without required permission;
 - organization-scope isolation;
-- deterministic list/detail projection;
+- exact DTO/request schema;
+- server-owned ID/organization/active/version creation behavior;
+- code normalization and uniqueness;
+- deterministic list filters/order;
 - create/update idempotent replay;
 - same-key changed-payload conflict;
-- stale-version conflict for update;
-- contract-defined uniqueness conflict;
-- contract-defined location validation and cross-organization denial;
+- stale-version conflict;
+- missing/cross-organization/inactive location behavior;
+- reassignment/reactivation rules;
+- location deactivation dependency protection;
+- no delete/cascade behavior;
 - audit/outbox/idempotency atomicity;
 - PostgreSQL and MySQL persistence behavior;
-- regressions for current company/location, W1.4 users/roles, reference data and parties.
+- regression coverage for company/locations, W1.4 users/roles, reference data, parties and existing sales/fiscal terminal references.
 
 ## Implementation gate
 
-Implementation is prohibited until the terminal field-level contract is accepted and this readiness document is updated from `CONTRACT_PREREQUISITE_REQUIRED` to an implementation-ready state.
+The field-level contract prerequisite is closed by explicit owner approval.
 
-When that prerequisite closes, implementation should remain a bounded W1.5 slice covering only `API-ORG-007..010`, with no speculative device/sync endpoints and no unrelated organization redesign.
+After this contract/readiness PR is merged and its exact-head/post-merge CI is green, a separate bounded implementation increment may begin for `API-ORG-007..010` plus the accepted `API-ORG-006` active-terminal dependency invariant.
+
+Implementation counts remain unchanged until the matching public HTTP surfaces actually exist and pass the governed acceptance process.
