@@ -12,7 +12,7 @@ export interface UiCapability {
   uiId: string;
   label: string;
   route: string;
-  status: 'IMPLEMENTED_API_MOCK_DATA';
+  status: 'IMPLEMENTED_API_MOCK_DATA' | 'IMPLEMENTED_VISUAL_PREVIEW';
   operations: CapabilityOperation[];
 }
 
@@ -101,5 +101,19 @@ export const uiCapabilities: UiCapability[] = [
       { apiId: 'API-INV-003', operationId: 'listStockMovements', method: 'GET', route: '/api/v1/inventory/movements', permission: 'inventory.read' },
       { apiId: 'API-INV-004', operationId: 'createStockAdjustment', method: 'POST', route: '/api/v1/inventory/adjustments', permission: 'inventory.adjust' }
     ]
+  },
+  {
+    uiId: 'UI-TRANSFER-001',
+    label: 'Transferencias',
+    route: '/transferencias',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
+  },
+  {
+    uiId: 'UI-PROCUREMENT-001',
+    label: 'Órdenes de compra y Recepciones',
+    route: '/compras',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];
