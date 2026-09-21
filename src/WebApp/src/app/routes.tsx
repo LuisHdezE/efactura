@@ -3,6 +3,7 @@ import { CatalogPage } from '../features/catalog/CatalogPage';
 import { CustomersPage } from '../features/customers/CustomersPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { InventoryPage } from '../features/inventory/InventoryPage';
+import { PayablesPage } from '../features/payables/PayablesPage';
 import { PosPage } from '../features/pos/PosPage';
 import { ProcurementPage } from '../features/procurement/ProcurementPage';
 import { ReceivablesPage } from '../features/receivables/ReceivablesPage';
@@ -83,7 +84,7 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-008', state: 'active', capability: requireCapability('UI-TRANSFER-001'), icon: '⇄', navigationGroup: 'Inventario y Compras', element: <TransfersPage /> },
   { webId: 'WEB-009', state: 'active', capability: requireCapability('UI-PROCUREMENT-001'), icon: '↓', navigationGroup: 'Inventario y Compras', element: <ProcurementPage /> },
   { webId: 'WEB-010', state: 'active', capability: requireCapability('UI-RECEIVABLE-001'), icon: '↗', navigationGroup: 'Finanzas', element: <ReceivablesPage /> },
-  { webId: 'WEB-011', state: 'planned', label: 'Cuentas por pagar', icon: '↙', navigationGroup: 'Finanzas' },
+  { webId: 'WEB-011', state: 'active', capability: requireCapability('UI-PAYABLE-001'), icon: '↙', navigationGroup: 'Finanzas', element: <PayablesPage /> },
   { webId: 'WEB-012', state: 'planned', label: 'Caja y conciliación', icon: '▰', navigationGroup: 'Finanzas' },
   { webId: 'WEB-013', state: 'planned', label: 'Documentos fiscales', icon: '≡', navigationGroup: 'Fiscal' },
   { webId: 'WEB-014', state: 'planned', label: 'CAE', icon: '#', navigationGroup: 'Fiscal' },

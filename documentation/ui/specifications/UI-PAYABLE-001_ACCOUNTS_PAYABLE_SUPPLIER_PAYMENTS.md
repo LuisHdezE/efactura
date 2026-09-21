@@ -1,10 +1,10 @@
 # UI-PAYABLE-001 — Accounts Payable and Supplier Payments
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED`
+Status: `IMPLEMENTED_VISUAL_PREVIEW / API_PENDING`
 
 WEB mapping: `WEB-011`
 
-Candidate route: `/cuentas-por-pagar`
+Route: `/cuentas-por-pagar`
 
 ## Purpose
 
@@ -17,7 +17,8 @@ Provide treasury/accounting/admin users with a responsive view of supplier oblig
 - requirements: `FR-026`, `FR-027`, `FR-071`, `FR-072`, `FR-073`, `FR-074`;
 - API reconciliation: `documentation/blueprint-api-contract/09_INTERFACE_SCOPE_RECONCILIATION.md`;
 - completion matrix: `documentation/api-completion-matrix/WAVE_3.md`;
-- approved visuals: `documentation/ui/references/approved/UI-PAYABLE-001/v1-responsive-suite/README.md`.
+- approved visuals: `documentation/ui/references/approved/UI-PAYABLE-001/v1-responsive-suite/README.md`;
+- preview governance: `documentation/ui/PREVIEW_ROUTE_POLICY_AMENDMENT.md`.
 
 ## Roles
 
@@ -25,67 +26,73 @@ Provide treasury/accounting/admin users with a responsive view of supplier oblig
 - accountant;
 - administrator.
 
-## Information architecture
+## Implemented preview information architecture
 
 ### Header
 
 - module breadcrumb: `Finanzas > Cuentas por pagar`;
-- title: `Cuentas por pagar`;
-- concise purpose text;
-- preview/demo disclosure when the route is not live-backed.
+- title and concise purpose text;
+- explicit `Preview UI · API pendiente` disclosure;
+- visually reserved `Registrar factura` action, disabled because no authoritative intake/create contract is implemented for this surface.
 
 ### KPI / aging summary
 
-The approved visual supports demonstration cards for:
+The preview renders local demonstration cards for:
 
 - total open payable amount;
 - pending supplier-document count;
 - overdue count;
 - amount due in the next 30 days.
 
-When live integration exists, these values must come from authoritative payable projections/API responses. A preview may use explicit local fixtures only.
+These are fixtures only and are never represented as authoritative server projections.
 
 ### Search and filters
 
-The preview may support client-side filtering of demo fixtures by:
+Client-side controls support:
 
-- supplier/document search;
-- status;
-- due-date bucket.
+- supplier/document/reference search;
+- status filter;
+- due-date bucket filter;
+- reset/clear.
 
-These controls must not imply server-side querying while APIs are absent.
+No server-side query is implied.
 
 ### Payable ledger
 
-Desktop presentation may include:
+Desktop presentation includes:
 
 - supplier document/reference;
 - supplier;
 - issue date;
 - due date;
-- amount;
-- textual status;
-- non-destructive inspection action.
+- original amount;
+- open balance;
+- textual status.
 
-Mobile presentation replaces the wide table with stacked obligation cards while preserving supplier, document, due date, amount and textual status.
+Rows are keyboard-selectable and only change local selected-detail state.
+
+Mobile presentation replaces the wide table with stacked obligation cards preserving supplier, document, due date, open balance and textual state.
 
 ### Selected payable detail
 
-The selected obligation may show:
+The selected obligation displays:
 
 - supplier/document identity;
-- supplier fiscal identity when fixture evidence exists;
+- supplier fiscal identity from the local fixture;
 - issue date;
 - due date;
 - original amount;
 - open balance;
-- current textual state;
-- history/allocation tab structure;
-- document/context navigation only where a real governed destination exists.
+- reference;
+- `Información` / `Historial` client-side tabs.
+
+The history is explicitly demonstration data and does not claim immutable backend evidence.
 
 ### Supplier-payment composer
 
-The approved visual reserves placement for `Registrar pago`, but while `API-PAY-001` is `MISSING_HTTP` the control must remain disabled/non-executable.
+The preview reserves placement for `Registrar pago` but the submit control is disabled while `API-PAY-001` remains `MISSING_HTTP`.
+
+Inputs for amount, payment medium and external reference remain non-executable. The preview also shows the critical policy warning that excess payment may not be silently truncated.
 
 The view must not locally invent:
 
@@ -110,43 +117,33 @@ Critical invariant from `UC-AP-001`: an entered supplier payment must never be s
 
 ## States
 
-The source interface baseline requires support for:
+The source interface baseline requires support for default, loading, empty, filtered_empty, error, 403, 409 and 422.
 
-- default;
-- loading;
-- empty;
-- filtered_empty;
-- error;
-- 403;
-- 409;
-- 422.
-
-A governed visual preview may represent only presentation states that can be truthful with local fixtures; it must not fabricate backend failures or authorization decisions as if observed from a live service.
+The current visual preview implements truthful local default/filtering/filtered-empty behavior only. It does not fabricate backend failures or authorization decisions as if observed from a live service.
 
 ## Responsive behavior
 
-The approved baseline explicitly covers:
+The approved baseline and implementation cover:
 
-- desktop: KPI row + filterable ledger + selected detail panel;
-- mobile: single-column hierarchy, compact KPI grid, search/filter row, obligation cards and selected detail below the list.
-
-Tablet/intermediate breakpoints may adapt between those compositions while preserving content priority and execution boundaries.
+- desktop: KPI row + filterable ledger + selected detail/payment panel;
+- mobile: single-column hierarchy, compact KPI grid, search/filter controls, obligation cards and selected detail below the list;
+- tablet/intermediate layouts that collapse progressively without changing execution authority.
 
 ## Accessibility
 
-- currency and balances must remain readable without relying on color alone;
-- states such as `Pendiente`, `Vencida` and `Pagada` require visible text;
-- search/filter controls require programmatic labels in implementation;
-- disabled financial actions must expose disabled state semantically, not only visually;
-- tab/detail navigation must remain keyboard operable.
+- currency and balances remain readable without relying on color alone;
+- states such as `Pendiente`, `Vencida`, `Parcial` and `Pagada` use visible text;
+- search/filter controls use labels;
+- disabled financial actions expose semantic disabled state;
+- rows/cards and detail tabs are keyboard operable.
 
 ## Accepted API dependencies
 
 - `API-AP-001..004`;
 - `API-PAY-001..003`.
 
-All seven are currently `MISSING_HTTP`. Therefore this specification does not authorize live integration or financial mutation.
+All seven remain `MISSING_HTTP`; `UI-PAYABLE-001` therefore registers no executable API operations.
 
-## Implementation gate
+## Runtime gate
 
-React preview implementation requires a separate governance promotion to `ACTIVE_VISUAL_PREVIEW`. Route activation and live API integration are independent gates.
+After merge/deploy, `/cuentas-por-pagar` requires separate desktop/mobile visual runtime review against `v1-responsive-suite`. Live API integration remains a later, independent reconciliation gate.

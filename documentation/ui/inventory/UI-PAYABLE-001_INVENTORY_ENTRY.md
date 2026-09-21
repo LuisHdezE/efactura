@@ -1,6 +1,6 @@
 # UI-PAYABLE-001 — Governed UI Inventory Entry
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / ROUTE_NOT_ACTIVE`
+Status: `IMPLEMENTED_VISUAL_PREVIEW / RUNTIME_REVIEW_PENDING`
 
 Mapping:
 
@@ -8,9 +8,9 @@ Mapping:
 WEB-011 -> UI-PAYABLE-001
 ```
 
-Candidate route: `/cuentas-por-pagar`
+Route: `/cuentas-por-pagar`
 
-Navigation state: `PLANNED_DISABLED`
+Navigation state: `ACTIVE_VISUAL_PREVIEW`
 
 ## Evidence
 
@@ -19,7 +19,10 @@ Navigation state: `PLANNED_DISABLED`
 - lifecycle: `UC-AP-001 — Record supplier payment and allocate`;
 - reconciliation: `documentation/ui/payables/UI-PAYABLE-001_RECONCILIATION.md`;
 - specification: `documentation/ui/specifications/UI-PAYABLE-001_ACCOUNTS_PAYABLE_SUPPLIER_PAYMENTS.md`;
-- approved visual reference: `documentation/ui/references/approved/UI-PAYABLE-001/v1-responsive-suite/README.md`.
+- approved visual reference: `documentation/ui/references/approved/UI-PAYABLE-001/v1-responsive-suite/README.md`;
+- preview policy: `documentation/ui/PREVIEW_ROUTE_POLICY_AMENDMENT.md`;
+- React implementation: `src/WebApp/src/features/payables/PayablesPage.tsx`;
+- source-level guard: `src/WebApp/scripts/verify-payables-preview.mjs`.
 
 ## Approved visual baseline
 
@@ -30,7 +33,7 @@ Artifact identities:
 - desktop gen_id: `764a3a30-08a6-4f4f-8bda-2bdaf245b8c2`;
 - mobile gen_id: `06ffefef-b352-4967-9585-8012b03e7c6a`.
 
-The suite governs desktop and mobile composition, hierarchy, status presentation, selected-payable detail and the disabled supplier-payment action treatment.
+The suite governs desktop and mobile composition, hierarchy, status presentation, selected-payable detail and disabled supplier-payment treatment.
 
 ## Accepted API dependency
 
@@ -44,13 +47,12 @@ The view depends on:
 - `API-PAY-002` supplier-payment detail;
 - `API-PAY-003` compensating supplier-payment reversal.
 
-Wave 3 currently records all seven as `MISSING_HTTP` with no WebApi evidence and `NOT_YET_AUDITED` deep readiness.
+All seven remain `MISSING_HTTP` in Wave 3.
 
-## Execution boundary
+## Preview execution boundary
 
-This approved baseline does **not** authorize:
+The active preview is authorized to use local demonstration fixtures for client-side inspection only. It does **not** authorize:
 
-- route activation;
 - authoritative payable/aging claims;
 - supplier-payment posting;
 - payable adjustment;
@@ -60,6 +62,8 @@ This approved baseline does **not** authorize:
 - silent payment capping/truncation;
 - invented unapplied-payment/advance policy.
 
-## Next gate
+`UI-PAYABLE-001` therefore remains `IMPLEMENTED_VISUAL_PREVIEW` with `operations: []` until fresh API evidence exists.
 
-Reconcile `UI-PAYABLE-001` with the existing visual-preview route policy. If promoted to `ACTIVE_VISUAL_PREVIEW`, implementation may use explicit local demo fixtures and client-side inspection/filtering only, with all server-owned financial operations disabled until the accepted API dependencies exist.
+## Runtime review
+
+After merge/deploy, desktop and mobile behavior must be inspected separately against the approved responsive suite. Search, filters, selection/detail and disabled financial controls are part of runtime acceptance.
