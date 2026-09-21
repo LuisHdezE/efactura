@@ -26,10 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build demo
+      - name: Build demo for /efactura/
         env:
           VITE_DATA_MODE: mock
-        run: npm run build
+        run: npm run build:deploy
 
       - name: Deploy static bundle via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

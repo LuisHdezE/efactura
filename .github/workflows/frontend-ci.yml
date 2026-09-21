@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Typecheck and build
+      - name: Typecheck and build production subpath
         env:
           VITE_DATA_MODE: mock
-        run: npm run check
+        run: npm run check:deploy

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:deploy": "tsc --noEmit && vite build --base=/efactura/ && node scripts/verify-deploy-routing.mjs",
     "check": "tsc --noEmit && vite build",
+    "check:deploy": "npm run build:deploy",
     "preview": "vite preview"
   },
   "dependencies": {
