@@ -6,7 +6,7 @@ Date: `2026-09-21`
 
 ## Purpose
 
-Reconcile an ambiguity discovered during runtime review of the Sidebar: previous `UI-TRANSFER-001` and `UI-PROCUREMENT-001` specifications treated missing HTTP implementation as a blocker for any React route activation, even though the WebApp already uses explicit demo/mock presentation for incomplete integration boundaries.
+Reconcile the distinction between an inspectable frontend surface and executable backend capability. A governed WebApp view may be navigable for visual/runtime review while its authoritative HTTP operations remain unavailable, provided the preview cannot masquerade as live business execution.
 
 This amendment separates **frontend route availability** from **backend command readiness**.
 
@@ -32,18 +32,29 @@ IMPLEMENTED_VISUAL_PREVIEW
 
 ## Current application
 
-This amendment applies immediately to:
+This amendment applies to:
 
 - `WEB-008 / UI-TRANSFER-001` at `/transferencias`;
-- `WEB-009 / UI-PROCUREMENT-001` at `/compras`.
+- `WEB-009 / UI-PROCUREMENT-001` at `/compras`;
+- `WEB-010 / UI-RECEIVABLE-001` at `/cuentas-por-cobrar`.
 
-Their accepted API operations remain `MISSING_HTTP`. This amendment authorizes navigable frontend previews only; it does not authorize live create/update/approve/dispatch/receive/reconcile/post behavior.
+For `UI-RECEIVABLE-001`, the approved visual authority is `v1-approved-view`, image generation id `1fad639a-815f-431b-8c1c-7e6a50cdae77`.
 
-`WEB-010 / UI-RECEIVABLE-001` does not qualify yet because its exact visual baseline has not been approved and no governed React preview has been implemented. It remains `PLANNED_DISABLED`.
+Its preview implementation may provide client-side search/filter/selection/detail behavior over explicit local fixtures and may visually reserve the collection/allocation composer. The following remain non-executable while the authoritative HTTP surface is absent:
+
+- collection posting;
+- receivable adjustment;
+- collection reversal;
+- local authoritative balance mutation;
+- silent overpayment truncation;
+- invented advance/unapplied-payment policy;
+- cash-shift reconciliation.
+
+`API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`; therefore `UI-RECEIVABLE-001` registers no executable API operations in `capabilities.ts` while it is a visual preview.
 
 ## Supersession scope
 
-For `UI-TRANSFER-001` and `UI-PROCUREMENT-001`, this amendment supersedes only prior statements that missing HTTP evidence prohibits **all route activation**.
+For `UI-TRANSFER-001`, `UI-PROCUREMENT-001` and `UI-RECEIVABLE-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
 
 It does **not** supersede any requirement concerning:
 
@@ -51,7 +62,7 @@ It does **not** supersede any requirement concerning:
 - permissions;
 - idempotency;
 - concurrency/version handling;
-- server-authoritative inventory, costing or payable effects;
+- server-authoritative balances, inventory, costing, payable or receivable effects;
 - discrepancy handling;
 - mutation restrictions;
 - runtime acceptance;
