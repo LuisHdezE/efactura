@@ -1,16 +1,16 @@
 # API Completion Master Matrix — Wave Count Ledger
 
-Status: `FULLY_RECONCILED / W1_4_USERS_CLOSED / W1_5_IMPLEMENTED_PRE_MERGE`
+Status: `FULLY_RECONCILED / WAVE_1_CLOSED / W2.1_IMPLEMENTED_PRE_MERGE`
 
-Implementation reconciliation PR: **#195**.
+Implementation reconciliation PR: **#208**.
 
 This companion ledger prevents the public-v1 denominator, implementation count and wave ownership from drifting while the completion program proceeds.
 
 Current public-v1 inventory denominator: **194 operation IDs**.
 
-Current implemented HTTP operations: **64**.
+Current implemented HTTP operations: **65**.
 
-Current non-implemented operation IDs: **130**.
+Current non-implemented operation IDs: **129**.
 
 Current distinct HTTP method/path signatures: **193** because one accepted-contract collision uses the same signature for two API IDs.
 
@@ -19,30 +19,30 @@ Current distinct HTTP method/path signatures: **193** because one accepted-contr
 | Wave | Scope | Contract operations | Implemented | Missing HTTP | Contract-collision IDs | Non-implemented | Raw operation coverage |
 |---:|---|---:|---:|---:|---:|---:|---:|
 | 1 | Identity + Organization + Reference Data | 30 | 30 | 0 | 0 | 0 | 100.00% |
-| 2 | Parties + Catalog + Sales Completion | 26 | 22 | 4 | 0 | 4 | 84.62% |
+| 2 | Parties + Catalog + Sales Completion | 26 | 23 | 3 | 0 | 3 | 88.46% |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 | 0.00% |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 | 17.39% |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 | 20.00% |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 | 0.00% |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 | 0.00% |
-| **Total** |  | **194** | **64** | **128** | **2** | **130** | **32.99%** |
+| **Total** |  | **194** | **65** | **127** | **2** | **129** | **33.51%** |
 
 The totals reconcile exactly:
 
 `30 + 26 + 24 + 23 + 40 + 21 + 30 = 194`
 
-`30 + 22 + 0 + 4 + 8 + 0 + 0 = 64`
+`30 + 23 + 0 + 4 + 8 + 0 + 0 = 65`
 
-`0 + 4 + 24 + 19 + 32 + 21 + 30 = 130`
+`0 + 3 + 24 + 19 + 32 + 21 + 30 = 129`
 
-`128 MISSING_HTTP + 2 CONTRACT_COLLISION = 130 non-implemented IDs`
+`127 MISSING_HTTP + 2 CONTRACT_COLLISION = 129 non-implemented IDs`
 
 ## Family-to-wave allocation
 
 | Wave | API families | Count | Current implemented families/operations |
 |---:|---|---:|---|
 | 1 | `IAM-001..011`, `ORG-001..010`, `REF-001..008`, `CAT-009` | 30 | `IAM-001..011`, `ORG-001..010`, `REF-001..008`, `CAT-009` |
-| 2 | `PTY-001..008`, `CAT-001..008`, `POS-001`, `SAL-001..009` | 26 | `PTY-001..007`, `CAT-001..008`, `SAL-001..007` |
+| 2 | `PTY-001..008`, `CAT-001..008`, `POS-001`, `SAL-001..009` | 26 | `PTY-001..007`, `CAT-001..008`, `SAL-001..007`, `SAL-009` |
 | 3 | `PMT-001..003`, `AR-001..004`, `COL-001..003`, `AP-001..004`, `PAY-001..003`, `CSH-001..007` | 24 | none |
 | 4 | `INV-001..004`, `TRF-001..007`, `RPL-001..002`, `PRC-001..006`, `GRC-001..004` | 23 | `INV-001..004` |
 | 5 | `FIS-001..010`, `FDL-001..002`, `CAE-001..007`, `CNT-001..007`, `RCV-001..006`, `XML-001`, `DFR-001..004`, `CAL-001`, `CFG-001..002` | 40 | `FIS-010`, `CAE-001..007` |
@@ -77,6 +77,8 @@ Architecture tests require those seven shards to contain the exact 194 inventory
 
 ## Next implementation gate
 
-W1.1 Reference Data is complete. W1.2 implements `API-IAM-001 getCurrentActor` plus `API-IAM-011 listPermissions`. W1.3 implements and closes `API-IAM-006..009` roles read/write. W1.4 implements and closes `API-IAM-002..005` plus `API-IAM-010` users and role assignment after governed merge, deployment, explicitly approved Neon production migration, HTTP runtime acceptance and independent durable-evidence verification.
+Wave 1 is formally closed at `30 / 30` after the W1.5 Terminals merge, deployment, explicitly approved production migration, production runtime acceptance and independent Neon verification.
 
-W1.5 now implements `API-ORG-007..010` terminals in PR #195, including the accepted `API-ORG-006` active-terminal dependency protection. The four public HTTP surfaces exist in the implementation branch and provider-real PostgreSQL/MySQL QA has passed on the implementation code. The remaining W1.5 gates are final exact-head CI, governed merge, separately approved production schema promotion, Cloud Run deployment and HTTP runtime acceptance. These counts describe HTTP implementation presence and do not imply that W1.5 is formally closed or production-accepted.
+Wave 2 opened with a governed readiness audit. W2.1 owner-locked the field-level contract for `API-SAL-009 getSaleFiscalizationStatus` in PR #207. PR #208 now implements that exact bounded read-only surface using existing Sale, FiscalizationRequest and FiscalDocument persistence. This ledger counts the HTTP surface as implemented in the candidate branch; exact-head CI, owner-approved merge, deployment and runtime acceptance remain separate gates and are not implied by these counts.
+
+The three remaining Wave 2 gaps stay unchanged: `API-SAL-008 cancelSale`, `API-POS-001 getPosBootstrap`, and `API-PTY-008 getPartyAccountSummary` each retain their explicit prerequisites from `W2_READINESS_AUDIT.md`.
