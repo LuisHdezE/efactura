@@ -14,7 +14,9 @@ A contracted-but-not-implemented endpoint does not authorize an apparently funct
 
 ## Hosting boundary
 
-The public hosting target `efactura.eliasworks.uy` serves **only the compiled WebApp static bundle**.
+The canonical public hosting target is `https://eliasworks.uy/efactura/` and serves **only the compiled WebApp static bundle**.
+
+The production WebApp is therefore hosted below the `/efactura/` path prefix. The production Vite bundle MUST be built with base `/efactura/`, and React Router MUST consume the same base through `import.meta.env.BASE_URL`. Local development may continue to use `/`.
 
 The eFactura .NET API is explicitly outside this hosting/deployment increment:
 
@@ -77,18 +79,17 @@ API mode intentionally fails closed until an HTTP adapter is explicitly implemen
 
 ## Deployment target
 
-Target public URL: `https://efactura.eliasworks.uy`.
+Target public URL: `https://eliasworks.uy/efactura/`.
 
 Expected document root: `public_html/efactura/`.
 
-GitHub Actions builds `src/WebApp` and uploads **only** the static `src/WebApp/dist/` output over FTP, following the deployment pattern already used by `erp_eliasworks`.
+GitHub Actions builds `src/WebApp` with production base `/efactura/` and uploads **only** the static `src/WebApp/dist/` output over FTP, following the deployment pattern already used by `erp_eliasworks`.
+
+The bundled `.htaccess` preserves direct SPA routes such as `/efactura/transferencias` and `/efactura/compras` by rewriting non-file/non-directory requests to `index.html` inside the deployed application directory.
 
 Repository prerequisite before the first successful automatic deploy:
 
-- GitHub Actions secret `FTP_PASSWORD` available to this repository;
-- DNS/subdomain `efactura.eliasworks.uy` configured to the expected hosting document root.
-
-The bundled `.htaccess` preserves SPA routes on Apache.
+- GitHub Actions secret `FTP_PASSWORD` available to this repository.
 
 ## Governance flow from D0 onward
 
