@@ -6,6 +6,7 @@ on:
       - ops/w15-runtime-acceptance-20260921
     paths:
       - '.github/workflows/w15-runtime-acceptance.yml'
+      - 'scripts/ops/w15_runtime_acceptance.py'
 
 permissions:
   contents: read
@@ -22,26 +23,33 @@ env:
   ACCEPTED_REVISION: efactura-api-d22-11139c7-54-1
 
 jobs:
-  probe:
-    name: Probe governed W1.5 runtime harness
+  acceptance:
+    name: Governed W1.5 runtime acceptance
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - name: Checkout operational branch
+      - name: Checkout acceptance source
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-          fetch-depth: 4
+          fetch-depth: 8
 
-      - name: Verify operational branch derives only from accepted main
+      - name: Verify isolated operational delta
         shell: bash
         run: |
           set -euo pipefail
           merge_base="$(git merge-base HEAD "$ACCEPTED_MAIN_SHA")"
           [[ "$merge_base" == "$ACCEPTED_MAIN_SHA" ]]
-          unexpected="$(git diff --name-only "$ACCEPTED_MAIN_SHA"..HEAD | grep -v '^.github/workflows/w15-runtime-acceptance.yml$' || true)"
+          unexpected="$(git diff --name-only "$ACCEPTED_MAIN_SHA"..HEAD | grep -Ev '^(\.github/workflows/w15-runtime-acceptance\.yml|scripts/ops/w15_runtime_acceptance\.py)$' || true)"
           [[ -z "$unexpected" ]]
-          echo "Operational harness is isolated from accepted main $ACCEPTED_MAIN_SHA"
+          echo "Acceptance harness is isolated from accepted API baseline $ACCEPTED_MAIN_SHA"
+
+      - name: Validate acceptance runner syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ops/w15_runtime_acceptance.py
+          echo "W1.5 acceptance runner syntax PASS"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -56,64 +64,38 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Verify accepted revision and public read-only surface
+      - name: Verify accepted Cloud Run revision
+        id: runtime
         shell: bash
         run: |
           set -euo pipefail
-          work="$RUNNER_TEMP/w15-probe"
-          mkdir -p "$work"
-
           service_json="$(gcloud run services describe "$SERVICE" --project="$PROJECT_ID" --region="$REGION" --platform=managed --format=json)"
           revision="$(jq -r '.status.traffic[] | select((.percent // 0) == 100) | .revisionName // empty' <<< "$service_json" | head -n1)"
           base_url="$(jq -r '.status.url // empty' <<< "$service_json")"
           echo "100% revision: $revision"
           [[ "$revision" == "$ACCEPTED_REVISION" ]]
           [[ -n "$base_url" ]]
+          echo "base_url=$base_url" >> "$GITHUB_OUTPUT"
 
-          swagger_code="$(curl -sS -L -o "$work/swagger.html" -w '%{http_code}' "$base_url/swagger")"
-          openapi_code="$(curl -sS -o "$work/openapi.json" -w '%{http_code}' "$base_url/swagger/v1/swagger.json")"
-          unauth_code="$(curl -sS -o "$work/terminals-unauth.json" -w '%{http_code}' "$base_url/api/v1/terminals")"
-          echo "Swagger=$swagger_code OpenAPI=$openapi_code TerminalsWithoutJwt=$unauth_code"
-          [[ "$swagger_code" == "200" ]]
-          [[ "$openapi_code" == "200" ]]
-          [[ "$unauth_code" == "401" ]]
-
+      - name: Run W1.5 production runtime acceptance
+        shell: bash
+        env:
+          BASE_URL: ${{ steps.runtime.outputs.base_url }}
+          W15_STAMP: ${{ github.run_id }}
+          W15_SUMMARY_PATH: ${{ runner.temp }}/w15-runtime-summary.json
+        run: |
+          set -euo pipefail
           JWT_KEY="$(gcloud secrets versions access latest --project="$PROJECT_ID" --secret="$JWT_SECRET")"
           [[ -n "$JWT_KEY" ]]
           echo "::add-mask::$JWT_KEY"
-          JWT_ISSUER="$(jq -r '.Jwt.Issuer' src/WebApi/appsettings.json)"
-          JWT_AUDIENCE="$(jq -r '.Jwt.Audience' src/WebApi/appsettings.json)"
+          export JWT_KEY
+          export JWT_ISSUER="$(jq -r '.Jwt.Issuer' src/WebApi/appsettings.json)"
+          export JWT_AUDIENCE="$(jq -r '.Jwt.Audience' src/WebApi/appsettings.json)"
 
-          TOKEN="$(JWT_KEY="$JWT_KEY" JWT_ISSUER="$JWT_ISSUER" JWT_AUDIENCE="$JWT_AUDIENCE" python3 - <<'PY'
-          import base64, hashlib, hmac, json, os, time
+          python3 scripts/ops/w15_runtime_acceptance.py
 
-          def b64(data: bytes) -> str:
-              return base64.urlsafe_b64encode(data).rstrip(b'=').decode()
-
-          now = int(time.time())
-          header = {'alg': 'HS256', 'typ': 'JWT'}
-          payload = {
-              'sub': 'w15-runtime-probe',
-              'iss': os.environ['JWT_ISSUER'],
-              'aud': os.environ['JWT_AUDIENCE'],
-              'iat': now,
-              'nbf': now - 5,
-              'exp': now + 600,
-              'permission': 'organization.read',
-              'company_scope': 'w15-runtime-probe-org'
-          }
-          encoded_header = b64(json.dumps(header, separators=(',', ':')).encode())
-          encoded_payload = b64(json.dumps(payload, separators=(',', ':')).encode())
-          unsigned = f'{encoded_header}.{encoded_payload}'
-          signature = hmac.new(os.environ['JWT_KEY'].encode(), unsigned.encode(), hashlib.sha256).digest()
-          print(f'{unsigned}.{b64(signature)}')
-          PY
-          )"
-          unset JWT_KEY
-          echo "::add-mask::$TOKEN"
-
-          auth_code="$(curl -sS -H "Authorization: Bearer $TOKEN" -o "$work/terminals-auth.json" -w '%{http_code}' "$base_url/api/v1/terminals")"
-          unset TOKEN
-          echo "TerminalsWithJwt=$auth_code"
-          [[ "$auth_code" == "200" ]]
-          jq -e 'type == "array"' "$work/terminals-auth.json" >/dev/null
+          unset JWT_KEY JWT_ISSUER JWT_AUDIENCE
+          echo "### W1.5 Runtime Acceptance" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "$W15_SUMMARY_PATH" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
