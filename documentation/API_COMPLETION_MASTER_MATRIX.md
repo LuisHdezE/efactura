@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / WAVE_1_CLOSED / W2.1_IMPLEMENTED_PRE_MERGE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / WAVE_1_CLOSED / W2.1_CLOSED`
 
-Current implementation baseline: Wave 1 is formally closed at `30 / 30` implemented operations. W2.1 adds the bounded read-only `API-SAL-009 getSaleFiscalizationStatus` candidate in PR #208, moving the implementation branch to `65 / 194` public v1 operations. This count records HTTP-surface presence only; W2.1 exact-head CI, governed merge, deployment and runtime acceptance remain separate gates.
+Current implementation baseline: Wave 1 is formally closed at `30 / 30` implemented operations. W2.1 added the bounded read-only `API-SAL-009 getSaleFiscalizationStatus`, moving the governed public v1 implementation baseline to `65 / 194` operations. W2.1 is now closed after contract lock, implementation, exact-head CI, merge, deployment and bounded read-only production runtime acceptance. Detailed evidence is recorded in `documentation/api-completion-matrix/W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
 W1.5 Terminals was implemented in PR #195, merged, accepted by post-merge Clean Architecture Guard #675, deployed as Cloud Run revision `efactura-api-d22-11139c7-54-1`, promoted through explicitly approved Neon migration `20260921024500_V1Terminals`, accepted by production runtime run `35612527016`, and independently verified in Neon. Detailed W1.5 evidence is recorded in `documentation/api-completion-matrix/W1_5_TERMINALS_RUNTIME_CLOSURE.md`.
 
@@ -64,7 +64,9 @@ This is an operation-count measure only. It is not a product-readiness score and
 
 W1.1A contributes `API-REF-002 listUruguayDepartments` and `API-REF-003 listFiscalIdentityTypes`. W1.1B adds `API-REF-001 listCountries` and `API-REF-004 listCurrencies` after closing their governed source prerequisites. W1.1C adds `API-REF-005 listFiscalDocumentTypes` and `API-REF-006 listInvoiceIndicators` after closing fiscal scope with fail-closed Release-1 subsets. W1.1D completes Reference Data with `API-REF-007 listContactTypes` and `API-REF-008 listUnitsOfMeasure`, preserving configurable party-contact semantics and projecting only active commercial units visible through the actor's company scopes. W1.2 adds `API-IAM-001 getCurrentActor` and `API-IAM-011 listPermissions` by projecting the existing actor context and canonical `Permissions.All` set without introducing a second identity model or persistence boundary. W1.3 adds `API-IAM-006..009` through a dedicated company-scoped `SecurityRole` aggregate, canonical permission-code validation, idempotent create/update, optimistic concurrency, audit/outbox evidence and provider-real PostgreSQL/MySQL persistence, and is formally closed after production schema promotion, Cloud Run deployment and runtime acceptance. W1.4 adds `API-IAM-002..005` and `API-IAM-010` through the provider-neutral `SecurityUser` model, organization-scoped user management, idempotent/versioned mutation, scope/self-escalation protections, role replacement and durable audit/outbox evidence. W1.4 is formally closed after PR #185 merge, accepted deployment, explicitly approved production migration, runtime acceptance and independent Neon verification. W1.5 adds the remaining four Wave 1 operations `API-ORG-007..010` through the governed Terminal aggregate, organization/location invariants, idempotent/versioned mutation, durable audit/outbox evidence and provider-neutral PostgreSQL/MySQL persistence. W1.5 is formally closed after PR #195 merge, post-merge Guard #675, accepted deployment, explicitly approved production schema promotion, successful runtime acceptance run `35612527016`, and independent Neon verification. Wave 1 is therefore fully closed at `30 / 30`.
 
-W2.1 begins Wave 2 implementation from the owner-locked PR #207 contract. PR #208 exposes `GET /api/v1/sales/{saleId}/fiscalization` as `getSaleFiscalizationStatus` with `sales.read`, using existing Sale, FiscalizationRequest and FiscalDocument readers only. Its projection is explicitly local-workflow authority (`NOT_REQUESTED`, `PENDING`, `IDENTITY_CREATED`) and never claims DGI/provider acceptance or transport state. Impossible persistence combinations fail closed with `fiscalization.inconsistent_state`. No schema or migration is introduced.
+W2.1 began Wave 2 implementation from the owner-locked PR #207 contract. PR #208 exposed `GET /api/v1/sales/{saleId}/fiscalization` as `getSaleFiscalizationStatus` with `sales.read`, using existing Sale, FiscalizationRequest and FiscalDocument readers only. Its projection is explicitly local-workflow authority (`NOT_REQUESTED`, `PENDING`, `IDENTITY_CREATED`) and never claims DGI/provider acceptance or transport state. Impossible persistence combinations fail closed with `fiscalization.inconsistent_state`. No schema or migration was introduced.
+
+W2.1 is formally closed after pre-merge Guard #695, owner-approved PR #208 merge at `9989c0f15d76423f76e25e1cfdc1ab1337586849`, post-merge Guard #696, Deploy API Demo #55, promotion of Cloud Run revision `efactura-api-d22-9989c0f-55-1`, and read-only production runtime acceptance run `35643849728`. Production contained zero Sale rows, so no artificial business fixture was created solely to force a 200 response; successful-state projections remain covered by accepted automated QA.
 
 ## 4. Logical matrix shards
 
@@ -93,7 +95,7 @@ CI validates that the shards contain every current inventory API ID exactly once
 Deep-readiness markers are deliberately separate from HTTP status:
 
 - `EXISTING_PATH / regression`: current public surface exists; preserve and regression-test it.
-- `IMPLEMENTED_PENDING_MERGE`: the matching HTTP surface exists in the current implementation PR, but governed merge and later operational gates remain pending.
+- historical `IMPLEMENTED_PENDING_MERGE`: the matching HTTP surface existed in an implementation PR while governed merge and later operational gates were pending.
 - `NOT_YET_AUDITED`: do not assume Application, persistence or test readiness from the API contract alone.
 - historical `W1_4_READY`: the bounded W1.4 readiness audit was locked before implementation; all five rows are now `IMPLEMENTED / EXISTING_PATH / regression` after closure.
 - historical `IMPLEMENTATION_READY_PENDING_MERGE`: prerequisite was owner-approved before the bounded W1.5 implementation started.
@@ -119,7 +121,7 @@ Wave 1 closed through bounded increments W1.1 through W1.5 plus runtime reconcil
 
 Wave 2 proceeds from `W2_READINESS_AUDIT.md`:
 
-1. `W2.1 API-SAL-009 getSaleFiscalizationStatus`: contract locked in PR #207; implementation candidate in PR #208.
+1. `W2.1 API-SAL-009 getSaleFiscalizationStatus`: CLOSED after contract PR #207, implementation PR #208, CI, deployment and read-only runtime acceptance.
 2. `W2.2 API-SAL-008 cancelSale`: lifecycle/irreversible-boundary prerequisite remains required.
 3. `W2.3 API-POS-001 getPosBootstrap`: bootstrap composition/freshness contract remains required.
 4. `W2.4 API-PTY-008 getPartyAccountSummary`: authoritative party-scoped AR/AP read model remains required.
@@ -139,7 +141,7 @@ Every implementation increment must include, as applicable:
 - matrix row/status updates in the same governed increment;
 - no test weakening to obtain green CI.
 
-## 9. Closed W1.4 and W1.5 gates
+## 9. Closed W1.4, W1.5 and W2.1 gates
 
 W1.4 closure evidence is recorded in `documentation/api-completion-matrix/W1_4_USERS_READINESS.md`.
 
@@ -156,5 +158,7 @@ PR #195 implemented the four routes, accepted DTOs, organization authorization, 
 Final W1.5 runtime acceptance run `35612527016` passed OpenAPI, authentication/authorization, organization isolation, prerequisite provisioning through public HTTP, Terminal registration/list/get/update behavior, deterministic replay, conflict semantics, location lifecycle invariants, stale-version handling, DELETE absence and Wave 1 regressions. Independent Neon verification confirmed final expected versions, exactly six Terminal audit events, six Terminal outbox messages, six completed Terminal idempotency records, zero non-completed Terminal idempotency residue and zero Terminal evidence in the isolated organization B.
 
 Wave 1 is therefore formally closed at `30 / 30` implemented operations.
+
+W2.1 closure evidence is recorded in `documentation/api-completion-matrix/W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`. Runtime run `35643849728` verified the exact deployed revision, OpenAPI route/operation, GET-only surface, 401 authentication behavior, 403 permission enforcement, 403 organization-scope enforcement and 404 masked unknown-sale behavior with no production writes or fixture creation.
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.
