@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EFactura.Application.Common.Context;
 using EFactura.Application.Common.Errors;
+using EFactura.Application.Common.Security;
 using EFactura.Application.ReferenceData;
 using Infrastructure.ReferenceData;
 using Microsoft.AspNetCore.Authorization;
@@ -118,6 +119,56 @@ public sealed class ReferenceDataFoundationTests
         context.Response.Body.Position = 0;
         using var json = await JsonDocument.ParseAsync(context.Response.Body);
         Assert.Equal("authentication_required", json.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task V1_permission_policy_forbidden_returns_rfc9457_permission_denied()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/v1/pos/bootstrap";
+        context.Response.Body = new MemoryStream();
+
+        var handler = new V1AuthorizationMiddlewareResultHandler();
+        var policy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .AddRequirements(new PermissionRequirement(Permissions.SalesRead))
+            .Build();
+
+        await handler.HandleAsync(
+            _ => Task.CompletedTask,
+            context,
+            policy,
+            PolicyAuthorizationResult.Forbid());
+
+        Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
+        Assert.Equal("application/problem+json", context.Response.ContentType);
+
+        context.Response.Body.Position = 0;
+        using var json = await JsonDocument.ParseAsync(context.Response.Body);
+        Assert.Equal("permission_denied", json.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task V1_non_permission_forbidden_preserves_generic_forbidden_code()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/v1/reference-data/uruguay-departments";
+        context.Response.Body = new MemoryStream();
+
+        var handler = new V1AuthorizationMiddlewareResultHandler();
+        var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+
+        await handler.HandleAsync(
+            _ => Task.CompletedTask,
+            context,
+            policy,
+            PolicyAuthorizationResult.Forbid());
+
+        Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
+
+        context.Response.Body.Position = 0;
+        using var json = await JsonDocument.ParseAsync(context.Response.Body);
+        Assert.Equal("forbidden", json.RootElement.GetProperty("code").GetString());
     }
 
     private sealed class FakeActorAccessor : IActorContextAccessor
