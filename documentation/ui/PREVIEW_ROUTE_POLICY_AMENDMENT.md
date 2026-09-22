@@ -38,7 +38,8 @@ This amendment applies to:
 - `WEB-009 / UI-PROCUREMENT-001` at `/compras`;
 - `WEB-010 / UI-RECEIVABLE-001` at `/cuentas-por-cobrar`;
 - `WEB-011 / UI-PAYABLE-001` at `/cuentas-por-pagar`;
-- `WEB-012 / UI-CASH-001` at `/caja`.
+- `WEB-012 / UI-CASH-001` at `/caja`;
+- `WEB-013 / UI-FIS-001` at `/documentos-fiscales`.
 
 ### Receivables boundary
 
@@ -101,9 +102,31 @@ The following remain non-executable while the authoritative HTTP surface is abse
 
 The approved visual contains generic bank/account wording. That visual wording is not product authority. The implementation maps it to source-backed cash-shift/payment-medium concepts while preserving the approved composition.
 
+### Fiscal documents boundary
+
+For `UI-FIS-001`, the approved visual authority is `v1-responsive-composite`, image generation id `f7f7b77c-d6c9-4366-9c1d-7767990c4746`.
+
+Its preview implementation may provide client-side document search/filter/selection, demonstration fiscal-result states, document snapshot detail, local event timeline presentation and responsive fiscal-document cards.
+
+The following remain non-executable while the authoritative HTTP surface is absent:
+
+- canonical fiscal-document list/detail claims;
+- authoritative DGI or transport/result evidence;
+- XML download;
+- printable/authorized representation retrieval;
+- correction creation;
+- regularization queue/case resolution;
+- delivery-attempt claims or delivery requests;
+- bulk export;
+- any local lifecycle mutation presented as canonical fiscal state.
+
+`API-FIS-001..009` and `API-FDL-001..002` remain `MISSING_HTTP`; therefore `UI-FIS-001` registers `operations: []` in `capabilities.ts` while it is a visual preview.
+
+`API-FIS-010` is implemented separately but does not provide the list/detail/artifact/events/correction/regularization/delivery surface required by `WEB-013`.
+
 ## Supersession scope
 
-For `UI-TRANSFER-001`, `UI-PROCUREMENT-001`, `UI-RECEIVABLE-001`, `UI-PAYABLE-001` and `UI-CASH-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
+For `UI-TRANSFER-001`, `UI-PROCUREMENT-001`, `UI-RECEIVABLE-001`, `UI-PAYABLE-001`, `UI-CASH-001` and `UI-FIS-001`, this amendment supersedes prior statements that missing HTTP evidence prohibits **all route activation**.
 
 It does **not** supersede any requirement concerning:
 
@@ -111,7 +134,7 @@ It does **not** supersede any requirement concerning:
 - permissions;
 - idempotency;
 - concurrency/version handling;
-- server-authoritative balances, inventory, costing, payable, receivable or cash effects;
+- server-authoritative balances, inventory, costing, payable, receivable, cash or fiscal effects;
 - discrepancy handling;
 - mutation restrictions;
 - runtime acceptance;
