@@ -32,12 +32,16 @@ public sealed class V1AuthorizationMiddlewareResultHandler : IAuthorizationMiddl
 
         if (authorizeResult.Forbidden)
         {
+            var code = policy.Requirements.Any(requirement => requirement is PermissionRequirement)
+                ? "permission_denied"
+                : "forbidden";
+
             await Errors.V1ProblemDetailsResponse.WriteAsync(
                 context,
                 StatusCodes.Status403Forbidden,
                 "Forbidden",
                 "The authenticated actor does not have permission for this operation.",
-                "forbidden");
+                code);
             return;
         }
 
