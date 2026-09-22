@@ -1,6 +1,6 @@
 # UI-FIS-001 — Inventory Entry
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / ROUTE_NOT_ACTIVE`
+Status: `ACTIVE_VISUAL_PREVIEW / API_PENDING / RUNTIME_REVIEW_PENDING`
 
 ## Identity
 
@@ -8,9 +8,9 @@ Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / ROUTE_NOT_ACTIVE`
 - UI: `UI-FIS-001`
 - Product area: `Fiscal`
 - Name: `Documentos fiscales`
-- Candidate route: `/documentos-fiscales`
-- Navigation state: `PLANNED_DISABLED`
-- Runtime mode: not implemented
+- Route: `/documentos-fiscales`
+- Navigation state: `ACTIVE_VISUAL_PREVIEW`
+- Runtime mode: local demo, API pending
 
 ## Visual evidence
 
@@ -58,20 +58,22 @@ Current implementation evidence for the eleven `WEB-013` dependencies: `MISSING_
 
 `API-FIS-010` exists separately as implemented envelope response-evidence collection and does not satisfy the UI dependency set above.
 
-## Preview eligibility
+## Active preview evidence
 
-A future preview may become `ACTIVE_VISUAL_PREVIEW` only with:
+The implementation provides:
 
 - a real responsive React surface;
 - explicit local/demo fixtures;
-- client-side search/filter/selection only;
-- no executable fiscal HTTP operations;
-- XML/representation/correction/regularization/delivery controls disabled or clearly non-executable;
-- no local authoritative lifecycle mutation;
-- `operations: []`;
-- successful repository gates;
-- separate deployed runtime review.
+- client-side search, filtering and document selection;
+- desktop table plus mobile document cards;
+- local demonstration event timeline;
+- artifact/representation placeholder treatment;
+- disabled XML, representation, correction, delivery and bulk-export controls;
+- `operations: []` in `capabilities.ts`;
+- `verify-fiscal-documents-preview.mjs` in frontend checks.
+
+No executable fiscal HTTP operation is registered and no local state mutation is presented as authoritative fiscal lifecycle change.
 
 ## Current decision
 
-The visual baseline is approved and preserved, but `/documentos-fiscales` remains disabled until implementation is reviewed in a dedicated branch/PR.
+`/documentos-fiscales` is implemented as `ACTIVE_VISUAL_PREVIEW`. Merge still requires repository gates and explicit human approval. Deployed desktop/mobile runtime review remains a separate acceptance checkpoint.
