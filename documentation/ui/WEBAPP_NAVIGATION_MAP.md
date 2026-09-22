@@ -26,7 +26,7 @@ Current runtime/governance state:
 - `WEB-010 / UI-RECEIVABLE-001` has approved visual baseline `v1-approved-view` and is implemented at `/cuentas-por-cobrar` as `IMPLEMENTED_VISUAL_PREVIEW`; its deployed desktop runtime was visually accepted on 2026-09-21 and collection/adjustment/reversal controls remain disabled because `API-AR-001..004` and `API-COL-001..003` remain `MISSING_HTTP`;
 - `WEB-011 / UI-PAYABLE-001` has approved visual baseline `v1-responsive-suite` and is implemented at `/cuentas-por-pagar` as `IMPLEMENTED_VISUAL_PREVIEW`; its deployed runtime was accepted on 2026-09-21 and supplier-payment mutations remain disabled because `API-AP-001..004` and `API-PAY-001..003` remain `MISSING_HTTP`;
 - `WEB-012 / UI-CASH-001` has approved visual baseline `v1-responsive-composite` and is implemented at `/caja` as `IMPLEMENTED_VISUAL_PREVIEW`; its deployed desktop runtime was visually accepted on 2026-09-21, while all server-owned cash commands remain disabled because `API-CSH-001..007` remain `MISSING_HTTP`;
-- `WEB-013 / UI-FIS-001` has approved visual baseline `v1-responsive-composite`; `/documentos-fiscales` remains `PLANNED_DISABLED` until a governed React preview exists because `API-FIS-001..009` and `API-FDL-001..002` remain `MISSING_HTTP`;
+- `WEB-013 / UI-FIS-001` has approved visual baseline `v1-responsive-composite` and is implemented at `/documentos-fiscales` as `IMPLEMENTED_VISUAL_PREVIEW`; fiscal rows/states/events are local fixtures and XML/representation/correction/regularization/delivery/export actions remain disabled because `API-FIS-001..009` and `API-FDL-001..002` remain `MISSING_HTTP`;
 - `WEB-014..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture.
 
@@ -34,9 +34,9 @@ Current counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
-- active shell routes: **11**;
-- active visual-preview routes: **5**;
-- planned disabled shell options: **7**.
+- active shell routes: **12**;
+- active visual-preview routes: **6**;
+- planned disabled shell options: **6**.
 
 ## 3. Sidebar information architecture
 
@@ -98,7 +98,7 @@ Legend:
 | `WEB-010` | Accounts Receivable and Collections | Finanzas | `UI-RECEIVABLE-001` | `/cuentas-por-cobrar` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-011` | Accounts Payable and Supplier Payments | Finanzas | `UI-PAYABLE-001` | `/cuentas-por-pagar` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI-CASH-001` | `/caja` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
-| `WEB-013` | Fiscal Documents | Fiscal | `UI-FIS-001` | `/documentos-fiscales` candidate | `PLANNED_DISABLED` | visual baseline approved |
+| `WEB-013` | Fiscal Documents | Fiscal | `UI-FIS-001` | `/documentos-fiscales` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-014` | CAE Administration | Fiscal | `UI ID pending` | `/cae` candidate | `PLANNED_DISABLED` | — |
 | `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI ID pending` | `/contingencia` candidate | `PLANNED_DISABLED` | — |
 | `WEB-016` | Received CFE and XML Validation | Fiscal | `UI ID pending` | `/cfe-recibidos` candidate | `PLANNED_DISABLED` | — |
@@ -135,19 +135,19 @@ Promotion from `IMPLEMENTED_VISUAL_PREVIEW` to API-integrated behavior requires 
 
 `UI-CASH-001` at `/caja` is the latest shell route whose deployed desktop runtime was explicitly accepted in the governed review lane on 2026-09-21.
 
-The approved baseline already contains mobile responsive authority, but deployed mobile runtime has not been separately evidenced in this checkpoint.
+The approved cash baseline already contains mobile responsive authority, but deployed mobile runtime has not been separately evidenced in this checkpoint.
 
 ## 9. Current next-view checkpoint
 
-Current design/governance checkpoint: `WEB-013 / UI-FIS-001 — Documentos fiscales`.
+Current implementation checkpoint: `WEB-013 / UI-FIS-001 — Documentos fiscales`.
 
 Approved baseline: `v1-responsive-composite`, containing desktop and mobile responsive compositions in one approved artifact (`f7f7b77c-d6c9-4366-9c1d-7767990c4746`).
 
-The accepted `WEB-013` contracts are `API-FIS-001..009` and `API-FDL-001..002`, all currently `MISSING_HTTP` in Wave 5. `/documentos-fiscales` therefore remains `PLANNED_DISABLED` until a responsive React preview is implemented. A future visual preview may use explicit local fixtures for search, filtering, selection, lifecycle presentation and document detail, but XML/representation retrieval, correction, regularization, delivery and any authoritative fiscal-state mutation remain prohibited without server authority.
+`/documentos-fiscales` is implemented as `ACTIVE_VISUAL_PREVIEW` with explicit local fixtures for search, filtering, selection, detail and event presentation. `API-FIS-001..009` and `API-FDL-001..002` remain `MISSING_HTTP`; therefore XML/representation retrieval, correction, regularization, delivery, bulk export and any authoritative fiscal-state mutation remain prohibited and `operations: []` is mandatory.
 
-After the approved baseline is preserved and merged, the next gate is a dedicated WebApp implementation PR for `ACTIVE_VISUAL_PREVIEW`.
+After repository gates, merge, deploy and runtime acceptance of this preview, the next product view is `WEB-014 — CAE Administration`.
 
-Shell counts remain **11 active / 7 planned**, with **5 active visual previews**.
+Shell counts are **12 active / 6 planned**, with **6 active visual previews**.
 
 ## 10. Change control
 
