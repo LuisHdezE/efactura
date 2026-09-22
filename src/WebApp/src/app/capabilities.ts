@@ -129,5 +129,12 @@ export const uiCapabilities: UiCapability[] = [
     route: '/cuentas-por-pagar',
     status: 'IMPLEMENTED_VISUAL_PREVIEW',
     operations: []
+  },
+  {
+    uiId: 'UI-CASH-001',
+    label: 'Caja y conciliación',
+    route: '/caja',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];

@@ -1,6 +1,6 @@
 # UI-CASH-001 — Cash Shift and Reconciliation Reconciliation
 
-Status: `RECONCILED / VISUAL_BASELINE_APPROVED / EXECUTION_BLOCKED_BY_API`
+Status: `ACTIVE_VISUAL_PREVIEW / API_PENDING / RUNTIME_REVIEW_PENDING`
 
 Mapping:
 
@@ -8,7 +8,7 @@ Mapping:
 WEB-012 -> UI-CASH-001
 ```
 
-Reserved route candidate: `/caja`
+Route: `/caja`
 
 ## Upstream product authority
 
@@ -28,7 +28,7 @@ Accepted lifecycle authority:
 - `UC-CASH-001 — Open POS/cash shift`;
 - `UC-CASH-002 — Close and reconcile cash shift`.
 
-Known application permissions already include:
+Known application permissions:
 
 - `cash.read`;
 - `cash.open`;
@@ -38,7 +38,7 @@ Known application permissions already include:
 
 ## Accepted API dependency
 
-The governed HTTP surface for this UI is:
+The governed HTTP surface is:
 
 - `API-CSH-001` `getCurrentCashShift`;
 - `API-CSH-002` `openCashShift`;
@@ -48,7 +48,7 @@ The governed HTTP surface for this UI is:
 - `API-CSH-006` `closeCashShift`;
 - `API-CSH-007` `reconcileCashShift`.
 
-All seven are currently `MISSING_HTTP` in Wave 3.
+All seven remain `MISSING_HTTP` in Wave 3.
 
 ## Visual authority
 
@@ -60,43 +60,32 @@ The artifact includes desktop and mobile responsive compositions within the same
 
 ## Visual-to-domain reconciliation
 
-The approved visual establishes composition, density, hierarchy, responsive behavior and visual language. It does not override source-backed CashManagement semantics.
+The approved visual governs composition, density, hierarchy, responsive behavior and visual language. It does not override source-backed CashManagement semantics.
 
-The following visual concepts are directly compatible with current scope:
+The React implementation intentionally maps unsupported generic bank/account wording onto source-backed cash-shift/payment-medium concepts. It does not expose bank-account administration, authoritative bank balances, arbitrary inter-account transfer management or ungoverned export behavior.
 
-- cash/finance summary cards;
-- movement ledger/list;
-- reconciliation workspace;
-- selected movement/shift detail;
-- status history;
-- search/filter controls;
-- responsive mobile cards;
-- explicit demo disclosure.
+## Active preview boundary
 
-The following visual copy is not independently supported by current `WEB-012` authority and must remain illustrative until separate product evidence exists:
+The route is now permitted as `ACTIVE_VISUAL_PREVIEW` under `PREVIEW_ROUTE_POLICY_AMENDMENT.md` because:
 
-- generic bank-account administration;
-- authoritative bank balances;
-- arbitrary inter-account transfer management;
-- export behavior not attached to an accepted contract.
+- the approved baseline is preserved;
+- a responsive React page exists;
+- every displayed business value is identified as local demonstration data;
+- `Abrir turno`, manual movement, `Cerrar turno` and reconciliation remain disabled;
+- `capabilities.ts` registers `operations: []`;
+- `verify-cash-preview.mjs` guards against accidental CSH HTTP integration.
 
-Implementation may reconcile those labels to cash-shift concepts while preserving the approved composition.
+The preview must not:
 
-## Preview boundary
-
-A future visual preview may use local fixtures for inspection and client-side interaction, but must not:
-
-- claim a canonical shift is open/closed from server state;
+- claim canonical shift state from the server;
 - post movements;
 - close a shift;
 - reconcile differences;
 - persist counted values;
-- invent tolerance approval outcomes;
+- invent tolerance or approval outcomes;
 - mutate historical shift data;
 - claim bank-account side effects.
 
-All server-owned actions remain disabled until executable API evidence exists.
+## Runtime gate
 
-## Next gate
-
-Create the functional specification/inventory record, preserve the approved baseline, then separately implement `/caja` as `ACTIVE_VISUAL_PREVIEW` under the shared preview policy. Route activation is not authorized by this reconciliation alone.
+Repository CI must pass before merge. After deployment, desktop/mobile runtime review remains a separate acceptance checkpoint. Live API integration requires fresh executable evidence and a separate reconciliation.

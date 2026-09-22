@@ -1,16 +1,16 @@
 # UI-CASH-001 — Cash Shift and Reconciliation
 
-Status: `FUNCTIONAL_SPECIFICATION / VISUAL_BASELINE_APPROVED / EXECUTION_BLOCKED_BY_API`
+Status: `IMPLEMENTED_VISUAL_PREVIEW / API_PENDING / RUNTIME_REVIEW_PENDING`
 
 WEB mapping: `WEB-012`
 
-Reserved route candidate: `/caja`
+Route: `/caja`
 
 Approved visual baseline: `UI-CASH-001 / v1-responsive-composite`
 
 ## 1. Purpose
 
-Provide the governed WebApp surface for cashier/treasury inspection of the active cash shift, expected totals, counted values, movements and reconciliation variance without inventing server authority.
+Provide the governed WebApp surface for cashier/treasury inspection of a demonstration cash shift, expected totals, counted values, movements and reconciliation variance without inventing server authority.
 
 ## 2. Roles and permissions
 
@@ -56,19 +56,20 @@ From `UC-CASH-002`:
 6. close shift and prevent ordinary mutation of closed records;
 7. audit counted values, expected values, variance and approvals.
 
-## 4. Required information architecture
+## 4. Implemented preview information architecture
 
-The preview should reserve the following regions while preserving the approved visual hierarchy:
+The active preview contains:
 
 - page header and preview/demo status;
-- current-shift summary;
-- expected/count/variance KPI region;
+- demonstration current-shift summary;
+- expected/income/expense/variance KPI region;
 - movement search/filter region;
-- movement ledger/list;
-- selected shift or movement detail;
+- responsive movement ledger/cards;
+- selected movement detail and local history;
 - reconciliation workspace;
-- history/audit-oriented timeline where supported by fixture semantics;
-- responsive mobile cards/detail.
+- turn information workspace;
+- disabled server-owned controls;
+- responsive mobile behavior.
 
 ## 5. Current API dependency
 
@@ -82,67 +83,71 @@ The preview should reserve the following regions while preserving the approved v
 
 All seven are `MISSING_HTTP`.
 
-## 6. Preview behavior before API readiness
+## 6. Active preview behavior
 
-A governed visual preview may support local-only interactions such as:
+The governed visual preview supports local-only interaction:
 
-- selecting demo movement/shift records;
+- selecting demo movement records;
 - searching/filtering fixture rows/cards;
-- switching informational tabs;
+- switching `Movimientos`, `Conciliación` and `Turno` tabs;
 - displaying deterministic fixture expected/count/variance examples;
 - responsive layout behavior.
 
-It must visibly identify all business values as demonstration data.
+All business values are visibly identified as demonstration data.
 
 ## 7. Disabled server-owned actions
 
-Until fresh executable API evidence exists, the preview must disable or otherwise make non-executable:
+Until fresh executable API evidence exists, the preview keeps non-executable:
 
 - `Abrir turno`;
 - manual cash movement posting;
 - `Cerrar turno`;
 - `Conciliar` / approve variance;
 - persistence of counted values;
+- movement editing/reversal;
 - any operation that mutates canonical cash state.
 
 No local interaction may pretend to have changed server truth.
 
 ## 8. Variance and tolerance semantics
 
-The client may display fixture examples of expected, counted and variance values. It must not invent:
+The client displays fixture examples of expected, counted and variance values. It does not invent:
 
 - the configured tolerance threshold;
 - who must approve a variance;
 - whether a variance is accepted;
 - accounting/cash consequences of the variance.
 
-Those outcomes are server/policy authority.
+Those outcomes remain server/policy authority.
 
 ## 9. Movement history
 
-Movement fixtures may represent business sources such as collections, supplier payments, POS cash operations or manual movements for visual inspection. The preview must not claim those cross-module effects were actually posted.
+Movement fixtures may visually represent business sources such as collections, supplier payments or POS cash operations. The preview does not claim those cross-module effects were actually posted.
 
-Closed shift history is immutable from this UI except through future accepted compensating/reconciliation workflows.
+Closed shift history remains immutable from this UI except through future accepted compensating/reconciliation workflows.
 
 ## 10. Approved visual reconciliation
 
-The approved composite contains generic account/bank wording. That wording is not itself a product contract. React implementation should preserve the approved layout, density, visual hierarchy, responsive behavior and status treatment while mapping labels to source-backed cash-shift concepts.
+The approved composite contains generic bank/account wording. That wording is not itself a product contract. The React implementation preserves the approved layout, density, visual hierarchy, responsive behavior and status treatment while mapping labels to source-backed cash-shift/payment-medium concepts.
+
+It does not expose authoritative bank balances, bank-account administration or arbitrary inter-account transfers.
 
 ## 11. Responsive behavior
 
 Desktop/tablet:
 
-- dense movement ledger permitted;
-- detail/reconciliation panel may coexist beside the ledger;
-- filters remain accessible without hiding execution boundaries.
+- dense movement ledger;
+- detail panel beside ledger when space permits;
+- reconciliation and turn panels readable within the shared shell;
+- filters keep execution boundaries visible.
 
 Mobile:
 
-- cards replace wide tables where necessary;
+- movement cards replace the wide table;
 - expected/count/variance values remain readable;
-- selected detail follows the list or opens in a readable stacked region;
+- selected detail follows the list;
 - disabled authoritative actions remain visibly disabled;
-- status must never depend on color alone.
+- status never depends on color alone.
 
 ## 12. Error/state reservation
 
@@ -158,19 +163,17 @@ Future API integration must handle at minimum:
 
 Preview fixtures do not manufacture authoritative responses for those states.
 
-## 13. Route activation gate
+## 13. Current activation state
 
-The approved visual baseline alone does not activate `/caja`.
+`/caja` is `ACTIVE_VISUAL_PREVIEW` under `PREVIEW_ROUTE_POLICY_AMENDMENT.md`.
 
-Activation as `ACTIVE_VISUAL_PREVIEW` requires:
+Current guarantees:
 
-1. preview-policy reconciliation;
-2. responsive React implementation;
-3. explicit local-demo labeling;
-4. all server-owned mutations disabled;
-5. `operations: []` while all cash HTTP contracts remain missing;
-6. source-level regression guard;
-7. repository CI green;
-8. separate deployed runtime review.
+1. responsive React implementation exists;
+2. local-demo labeling is explicit;
+3. all server-owned mutations are disabled;
+4. `capabilities.ts` registers `operations: []`;
+5. `verify-cash-preview.mjs` guards against accidental live CSH integration;
+6. deployed runtime review remains pending until merge/deploy.
 
-Live integration is a later, independent gate.
+Live API integration is a later, independent gate.
