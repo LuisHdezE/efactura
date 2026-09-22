@@ -234,6 +234,7 @@ public static class V1PersistenceServiceCollectionExtensions
         services.AddSingleton<SaleSettlementPlanner>();
         services.AddScoped<ISaleConfirmationEvidenceResolver, SaleConfirmationEvidenceResolver>();
         services.AddScoped<ConfirmSaleUseCase>();
+        services.AddScoped<CancelSaleUseCase>();
 
         return services;
     }

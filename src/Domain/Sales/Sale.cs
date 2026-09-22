@@ -6,7 +6,8 @@ public enum SaleStatus
 {
     Draft = 1,
     Validated = 2,
-    Confirmed = 3
+    Confirmed = 3,
+    Cancelled = 4
 }
 
 public enum SaleCommercialIntent
@@ -409,6 +410,27 @@ public sealed class Sale
         Validate();
     }
 
+    public void MarkCancelled(long expectedVersion)
+    {
+        if (Status == SaleStatus.Confirmed)
+        {
+            throw new DomainRuleException(
+                "sales.cancellation.irreversible_boundary_crossed",
+                "A confirmed sale cannot be cancelled through the pre-confirmation cancellation workflow.");
+        }
+        if (Status == SaleStatus.Cancelled)
+        {
+            throw new DomainRuleException(
+                "sales.already_cancelled",
+                "A cancelled sale is terminal.");
+        }
+
+        EnsureVersion(expectedVersion);
+        Status = SaleStatus.Cancelled;
+        Version++;
+        Validate();
+    }
+
     private void Validate()
     {
         if (CurrencyCode.Length != 3 || CurrencyCode.Any(ch => ch < 'A' || ch > 'Z'))
@@ -463,6 +485,12 @@ public sealed class Sale
             throw new DomainRuleException(
                 "sales.confirmed_immutable",
                 "A confirmed sale commercial snapshot is immutable.");
+        }
+        if (Status == SaleStatus.Cancelled)
+        {
+            throw new DomainRuleException(
+                "sales.cancelled_terminal",
+                "A cancelled sale is terminal and cannot be modified or validated.");
         }
     }
 

@@ -1,12 +1,12 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_CONTRACT_CANDIDATE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_IMPLEMENTED_PENDING_MERGE`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Parties + Catalog + Sales Completion**.
 
-Baseline: **26 operation IDs**, **23 implemented**, **3 non-implemented**.
+Candidate baseline: **26 operation IDs**, **24 implemented HTTP surfaces**, **2 non-implemented** if PR #216 is owner-approved and merged at its final exact HEAD.
 
 Detailed readiness evidence for the original four missing operations is recorded in `W2_READINESS_AUDIT.md`.
 
@@ -14,7 +14,7 @@ W2.1 field-level contract: `W2_1_SALE_FISCALIZATION_STATUS_CONTRACT.md`.
 
 W2.1 operational closure: `W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
-W2.2 lifecycle contract candidate: `W2_2_SALE_CANCELLATION_CONTRACT.md`.
+W2.2 owner-locked lifecycle contract: `W2_2_SALE_CANCELLATION_CONTRACT.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -42,5 +42,5 @@ W2.2 lifecycle contract candidate: `W2_2_SALE_CANCELLATION_CONTRACT.md`.
 | `API-SAL-005` | `validateSale` | POST `/api/v1/sales/{saleId}/validate` | `sales.create` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-006` | `getSaleFiscalPreview` | GET `/api/v1/sales/{saleId}/fiscal-preview` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-007` | `confirmSale` | POST `/api/v1/sales/{saleId}/confirm` | `sales.confirm` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
-| `API-SAL-008` | `cancelSale` | POST `/api/v1/sales/{saleId}/cancel` | `sales.cancel` | ACCEPTED | MISSING_HTTP | none | CONTRACT_CANDIDATE_PENDING_OWNER_LOCK | 2 | Candidate contract locks Draft/Validated -> Cancelled, Confirmed irreversible boundary, version/reason/idempotency and durable audit/outbox semantics; implementation remains unauthorized until owner-approved contract merge |
+| `API-SAL-008` | `cancelSale` | POST `/api/v1/sales/{saleId}/cancel` | `sales.cancel` | ACCEPTED | IMPLEMENTED | `SaleCancellationController` | IMPLEMENTED_PENDING_MERGE | 2 | PR #216 implements the owner-locked Draft/Validated -> Cancelled terminal transition with idempotency, optimistic concurrency, audit/outbox evidence, irreversible Confirmed boundary and provider-real QA; acceptance remains pending exact-head merge/deploy/runtime gates |
 | `API-SAL-009` | `getSaleFiscalizationStatus` | GET `/api/v1/sales/{saleId}/fiscalization` | `sales.read` | ACCEPTED | IMPLEMENTED | `SaleFiscalizationController` | EXISTING_PATH / regression | 2 | W2.1 closed after PR #208 merge, Guard #695/#696, Deploy #55 and read-only production runtime acceptance run `35643849728`; see closure evidence |
