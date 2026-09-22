@@ -1,12 +1,14 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_CONTRACT_CANDIDATE_PENDING_OWNER_LOCK`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_IMPLEMENTATION_CANDIDATE_PENDING_MERGE`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Parties + Catalog + Sales Completion**.
 
 Accepted baseline after PR #216 merge: **26 operation IDs**, **24 implemented HTTP surfaces**, **2 non-implemented**.
+
+W2.3 PR #221 is the governed implementation candidate for `API-POS-001 getPosBootstrap`; if accepted and merged, Wave 2 becomes **25 / 26 implemented** with only `API-PTY-008 getPartyAccountSummary` remaining.
 
 Detailed readiness evidence for the original four missing operations is recorded in `W2_READINESS_AUDIT.md`.
 
@@ -16,7 +18,7 @@ W2.1 operational closure: `W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
 W2.2 owner-locked lifecycle contract: `W2_2_SALE_CANCELLATION_CONTRACT.md`.
 
-W2.3 contract candidate: `W2_3_POS_BOOTSTRAP_CONTRACT.md`.
+W2.3 owner-locked contract: `W2_3_POS_BOOTSTRAP_CONTRACT.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -36,7 +38,7 @@ W2.3 contract candidate: `W2_3_POS_BOOTSTRAP_CONTRACT.md`.
 | `API-CAT-006` | `listItemCategories` | GET `/api/v1/item-categories` | `catalog.read` | ACCEPTED | IMPLEMENTED | `ItemCategoriesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-CAT-007` | `createItemCategory` | POST `/api/v1/item-categories` | `catalog.manage` | ACCEPTED | IMPLEMENTED | `ItemCategoriesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-CAT-008` | `updateItemCategory` | PATCH `/api/v1/item-categories/{categoryId}` | `catalog.manage` | ACCEPTED | IMPLEMENTED | `ItemCategoriesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
-| `API-POS-001` | `getPosBootstrap` | GET `/api/v1/pos/bootstrap` | `sales.read` | ACCEPTED | MISSING_HTTP | none | CONTRACT_CANDIDATE_PENDING_OWNER_LOCK | 2 | W2.3 candidate locks a sales-scoped, read-only active location/terminal projection with actor scope filtering and ETag revalidation; payment methods/catalog/parties/pricing/fiscal data remain explicitly outside bootstrap |
+| `API-POS-001` | `getPosBootstrap` | GET `/api/v1/pos/bootstrap` | `sales.read` | ACCEPTED | IMPLEMENTATION_CANDIDATE | `PosBootstrapController -> GetPosBootstrapUseCase -> IFiscalLocationRepository + ITerminalRepository` | IMPLEMENTED_PENDING_MERGE | 2 | PR #221 candidate implements actor-scoped active location/terminal contexts, deterministic ordering and `private, no-cache` ETag revalidation. No payment/catalog/party/pricing/fiscal/stock aggregation; no migration or production mutation |
 | `API-SAL-001` | `listSales` | GET `/api/v1/sales` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-002` | `createSale` | POST `/api/v1/sales` | `sales.create` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-003` | `getSale` | GET `/api/v1/sales/{saleId}` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
