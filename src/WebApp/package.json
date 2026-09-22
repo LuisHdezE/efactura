@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:deploy": "tsc --noEmit && vite build && node scripts/verify-deploy-routing.mjs && node scripts/verify-receivables-preview.mjs && node scripts/verify-payables-preview.mjs && node scripts/verify-cash-preview.mjs",
-    "check": "tsc --noEmit && vite build && node scripts/verify-receivables-preview.mjs && node scripts/verify-payables-preview.mjs && node scripts/verify-cash-preview.mjs",
+    "build:deploy": "tsc --noEmit && vite build && node scripts/verify-deploy-routing.mjs && node scripts/verify-receivables-preview.mjs && node scripts/verify-payables-preview.mjs && node scripts/verify-cash-preview.mjs && node scripts/verify-fiscal-documents-preview.mjs",
+    "check": "tsc --noEmit && vite build && node scripts/verify-receivables-preview.mjs && node scripts/verify-payables-preview.mjs && node scripts/verify-cash-preview.mjs && node scripts/verify-fiscal-documents-preview.mjs",
     "check:deploy": "npm run build:deploy",
     "preview": "vite preview"
   },
