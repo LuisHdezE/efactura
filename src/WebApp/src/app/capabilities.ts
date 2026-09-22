@@ -136,5 +136,12 @@ export const uiCapabilities: UiCapability[] = [
     route: '/caja',
     status: 'IMPLEMENTED_VISUAL_PREVIEW',
     operations: []
+  },
+  {
+    uiId: 'UI-FIS-001',
+    label: 'Documentos fiscales',
+    route: '/documentos-fiscales',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];
