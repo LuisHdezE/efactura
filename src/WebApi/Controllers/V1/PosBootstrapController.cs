@@ -1,4 +1,6 @@
+using EFactura.Application.Common.Context;
 using EFactura.Application.Common.Security;
+using EFactura.Application.Organizations;
 using EFactura.Application.Sales;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers.V1.Contracts;
@@ -16,10 +18,12 @@ public sealed class PosBootstrapController : ControllerBase
 
     public PosBootstrapController(
         V1OrganizationContextResolver organization,
-        GetPosBootstrapUseCase get)
+        IFiscalLocationRepository locations,
+        ITerminalRepository terminals,
+        IActorContextAccessor actors)
     {
         _organization = organization;
-        _get = get;
+        _get = new GetPosBootstrapUseCase(locations, terminals, actors);
     }
 
     [HttpGet(Name = "getPosBootstrap")]
