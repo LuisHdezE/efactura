@@ -85,6 +85,12 @@ jobs:
           tmp="${RUNNER_TEMP}/w23-readonly"
           mkdir -p "$tmp"
 
+          header_value() {
+            local name="$1"
+            local file="$2"
+            grep -im1 "^${name}:" "$file" | cut -d: -f2- | sed -E 's/^[[:space:]]+//; s/\r$//'
+          }
+
           openapi_code="$(curl -sS -o "$tmp/openapi.json" -w '%{http_code}' "$BASE_URL/swagger/v1/swagger.json")"
           echo "OpenAPI HTTP $openapi_code"
           [[ "$openapi_code" == "200" ]]
@@ -184,24 +190,24 @@ jobs:
             and ((keys | sort) == ["contexts", "generatedAtUtc", "organizationId"])
           ' "$tmp/empty.json" >/dev/null
 
-          cache_control="$(awk 'BEGIN{IGNORECASE=1} /^cache-control:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$tmp/empty.headers")"
+          cache_control="$(header_value 'cache-control' "$tmp/empty.headers")"
           [[ "$cache_control" == *"private"* ]]
           [[ "$cache_control" == *"no-cache"* ]]
 
-          etag="$(awk 'BEGIN{IGNORECASE=1} /^etag:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$tmp/empty.headers")"
+          etag="$(header_value 'etag' "$tmp/empty.headers")"
           [[ -n "$etag" ]]
           echo "W2.3 cache + ETag PASS"
 
           repeat_code="$(curl -sS -D "$tmp/repeat.headers" -H "Authorization: Bearer $sales_token" -H 'X-Organization-Id: demo-org' -o "$tmp/repeat.json" -w '%{http_code}' "$target")"
           [[ "$repeat_code" == "200" ]]
-          repeat_etag="$(awk 'BEGIN{IGNORECASE=1} /^etag:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$tmp/repeat.headers")"
+          repeat_etag="$(header_value 'etag' "$tmp/repeat.headers")"
           [[ "$repeat_etag" == "$etag" ]]
           echo "W2.3 stable ETag PASS"
 
           not_modified_code="$(curl -sS -D "$tmp/not-modified.headers" -H "Authorization: Bearer $sales_token" -H 'X-Organization-Id: demo-org' -H "If-None-Match: $etag" -o "$tmp/not-modified.body" -w '%{http_code}' "$target")"
           [[ "$not_modified_code" == "304" ]]
           [[ ! -s "$tmp/not-modified.body" ]]
-          not_modified_etag="$(awk 'BEGIN{IGNORECASE=1} /^etag:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$tmp/not-modified.headers")"
+          not_modified_etag="$(header_value 'etag' "$tmp/not-modified.headers")"
           [[ "$not_modified_etag" == "$etag" ]]
           echo "W2.3 If-None-Match 304 PASS"
 
@@ -211,7 +217,7 @@ jobs:
           unset scoped_token
           [[ "$scoped_code" == "200" ]]
           jq -e '.organizationId == "demo-org" and (.contexts | type == "array")' "$tmp/scoped.json" >/dev/null
-          scoped_etag="$(awk 'BEGIN{IGNORECASE=1} /^etag:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$tmp/scoped.headers")"
+          scoped_etag="$(header_value 'etag' "$tmp/scoped.headers")"
           [[ -n "$scoped_etag" ]]
           [[ "$scoped_etag" != "$etag" ]]
           echo "W2.3 scope-sensitive ETag PASS"
