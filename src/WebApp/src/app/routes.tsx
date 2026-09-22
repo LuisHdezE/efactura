@@ -3,6 +3,7 @@ import { CashPage } from '../features/cash/CashPage';
 import { CatalogPage } from '../features/catalog/CatalogPage';
 import { CustomersPage } from '../features/customers/CustomersPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { FiscalDocumentsPage } from '../features/fiscal-documents/FiscalDocumentsPage';
 import { InventoryPage } from '../features/inventory/InventoryPage';
 import { PayablesPage } from '../features/payables/PayablesPage';
 import { PosPage } from '../features/pos/PosPage';
@@ -87,7 +88,7 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-010', state: 'active', capability: requireCapability('UI-RECEIVABLE-001'), icon: '↗', navigationGroup: 'Finanzas', element: <ReceivablesPage /> },
   { webId: 'WEB-011', state: 'active', capability: requireCapability('UI-PAYABLE-001'), icon: '↙', navigationGroup: 'Finanzas', element: <PayablesPage /> },
   { webId: 'WEB-012', state: 'active', capability: requireCapability('UI-CASH-001'), icon: '▰', navigationGroup: 'Finanzas', element: <CashPage /> },
-  { webId: 'WEB-013', state: 'planned', label: 'Documentos fiscales', icon: '≡', navigationGroup: 'Fiscal' },
+  { webId: 'WEB-013', state: 'active', capability: requireCapability('UI-FIS-001'), icon: '≡', navigationGroup: 'Fiscal', element: <FiscalDocumentsPage /> },
   { webId: 'WEB-014', state: 'planned', label: 'CAE', icon: '#', navigationGroup: 'Fiscal' },
   { webId: 'WEB-015', state: 'planned', label: 'Contingencia / Sincronización', icon: '↻', navigationGroup: 'Fiscal' },
   { webId: 'WEB-016', state: 'planned', label: 'CFE recibidos', icon: '⇩', navigationGroup: 'Fiscal' },

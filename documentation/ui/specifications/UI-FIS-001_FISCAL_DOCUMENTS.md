@@ -1,10 +1,10 @@
 # UI-FIS-001 — Fiscal Documents
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED`
+Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / ACTIVE_VISUAL_PREVIEW`
 
 WEB mapping: `WEB-013`
 
-Candidate route: `/documentos-fiscales`
+Route: `/documentos-fiscales`
 
 Approved visual baseline: `v1-responsive-composite`
 
@@ -42,31 +42,29 @@ The approved visual reserves four summary cards:
 - in process;
 - rejected.
 
-In visual-preview mode these values are demonstration-only and must be labeled/contained so they cannot be interpreted as live DGI totals. Once API integration exists, status semantics must come from the server contract rather than client inference.
+In visual-preview mode these values are demonstration-only and are labeled/contained so they cannot be interpreted as live DGI totals. Once API integration exists, status semantics must come from the server contract rather than client inference.
 
 ## Search and filters
 
-The working surface should provide client-side demo controls for:
+The active preview provides client-side demo controls for:
 
 - document number;
 - RUT/customer;
 - CFE type;
-- lifecycle/result state;
-- issue-date range.
+- lifecycle/result state.
 
-Search/filtering in preview mode operates only over local fixtures.
+The approved baseline also reserves issue-date filtering. The preview does not fabricate a server query contract for date ranges while HTTP coverage is absent. Search/filtering operates only over local fixtures.
 
 ## Fiscal document ledger
 
-Desktop uses a dense table. Minimum columns from the approved composition:
+Desktop uses a dense table with:
 
 - issue date;
 - type;
 - number;
 - customer / RUT;
 - amount and currency;
-- state;
-- compact action affordances.
+- textual state.
 
 Mobile replaces the dense table with stacked cards preserving:
 
@@ -76,11 +74,11 @@ Mobile replaces the dense table with stacked cards preserving:
 - amount;
 - textual state.
 
-Selection is local UI state only until `API-FIS-001/002` exist.
+Selection is local UI state only while `API-FIS-001/002` remain unavailable.
 
 ## Selected document detail
 
-The desktop detail panel and mobile detail flow should be able to present, from demo fixtures:
+The desktop detail panel and mobile stacked detail present demo fixtures for:
 
 - document number/fiscal identity;
 - type;
@@ -88,7 +86,7 @@ The desktop detail panel and mobile detail flow should be able to present, from 
 - customer/receiver and RUT;
 - total amount/currency;
 - illustrative lifecycle/result state;
-- CAE metadata where visually useful;
+- CAE metadata;
 - reference metadata;
 - observations.
 
@@ -96,38 +94,28 @@ No local fixture is canonical fiscal evidence.
 
 ## Lifecycle and events
 
-A dedicated tab/section is reserved for document events and traceability.
-
-Preview mode may display local chronological fixture events for presentation validation. It must not claim those events came from DGI, transport infrastructure or `API-FIS-005`.
+A dedicated tab presents local chronological fixture events for presentation validation. It explicitly states that these events do not come from DGI, transport infrastructure or `API-FIS-005`.
 
 ## Representation and XML
 
 The approved visual reserves affordances for:
 
-- view/download representation;
+- view representation;
 - download XML.
 
-While `API-FIS-003` and `API-FIS-004` remain `MISSING_HTTP`, these controls must remain disabled or explicitly non-executable demo affordances. The client must not synthesize an authoritative XML or fiscal representation.
+While `API-FIS-003` and `API-FIS-004` remain `MISSING_HTTP`, these controls are disabled. The preview displays an artifact placeholder and does not synthesize authoritative XML, PDF or printable fiscal representation.
 
 ## Correction and regularization
 
-The view may reserve visual placement for:
-
-- correction request;
-- regularization case inspection;
-- regularization disposition.
-
-`API-FIS-006..009` remain server authority. Preview mode must not create, resolve or locally mutate correction/regularization state.
+The view reserves visual placement for correction and regularization context. `API-FIS-006..009` remain server authority. Preview mode does not create, resolve or locally mutate correction/regularization state.
 
 ## Delivery context
 
-The view may display delivery-attempt context or reserve a delivery action area.
-
-`API-FDL-001/002` remain server authority. Preview mode must not claim real delivery attempts or send delivery requests.
+The view reserves a disabled delivery-request affordance. `API-FDL-001/002` remain server authority. Preview mode does not claim real delivery attempts or send delivery requests.
 
 ## Export boundary
 
-The approved visual contains an `Exportar` affordance. No accepted `WEB-013` bulk-export operation is currently mapped. Therefore the preview must not implement a server export or imply one exists. The affordance may be omitted, disabled or clearly marked illustrative without changing the approved hierarchy.
+The approved visual contains an `Exportar` affordance. No accepted `WEB-013` bulk-export operation is mapped. The preview therefore renders export disabled and does not imply an executable server export exists.
 
 ## States
 
@@ -160,16 +148,16 @@ Mobile:
 - document cards instead of the full table;
 - selected detail as a stacked drill-down surface.
 
-Intermediate widths may adapt while preserving the information hierarchy and explicit demo boundary.
+Intermediate widths adapt while preserving information hierarchy and the explicit demo boundary.
 
 ## Accessibility
 
-- do not encode fiscal state by color alone;
-- keep textual state labels;
-- preserve keyboard-focus visibility;
-- provide accessible names for icon-only row actions;
-- keep RUT, fiscal number, amount/currency and dates readable without relying on tooltip-only content;
-- maintain sufficient contrast in both shell and cards.
+- fiscal state is not encoded by color alone;
+- textual state labels remain visible;
+- keyboard selection is supported on desktop rows;
+- iconography is supplemental rather than the only status cue;
+- RUT, fiscal number, amount/currency and dates remain readable;
+- disabled server-owned controls remain explicit.
 
 ## API dependencies
 
@@ -182,15 +170,18 @@ These are currently `MISSING_HTTP` in Wave 5.
 
 `API-FIS-010` is implemented separately but does not provide the full UI contract required by this view.
 
-## Preview implementation gate
+## Active preview implementation boundary
 
-Before `/documentos-fiscales` may become navigable as `ACTIVE_VISUAL_PREVIEW`:
+`/documentos-fiscales` is eligible as `ACTIVE_VISUAL_PREVIEW` because:
 
-1. this approved baseline must be preserved;
-2. a real responsive React surface must exist in the shared shell;
-3. business data must be explicitly local/demo;
-4. server-owned fiscal actions must remain disabled;
-5. no fiscal HTTP operations may be registered as executable without fresh evidence;
-6. `operations: []` must remain true for the preview capability;
-7. repository CI/architecture gates must pass;
-8. deployed runtime review must remain separate from baseline approval.
+1. the approved baseline is preserved;
+2. a real responsive React surface exists in the shared shell;
+3. business data is explicitly local/demo;
+4. server-owned fiscal actions remain disabled;
+5. no FIS/FDL HTTP operation is registered as executable;
+6. `operations: []` remains true for the preview capability;
+7. `verify-fiscal-documents-preview.mjs` guards the boundary;
+8. repository CI/architecture gates must pass before merge;
+9. deployed runtime review remains separate from baseline approval.
+
+Promotion to live API-integrated behavior requires fresh executable API evidence and a separate integration reconciliation.

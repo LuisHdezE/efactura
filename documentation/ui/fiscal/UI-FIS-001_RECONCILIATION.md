@@ -1,6 +1,6 @@
 # UI-FIS-001 — Fiscal Documents Reconciliation
 
-Status: `VISUAL_BASELINE_APPROVED / IMPLEMENTATION_NOT_STARTED`
+Status: `ACTIVE_VISUAL_PREVIEW / API_PENDING / RUNTIME_REVIEW_PENDING`
 
 Mapping:
 
@@ -8,7 +8,7 @@ Mapping:
 WEB-013 -> UI-FIS-001
 ```
 
-Candidate route: `/documentos-fiscales`
+Route: `/documentos-fiscales`
 
 ## Upstream product authority
 
@@ -62,28 +62,38 @@ The artifact contains desktop and mobile responsive compositions within one appr
 
 The approved artifact governs composition, density, hierarchy, responsive behavior and visual language. It does not override source-backed fiscal semantics.
 
-The future React implementation may use local fixtures to demonstrate:
+The React preview uses local fixtures to demonstrate:
 
 - document search/filtering;
 - local selection of a document;
-- visual accepted/in-process/rejected statuses clearly labeled as demonstration data;
+- visual accepted/in-process/rejected states clearly labeled as demonstration data;
 - document identity and snapshot-oriented detail;
-- tabs for events, representation/XML and references/delivery context.
+- local event timeline presentation;
+- responsive document cards and artifact placeholders.
 
-The preview must not present local fixtures as live DGI evidence, canonical fiscal state or immutable server artifacts.
+The preview does not present local fixtures as live DGI evidence, canonical fiscal state or immutable server artifacts.
 
-## Execution boundary while APIs remain missing
+## Active preview boundary
 
-A future `ACTIVE_VISUAL_PREVIEW` is eligible only if all of the following remain true:
+The route is permitted as `ACTIVE_VISUAL_PREVIEW` under `PREVIEW_ROUTE_POLICY_AMENDMENT.md` because:
 
-- all displayed business rows/counts/states are explicitly local demonstration data;
-- no `fetch`/HTTP registration targets `API-FIS-001..009` or `API-FDL-001..002` until executable evidence exists;
-- XML/representation actions are disabled or explicitly non-executable demonstration affordances;
-- correction and regularization mutations are disabled;
-- delivery requests are disabled;
-- no bulk export behavior is invented;
-- no local state mutation is presented as authoritative fiscal lifecycle change;
-- `operations: []` remains mandatory in `capabilities.ts` for the preview.
+- the approved baseline is preserved;
+- a responsive React page exists in the shared shell;
+- every displayed business value is explicitly local demonstration data;
+- XML/representation, correction, regularization and delivery commands remain disabled;
+- bulk export remains disabled;
+- `capabilities.ts` registers `operations: []`;
+- `verify-fiscal-documents-preview.mjs` guards against accidental FIS/FDL HTTP integration.
+
+The preview must not:
+
+- claim canonical fiscal state from DGI or transport services;
+- synthesize authoritative XML or printable fiscal representations;
+- create corrections;
+- create or resolve regularization cases;
+- claim real delivery attempts or send delivery requests;
+- mutate local fixtures as authoritative fiscal history;
+- expose a bulk-export operation not present in the accepted WEB-013 contract.
 
 ## Required states
 
@@ -97,7 +107,7 @@ The governed interface baseline requires support for:
 - `409`;
 - `422`.
 
-A local visual preview must not fake live backend failures or authorization outcomes as if they came from production. Those states remain implementation requirements for later API integration.
+The local visual preview demonstrates deterministic presentation states only. It does not fake live backend failures or authorization outcomes as if they came from production. Those states remain requirements for later API integration.
 
 ## Neighboring module boundaries
 
@@ -108,14 +118,8 @@ A local visual preview must not fake live backend failures or authorization outc
 - `WEB-016 — Received CFE and XML Validation`;
 - `WEB-017 — Reports and Fiscal Calendar`.
 
-Links or affordances toward those areas must remain non-navigable until the destination has its own governed route.
+No dead navigation into those planned modules is introduced by this preview.
 
-## Next gate
+## Runtime gate
 
-1. Preserve the approved baseline.
-2. Keep `/documentos-fiscales` `PLANNED_DISABLED` while no responsive React preview exists.
-3. Reconcile preview-route policy.
-4. Implement the responsive local-demo preview in a dedicated branch.
-5. Keep every server-owned fiscal action disabled.
-6. Run repository gates.
-7. Merge only after explicit human approval and review deployed runtime separately.
+Repository CI must pass before merge. After deployment, desktop/mobile runtime review remains a separate acceptance checkpoint. Live API integration requires fresh executable evidence and a separate reconciliation.
