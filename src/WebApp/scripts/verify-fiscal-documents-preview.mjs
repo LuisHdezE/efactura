@@ -8,6 +8,7 @@ const root = path.resolve(here, '..');
 const routes = fs.readFileSync(path.join(root, 'src/app/routes.tsx'), 'utf8');
 const capabilities = fs.readFileSync(path.join(root, 'src/app/capabilities.ts'), 'utf8');
 const page = fs.readFileSync(path.join(root, 'src/features/fiscal-documents/FiscalDocumentsPage.tsx'), 'utf8');
+const styles = fs.readFileSync(path.join(root, 'src/features/fiscal-documents/fiscal-documents-preview.css'), 'utf8');
 
 const failures = [];
 
@@ -39,10 +40,32 @@ for (const required of ['Datos de demostración', 'Preview UI · API pendiente',
   }
 }
 
+for (const requiredStyle of [
+  'padding: 14px',
+  'color: var(--text)',
+  'background: var(--surface)',
+  'border: 1px solid var(--border)',
+  "root[data-theme='dark']"
+]) {
+  if (!styles.includes(requiredStyle)) {
+    failures.push(`Fiscal documents theme parity marker is missing: ${requiredStyle}`);
+  }
+}
+
+for (const forbiddenStyle of [
+  'color: #f7fbff',
+  'background: #08253d',
+  'background: #08233a'
+]) {
+  if (styles.includes(forbiddenStyle)) {
+    failures.push(`Fiscal documents preview must not force a dark-only shell palette: ${forbiddenStyle}`);
+  }
+}
+
 if (failures.length) {
   console.error('Fiscal documents preview guard FAIL');
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exit(1);
 }
 
-console.log('Fiscal documents preview guard PASS: governed route active, demo boundary explicit, no FIS/FDL HTTP integration registered.');
+console.log('Fiscal documents preview guard PASS: governed route active, demo boundary explicit, shared theme parity enforced, no FIS/FDL HTTP integration registered.');
