@@ -7,6 +7,7 @@ const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
 
 const page = read('src/features/cae/CaePage.tsx');
 const css = read('src/features/cae/cae.css');
+const mobileCss = read('src/features/cae/cae-mobile-filters.css');
 const routes = read('src/app/routes.tsx');
 const capabilities = read('src/app/capabilities.ts');
 const services = read('src/services/index.ts');
@@ -27,7 +28,7 @@ for (const forbidden of ['fetch(', 'axios', 'NextNumber', 'nextNumber', 'consume
   if (page.includes(forbidden)) failures.push(`CaePage.tsx contains forbidden live/invented marker: ${forbidden}`);
 }
 
-for (const required of ['gateways.cae.listAuthorizations', 'gateways.cae.getAuthorization', 'gateways.cae.listAllocations', 'Importar CAE', 'Nueva asignación', 'Activar CAE', 'fiscal.manage_cae']) {
+for (const required of ['gateways.cae.listAuthorizations', 'gateways.cae.getAuthorization', 'gateways.cae.listAllocations', 'Importar CAE', 'Nueva asignación', 'Activar CAE', 'fiscal.manage_cae', 'cae-mobile-filter-toggle', 'aria-expanded={mobileFiltersOpen}', 'Filtros']) {
   if (!page.includes(required)) failures.push(`CaePage.tsx missing governed UI marker: ${required}`);
 }
 
@@ -41,6 +42,10 @@ for (const token of ['var(--surface)', 'var(--surface-2)', 'var(--text)', 'var(-
 
 for (const responsive of ['@media (max-width: 980px)', '@media (max-width: 760px)', '@media (max-width: 430px)', '.cae-mobile-list']) {
   if (!css.includes(responsive)) failures.push(`CAE responsive guard missing: ${responsive}`);
+}
+
+for (const mobileFilterMarker of ['.cae-mobile-filter-toggle', '.cae-filters.is-mobile-expanded .cae-filter-field', "[aria-expanded='true']"]) {
+  if (!mobileCss.includes(mobileFilterMarker)) failures.push(`CAE mobile filter guard missing: ${mobileFilterMarker}`);
 }
 
 if (failures.length) {
