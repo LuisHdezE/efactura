@@ -2,7 +2,7 @@
 
 Status: `IMPLEMENTED_PENDING_REVIEW`
 
-Baseline: `main@bb3d1c70765bcd6d79145c185c6036032d1548ed`. This baseline already contains the owner-approved PR #233 backend merge plus the later WebApp-only PR #232 merge from the parallel UI lane.
+Baseline: `main@eb8bb673925817473f7082076eefbe26a8252bd9`. This baseline contains the owner-approved PR #233 backend merge plus the later WebApp-only PR #232 and PR #235 changes from the parallel UI lane; those UI merges do not change W2.4 backend semantics.
 
 Parent prerequisite contract: `documentation/api-completion-matrix/W2_4_PARTY_ACCOUNT_SUMMARY_PREREQUISITE_CONTRACT.md`.
 

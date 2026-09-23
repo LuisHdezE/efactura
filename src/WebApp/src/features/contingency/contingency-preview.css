@@ -572,4 +572,42 @@
   .contingency-panel-heading {
     padding: 11px;
   }
+
+  .contingency-preview-page,
+  .contingency-heading > *,
+  .contingency-demo-note > *,
+  .contingency-status-card,
+  .contingency-panel-heading > *,
+  .contingency-mobile-card,
+  .contingency-detail-callout > *,
+  .contingency-detail-section,
+  .contingency-history-entry > *,
+  .contingency-blocked-actions > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .contingency-heading p,
+  .contingency-demo-note span,
+  .contingency-status-card p,
+  .contingency-status-card__topline > span:first-child,
+  .contingency-panel-heading h2,
+  .contingency-mobile-card > span:not(.contingency-status),
+  .contingency-detail-callout span,
+  .contingency-detail-section p,
+  .contingency-history-entry p,
+  .contingency-blocked-actions p {
+    overflow-wrap: anywhere;
+    word-break: normal;
+    white-space: normal;
+  }
+
+  .contingency-status-card__topline,
+  .contingency-history-entry > div {
+    min-width: 0;
+  }
+
+  .contingency-local-pill {
+    flex: 0 0 auto;
+  }
 }
