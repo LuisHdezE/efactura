@@ -60,8 +60,12 @@ for (const responsive of ['@media (max-width: 1080px)', '@media (max-width: 760p
   if (!styles.includes(responsive)) failures.push(`Contingency responsive marker is missing: ${responsive}`);
 }
 
-if (!styles.includes("root[data-theme='dark']")) {
-  failures.push('Contingency preview must preserve an explicit dark-theme parity hook.');
+if (!styles.includes(":root[data-theme='dark']")) {
+  failures.push('Contingency preview must preserve a valid explicit dark-theme parity hook.');
+}
+
+if (!page.includes('filteredRecords.find((record) => record.id === selectedId)')) {
+  failures.push('Contingency detail selection must stay aligned with the active filtered result set.');
 }
 
 if (failures.length) {
@@ -70,4 +74,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, theme/responsive markers present.');
+console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present.');
