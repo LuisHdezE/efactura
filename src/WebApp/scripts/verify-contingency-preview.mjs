@@ -60,6 +60,17 @@ for (const responsive of ['@media (max-width: 1080px)', '@media (max-width: 760p
   if (!styles.includes(responsive)) failures.push(`Contingency responsive marker is missing: ${responsive}`);
 }
 
+for (const wrapMarker of [
+  '.contingency-demo-note span',
+  '.contingency-status-card p',
+  '.contingency-mobile-card > span:not(.contingency-status)',
+  '.contingency-detail-section p',
+  'overflow-wrap: anywhere;',
+  'white-space: normal;',
+]) {
+  if (!styles.includes(wrapMarker)) failures.push(`Contingency narrow-mobile wrapping guard is missing: ${wrapMarker}`);
+}
+
 if (!styles.includes(":root[data-theme='dark']")) {
   failures.push('Contingency preview must preserve a valid explicit dark-theme parity hook.');
 }
@@ -74,4 +85,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present.');
+console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present, narrow-mobile wrapping guarded.');
