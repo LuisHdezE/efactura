@@ -1,0 +1,101 @@
+/* UI-CON-001 runtime refinement after desktop/intermediate visual evidence.
+   This layer intentionally owns shell breathing room and the disabled header action composition. */
+.contingency-preview-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 18px 22px 32px;
+}
+
+.contingency-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
+  gap: 24px;
+  align-items: start;
+}
+
+.contingency-heading > :first-child {
+  min-width: 0;
+}
+
+.contingency-heading-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  max-width: 340px;
+  gap: 8px;
+  margin-left: 0;
+  justify-self: end;
+  align-content: start;
+}
+
+.contingency-preview-badge {
+  grid-column: 1 / -1;
+  justify-self: end;
+  min-height: 30px;
+  padding: 0 10px;
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+  color: var(--text-soft);
+}
+
+.contingency-heading-actions button {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.contingency-heading-actions button:disabled,
+.contingency-heading-actions .contingency-primary:disabled,
+.contingency-heading-actions .contingency-secondary:disabled {
+  cursor: not-allowed;
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--text-soft);
+  box-shadow: none;
+  opacity: 1;
+}
+
+@media (max-width: 1180px) {
+  .contingency-heading {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .contingency-heading-actions {
+    width: min(100%, 340px);
+    max-width: 340px;
+    justify-self: start;
+  }
+
+  .contingency-preview-badge {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .contingency-preview-page {
+    padding: 14px 16px 28px;
+  }
+}
+
+@media (max-width: 520px) {
+  .contingency-preview-page {
+    padding: 12px;
+  }
+
+  .contingency-heading-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: none;
+  }
+
+  .contingency-preview-badge {
+    grid-column: auto;
+  }
+}
