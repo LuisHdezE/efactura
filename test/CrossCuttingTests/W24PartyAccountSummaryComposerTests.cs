@@ -151,6 +151,36 @@ public sealed class W24PartyAccountSummaryComposerTests
     }
 
     [Fact]
+    public async Task Aging_totals_that_do_not_reconcile_with_outstanding_and_overdue_fail_closed()
+    {
+        var parties = new StubPartyRepository(PartyWith(PartyRole.Customer));
+        var receivables = new StubReceivables(new PartyReceivableAccountSummary(
+            OrganizationId,
+            PartyId,
+            AsOf,
+            new[]
+            {
+                new ReceivableCurrencyAccountSummary(
+                    "UYU",
+                    100m,
+                    40m,
+                    new ReceivableAgingBuckets(
+                        50m,
+                        30m,
+                        0m,
+                        0m,
+                        0m))
+            }));
+        var payables = new StubPayables(PayableSummary("UYU", 0m, 0m));
+        var sut = new PartyAccountSummaryReadModel(parties, receivables, payables);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => sut.GetAsync(OrganizationId, PartyId, AsOf));
+
+        Assert.Contains("party.account_summary.receivable_aging_mismatch", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Non_canonical_currency_fails_closed()
     {
         var parties = new StubPartyRepository(PartyWith(PartyRole.Customer));
