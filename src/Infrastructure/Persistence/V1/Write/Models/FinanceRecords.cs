@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Persistence.V1.Write.Models;
 
 public sealed class V1PaymentMethodRecord
@@ -40,4 +44,33 @@ public sealed class V1ReceivableRecord
     public string SettlementFingerprint { get; set; } = string.Empty;
     public long Version { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
+    public List<V1ReceivableBalanceFactRecord> BalanceFacts { get; set; } = new();
+}
+
+[Table("v1_receivable_balance_facts")]
+[Index(nameof(OrganizationId), nameof(ReceivableId), nameof(EffectiveOn), Name = "IX_v1_ar_fact_org_receivable_effective")]
+[Index(nameof(ReversalOfFactId), IsUnique = true, Name = "UX_v1_ar_fact_reversal_of")]
+public sealed class V1ReceivableBalanceFactRecord
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    [MaxLength(200)]
+    public string OrganizationId { get; set; } = string.Empty;
+
+    public Guid ReceivableId { get; set; }
+    public int Kind { get; set; }
+
+    [Precision(18, 6)]
+    public decimal Amount { get; set; }
+
+    [Column(TypeName = "date")]
+    public DateTime EffectiveOn { get; set; }
+
+    public Guid? ReversalOfFactId { get; set; }
+
+    [Precision(6)]
+    public DateTimeOffset RecordedAtUtc { get; set; }
+
+    public V1ReceivableRecord Receivable { get; set; } = null!;
 }
