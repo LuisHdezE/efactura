@@ -7,6 +7,11 @@
   padding: 18px 22px 32px;
 }
 
+.contingency-preview-page,
+.contingency-preview-page * {
+  box-sizing: border-box;
+}
+
 .contingency-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
@@ -81,6 +86,46 @@
 @media (max-width: 760px) {
   .contingency-preview-page {
     padding: 14px 16px 28px;
+  }
+
+  .contingency-preview-page,
+  .contingency-heading,
+  .contingency-heading > *,
+  .contingency-heading-actions,
+  .contingency-demo-note,
+  .contingency-status-grid,
+  .contingency-workspace,
+  .contingency-list-panel,
+  .contingency-detail-panel {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .contingency-breadcrumb,
+  .contingency-heading h1,
+  .contingency-heading p,
+  .contingency-demo-note,
+  .contingency-demo-note span,
+  .contingency-preview-badge {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .contingency-heading h1 {
+    max-width: 100%;
+    font-size: clamp(22px, 6.4vw, 30px);
+    line-height: 1.12;
+  }
+
+  .contingency-heading p,
+  .contingency-demo-note {
+    width: 100%;
+  }
+
+  .contingency-preview-badge {
+    width: auto;
+    max-width: 100%;
   }
 }
 

@@ -88,6 +88,18 @@ for (const layoutMarker of [
   if (!runtimeStyles.includes(layoutMarker)) failures.push(`Contingency runtime layout polish marker is missing: ${layoutMarker}`);
 }
 
+for (const mobileRuntimeMarker of [
+  '.contingency-preview-page *',
+  '.contingency-breadcrumb,',
+  '.contingency-heading h1,',
+  '.contingency-demo-note span,',
+  'font-size: clamp(22px, 6.4vw, 30px);',
+  'overflow-wrap: anywhere;',
+  'word-break: normal;',
+]) {
+  if (!runtimeStyles.includes(mobileRuntimeMarker)) failures.push(`Contingency runtime mobile-wrap marker is missing: ${mobileRuntimeMarker}`);
+}
+
 if (!styles.includes(":root[data-theme='dark']")) {
   failures.push('Contingency preview must preserve a valid explicit dark-theme parity hook.');
 }
@@ -102,4 +114,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present, narrow-mobile wrapping guarded, runtime spacing/action polish guarded.');
+console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present, narrow-mobile wrapping guarded, runtime spacing/action polish guarded, runtime mobile clipping prevention guarded.');
