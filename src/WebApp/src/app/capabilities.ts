@@ -143,5 +143,20 @@ export const uiCapabilities: UiCapability[] = [
     route: '/documentos-fiscales',
     status: 'IMPLEMENTED_VISUAL_PREVIEW',
     operations: []
+  },
+  {
+    uiId: 'UI-CAE-001',
+    label: 'Administración de CAE',
+    route: '/cae',
+    status: 'IMPLEMENTED_API_MOCK_DATA',
+    operations: [
+      { apiId: 'API-CAE-001', operationId: 'listCaeAuthorizations', method: 'GET', route: '/api/v1/cae-authorizations', permission: 'fiscal.read' },
+      { apiId: 'API-CAE-002', operationId: 'getCaeAuthorization', method: 'GET', route: '/api/v1/cae-authorizations/{caeId}', permission: 'fiscal.read' },
+      { apiId: 'API-CAE-003', operationId: 'importCaeAuthorization', method: 'POST', route: '/api/v1/cae-authorizations/import', permission: 'fiscal.manage_cae' },
+      { apiId: 'API-CAE-004', operationId: 'activateCaeAuthorization', method: 'POST', route: '/api/v1/cae-authorizations/{caeId}/activate', permission: 'fiscal.manage_cae' },
+      { apiId: 'API-CAE-005', operationId: 'listCaeAllocations', method: 'GET', route: '/api/v1/cae-authorizations/{caeId}/allocations', permission: 'fiscal.read' },
+      { apiId: 'API-CAE-006', operationId: 'createCaeAllocation', method: 'POST', route: '/api/v1/cae-authorizations/{caeId}/allocations', permission: 'fiscal.manage_cae' },
+      { apiId: 'API-CAE-007', operationId: 'closeCaeAllocation', method: 'POST', route: '/api/v1/cae-authorizations/{caeId}/allocations/{allocationId}/close', permission: 'fiscal.manage_cae' }
+    ]
   }
 ];

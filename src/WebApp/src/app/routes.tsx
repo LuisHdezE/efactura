@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { CaePage } from '../features/cae/CaePage';
 import { CashPage } from '../features/cash/CashPage';
 import { CatalogPage } from '../features/catalog/CatalogPage';
 import { CustomersPage } from '../features/customers/CustomersPage';
@@ -89,7 +90,7 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-011', state: 'active', capability: requireCapability('UI-PAYABLE-001'), icon: '↙', navigationGroup: 'Finanzas', element: <PayablesPage /> },
   { webId: 'WEB-012', state: 'active', capability: requireCapability('UI-CASH-001'), icon: '▰', navigationGroup: 'Finanzas', element: <CashPage /> },
   { webId: 'WEB-013', state: 'active', capability: requireCapability('UI-FIS-001'), icon: '≡', navigationGroup: 'Fiscal', element: <FiscalDocumentsPage /> },
-  { webId: 'WEB-014', state: 'planned', label: 'CAE', icon: '#', navigationGroup: 'Fiscal' },
+  { webId: 'WEB-014', state: 'active', capability: requireCapability('UI-CAE-001'), icon: '#', navigationGroup: 'Fiscal', element: <CaePage /> },
   { webId: 'WEB-015', state: 'planned', label: 'Contingencia / Sincronización', icon: '↻', navigationGroup: 'Fiscal' },
   { webId: 'WEB-016', state: 'planned', label: 'CFE recibidos', icon: '⇩', navigationGroup: 'Fiscal' },
   { webId: 'WEB-017', state: 'planned', label: 'Reportes y Calendario fiscal', icon: '▧', navigationGroup: 'Reportes' },

@@ -1,6 +1,6 @@
 # UI-CAE-001 — CAE Administration Reconciliation
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / PLANNED_DISABLED`
+Status: `IMPLEMENTED_API_MOCK_DATA / VISUAL_BASELINE_APPROVED / RUNTIME_REVIEW_PENDING`
 
 Mapping:
 
@@ -8,21 +8,13 @@ Mapping:
 WEB-014 -> UI-CAE-001
 ```
 
-Reserved route candidate: `/cae`
+Route: `/cae`
 
-## Upstream product authority
+## Product authority
 
-`WEB-014 — CAE Administration` belongs to the Fiscal product area and exists to import, validate, monitor and operationally allocate CAE ranges/subranges without violating company-wide numbering uniqueness.
+`WEB-014 — CAE Administration` belongs to the Fiscal area and governs inspection and administration of CAE authorizations, ranges and allocations without allowing the client to invent numbering authority.
 
-Accepted source requirements:
-
-- `FR-050`;
-- `FR-051`;
-- `FR-052`;
-- `FR-053`;
-- `FR-054`;
-- `FR-055`;
-- `FR-056`.
+Accepted requirements: `FR-050..FR-056`.
 
 Accepted roles:
 
@@ -30,11 +22,9 @@ Accepted roles:
 - administrator;
 - auditor.
 
-Source data authority is server-owned: CAE authorization identity, range, validity, lifecycle state, verification/provenance metadata and allocation state are authoritative API data when exposed.
+## Accepted API dependency
 
-## Accepted WEB-014 API dependency
-
-`documentation/blueprint-api-contract/09_INTERFACE_SCOPE_RECONCILIATION.md` maps `WEB-014` to:
+WEB-014 maps exactly to:
 
 - `API-CAE-001` `listCaeAuthorizations`;
 - `API-CAE-002` `getCaeAuthorization`;
@@ -44,130 +34,81 @@ Source data authority is server-owned: CAE authorization identity, range, validi
 - `API-CAE-006` `createCaeAllocation`;
 - `API-CAE-007` `closeCaeAllocation`.
 
-Current Wave 5 evidence records all seven operations as `IMPLEMENTED` with `CaeAuthorizationsController` WebApi evidence.
+Wave 5 records all seven as `IMPLEMENTED` in WebApi. Reads require `fiscal.read`; mutations require `fiscal.manage_cae`.
 
-Read operations use `fiscal.read`. Import, activation and allocation mutations use `fiscal.manage_cae`.
+## HTTP contract boundary
 
-## Current HTTP contract boundary
+`CaeAuthorizationDto` exposes id/version, CFE type, authorization number, series, range, validity dates, textual status, verification/provenance metadata, imported/activated timestamps and optional alert code.
 
-`CaeAuthorizationDto` currently exposes:
+`CaeAllocationDto` exposes id/version, CAE authorization id, location, optional terminal, assigned range, textual status and created/closed timestamps.
 
-- id and version;
-- CFE type;
-- authorization number;
-- series;
-- range from / range to;
-- valid from / valid to;
-- textual status;
-- verification method;
-- source artifact/name/reference metadata;
-- imported and activated timestamps;
-- optional alert code;
-- replay marker.
-
-`CaeAllocationDto` currently exposes:
-
-- id and CAE authorization id;
-- version;
-- location id;
-- optional terminal id;
-- range from / range to;
-- textual status;
-- created/closed timestamps;
-- replay marker.
-
-The HTTP DTO does **not** currently expose canonical consumed percentage, remaining-number count or `NextNumber`. The WebApp must not invent those values or derive them as authoritative CAE state.
+The DTO does **not** expose canonical `NextNumber`, consumed percentage or remaining-number count. `UI-CAE-001` does not display or derive those values.
 
 ## Visual authority
 
 Approved baseline: `UI-CAE-001 / v1-responsive-composite`.
 
-Approved artifact gen_id: `ea4d59d5-0a58-451f-bd34-9af9b939819b`.
+- gen_id: `ea4d59d5-0a58-451f-bd34-9af9b939819b`;
+- aspect ratio: `4:3`;
+- authority includes desktop light plus dark/tablet/mobile compositions.
 
-Approved aspect ratio: `4:3`.
+The earlier generation `a0635f18-94eb-4230-9af3-c32e37d1f37f` remains non-authoritative.
 
-The artifact contains a primary desktop light-mode composition plus dark-mode, tablet and mobile responsive compositions within one approved image.
+## Implemented WebApp boundary
 
-The pre-revision generation `a0635f18-94eb-4230-9af3-c32e37d1f37f` is not approved authority.
+`/cae` is now a real responsive React route registered through `UI-CAE-001` as `IMPLEMENTED_API_MOCK_DATA`.
 
-## Visual-to-domain reconciliation
+The surface provides:
 
-The approved artifact governs composition, density, hierarchy, responsive behavior and visual language. It does not override source-backed CAE semantics.
+- approved master-detail hierarchy;
+- local search and presentation filters;
+- desktop CAE ledger;
+- mobile CAE cards;
+- selected authorization detail;
+- allocation presentation by location/terminal;
+- shared light/dark shell tokens;
+- explicit loading, empty and error presentation paths;
+- operation mapping for `API-CAE-001..007` in `capabilities.ts`.
 
-The future React surface may present:
+Data is supplied through `gateways.cae` and deterministic fixtures while global `VITE_DATA_MODE=api` remains fail-closed.
 
-- CAE authorization list and selection;
-- CFE type and series;
-- authorized range;
-- validity dates;
-- textual lifecycle state;
-- verification/provenance metadata supported by the API;
-- server alert code/context;
-- allocation list by location/terminal;
-- allocation subranges and textual states;
-- governed placement of import, activation, create-allocation and close-allocation actions.
+## Why mutations remain disabled
 
-The client must not convert illustrative labels in the approved image into new backend requirements without accepted API authority.
+The current shell identity `Admin / Demo Uruguay` is not authoritative session/permission context. The WebApp service layer also intentionally rejects API mode until the governed integration lane is enabled.
 
-## Planned route boundary
+Therefore the React surface does not execute:
 
-`/cae` remains `PLANNED_DISABLED` until a separate implementation PR creates a real React surface and reconciles capability registration, route activation and API usage.
+- CAE import;
+- CAE activation;
+- allocation creation;
+- allocation closure.
 
-Baseline approval alone does not authorize:
+The approved baseline retains those controls as disabled placement only, with explicit `fiscal.manage_cae` boundary messaging.
 
-- route activation;
-- HTTP calls from the WebApp;
-- import or mutation execution;
-- optimistic client-side CAE state mutation;
-- inferred consumed/remaining numbering state;
-- changes to backend/API, Domain, Persistence, database or auth.
-
-## Required states
-
-The governed interface baseline requires support for:
-
-- `default`;
-- `loading`;
-- `empty`;
-- `error`;
-- `403`;
-- `409`;
-- `422`.
-
-Server error/authorization/conflict semantics must be rendered from the accepted API contract rather than locally invented status.
+No direct `fetch`/Axios integration is permitted in the feature component.
 
 ## Responsive behavior
 
-The source baseline identifies CAE administration as primarily desktop/tablet, while the approved visual additionally establishes an explicit mobile adaptation.
+Desktop preserves the approved dense ledger plus detail/allocation panel. Tablet collapses to a single main column. At mobile widths the desktop table is replaced by stacked CAE cards, while selected detail and allocations remain readable in one column.
 
-Responsive implementation must preserve:
+State is always textual and never color-only.
 
-- textual status labels;
-- authorization identity;
-- range and validity context;
-- allocation visibility;
-- safe action hierarchy;
-- theme parity.
+## Theme parity
 
-Dense desktop tables may become stacked cards on narrow screens without losing the server-owned identity/state fields needed for auditability.
+Feature CSS uses shared shell tokens (`--surface`, `--surface-2`, `--text`, `--text-soft`, `--border`, `--accent`, etc.) rather than a feature-local fixed dark/light palette.
 
-## Accessibility
+## Guard
 
-- range/status information must have textual equivalents;
-- state may not be encoded by color alone;
-- filters and action controls must be keyboard operable;
-- disabled/unauthorized operations must be explicit;
-- CAE authorization, series, range and validity dates must remain readable at supported widths.
+`src/WebApp/scripts/verify-cae-ui.mjs` verifies:
 
-## Neighboring module boundaries
+- active WEB-014 route registration;
+- `UI-CAE-001` capability mode;
+- all seven API-CAE mappings;
+- absence of direct HTTP integration markers;
+- absence of invented numbering-consumption fields;
+- shared theme-token usage;
+- responsive breakpoints/mobile list.
 
-`WEB-014` does not absorb:
+## Runtime gate
 
-- `WEB-013 — Fiscal Documents`;
-- `WEB-015 — Contingency and Synchronization Supervision`;
-- `WEB-016 — Received CFE and XML Validation`;
-- `WEB-017 — Reports and Fiscal Calendar`.
-
-## Next gate
-
-Preserve this approved baseline in a documentation-only PR. After explicit merge approval, implement the responsive React surface in a separate PR. HTTP integration must remain within `API-CAE-001..007` and their accepted permission/idempotency/concurrency contracts.
+Repository CI, explicit merge approval, deploy and deployed light/dark/mobile runtime acceptance remain separate gates. Activation of the route does not imply live API/session integration.
