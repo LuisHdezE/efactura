@@ -1,4 +1,5 @@
 import type { AppGateways } from '../contracts';
+import { mockCaeAllocations, mockCaeAuthorizations } from './caeData';
 import { mockItemCategories, mockTaxProfiles, mockUnitsOfMeasure } from './catalogReferenceData';
 import { mockItems, mockParties } from './data';
 import { mockInventoryPositions, mockStockMovements } from './inventoryData';
@@ -71,4 +72,22 @@ export const mockGateways: AppGateways = {
     }
   },
   sales: mockSalesGateway,
+  cae: {
+    async listAuthorizations(query = {}) {
+      const items = mockCaeAuthorizations.filter((authorization) => !query.cfeType || authorization.cfeType === query.cfeType);
+      const page = query.page ?? 1;
+      const pageSize = query.pageSize ?? 50;
+      const offset = (page - 1) * pageSize;
+      return pause({ items: items.slice(offset, offset + pageSize), page, pageSize, total: items.length });
+    },
+    async getAuthorization(caeId) {
+      const authorization = mockCaeAuthorizations.find((item) => item.id === caeId);
+      if (!authorization) throw new Error('Mock CAE authorization not found.');
+      return pause(authorization);
+    },
+    async listAllocations(caeId) {
+      const items = mockCaeAllocations.filter((item) => item.caeAuthorizationId === caeId);
+      return pause({ items, page: 1, pageSize: 50, total: items.length });
+    }
+  }
 };
