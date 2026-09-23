@@ -158,5 +158,12 @@ export const uiCapabilities: UiCapability[] = [
       { apiId: 'API-CAE-006', operationId: 'createCaeAllocation', method: 'POST', route: '/api/v1/cae-authorizations/{caeId}/allocations', permission: 'fiscal.manage_cae' },
       { apiId: 'API-CAE-007', operationId: 'closeCaeAllocation', method: 'POST', route: '/api/v1/cae-authorizations/{caeId}/allocations/{allocationId}/close', permission: 'fiscal.manage_cae' }
     ]
+  },
+  {
+    uiId: 'UI-CON-001',
+    label: 'Contingencia / Sincronización',
+    route: '/contingencia',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];

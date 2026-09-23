@@ -28,7 +28,7 @@ Current runtime/governance state:
 - `WEB-012 / UI-CASH-001` has approved visual baseline `v1-responsive-composite` and is implemented at `/caja` as `IMPLEMENTED_VISUAL_PREVIEW`;
 - `WEB-013 / UI-FIS-001` has approved visual baseline `v1-responsive-composite` and is implemented at `/documentos-fiscales` as `IMPLEMENTED_VISUAL_PREVIEW`; deployed desktop light/dark and 390×844 mobile runtime were visually accepted on 2026-09-22;
 - `WEB-014 / UI-CAE-001` has approved visual baseline `v1-responsive-composite` (`4:3`, gen_id `ea4d59d5-0a58-451f-bd34-9af9b939819b`) and is implemented at `/cae` as `IMPLEMENTED_API_MOCK_DATA`; its deployed desktop light/dark and mobile 390×844 runtime were visually accepted on 2026-09-23; `API-CAE-001..007` remain mapped while server-owned mutations stay blocked until authoritative WebApp session/permission and HTTP integration are enabled;
-- `WEB-015 / UI-CON-001` has approved visual baseline `v1-responsive-composite` (`4:3`, gen_id `4f3edc3e-cb6e-45f2-b0aa-ecad5854d76f`) and remains `PLANNED_DISABLED` at reserved route candidate `/contingencia`; required `API-CNT-001..007` and `API-SYN-001..003` are still missing HTTP, so any future first implementation is limited to `IMPLEMENTED_VISUAL_PREVIEW` with local fixtures and `operations: []`;
+- `WEB-015 / UI-CON-001` has approved visual baseline `v1-responsive-composite` (`4:3`, gen_id `4f3edc3e-cb6e-45f2-b0aa-ecad5854d76f`) and is implemented at `/contingencia` as `IMPLEMENTED_VISUAL_PREVIEW`; `operations: []` is mandatory while required `API-CNT-001..007` and `API-SYN-001..003` remain `MISSING_HTTP`, and all server-owned actions stay blocked;
 - `WEB-016..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture.
 
@@ -36,9 +36,9 @@ Current counts:
 
 - Web scope total: **19**;
 - standalone implemented: **1**;
-- active shell routes: **13**;
-- active visual-preview routes: **6**;
-- planned disabled shell options: **5**.
+- active shell routes: **14**;
+- active visual-preview routes: **7**;
+- planned disabled shell options: **4**.
 
 ## 3. Sidebar information architecture
 
@@ -101,7 +101,7 @@ Legend:
 | `WEB-012` | Cash Shift and Reconciliation | Finanzas | `UI-CASH-001` | `/caja` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-013` | Fiscal Documents | Fiscal | `UI-FIS-001` | `/documentos-fiscales` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-014` | CAE Administration | Fiscal | `UI-CAE-001` | `/cae` | `ACTIVE` | API contract mapped / mock gateway |
-| `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI-CON-001` | `/contingencia` candidate | `PLANNED_DISABLED` | approved visual baseline / implementation pending |
+| `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI-CON-001` | `/contingencia` | `ACTIVE_VISUAL_PREVIEW` | local fixtures, `operations: []`, API pending |
 | `WEB-016` | Received CFE and XML Validation | Fiscal | `UI ID pending` | `/cfe-recibidos` candidate | `PLANNED_DISABLED` | — |
 | `WEB-017` | Reports and Fiscal Calendar | Reportes | `UI ID pending` | `/reportes` candidate | `PLANNED_DISABLED` | — |
 | `WEB-018` | Audit, Security and Configuration | Administración | `UI ID pending` | `/administracion` candidate | `PLANNED_DISABLED` | — |
@@ -150,11 +150,20 @@ It must not yet:
 
 ## 8. WEB-015 visual-preview boundary
 
-`UI-CON-001` has an approved visual baseline but remains planned and non-executable.
+`UI-CON-001` is active at `/contingencia` exclusively as `IMPLEMENTED_VISUAL_PREVIEW`.
 
-WEB-015 maps to `API-CNT-001..007` plus `API-SYN-001..003`. The accepted completion matrices currently classify all ten as `MISSING_HTTP`.
+WEB-015 maps conceptually to `API-CNT-001..007` plus `API-SYN-001..003`, but the accepted completion matrices currently classify all ten as `MISSING_HTTP`. For that reason the capability deliberately registers `operations: []`.
 
-Therefore a future first implementation may render deterministic local fixtures for supervision, status, filters, queue/history concepts and responsive detail, but it must register `operations: []` and must not:
+The implementation may:
+
+- render deterministic local fixtures for supervision, status, queue/history and detail;
+- distinguish `Cliente / API` from `DGI / Proveedor`;
+- perform local search/filter/selection only;
+- show all canonical sync result labels as text;
+- transform the dense desktop table into cards on mobile;
+- show disabled server-owned action placement.
+
+It must not:
 
 - claim live DGI/provider status;
 - claim live client/API server status beyond clearly marked demo data;
@@ -164,34 +173,20 @@ Therefore a future first implementation may render deterministic local fixtures 
 - execute review/recovery mutations;
 - imply server permission authority from the demo shell identity.
 
-Generated copy in the approved visual is subordinate to these contracts.
+Generated copy in the approved visual remains subordinate to these contracts.
 
 ## 9. Latest accepted runtime checkpoint
 
-`UI-CAE-001` at `/cae` is the latest shell route whose deployed runtime was explicitly accepted in the governed review lane on 2026-09-23.
+`UI-CAE-001` at `/cae` remains the latest shell route whose deployed runtime was explicitly accepted in the governed review lane on 2026-09-23.
 
 Accepted evidence covers desktop light, desktop dark and mobile 390×844. That runtime closure does not change its API/session boundary.
 
+WEB-015 implementation does not alter this checkpoint until its own deployment and separate runtime visual acceptance are completed.
+
 ## 10. Current next-view checkpoint
 
-Current design checkpoint: `WEB-015 / UI-CON-001 — Contingency and Synchronization Supervision`.
+Current implementation checkpoint: `WEB-015 / UI-CON-001 — Contingency and Synchronization Supervision`.
 
 Approved baseline: `v1-responsive-composite`, aspect ratio `4:3`, artifact `4f3edc3e-cb6e-45f2-b0aa-ecad5854d76f`.
 
-The baseline is approved for composition and responsive intent only. WEB-015 remains `PLANNED_DISABLED`; route activation and React implementation require a separate implementation PR after this documentation baseline is merged.
-
-The intended first implementation mode is `IMPLEMENTED_VISUAL_PREVIEW` with local fixtures, explicit API-pending messaging and all server-owned actions blocked.
-
-Shell counts remain **13 active / 5 planned**, with **6 active visual previews**.
-
-## 11. Change control
-
-Changing product group assignment, route, standalone/shell classification, ordering, visibility rules, preview status, progress metadata or Sidebar/mobile grouping requires an explicit navigation-governance update.
-
-## 12. Relationship to shell policy
-
-- `WEBAPP_NAVIGATION_MAP.md`: complete product-navigation roadmap, visibility and runtime mode;
-- `WEBAPP_SHELL_POLICY.md`: reusable shell behavior and preview/activation rules;
-- `PREVIEW_ROUTE_POLICY_AMENDMENT.md`: explicit boundary for navigable visual previews without executable HTTP operations;
-- `capabilities.ts`: implemented UI capability mode and route bindings;
-- `routes.tsx`: unified product-navigation registry plus derived executable `shellRoutes`.
+Implementation mode: `IMPLEMENTED_VISUAL_PREVIEW` with local deterministic fixtures, `operations: []`, dedicated QA guard and runtime acceptance still pending.

@@ -1,6 +1,6 @@
 # UI-CON-001 — Contingency / Synchronization Reconciliation
 
-Status: `VISUAL_BASELINE_APPROVED / IMPLEMENTATION_PENDING`
+Status: `VISUAL_BASELINE_APPROVED / IMPLEMENTED_VISUAL_PREVIEW / RUNTIME_ACCEPTANCE_PENDING`
 
 Mapping:
 
@@ -8,7 +8,7 @@ Mapping:
 WEB-015 -> UI-CON-001
 ```
 
-Reserved route candidate: `/contingencia`
+Route: `/contingencia`
 
 ## Product authority
 
@@ -24,7 +24,7 @@ Accepted roles:
 
 ## Functional invariants
 
-The UI must preserve these domain rules:
+The UI preserves these domain rules:
 
 - distinguish client/API offline state from DGI/provider transport outage;
 - formal CFC contingency keeps CFC identity and must not allocate arbitrary normal CAE/CFE numbers;
@@ -59,15 +59,27 @@ Wave 5 currently records `API-CNT-001..007` as `MISSING_HTTP`.
 
 Wave 6 currently records `API-SYN-001..003` as `MISSING_HTTP`.
 
-Therefore the first WebApp implementation may only become `IMPLEMENTED_VISUAL_PREVIEW` with deterministic local fixtures and `operations: []`.
+Therefore the WebApp implementation is intentionally `IMPLEMENTED_VISUAL_PREVIEW` with deterministic local fixtures and `operations: []`.
 
-It must not claim live contingency state, live DGI/provider connectivity, successful synchronization, current server permissions or executable recovery authority.
+It does not claim live contingency state, live DGI/provider connectivity, successful synchronization, current server permissions or executable recovery authority.
+
+Implemented local-only behavior is limited to:
+
+- search;
+- filters;
+- record selection;
+- textual contract-status presentation;
+- demo detail/history;
+- responsive list/card transformation;
+- disabled server-owned action placement.
+
+No CNT/SYN HTTP route is registered in `UI-CON-001`.
 
 ## Accepted permissions
 
 Read concepts are governed by `fiscal.read` and synchronization usage by `sync.use` according to the accepted API contract. Server-owned contingency mutations require `fiscal.manage_contingency`.
 
-The current demo-shell identity is not authoritative permission context.
+The current demo-shell identity is not authoritative permission context and the preview derives no permission decision from it.
 
 ## Visual authority
 
@@ -78,25 +90,11 @@ Approved baseline: `UI-CON-001 / v1-responsive-composite`.
 - authority includes desktop light, desktop dark and mobile responsive compositions;
 - explicitly approved by the user on 2026-09-23.
 
-Visual authority is limited to composition and UX intent. Generated labels that imply non-existent endpoints, live DGI connectivity, automatic synchronization guarantees or executable configuration are non-authoritative and must be reconciled to the canonical contracts during implementation.
+Visual authority is limited to composition and UX intent. Generated labels that imply non-existent endpoints, live DGI connectivity, automatic synchronization guarantees or executable configuration are non-authoritative and are reconciled to the canonical contracts in the implementation.
 
 ## Required state semantics
 
-The surface must support textual presentation for:
-
-- normal / available;
-- client/API offline;
-- DGI/provider transport unavailable;
-- formal contingency active/inactive;
-- loading;
-- empty;
-- error;
-- offline;
-- `403`;
-- `409`;
-- `422`.
-
-Synchronization operation results must support the canonical textual statuses:
+The surface supports textual presentation for canonical synchronization results:
 
 - `APPLIED` → Aplicada;
 - `ALREADY_APPLIED` → Ya aplicada;
@@ -105,12 +103,31 @@ Synchronization operation results must support the canonical textual statuses:
 - `REVIEW_REQUIRED` → Requiere revisión;
 - `DEPENDENCY_BLOCKED` → Dependencia bloqueada.
 
-State must never be communicated by color alone.
+State is never communicated by color alone.
+
+HTTP-derived `loading`, `error`, `403`, `409` and `422` remain contract states for future authoritative integration. The preview may visually illustrate related semantic outcomes but must not claim they came from a live server response.
 
 ## Responsive intent
 
-Supervision must remain usable on tablet and mobile. Complex reconciliation is desktop-first. Mobile should prioritize status summary, filters, queue cards and readable operation detail in one column.
+Supervision remains usable on tablet and mobile. Complex reconciliation is desktop-first. Mobile prioritizes status summary, filter disclosure, queue cards and readable operation detail in one column.
 
-## Implementation gate
+## QA guard
 
-No route activation, capability registration, fixture creation or React implementation is authorized by this documentation PR. Those changes belong to a separate implementation PR after this baseline is merged.
+`src/WebApp/scripts/verify-contingency-preview.mjs` is included in normal frontend `check` and `build:deploy` commands.
+
+It guards at least:
+
+- WEB-015 active route ownership by UI-CON-001;
+- `/contingencia` capability route;
+- `IMPLEMENTED_VISUAL_PREVIEW`;
+- `operations: []`;
+- absence of direct `fetch`/Axios or CNT/SYN HTTP paths;
+- explicit demo/API-pending language;
+- all six canonical textual statuses;
+- shared theme tokens and responsive markers.
+
+## Remaining gate
+
+Merge still requires explicit user approval after CI/review verification.
+
+After merge, deployment and runtime visual acceptance are separate gates. Desktop Claro, desktop Oscuro and mobile 390×844 must be reviewed before UI-CON-001 can be considered runtime-closed.
