@@ -29,13 +29,17 @@ public sealed class W24PartyAccountSummaryComposerArchitectureTests
     }
 
     [Fact]
-    public void Composer_checkpoint_does_not_expose_http_or_advance_wave_counts()
+    public void Http_candidate_delegates_only_to_composer_without_advancing_wave_counts()
     {
-        var root = FindRepositoryRoot();
         var wave = Read("documentation/api-completion-matrix/WAVE_2.md");
-        var controllerPath = Path.Combine(root, "src", "WebApi", "Controllers", "V1", "PartyAccountSummaryController.cs");
+        var controller = Read("src/WebApi/Controllers/V1/PartyAccountSummaryController.cs");
 
-        Assert.False(File.Exists(controllerPath));
+        Assert.Contains("IPartyAccountSummaryReadModel", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPartyReceivableAccountReadModel", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPartyPayableAccountReadModel", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("EfReceivableBalanceRepository", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("EfPayableBalanceRepository", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("DbContext", controller, StringComparison.Ordinal);
         Assert.Contains("**25 implemented HTTP surfaces**, **1 non-implemented**", wave, StringComparison.Ordinal);
         Assert.Contains("`API-PTY-008`", wave, StringComparison.Ordinal);
         Assert.Contains("MISSING_HTTP", wave, StringComparison.Ordinal);
