@@ -34,7 +34,7 @@ export function ContingencyPage() {
     });
   }, [kind, search, status]);
 
-  const selected = contingencyPreviewRecords.find((record) => record.id === selectedId)
+  const selected = filteredRecords.find((record) => record.id === selectedId)
     ?? filteredRecords[0]
     ?? contingencyPreviewRecords[0];
 
