@@ -4,10 +4,10 @@ using EFactura.Application.Receivables;
 using EFactura.Domain.Receivables;
 using EFactura.Domain.Sales;
 using Infrastructure.Persistence.V1;
+using Infrastructure.Persistence.V1.Transactions;
 using Infrastructure.Persistence.V1.Write;
 using Infrastructure.Persistence.V1.Write.Models;
 using Infrastructure.Persistence.V1.Write.Repositories;
-using Infrastructure.Persistence.V1.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -133,7 +133,15 @@ public sealed class W24ReceivableBalancePersistenceTests
     {
         var saleId = Guid.NewGuid();
         var receivableId = Guid.NewGuid();
-        var now = new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
+        var saleDate = dueDate.AddDays(-30);
+        var saleAt = new DateTimeOffset(
+            saleDate.Year,
+            saleDate.Month,
+            saleDate.Day,
+            12,
+            0,
+            0,
+            TimeSpan.Zero);
 
         await using var context = database.CreateContext();
         if (!await context.Parties.AnyAsync(x => x.Id == partyId))
@@ -147,8 +155,8 @@ public sealed class W24ReceivableBalancePersistenceTests
                 TaxResidenceCountry = "UY",
                 Active = true,
                 Version = 1,
-                CreatedAtUtc = now.UtcDateTime,
-                UpdatedAtUtc = now.UtcDateTime
+                CreatedAtUtc = saleAt.UtcDateTime,
+                UpdatedAtUtc = saleAt.UtcDateTime
             });
         }
 
@@ -161,15 +169,15 @@ public sealed class W24ReceivableBalancePersistenceTests
             CustomerPartyId = partyId,
             Intent = (int)SaleCommercialIntent.ConsumerFinal,
             CurrencyCode = currency,
-            EffectiveOnUtc = now.UtcDateTime,
+            EffectiveOnUtc = saleAt.UtcDateTime,
             DeliveryCountry = "UY",
             GoodsExportConfirmed = false,
             Status = (int)SaleStatus.Validated,
             ValidationFingerprint = Confirmation,
-            ValidatedAtUtc = now,
+            ValidatedAtUtc = saleAt,
             Version = 2,
-            CreatedAtUtc = now,
-            UpdatedAtUtc = now
+            CreatedAtUtc = saleAt,
+            UpdatedAtUtc = saleAt
         });
 
         await new EfReceivableRepository(context).AddAsync(Receivable.CreateFromSale(
@@ -179,11 +187,11 @@ public sealed class W24ReceivableBalancePersistenceTests
             saleId,
             amount,
             currency,
-            DateOnly.FromDateTime(now.UtcDateTime),
+            saleDate,
             dueDate,
             Confirmation,
             Settlement,
-            now));
+            saleAt));
 
         await new EfUnitOfWork(context).SaveChangesAsync();
         return receivableId;
