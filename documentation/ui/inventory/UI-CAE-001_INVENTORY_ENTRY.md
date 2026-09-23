@@ -1,6 +1,6 @@
 # UI-CAE-001 — Inventory Entry
 
-Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / PLANNED_DISABLED`
+Status: `IMPLEMENTED_API_MOCK_DATA / VISUAL_BASELINE_APPROVED / RUNTIME_REVIEW_PENDING`
 
 ## Identity
 
@@ -8,64 +8,61 @@ Status: `SPECIFICATION_READY / VISUAL_BASELINE_APPROVED / PLANNED_DISABLED`
 - UI: `UI-CAE-001`
 - Product area: `Fiscal`
 - Name: `Administración de CAE`
-- Reserved route candidate: `/cae`
-- Navigation state: `PLANNED_DISABLED`
-- Runtime mode: implementation pending
+- Route: `/cae`
+- Navigation state: `ACTIVE`
+- Runtime mode: governed API operation map + mock gateway
 
 ## Visual evidence
 
-Approved baseline:
+Approved baseline: `UI-CAE-001 / v1-responsive-composite`.
 
-`UI-CAE-001 / v1-responsive-composite`
+- artifact gen_id: `ea4d59d5-0a58-451f-bd34-9af9b939819b`;
+- aspect ratio: `4:3`;
+- desktop light, dark, tablet and mobile responsive authority are present in the same approved composite.
 
-Approved artifact:
-
-`ea4d59d5-0a58-451f-bd34-9af9b939819b`
-
-Approved aspect ratio: `4:3`.
-
-The approved artifact includes a primary desktop light-mode composition plus dark-mode, tablet and mobile responsive compositions inside the same image.
-
-The earlier pre-revision generation `a0635f18-94eb-4230-9af3-c32e37d1f37f` is not approved authority.
+The earlier generation `a0635f18-94eb-4230-9af3-c32e37d1f37f` is non-authoritative.
 
 ## Governed purpose
 
-Import, validate, monitor and operationally allocate CAE authorization ranges/subranges without violating company-wide fiscal-numbering uniqueness or transferring numbering authority to the client.
+Inspect and administer CAE authorization ranges/subranges without violating fiscal-numbering authority or fabricating consumption state in the client.
 
-## Accepted roles
+## Requirements and roles
 
-- fiscal administrator
-- administrator
-- auditor
-
-## Requirements
-
-`FR-050..FR-056`.
+- requirements: `FR-050..FR-056`;
+- roles: fiscal administrator, administrator, auditor.
 
 ## API dependencies
 
-- `API-CAE-001` list CAE authorizations
-- `API-CAE-002` CAE authorization detail
-- `API-CAE-003` import CAE authorization
-- `API-CAE-004` activate CAE authorization
-- `API-CAE-005` list CAE allocations
-- `API-CAE-006` create CAE allocation
-- `API-CAE-007` close CAE allocation
+`API-CAE-001..007` are all `IMPLEMENTED` through `CaeAuthorizationsController`.
 
-Current Wave 5 implementation evidence: all seven dependencies are `IMPLEMENTED` through `CaeAuthorizationsController`.
+- reads: `fiscal.read`;
+- mutations: `fiscal.manage_cae`.
 
-Read authority uses `fiscal.read`. Mutation authority uses `fiscal.manage_cae`.
+The capability registers all seven operation IDs, but current WebApp API mode remains deliberately unavailable. Route activation therefore does not equal live HTTP integration.
+
+## Implemented UI evidence
+
+The implementation provides:
+
+- responsive `CaePage` inside the shared shell;
+- local/mock CAE and allocation gateway data;
+- search and presentation filters;
+- desktop ledger and mobile CAE cards;
+- selected authorization detail;
+- allocation list by location/terminal;
+- server status/alert concepts without invented numbering consumption;
+- shared light/dark theme tokens;
+- disabled import/activate/create-allocation/more-actions controls;
+- focused `verify-cae-ui.mjs` boundary guard.
 
 ## Contract limitation
 
-The current authorization DTO includes identity, version, CFE type, authorization number, series, range, validity, status, verification/provenance, timestamps and optional alert code.
+The current DTO does not expose canonical consumed percentage, remaining-number count or `NextNumber`. The view does not calculate or show them.
 
-The current allocation DTO includes allocation identity/version, CAE id, location/terminal, range, status and created/closed timestamps.
+## Mutation boundary
 
-No authoritative consumed percentage, remaining-number count or `NextNumber` is exposed by the current HTTP DTO. The WebApp must not invent these values.
+The hardcoded demo shell user is not authoritative permission context. Until session/permission resolution and WebApp HTTP integration are governed, all CAE mutations remain non-executable despite backend support.
 
 ## Current decision
 
-The approved baseline is preserved, but `/cae` remains `PLANNED_DISABLED` until a dedicated implementation PR creates the responsive React surface and explicitly reconciles route/capability registration and HTTP integration.
-
-This inventory entry does not authorize backend/API, Domain, Persistence, database or auth changes.
+`/cae` is implemented and eligible for merge only after repository CI and explicit human approval. Deploy and light/dark/mobile runtime acceptance remain separate gates.
