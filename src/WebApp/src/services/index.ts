@@ -28,6 +28,11 @@ function unavailableApiGateways(): AppGateways {
       validateSale: notIntegrated,
       getSaleFiscalPreview: notIntegrated,
     },
+    cae: {
+      listAuthorizations: notIntegrated,
+      getAuthorization: notIntegrated,
+      listAllocations: notIntegrated,
+    },
   };
 }
 
