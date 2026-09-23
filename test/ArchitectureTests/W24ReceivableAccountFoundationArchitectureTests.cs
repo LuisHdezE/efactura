@@ -36,7 +36,7 @@ public sealed class W24ReceivableAccountFoundationArchitectureTests
         Assert.Contains("CollectionAllocation", domain, StringComparison.Ordinal);
         Assert.Contains("CollectionReversal", domain, StringComparison.Ordinal);
         Assert.Contains("v1_receivable_balance_facts", records, StringComparison.Ordinal);
-        Assert.Contains("HasPrecision", records, StringComparison.Ordinal);
+        Assert.Contains("[Precision(18, 6)]", records, StringComparison.Ordinal);
         Assert.Contains("precision: 18, scale: 6", migration, StringComparison.Ordinal);
         Assert.Contains("ReferentialAction.Restrict", migration, StringComparison.Ordinal);
         Assert.DoesNotContain("Npgsql", migration, StringComparison.Ordinal);
