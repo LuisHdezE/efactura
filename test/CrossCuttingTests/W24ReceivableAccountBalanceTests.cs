@@ -15,13 +15,11 @@ public sealed class W24ReceivableAccountBalanceTests
     public async Task Projection_applies_adjustments_allocations_reversals_and_keeps_currencies_isolated()
     {
         var current = Source(100m, "UYU", new DateOnly(2026, 9, 23));
-        var overdue1To30 = Source(
-            300m,
-            "UYU",
-            new DateOnly(2026, 9, 22),
-            ReceivableBalanceEffect.CreateCollectionAllocation(
-                Guid.NewGuid(), Organization, Guid.Empty, 100m, "collection-1", 0, AsOfUtc.AddDays(-1)));
-        overdue1To30 = RebindEffects(overdue1To30);
+
+        var overdue1To30 = Source(300m, "UYU", new DateOnly(2026, 9, 22));
+        var partialAllocation = ReceivableBalanceEffect.CreateCollectionAllocation(
+            Guid.NewGuid(), Organization, overdue1To30.ReceivableId, 100m, "collection-1", 0, AsOfUtc.AddDays(-1));
+        overdue1To30 = overdue1To30 with { Effects = new[] { partialAllocation } };
 
         var overdue31To60 = Source(200m, "UYU", new DateOnly(2026, 8, 23));
         var allocation = ReceivableBalanceEffect.CreateCollectionAllocation(
@@ -148,35 +146,17 @@ public sealed class W24ReceivableAccountBalanceTests
     private static ReceivableBalanceSource Source(
         decimal originalAmount,
         string currency,
-        DateOnly dueDate,
-        params ReceivableBalanceEffect[] effects)
+        DateOnly dueDate)
     {
-        var receivableId = Guid.NewGuid();
         return new ReceivableBalanceSource(
-            receivableId,
+            Guid.NewGuid(),
             Organization,
             PartyId,
             originalAmount,
             currency,
             dueDate,
             AsOfUtc.AddMonths(-2),
-            effects);
-    }
-
-    private static ReceivableBalanceSource RebindEffects(ReceivableBalanceSource source)
-    {
-        var rebound = source.Effects.Select(effect =>
-            ReceivableBalanceEffect.Rehydrate(
-                effect.Id,
-                effect.OrganizationId,
-                source.ReceivableId,
-                effect.Kind,
-                effect.Amount,
-                effect.SourceId,
-                effect.SourceSequence,
-                effect.ReversesEffectId,
-                effect.OccurredAtUtc)).ToArray();
-        return source with { Effects = rebound };
+            Array.Empty<ReceivableBalanceEffect>());
     }
 
     private sealed class FakeSourceReader : IReceivableBalanceSourceReader
