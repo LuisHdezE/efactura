@@ -12,6 +12,7 @@ import type {
   TaxProfileDto,
   UnitOfMeasureDto,
 } from '../contracts/api';
+import type { CaeAllocationDto, CaeAuthorizationDto, CaeAuthorizationQuery } from '../contracts/cae';
 import type { InventoryPositionDto, StockMovementDto } from '../contracts/inventory';
 
 export interface CatalogGateway {
@@ -48,9 +49,16 @@ export interface SalesGateway {
   getSaleFiscalPreview(saleId: string): Promise<SaleFiscalPreviewDto>;
 }
 
+export interface CaeGateway {
+  listAuthorizations(query?: CaeAuthorizationQuery): Promise<PageResponse<CaeAuthorizationDto>>;
+  getAuthorization(caeId: string): Promise<CaeAuthorizationDto>;
+  listAllocations(caeId: string): Promise<PageResponse<CaeAllocationDto>>;
+}
+
 export interface AppGateways {
   catalog: CatalogGateway;
   inventory: InventoryGateway;
   parties: PartiesGateway;
   sales: SalesGateway;
+  cae: CaeGateway;
 }
