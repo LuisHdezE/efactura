@@ -448,9 +448,9 @@
   grid-column: 1 / -1;
 }
 
-root[data-theme='dark'] .contingency-status-card,
-root[data-theme='dark'] .contingency-list-panel,
-root[data-theme='dark'] .contingency-detail-panel {
+:root[data-theme='dark'] .contingency-status-card,
+:root[data-theme='dark'] .contingency-list-panel,
+:root[data-theme='dark'] .contingency-detail-panel {
   box-shadow: 0 8px 26px rgba(0, 0, 0, .2);
 }
 
