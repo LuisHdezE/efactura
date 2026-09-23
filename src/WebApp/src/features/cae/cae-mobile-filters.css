@@ -1,0 +1,46 @@
+.cae-filter-options {
+  display: contents;
+}
+
+.cae-mobile-filter-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .cae-mobile-filter-toggle {
+    display: inline-flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 11px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--accent-strong);
+    font: inherit;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .cae-mobile-filter-toggle:hover,
+  .cae-mobile-filter-toggle[aria-expanded='true'] {
+    background: var(--accent-soft);
+  }
+
+  .cae-filters .cae-clear {
+    display: none;
+  }
+
+  .cae-filters.is-mobile-expanded .cae-filter-field {
+    display: grid;
+    grid-column: 1 / -1;
+  }
+
+  .cae-filters.is-mobile-expanded .cae-clear {
+    display: block;
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
