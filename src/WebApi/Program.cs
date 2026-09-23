@@ -240,6 +240,7 @@ var v1ConnectionString = builder.Configuration.GetConnectionString(v1ConnectionS
         "Configure V1Persistence:ConnectionStringName and the corresponding ConnectionStrings entry outside source control.");
 
 builder.Services.AddV1Persistence(v1DatabaseProvider, v1ConnectionString);
+builder.Services.AddW24PartyAccountSummaryComposition();
 builder.Services.AddReferenceDataFoundation();
 builder.Services.AddScoped<GetCurrentActorUseCase>();
 builder.Services.AddScoped<ListPermissionsUseCase>();
