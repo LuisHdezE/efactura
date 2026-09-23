@@ -2,7 +2,7 @@
 
 Status: `IMPLEMENTED_PENDING_REVIEW`
 
-Baseline: `main@d6eee791ce72f7cc1e95d59ab65a900a7668b1ef` after owner-approved merge of PR #233.
+Baseline: `main@bb3d1c70765bcd6d79145c185c6036032d1548ed`. This baseline already contains the owner-approved PR #233 backend merge plus the later WebApp-only PR #232 merge from the parallel UI lane.
 
 Parent prerequisite contract: `documentation/api-completion-matrix/W2_4_PARTY_ACCOUNT_SUMMARY_PREREQUISITE_CONTRACT.md`.
 
@@ -28,7 +28,7 @@ The implementation:
 - preserves per-currency buckets and deterministic ordinal currency ordering;
 - normalizes the requested `asOf` instant to UTC;
 - fails closed if a downstream projection returns the wrong organization, Party or `asOf` instant;
-- fails closed on duplicate/invalid currency buckets or negative/internally impossible top-level amounts.
+- fails closed on duplicate/invalid currency buckets, negative amounts, and aging totals that do not reconcile with `outstanding` / `overdue`.
 
 The composed Application result explicitly carries:
 
@@ -74,6 +74,7 @@ This checkpoint adds:
 - fail-closed Party-not-found / cross-organization behavior;
 - fail-closed downstream scope mismatch;
 - fail-closed duplicate currency behavior;
+- fail-closed aging reconciliation (`current + overdue buckets == outstanding`, and overdue buckets sum to `overdue` at the governed 6-decimal precision);
 - provider-real PostgreSQL composition;
 - provider-real MySQL composition;
 - architecture guards confirming that no W2.4 controller exists and Wave 2 counts remain unchanged.
