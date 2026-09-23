@@ -1,14 +1,14 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_IMPLEMENTATION_CANDIDATE_PENDING_MERGE`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED / W2.4_NEXT`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Parties + Catalog + Sales Completion**.
 
-Accepted baseline after PR #216 merge: **26 operation IDs**, **24 implemented HTTP surfaces**, **2 non-implemented**.
+Accepted baseline after W2.3 read-only production runtime acceptance: **26 operation IDs**, **25 implemented HTTP surfaces**, **1 non-implemented**.
 
-W2.3 PR #221 is the governed implementation candidate for `API-POS-001 getPosBootstrap`; if accepted and merged, Wave 2 becomes **25 / 26 implemented** with only `API-PTY-008 getPartyAccountSummary` remaining.
+`API-POS-001 getPosBootstrap` is implemented and runtime-accepted. The only remaining Wave 2 HTTP gap is `API-PTY-008 getPartyAccountSummary`.
 
 Detailed readiness evidence for the original four missing operations is recorded in `W2_READINESS_AUDIT.md`.
 
@@ -19,6 +19,8 @@ W2.1 operational closure: `W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 W2.2 owner-locked lifecycle contract: `W2_2_SALE_CANCELLATION_CONTRACT.md`.
 
 W2.3 owner-locked contract: `W2_3_POS_BOOTSTRAP_CONTRACT.md`.
+
+W2.3 runtime evidence: `W2_3_POS_BOOTSTRAP_RUNTIME_PLAN.md`.
 
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
@@ -38,7 +40,7 @@ W2.3 owner-locked contract: `W2_3_POS_BOOTSTRAP_CONTRACT.md`.
 | `API-CAT-006` | `listItemCategories` | GET `/api/v1/item-categories` | `catalog.read` | ACCEPTED | IMPLEMENTED | `ItemCategoriesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-CAT-007` | `createItemCategory` | POST `/api/v1/item-categories` | `catalog.manage` | ACCEPTED | IMPLEMENTED | `ItemCategoriesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-CAT-008` | `updateItemCategory` | PATCH `/api/v1/item-categories/{categoryId}` | `catalog.manage` | ACCEPTED | IMPLEMENTED | `ItemCategoriesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
-| `API-POS-001` | `getPosBootstrap` | GET `/api/v1/pos/bootstrap` | `sales.read` | ACCEPTED | MISSING_HTTP | PR #221 candidate: `PosBootstrapController -> GetPosBootstrapUseCase -> IFiscalLocationRepository + ITerminalRepository` | IMPLEMENTED_PENDING_MERGE | 2 | Candidate implements actor-scoped active location/terminal contexts, deterministic ordering and `private, no-cache` ETag revalidation. Accepted matrix remains MISSING_HTTP until exact-head approval and merge; no payment/catalog/party/pricing/fiscal/stock aggregation, migration or production mutation |
+| `API-POS-001` | `getPosBootstrap` | GET `/api/v1/pos/bootstrap` | `sales.read` | ACCEPTED | IMPLEMENTED | `PosBootstrapController -> GetPosBootstrapUseCase -> IFiscalLocationRepository + ITerminalRepository` | RUNTIME_ACCEPTED / regression | 2 | PR #221 implemented the actor-scoped active location/terminal projection. PR #223 repaired the permission-policy Problem Details boundary found by the first runtime attempt. Deploy API Demo #58 promoted `efactura-api-d22-47f97a8-58-1`; production runtime run `35802751788` passed GET-only OpenAPI, 401/403 boundaries, `permission_denied`, organization isolation, empty scoped projection, cache/ETag and 304 checks with no production writes or fixtures |
 | `API-SAL-001` | `listSales` | GET `/api/v1/sales` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-002` | `createSale` | POST `/api/v1/sales` | `sales.create` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-SAL-003` | `getSale` | GET `/api/v1/sales/{saleId}` | `sales.read` | ACCEPTED | IMPLEMENTED | `SalesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
