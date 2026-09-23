@@ -1,10 +1,10 @@
 # UI-CON-001 — Contingencia / Sincronización
 
-Status: `APPROVED_VISUAL_SPECIFICATION / IMPLEMENTATION_PENDING`
+Status: `APPROVED_VISUAL_SPECIFICATION / IMPLEMENTED_VISUAL_PREVIEW / RUNTIME_ACCEPTANCE_PENDING`
 
 WEB mapping: `WEB-015`
 
-Reserved route candidate: `/contingencia`
+Route: `/contingencia`
 
 Approved visual baseline: `v1-responsive-composite`
 
@@ -76,15 +76,22 @@ The UI should support list/detail visualization for batches/operations and canon
 
 For conflict/review items, detail should reserve space for operation identity, reason/evidence and canonical server result/reference when those contracts become available.
 
-## Allowed preview behavior before HTTP exists
+## Implemented preview behavior
 
-- deterministic local fixtures;
-- local search/filter;
-- local selection;
-- light/dark theme behavior;
-- responsive cards/list presentation;
-- disabled action placement;
-- explanatory demo/API-pending messaging.
+The first implementation activates `/contingencia` exclusively as `IMPLEMENTED_VISUAL_PREVIEW` and provides:
+
+- deterministic local fixtures separated from the React view;
+- local search and filtering;
+- local record selection;
+- explicit separation of `Cliente / API` and `DGI / Proveedor` status surfaces;
+- all six canonical synchronization result labels with text;
+- local CFC/synchronization detail and history examples;
+- desktop table plus mobile card presentation;
+- responsive filter disclosure;
+- light/dark behavior through shared WebApp shell tokens;
+- disabled placement for server-owned actions;
+- `operations: []` in `UI-CON-001` capability registration;
+- dedicated `verify-contingency-preview.mjs` QA guard in normal frontend checks.
 
 ## Forbidden preview behavior
 
@@ -124,6 +131,8 @@ Must visually accommodate:
 
 Status must always have text and must not depend on color alone.
 
+The current deterministic fixture set explicitly demonstrates normal preview data, empty filtered results, conflict/review and validation/dependency outcomes. Authoritative loading/error/HTTP states remain future integration behavior and must not be simulated as live server responses.
+
 ## Responsive behavior
 
 Desktop is authoritative for complex reconciliation and dense supervision.
@@ -141,8 +150,8 @@ Mobile should:
 
 ## Theme parity
 
-Implementation must use shared WebApp shell tokens rather than feature-local fixed light/dark palettes.
+Implementation uses shared WebApp shell tokens rather than feature-local fixed light/dark palettes.
 
 ## Acceptance gate
 
-A future implementation requires separate CI, merge approval, deploy and runtime visual acceptance in desktop Claro, desktop Oscuro and mobile 390×844.
+Implementation CI and merge review are required before deployment. Runtime visual acceptance remains separate and must cover desktop Claro, desktop Oscuro and mobile 390×844.
