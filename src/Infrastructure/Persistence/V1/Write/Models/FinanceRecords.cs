@@ -41,3 +41,16 @@ public sealed class V1ReceivableRecord
     public long Version { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
 }
+
+public sealed class V1ReceivableBalanceEffectRecord
+{
+    public Guid Id { get; set; }
+    public string OrganizationId { get; set; } = string.Empty;
+    public Guid ReceivableId { get; set; }
+    public int Kind { get; set; }
+    public decimal Amount { get; set; }
+    public string SourceId { get; set; } = string.Empty;
+    public int SourceSequence { get; set; }
+    public Guid? ReversesEffectId { get; set; }
+    public DateTimeOffset OccurredAtUtc { get; set; }
+}
