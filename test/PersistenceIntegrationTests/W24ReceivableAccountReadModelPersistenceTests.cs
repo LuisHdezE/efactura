@@ -200,6 +200,7 @@ public sealed class W24ReceivableAccountReadModelPersistenceTests
         var now = DateTimeOffset.UtcNow;
         var saleId = Guid.NewGuid();
         var receivableId = Guid.NewGuid();
+        var saleEffectiveOn = new DateOnly(2026, 1, 1);
 
         await using var context = database.CreateContext();
         context.Sales.Add(new V1SaleRecord
@@ -211,7 +212,7 @@ public sealed class W24ReceivableAccountReadModelPersistenceTests
             CustomerPartyId = customerId,
             Intent = (int)SaleCommercialIntent.ConsumerFinal,
             CurrencyCode = currencyCode,
-            EffectiveOnUtc = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
+            EffectiveOnUtc = saleEffectiveOn.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
             DeliveryCountry = "UY",
             GoodsExportConfirmed = false,
             Status = (int)SaleStatus.Validated,
@@ -229,7 +230,7 @@ public sealed class W24ReceivableAccountReadModelPersistenceTests
             saleId,
             amount,
             currencyCode,
-            new DateOnly(2026, 9, 1),
+            saleEffectiveOn,
             dueDate,
             Confirmation,
             Settlement,
