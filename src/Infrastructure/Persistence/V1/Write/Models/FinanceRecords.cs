@@ -80,3 +80,77 @@ public sealed class V1ReceivableBalanceEffectRecord
     [ForeignKey(nameof(ReversesEffectId))]
     public V1ReceivableBalanceEffectRecord? ReversedEffect { get; set; }
 }
+
+[Table("v1_payables")]
+[Index(nameof(OrganizationId), nameof(SourceKind), nameof(SourceId), IsUnique = true, Name = "UX_v1_ap_org_source")]
+[Index(nameof(OrganizationId), nameof(SupplierPartyId), nameof(DueDate), Name = "IX_v1_ap_org_supplier_due")]
+public sealed class V1PayableRecord
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    [MaxLength(200)]
+    public string OrganizationId { get; set; } = string.Empty;
+
+    public Guid SupplierPartyId { get; set; }
+    public int SourceKind { get; set; }
+
+    [MaxLength(200)]
+    public string SourceId { get; set; } = string.Empty;
+
+    [Precision(18, 6)]
+    public decimal OriginalAmount { get; set; }
+
+    [MaxLength(3)]
+    public string CurrencyCode { get; set; } = string.Empty;
+
+    [Column(TypeName = "date")]
+    public DateTime SourceEffectiveOn { get; set; }
+
+    [Column(TypeName = "date")]
+    public DateTime DueDate { get; set; }
+
+    public long Version { get; set; }
+
+    [Precision(6)]
+    public DateTimeOffset CreatedAtUtc { get; set; }
+
+    [ForeignKey(nameof(SupplierPartyId))]
+    public V1PartyRecord SupplierParty { get; set; } = null!;
+
+    public ICollection<V1PayableBalanceEffectRecord> BalanceEffects { get; set; } = new List<V1PayableBalanceEffectRecord>();
+}
+
+[Table("v1_payable_balance_effects")]
+[Index(nameof(OrganizationId), nameof(PayableId), nameof(OccurredAtUtc), Name = "IX_v1_ap_effect_org_payable_time")]
+[Index(nameof(OrganizationId), nameof(Kind), nameof(SourceId), nameof(SourceSequence), IsUnique = true, Name = "UX_v1_ap_effect_source")]
+[Index(nameof(OrganizationId), nameof(ReversesEffectId), IsUnique = true, Name = "UX_v1_ap_effect_reversal")]
+public sealed class V1PayableBalanceEffectRecord
+{
+    [Key]
+    public Guid Id { get; set; }
+
+    [MaxLength(200)]
+    public string OrganizationId { get; set; } = string.Empty;
+
+    public Guid PayableId { get; set; }
+    public int Kind { get; set; }
+
+    [Precision(18, 6)]
+    public decimal Amount { get; set; }
+
+    [MaxLength(200)]
+    public string SourceId { get; set; } = string.Empty;
+
+    public int SourceSequence { get; set; }
+    public Guid? ReversesEffectId { get; set; }
+
+    [Precision(6)]
+    public DateTimeOffset OccurredAtUtc { get; set; }
+
+    [ForeignKey(nameof(PayableId))]
+    public V1PayableRecord Payable { get; set; } = null!;
+
+    [ForeignKey(nameof(ReversesEffectId))]
+    public V1PayableBalanceEffectRecord? ReversedEffect { get; set; }
+}
