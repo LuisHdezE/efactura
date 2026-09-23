@@ -229,6 +229,14 @@ public sealed class PartyAccountSummaryReadModel : IPartyAccountSummaryReadModel
         {
             throw Invariant($"party.account_summary.{side}_amount_invalid");
         }
+
+        var normalizedOutstanding = Money(outstanding);
+        var normalizedOverdue = Money(overdue);
+        var overdueAging = Money(days1To30 + days31To60 + days61To90 + days91Plus);
+        var totalAging = Money(current + overdueAging);
+
+        if (normalizedOverdue != overdueAging || normalizedOutstanding != totalAging)
+            throw Invariant($"party.account_summary.{side}_aging_mismatch");
     }
 
     private static string RequiredOrganization(string value)
@@ -257,6 +265,9 @@ public sealed class PartyAccountSummaryReadModel : IPartyAccountSummaryReadModel
 
         return normalized;
     }
+
+    private static decimal Money(decimal value) =>
+        decimal.Round(value, 6, MidpointRounding.ToEven);
 
     private static InvalidOperationException Invariant(string code) =>
         new($"Authoritative Party account-summary invariant failed: {code}.");
