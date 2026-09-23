@@ -6,11 +6,13 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
 
+const main = read('src/main.tsx');
 const routes = read('src/app/routes.tsx');
 const capabilities = read('src/app/capabilities.ts');
 const page = read('src/features/contingency/ContingencyPage.tsx');
 const fixtures = read('src/features/contingency/fixtures.ts');
 const styles = read('src/features/contingency/contingency-preview.css');
+const runtimeStyles = read('src/features/contingency/contingency-runtime-polish.css');
 const failures = [];
 
 if (!routes.includes("webId: 'WEB-015', state: 'active', capability: requireCapability('UI-CON-001')")) {
@@ -71,6 +73,21 @@ for (const wrapMarker of [
   if (!styles.includes(wrapMarker)) failures.push(`Contingency narrow-mobile wrapping guard is missing: ${wrapMarker}`);
 }
 
+if (!main.includes("./features/contingency/contingency-runtime-polish.css")) {
+  failures.push('Contingency runtime polish stylesheet must be loaded after shared visual styles.');
+}
+
+for (const layoutMarker of [
+  'padding: 18px 22px 32px;',
+  'grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);',
+  'max-width: 340px;',
+  '@media (max-width: 1180px)',
+  '.contingency-heading-actions .contingency-primary:disabled',
+  'opacity: 1;',
+]) {
+  if (!runtimeStyles.includes(layoutMarker)) failures.push(`Contingency runtime layout polish marker is missing: ${layoutMarker}`);
+}
+
 if (!styles.includes(":root[data-theme='dark']")) {
   failures.push('Contingency preview must preserve a valid explicit dark-theme parity hook.');
 }
@@ -85,4 +102,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present, narrow-mobile wrapping guarded.');
+console.log('Contingency preview guard PASS: WEB-015 active, UI-CON-001 visual-only, operations empty, deterministic fixtures, server-owned actions blocked, filtered detail selection aligned, theme/responsive markers present, narrow-mobile wrapping guarded, runtime spacing/action polish guarded.');
