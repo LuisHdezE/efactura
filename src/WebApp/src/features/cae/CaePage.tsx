@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CaeAllocationDto, CaeAuthorizationDto } from '../../contracts/cae';
 import { dataMode, gateways } from '../../services';
 import './cae.css';
+import './cae-mobile-filters.css';
 
 const cfeLabels: Record<number, string> = {
   101: 'e-Ticket',
@@ -71,6 +72,7 @@ export function CaePage() {
   const [error, setError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(true);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -158,6 +160,7 @@ export function CaePage() {
     setCfeType('ALL');
     setStatus('ALL');
     setValidity('ALL');
+    setMobileFiltersOpen(false);
   };
 
   return (
@@ -192,14 +195,25 @@ export function CaePage() {
 
       <div className="cae-workspace">
         <section className="cae-panel cae-browser" aria-label="Autorizaciones CAE">
-          <div className="cae-filters">
+          <div className={`cae-filters ${mobileFiltersOpen ? 'is-mobile-expanded' : ''}`}>
             <label className="cae-search">
               <span aria-hidden="true">⌕</span>
               <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar autorización, tipo CFE, serie…" aria-label="Buscar CAE" />
             </label>
-            <label className="cae-filter-field"><span>Tipo CFE</span><select value={cfeType} onChange={(event) => setCfeType(event.target.value)}><option value="ALL">Todos</option>{Object.entries(cfeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-            <label className="cae-filter-field"><span>Estado</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="ALL">Todos</option><option value="ACTIVE">Vigente</option><option value="VERIFIED">Verificado</option><option value="EXHAUSTED">Agotado</option><option value="EXPIRED">Vencido</option></select></label>
-            <label className="cae-filter-field"><span>Vigencia</span><select value={validity} onChange={(event) => setValidity(event.target.value)}><option value="ALL">Todas</option><option value="CURRENT">Con vigencia</option><option value="EXPIRED">Vencida</option></select></label>
+            <button
+              type="button"
+              className="cae-mobile-filter-toggle"
+              aria-expanded={mobileFiltersOpen}
+              aria-controls="cae-filter-options"
+              onClick={() => setMobileFiltersOpen((value) => !value)}
+            >
+              <span aria-hidden="true">☰</span> Filtros
+            </button>
+            <div id="cae-filter-options" className="cae-filter-options">
+              <label className="cae-filter-field"><span>Tipo CFE</span><select value={cfeType} onChange={(event) => setCfeType(event.target.value)}><option value="ALL">Todos</option>{Object.entries(cfeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+              <label className="cae-filter-field"><span>Estado</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="ALL">Todos</option><option value="ACTIVE">Vigente</option><option value="VERIFIED">Verificado</option><option value="EXHAUSTED">Agotado</option><option value="EXPIRED">Vencido</option></select></label>
+              <label className="cae-filter-field"><span>Vigencia</span><select value={validity} onChange={(event) => setValidity(event.target.value)}><option value="ALL">Todas</option><option value="CURRENT">Con vigencia</option><option value="EXPIRED">Vencida</option></select></label>
+            </div>
             <button type="button" className="cae-clear" onClick={clearFilters}>Limpiar</button>
           </div>
 
