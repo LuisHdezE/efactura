@@ -33,13 +33,15 @@ public sealed class W24ReceivableBalanceFoundationArchitectureTests
     }
 
     [Fact]
-    public void Ar_foundation_does_not_prematurely_expose_w24_http_surface_or_advance_counts()
+    public void Ar_foundation_remains_prerequisite_only_after_http_candidate_is_introduced()
     {
-        var root = FindRepositoryRoot();
         var wave = Read("documentation/api-completion-matrix/WAVE_2.md");
-        var controllerPath = Path.Combine(root, "src", "WebApi", "Controllers", "V1", "PartyAccountSummaryController.cs");
+        var controller = Read("src/WebApi/Controllers/V1/PartyAccountSummaryController.cs");
 
-        Assert.False(File.Exists(controllerPath));
+        Assert.Contains("IPartyAccountSummaryReadModel", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPartyReceivableAccountReadModel", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("EfReceivableBalanceRepository", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("DbContext", controller, StringComparison.Ordinal);
         Assert.Contains("**25 implemented HTTP surfaces**, **1 non-implemented**", wave, StringComparison.Ordinal);
         Assert.Contains("`API-PTY-008`", wave, StringComparison.Ordinal);
         Assert.Contains("MISSING_HTTP", wave, StringComparison.Ordinal);
