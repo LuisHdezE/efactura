@@ -1,0 +1,50 @@
+/* Global WebApp shell width invariant.
+   Keep horizontal scrolling local to intentional scroll containers, never to the document shell. */
+#root,
+.ef-app,
+.ef-workspace,
+.ef-workspace > main {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ef-mobile-nav,
+.ef-mobile-nav > nav {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ef-app-footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .ef-global-topbar {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ef-header-brand,
+  .ef-header-actions {
+    min-width: 0;
+  }
+
+  .ef-mobile-nav > nav {
+    overscroll-behavior-inline: contain;
+  }
+
+  .ef-app-footer {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .ef-app-footer span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
