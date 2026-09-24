@@ -1,14 +1,14 @@
 # API Completion Master Matrix — Wave 2
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED / W2.4_NEXT`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED / W2.4_RUNTIME_ACCEPTED_READ_ONLY / HTTP_COMPLETE`
 
 Parent index: `documentation/API_COMPLETION_MASTER_MATRIX.md`.
 
 Scope: **Parties + Catalog + Sales Completion**.
 
-Accepted baseline after W2.3 read-only production runtime acceptance: **26 operation IDs**, **25 implemented HTTP surfaces**, **1 non-implemented**.
+Accepted baseline after W2.4 read-only production runtime acceptance: **26 operation IDs**, **26 implemented HTTP surfaces**, **0 non-implemented**.
 
-`API-POS-001 getPosBootstrap` is implemented and runtime-accepted. The only remaining Wave 2 HTTP gap is `API-PTY-008 getPartyAccountSummary`.
+`API-PTY-008 getPartyAccountSummary` is implemented, deployed and runtime-accepted read-only. Wave 2 now has no missing public HTTP surface; W2.2 mutation-based production runtime acceptance remains a separate owner-gated operational concern.
 
 Detailed readiness evidence for the original four missing operations is recorded in `W2_READINESS_AUDIT.md`.
 
@@ -22,6 +22,10 @@ W2.3 owner-locked contract: `W2_3_POS_BOOTSTRAP_CONTRACT.md`.
 
 W2.3 runtime evidence: `W2_3_POS_BOOTSTRAP_RUNTIME_PLAN.md`.
 
+W2.4 field-level HTTP contract: `W2_4_PARTY_ACCOUNT_SUMMARY_HTTP_CONTRACT.md`.
+
+W2.4 operational closure: `W2_4_PARTY_ACCOUNT_SUMMARY_RUNTIME_CLOSURE.md`.
+
 | API ID | operationId | Method / path | Permission | Contract | Implementation | Current WebApi evidence | Deep readiness | Wave | Gap / blocker |
 |---|---|---|---|---|---|---|---|---:|---|
 | `API-PTY-001` | `listParties` | GET `/api/v1/parties` | `parties.read` | ACCEPTED | IMPLEMENTED | `PartiesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
@@ -31,7 +35,7 @@ W2.3 runtime evidence: `W2_3_POS_BOOTSTRAP_RUNTIME_PLAN.md`.
 | `API-PTY-005` | `addPartyFiscalIdentity` | POST `/api/v1/parties/{partyId}/fiscal-identities` | `parties.fiscal.manage` | ACCEPTED | IMPLEMENTED | `PartiesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-PTY-006` | `updatePartyFiscalIdentity` | PUT `/api/v1/parties/{partyId}/fiscal-identities/{identityId}` | `parties.fiscal.manage` | ACCEPTED | IMPLEMENTED | `PartiesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-PTY-007` | `setPartyRoles` | PUT `/api/v1/parties/{partyId}/roles` | `parties.manage` | ACCEPTED | IMPLEMENTED | `PartiesController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
-| `API-PTY-008` | `getPartyAccountSummary` | GET `/api/v1/parties/{partyId}/account-summary` | `parties.read` | ACCEPTED | MISSING_HTTP | none | PREREQUISITE_REQUIRED | 2 | Authoritative party-scoped AR/AP balance-aging read model + field contract required; do not fake from Party master data or original receivable amounts |
+| `API-PTY-008` | `getPartyAccountSummary` | GET `/api/v1/parties/{partyId}/account-summary` | `parties.read` | ACCEPTED | IMPLEMENTED | `PartyAccountSummaryController -> IPartyAccountSummaryReadModel` | RUNTIME_ACCEPTED / regression | 2 | PR #238 merged at `7f8281c9f98e2c0a9171fbc9d56ee5bd872eb60b`; Deploy API Demo #62 promoted `efactura-api-d22-7f8281c-62-1`; bounded read-only production acceptance passed route/OpenAPI/auth/scope/not-found behavior with zero production Party rows, while successful 200 composition remains covered by exact-head controller and provider-real PostgreSQL/MySQL QA |
 | `API-CAT-001` | `listItems` | GET `/api/v1/items` | `catalog.read` | ACCEPTED | IMPLEMENTED | `ItemsController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-CAT-002` | `createItem` | POST `/api/v1/items` | `catalog.manage` | ACCEPTED | IMPLEMENTED | `ItemsController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |
 | `API-CAT-003` | `getItem` | GET `/api/v1/items/{itemId}` | `catalog.read` | ACCEPTED | IMPLEMENTED | `ItemsController` | EXISTING_PATH / regression | 2 | Preserve and regression-test |

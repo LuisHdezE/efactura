@@ -41,7 +41,7 @@ public sealed class W24PayableBalanceFoundationArchitectureTests
     }
 
     [Fact]
-    public void Ap_foundation_remains_prerequisite_only_after_http_candidate_is_introduced()
+    public void Ap_foundation_remains_internal_after_runtime_closure()
     {
         var wave = Read("documentation/api-completion-matrix/WAVE_2.md");
         var controller = Read("src/WebApi/Controllers/V1/PartyAccountSummaryController.cs");
@@ -50,10 +50,12 @@ public sealed class W24PayableBalanceFoundationArchitectureTests
         Assert.DoesNotContain("IPartyPayableAccountReadModel", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("EfPayableBalanceRepository", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("DbContext", controller, StringComparison.Ordinal);
-        Assert.Contains("**25 implemented HTTP surfaces**, **1 non-implemented**", wave, StringComparison.Ordinal);
+        Assert.Contains("**26 implemented HTTP surfaces**, **0 non-implemented**", wave, StringComparison.Ordinal);
         Assert.Contains("`API-PTY-008`", wave, StringComparison.Ordinal);
-        Assert.Contains("MISSING_HTTP", wave, StringComparison.Ordinal);
-        Assert.Contains("PREREQUISITE_REQUIRED", wave, StringComparison.Ordinal);
+        Assert.Contains("IMPLEMENTED", wave, StringComparison.Ordinal);
+        Assert.Contains("RUNTIME_ACCEPTED / regression", wave, StringComparison.Ordinal);
+        Assert.DoesNotContain("MISSING_HTTP", wave, StringComparison.Ordinal);
+        Assert.DoesNotContain("PREREQUISITE_REQUIRED", wave, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>
