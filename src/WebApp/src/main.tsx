@@ -10,6 +10,7 @@ import './features/dashboard/dashboard-density.css';
 import './features/dashboard/dashboard-icons.css';
 import './features/suppliers/supplier-runtime-polish.css';
 import './features/catalog/catalog-runtime-polish.css';
+import './features/contingency/contingency-runtime-polish.css';
 
 const routerBasename = import.meta.env.BASE_URL === '/'
   ? '/'
