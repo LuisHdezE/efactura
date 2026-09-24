@@ -26,11 +26,35 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .ef-header-brand,
+  .ef-header-brand > div,
   .ef-header-actions {
     min-width: 0;
+    max-width: 100%;
+  }
+
+  .ef-header-brand > div {
+    overflow-wrap: anywhere;
+  }
+
+  .ef-header-title {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ef-header-actions {
+    justify-self: end;
+    flex: 0 0 auto;
+  }
+
+  .ef-user-badge,
+  .ef-theme-toggle {
+    flex: 0 0 auto;
   }
 
   .ef-mobile-nav > nav {
