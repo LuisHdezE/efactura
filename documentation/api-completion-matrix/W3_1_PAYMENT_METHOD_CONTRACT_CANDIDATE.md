@@ -40,9 +40,11 @@ another organization's method.
 GET returns HTTP 200 and a bounded `PageResponse<PaymentMethodDto>` with
 `items`, `page`, `pageSize`, and `total`. Default `enabled=true` exposes usable
 methods for POS/treasury; `enabled=false` lists disabled methods to authorized
-administrators who also hold `payments.read`. No unbounded list is permitted.
-Sort deterministically by normalized display name, then ID. Empty results
-return 200 with `items=[]` and `total=0`. This operation does not include
+actors who hold `payments.read`. `page` defaults to 1 and is normalized to a
+minimum of 1; `pageSize` defaults to 100 and is clamped to 1..200, following
+the current v1 category listing convention. Sort by ID ascending so database
+collations do not change page membership between PostgreSQL and MySQL. Empty
+results return 200 with `items=[]` and `total=0`. This operation does not include
 classification, settlement availability, custody, fees, or FX policy.
 
 ### Create
@@ -110,12 +112,10 @@ changing both name and enabled.
    explicit exact-HEAD approval; deploy and runtime acceptance remain later
    gates. A production write or migration requires separate authorization.
 
-## 5. Open decisions for owner lock
+## 5. Name identity boundary
 
-The list pagination upper bound and case-sensitive versus case-insensitive
-name ordering should be fixed against the repository's established v1
-conventions before implementation. This candidate does not impose a unique
-name constraint because the existing v1 table has none. A future uniqueness
-policy would require a separate contract and migration review.
+This candidate does not impose a unique name constraint because the existing
+v1 table has none. A future uniqueness policy would require a separate
+contract and migration review. Display names do not classify payment custody.
 
 No public operation count changes as a result of this document.
