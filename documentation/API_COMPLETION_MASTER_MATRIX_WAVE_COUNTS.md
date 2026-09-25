@@ -1,6 +1,6 @@
 # API Completion Master Matrix — Wave Count Ledger
 
-Status: `FULLY_RECONCILED / WAVE_1_CLOSED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED`
+Status: `FULLY_RECONCILED / WAVE_1_CLOSED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED / W2.4_RUNTIME_ACCEPTED_READ_ONLY / WAVE_2_HTTP_COMPLETE`
 
 W2.1 implementation reconciliation PR: **#208**.
 
@@ -14,9 +14,9 @@ This companion ledger prevents the public-v1 denominator, implementation count a
 
 Current public-v1 inventory denominator: **194 operation IDs**.
 
-Accepted implemented HTTP operations: **67**.
+Accepted implemented HTTP operations: **68**.
 
-Accepted non-implemented operation IDs: **127**.
+Accepted non-implemented operation IDs: **126**.
 
 Current distinct HTTP method/path signatures: **193** because one accepted-contract collision uses the same signature for two API IDs.
 
@@ -25,30 +25,30 @@ Current distinct HTTP method/path signatures: **193** because one accepted-contr
 | Wave | Scope | Contract operations | Implemented | Missing HTTP | Contract-collision IDs | Non-implemented | Raw operation coverage |
 |---:|---|---:|---:|---:|---:|---:|---:|
 | 1 | Identity + Organization + Reference Data | 30 | 30 | 0 | 0 | 0 | 100.00% |
-| 2 | Parties + Catalog + Sales Completion | 26 | 25 | 1 | 0 | 1 | 96.15% |
+| 2 | Parties + Catalog + Sales Completion | 26 | 26 | 0 | 0 | 0 | 100.00% |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 | 0.00% |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 | 17.39% |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 | 20.00% |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 | 0.00% |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 | 0.00% |
-| **Total** |  | **194** | **67** | **125** | **2** | **127** | **34.54%** |
+| **Total** |  | **194** | **68** | **124** | **2** | **126** | **35.05%** |
 
 The totals reconcile exactly:
 
 `30 + 26 + 24 + 23 + 40 + 21 + 30 = 194`
 
-`30 + 25 + 0 + 4 + 8 + 0 + 0 = 67`
+`30 + 26 + 0 + 4 + 8 + 0 + 0 = 68`
 
-`0 + 1 + 24 + 19 + 32 + 21 + 30 = 127`
+`0 + 0 + 24 + 19 + 32 + 21 + 30 = 126`
 
-`125 MISSING_HTTP + 2 CONTRACT_COLLISION = 127 non-implemented IDs`
+`124 MISSING_HTTP + 2 CONTRACT_COLLISION = 126 non-implemented IDs`
 
 ## Family-to-wave allocation
 
 | Wave | API families | Count | Current implemented families/operations |
 |---:|---|---:|---|
 | 1 | `IAM-001..011`, `ORG-001..010`, `REF-001..008`, `CAT-009` | 30 | `IAM-001..011`, `ORG-001..010`, `REF-001..008`, `CAT-009` |
-| 2 | `PTY-001..008`, `CAT-001..008`, `POS-001`, `SAL-001..009` | 26 | `PTY-001..007`, `CAT-001..008`, `POS-001`, `SAL-001..009` |
+| 2 | `PTY-001..008`, `CAT-001..008`, `POS-001`, `SAL-001..009` | 26 | `PTY-001..008`, `CAT-001..008`, `POS-001`, `SAL-001..009` |
 | 3 | `PMT-001..003`, `AR-001..004`, `COL-001..003`, `AP-001..004`, `PAY-001..003`, `CSH-001..007` | 24 | none |
 | 4 | `INV-001..004`, `TRF-001..007`, `RPL-001..002`, `PRC-001..006`, `GRC-001..004` | 23 | `INV-001..004` |
 | 5 | `FIS-001..010`, `FDL-001..002`, `CAE-001..007`, `CNT-001..007`, `RCV-001..006`, `XML-001`, `DFR-001..004`, `CAL-001`, `CFG-001..002` | 40 | `FIS-010`, `CAE-001..007` |
@@ -91,4 +91,6 @@ W2.2 owner-locked the lifecycle and irreversible-boundary contract for `API-SAL-
 
 W2.3 `API-POS-001 getPosBootstrap` is implemented and runtime-accepted. PR #221 introduced the bounded read-only surface, PR #223 repaired the permission-policy Problem Details boundary found by the first one-shot, Deploy API Demo #58 promoted `efactura-api-d22-47f97a8-58-1`, and read-only production runtime run `35802751788` passed the exact GET-only contract, authentication/authorization boundaries, empty scoped projection, cache semantics and ETag revalidation with no production writes or fixtures.
 
-Wave 2 is therefore at `25 / 26`. The only remaining Wave 2 HTTP gap is W2.4 `API-PTY-008 getPartyAccountSummary`, which requires an authoritative party-scoped AR/AP balance-aging read model and must not derive financial truth from Party master data or original receivable amounts.
+W2.4 `API-PTY-008 getPartyAccountSummary` is merged, deployed and runtime-accepted read-only. PR #238 merged at `7f8281c9f98e2c0a9171fbc9d56ee5bd872eb60b`; Deploy API Demo #62 promoted `efactura-api-d22-7f8281c-62-1`; production runtime acceptance exercised the exact route/OpenAPI/authentication/permission/scope/not-found contract without writes or fixtures. Production contains zero Party rows, so the successful 200 business-state projection remains covered by the exact-head controller test and provider-real PostgreSQL/MySQL composition QA.
+
+Wave 2 is therefore HTTP-complete at `26 / 26`. W2.2 mutation-based production runtime acceptance remains a separate owner-gated operational concern and does not reduce the implemented HTTP count.

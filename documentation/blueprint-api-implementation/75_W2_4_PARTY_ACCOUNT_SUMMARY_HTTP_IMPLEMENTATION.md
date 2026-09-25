@@ -1,6 +1,10 @@
 # W2.4 Party Account Summary HTTP implementation
 
-Status: `IMPLEMENTED_HTTP_PENDING_PRODUCTION_MIGRATION_AND_RUNTIME_ACCEPTANCE`
+Status: `IMPLEMENTED / MERGED / DEPLOYED / RUNTIME_ACCEPTED_READ_ONLY`
+
+Operational closure: `documentation/api-completion-matrix/W2_4_PARTY_ACCOUNT_SUMMARY_RUNTIME_CLOSURE.md`.
+
+Audit note: the prerequisite and completion-accounting sections below preserve the pre-merge checkpoint chronology.
 
 Baseline: `main@9019141b10b3117a2c0cad7cd1fe723053542875` after owner-approved merge of PR #236.
 
