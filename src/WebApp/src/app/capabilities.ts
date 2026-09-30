@@ -165,5 +165,12 @@ export const uiCapabilities: UiCapability[] = [
     route: '/contingencia',
     status: 'IMPLEMENTED_VISUAL_PREVIEW',
     operations: []
+  },
+  {
+    uiId: 'UI-RCV-001',
+    label: 'CFE recibidos',
+    route: '/cfe-recibidos',
+    status: 'IMPLEMENTED_VISUAL_PREVIEW',
+    operations: []
   }
 ];

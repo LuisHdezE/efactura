@@ -11,6 +11,7 @@ import { PayablesPage } from '../features/payables/PayablesPage';
 import { PosPage } from '../features/pos/PosPage';
 import { ProcurementPage } from '../features/procurement/ProcurementPage';
 import { ReceivablesPage } from '../features/receivables/ReceivablesPage';
+import { ReceivedCfePage } from '../features/received-cfe/ReceivedCfePage';
 import { SuppliersPage } from '../features/suppliers/SuppliersPage';
 import { TransfersPage } from '../features/transfers/TransfersPage';
 import { uiCapabilities, type UiCapability } from './capabilities';
@@ -93,7 +94,7 @@ export const shellNavigationItems: ShellNavigationItem[] = [
   { webId: 'WEB-013', state: 'active', capability: requireCapability('UI-FIS-001'), icon: '≡', navigationGroup: 'Fiscal', element: <FiscalDocumentsPage /> },
   { webId: 'WEB-014', state: 'active', capability: requireCapability('UI-CAE-001'), icon: '#', navigationGroup: 'Fiscal', element: <CaePage /> },
   { webId: 'WEB-015', state: 'active', capability: requireCapability('UI-CON-001'), icon: '↻', navigationGroup: 'Fiscal', element: <ContingencyPage /> },
-  { webId: 'WEB-016', state: 'planned', label: 'CFE recibidos', icon: '⇩', navigationGroup: 'Fiscal' },
+  { webId: 'WEB-016', state: 'active', capability: requireCapability('UI-RCV-001'), icon: '⇩', navigationGroup: 'Fiscal', element: <ReceivedCfePage /> },
   { webId: 'WEB-017', state: 'planned', label: 'Reportes y Calendario fiscal', icon: '▧', navigationGroup: 'Reportes' },
   { webId: 'WEB-018', state: 'planned', label: 'Auditoría / Seguridad / Configuración', icon: '⚙', navigationGroup: 'Administración' },
   { webId: 'WEB-019', state: 'planned', label: 'Consola técnica', icon: '⌘', navigationGroup: 'Administración' }
