@@ -29,7 +29,8 @@ Current runtime/governance state:
 - `WEB-013 / UI-FIS-001` has approved visual baseline `v1-responsive-composite` and is implemented at `/documentos-fiscales` as `IMPLEMENTED_VISUAL_PREVIEW`; deployed desktop light/dark and 390×844 mobile runtime were visually accepted on 2026-09-22;
 - `WEB-014 / UI-CAE-001` has approved visual baseline `v1-responsive-composite` (`4:3`, gen_id `ea4d59d5-0a58-451f-bd34-9af9b939819b`) and is implemented at `/cae` as `IMPLEMENTED_API_MOCK_DATA`; its deployed desktop light/dark and mobile 390×844 runtime were visually accepted on 2026-09-23; `API-CAE-001..007` remain mapped while server-owned mutations stay blocked until authoritative WebApp session/permission and HTTP integration are enabled;
 - `WEB-015 / UI-CON-001` has approved visual baseline `v1-responsive-composite` (`4:3`, gen_id `4f3edc3e-cb6e-45f2-b0aa-ecad5854d76f`) and is implemented at `/contingencia` as `IMPLEMENTED_VISUAL_PREVIEW`; `operations: []` is mandatory while required `API-CNT-001..007` and `API-SYN-001..003` remain `MISSING_HTTP`, and all server-owned actions stay blocked;
-- `WEB-016..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
+- `WEB-016 / UI-RCV-001` has a governed draft specification and remains a planned disabled shell candidate with no executable route or approved visual baseline;
+- `WEB-017..WEB-019` remain roadmap-only planned shell candidates with no executable route yet;
 - all 18 shell-hosted product options remain visible in the Sidebar information architecture.
 
 Current counts:
@@ -102,7 +103,7 @@ Legend:
 | `WEB-013` | Fiscal Documents | Fiscal | `UI-FIS-001` | `/documentos-fiscales` | `ACTIVE_VISUAL_PREVIEW` | local demo, API pending |
 | `WEB-014` | CAE Administration | Fiscal | `UI-CAE-001` | `/cae` | `ACTIVE` | API contract mapped / mock gateway |
 | `WEB-015` | Contingency and Synchronization Supervision | Fiscal | `UI-CON-001` | `/contingencia` | `ACTIVE_VISUAL_PREVIEW` | local fixtures, `operations: []`, API pending |
-| `WEB-016` | Received CFE and XML Validation | Fiscal | `UI ID pending` | `/cfe-recibidos` candidate | `PLANNED_DISABLED` | — |
+| `WEB-016` | Received CFE and XML Validation | Fiscal | `UI-RCV-001` | `/cfe-recibidos` candidate | `PLANNED_DISABLED` | governed draft; visual approval pending |
 | `WEB-017` | Reports and Fiscal Calendar | Reportes | `UI ID pending` | `/reportes` candidate | `PLANNED_DISABLED` | — |
 | `WEB-018` | Audit, Security and Configuration | Administración | `UI ID pending` | `/administracion` candidate | `PLANNED_DISABLED` | — |
 | `WEB-019` | Technical Operations Console | Administración | `UI ID pending` | `/operaciones` candidate | `PLANNED_DISABLED` | — |
