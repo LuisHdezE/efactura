@@ -1,10 +1,10 @@
 # UI-RCV-001 — CFE recibidos / Validación XML: reconciliación
 
-Status: `GOVERNED_DRAFT / VISUAL_BASELINE_PENDING / ROUTE_DISABLED`
+Status: `VISUALLY_APPROVED / IMPLEMENTED_VISUAL_PREVIEW / API_PENDING`
 
 Mapping: `WEB-016 -> UI-RCV-001`
 
-Candidate route: `/cfe-recibidos`; navigation remains `PLANNED_DISABLED`.
+Active visual-preview route: `/cfe-recibidos`; navigation is enabled for local inspection.
 
 ## Product authority
 
@@ -35,6 +35,6 @@ Source: accepted operation inventory and WEB-016 interface reconciliation. All s
 
 ## Frontend boundary and next gates
 
-There is no `UI-RCV-001` React route, capability binding, HTTP adapter or approved visual baseline yet. The Sidebar entry stays visible and disabled. A future visual preview may use clearly labelled deterministic local fixtures, local search/filter/detail interaction and disabled placements for upload, validation, import, batch and download. It must keep `operations: []`, avoid direct HTTP and never imply that a file was validated, imported or downloaded by the server.
+The user approved the visual proposal on 2026-09-30. The React route and capability provide deterministic local fixtures, local search/filter/detail interaction, and disabled placements for import, batch, validation and download. The capability keeps `operations: []`; no HTTP or file upload executes. Fixture outcomes illustrate contract semantics without asserting server validation or import.
 
-Before activating a preview: approve an exact responsive visual baseline; implement the page and QA guard; verify desktop light/dark and 390×844 mobile; then review CI and merge under the normal PR gate. Real upload/import/validation require the separate API lane, authoritative WebApp session/permissions, file size and type bounds, idempotency and HTTP error handling.
+Before merge, review QA/CI and the preview in desktop light/dark and mobile 390×844 under the normal PR gate. Runtime visual acceptance remains pending. Real upload/import/validation require the separate API lane, authoritative WebApp session/permissions, file size and type bounds, idempotency and HTTP error handling.
