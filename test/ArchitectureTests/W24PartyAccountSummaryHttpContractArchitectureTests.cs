@@ -5,7 +5,7 @@ namespace ArchitectureTests;
 public sealed class W24PartyAccountSummaryHttpContractArchitectureTests
 {
     [Fact]
-    public void Http_implementation_matches_the_locked_contract_without_advancing_runtime_counts()
+    public void Http_implementation_matches_the_locked_contract_and_runtime_reconciliation()
     {
         var contract = Read("documentation/api-completion-matrix/W2_4_PARTY_ACCOUNT_SUMMARY_HTTP_CONTRACT.md");
         var controller = Read("src/WebApi/Controllers/V1/PartyAccountSummaryController.cs");
@@ -13,6 +13,7 @@ public sealed class W24PartyAccountSummaryHttpContractArchitectureTests
         var contracts = Read("src/WebApi/Controllers/V1/Contracts/PartyAccountSummaryContracts.cs");
         var program = Read("src/WebApi/Program.cs");
         var wave = Read("documentation/api-completion-matrix/WAVE_2.md");
+        var closure = Read("documentation/api-completion-matrix/W2_4_PARTY_ACCOUNT_SUMMARY_RUNTIME_CLOSURE.md");
 
         Assert.Contains("API-PTY-008", contract, StringComparison.Ordinal);
         Assert.Contains("getPartyAccountSummary", contract, StringComparison.Ordinal);
@@ -58,9 +59,17 @@ public sealed class W24PartyAccountSummaryHttpContractArchitectureTests
         Assert.Contains("builder.Services.AddW24PartyAccountSummaryComposition();", program, StringComparison.Ordinal);
         Assert.DoesNotContain("account-summary", partiesController, StringComparison.Ordinal);
 
-        Assert.Contains("**25 implemented HTTP surfaces**, **1 non-implemented**", wave, StringComparison.Ordinal);
+        Assert.Contains("**26 implemented HTTP surfaces**, **0 non-implemented**", wave, StringComparison.Ordinal);
         Assert.Contains("`API-PTY-008`", wave, StringComparison.Ordinal);
-        Assert.Contains("MISSING_HTTP", wave, StringComparison.Ordinal);
+        Assert.Contains("IMPLEMENTED", wave, StringComparison.Ordinal);
+        Assert.Contains("RUNTIME_ACCEPTED / regression", wave, StringComparison.Ordinal);
+        Assert.DoesNotContain("MISSING_HTTP", wave, StringComparison.Ordinal);
+
+        Assert.Contains("RUNTIME_ACCEPTED_READ_ONLY", closure, StringComparison.Ordinal);
+        Assert.Contains("7f8281c9f98e2c0a9171fbc9d56ee5bd872eb60b", closure, StringComparison.Ordinal);
+        Assert.Contains("efactura-api-d22-7f8281c-62-1", closure, StringComparison.Ordinal);
+        Assert.Contains("Wave 2: `26 / 26`", closure, StringComparison.Ordinal);
+        Assert.Contains("global public v1: `68 / 194`", closure, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) =>

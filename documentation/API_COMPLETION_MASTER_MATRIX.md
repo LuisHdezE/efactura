@@ -1,8 +1,8 @@
 # API Completion Master Matrix
 
-Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / WAVE_1_CLOSED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED / W2.4_NEXT`
+Status: `FULL_OPERATION_LEVEL_RECONCILED / WAVES_1_TO_7_AUDITED / WAVE_1_CLOSED / W2.1_CLOSED / W2.2_MERGED_DEPLOYED_RUNTIME_PENDING / W2.3_RUNTIME_ACCEPTED / W2.4_RUNTIME_ACCEPTED_READ_ONLY / WAVE_2_HTTP_COMPLETE`
 
-Current accepted baseline after W2.3 read-only production runtime acceptance is `67 / 194` implemented operations. Wave 2 is `25 / 26`, with only `API-PTY-008 getPartyAccountSummary` remaining without a governed public HTTP surface.
+Current accepted baseline after W2.4 read-only production runtime acceptance is `68 / 194` implemented operations. Wave 2 is HTTP-complete at `26 / 26`; W2.2 mutation-based production runtime acceptance remains a separate owner-gated operational concern.
 
 W2.1 added the bounded read-only `API-SAL-009 getSaleFiscalizationStatus` and is closed after contract lock, implementation, exact-head CI, merge, deployment and bounded read-only production runtime acceptance. Detailed evidence is recorded in `documentation/api-completion-matrix/W2_1_SALE_FISCALIZATION_STATUS_RUNTIME_CLOSURE.md`.
 
@@ -54,15 +54,15 @@ The legitimate later `+1` is:
 | Wave | Scope | Operation IDs | Implemented | Missing HTTP | Contract collision | Non-implemented |
 |---:|---|---:|---:|---:|---:|---:|
 | 1 | Identity + Organization + Reference Data | 30 | 30 | 0 | 0 | 0 |
-| 2 | Parties + Catalog + Sales Completion | 26 | 25 | 1 | 0 | 1 |
+| 2 | Parties + Catalog + Sales Completion | 26 | 26 | 0 | 0 | 0 |
 | 3 | Payments + Cash + AR/AP | 24 | 0 | 24 | 0 | 24 |
 | 4 | Inventory + Transfers + Procurement + Receiving | 23 | 4 | 19 | 0 | 19 |
 | 5 | Fiscal Completion + CAE + CFE Lifecycle | 40 | 8 | 32 | 0 | 32 |
 | 6 | Reporting + Audit + Sync | 21 | 0 | 21 | 0 | 21 |
 | 7 | Technical Operations Console | 30 | 0 | 28 | 2 | 30 |
-| **Total** |  | **194** | **67** | **125** | **2** | **127** |
+| **Total** |  | **194** | **68** | **124** | **2** | **126** |
 
-Raw operation-ID implementation coverage is `67 / 194 = 34.54%`.
+Raw operation-ID implementation coverage is `68 / 194 = 35.05%`.
 
 This is an operation-count measure only. It is not a product-readiness score and does not diminish deeper Domain/Application/fiscal capabilities that are not yet exposed through the governed public API.
 
@@ -75,6 +75,8 @@ W2.1 is formally closed after pre-merge Guard #695, owner-approved PR #208 merge
 W2.2 contract authority was owner-locked in PR #213. PR #216 implemented `POST /api/v1/sales/{saleId}/cancel` as `cancelSale` with `sales.cancel`, terminal `SaleStatus.Cancelled = 4`, required idempotency, version/reason validation, organization/location/terminal authorization, durable `SALE_CANCELLED` audit, `SaleCancelledIntegrationEvent`, and one local transaction. `CONFIRMED` is the hard irreversible boundary. The slice contains no Payment, Receivable, stock, FiscalizationRequest, FiscalDocument, CAE or DGI/provider dependency and introduced no migration. PR #216 is merged and Deploy API Demo #56 promoted revision `efactura-api-d22-1f627b3-56-1`; mutating production runtime acceptance remains a separate owner-gated concern because production has no suitable Sale/commercial fixture.
 
 W2.3 contract authority was owner-locked in PR #217. PR #221 implemented `GET /api/v1/pos/bootstrap` as `getPosBootstrap` with exactly `sales.read`, returning only actor-scoped active location/terminal operational contexts with deterministic ordering and private/no-cache ETag revalidation. The first one-shot runtime run `35795755059` exposed a real HTTP authorization-boundary mismatch: missing `sales.read` returned HTTP 403 with Problem Details code `forbidden` instead of `permission_denied`. PR #223 repaired permission-policy failures while preserving generic `forbidden` for non-permission authorization failures. Deploy API Demo #58 promoted `efactura-api-d22-47f97a8-58-1`, and read-only production runtime run `35802751788` passed the full locked contract without production writes or fixtures.
+
+W2.4 completed the final missing Wave 2 HTTP surface. The authoritative AR/AP foundations and Party composer are provider-backed; PR #238 exposed `GET /api/v1/parties/{partyId}/account-summary` as `getPartyAccountSummary` with exactly `parties.read`; Deploy API Demo #62 promoted Cloud Run revision `efactura-api-d22-7f8281c-62-1`. Production runtime acceptance was deliberately read-only. Because Neon production contained zero `v1_parties` rows, no synthetic Party/AR/AP fixture was created solely to force a 200 response. Runtime verified the deployed OpenAPI contract plus 401 `authentication_required`, 403 `permission_denied`, 403 `organization_scope_denied` and 404 `party.not_found`; the successful 200 mapping remains covered by accepted controller QA and real PostgreSQL/MySQL composition tests. Detailed evidence is recorded in `documentation/api-completion-matrix/W2_4_PARTY_ACCOUNT_SUMMARY_RUNTIME_CLOSURE.md`.
 
 ## 4. Logical matrix shards
 
@@ -133,10 +135,10 @@ Wave 2 proceeds from `W2_READINESS_AUDIT.md`:
 1. `W2.1 API-SAL-009 getSaleFiscalizationStatus`: CLOSED after contract PR #207, implementation PR #208, CI, deployment and read-only runtime acceptance.
 2. `W2.2 API-SAL-008 cancelSale`: IMPLEMENTED + MERGED + DEPLOYED; mutation-based production runtime acceptance remains a separate owner-gated concern.
 3. `W2.3 API-POS-001 getPosBootstrap`: RUNTIME_ACCEPTED after contract PR #217, implementation PR #221, authorization repair PR #223, Deploy API Demo #58 and successful read-only production runtime run `35802751788`.
-4. `W2.4 API-PTY-008 getPartyAccountSummary`: NEXT; authoritative party-scoped AR/AP read model and field contract remain required.
-5. `W2.5`: final Wave 2 reconciliation after W2.4.
+4. `W2.4 API-PTY-008 getPartyAccountSummary`: RUNTIME_ACCEPTED_READ_ONLY after AR/AP authoritative foundations, field-level contract lock, PR #238 merge, Deploy API Demo #62 and bounded read-only production acceptance.
+5. `W2.5`: reconciled by the W2.4 runtime-closure increment; Wave 2 is HTTP-complete at 26 / 26.
 
-The single remaining prerequisite-gated Wave 2 gap must not be bypassed merely to increase endpoint counts.
+There is no remaining Wave 2 public HTTP gap. W2.2 mutation-based production runtime acceptance remains separately owner-gated.
 
 ## 8. QA rule for completion waves
 
@@ -174,6 +176,6 @@ W2.2 is implemented, merged and deployed. Production Sale creation/cancellation 
 
 W2.3 runtime acceptance run `35802751788`, job `106996575773`, succeeded against exact revision `efactura-api-d22-47f97a8-58-1`. It verified the GET-only OpenAPI surface, unauthenticated and malformed-token 401s, missing `sales.read` as `403 permission_denied`, organization-scope escape as `403 organization_scope_denied`, successful access with `sales.read` and no `organization.read`, the exact empty scoped projection, `Cache-Control: private, no-cache`, stable and scope-sensitive ETags, and `If-None-Match` 304 with an empty body. Production writes: NONE. Fixture creation: NONE.
 
-Wave 2 is now `25 / 26`; W2.4 `API-PTY-008 getPartyAccountSummary` is the only remaining Wave 2 public-v1 HTTP gap.
+W2.4 `API-PTY-008 getPartyAccountSummary` is runtime-accepted read-only after PR #238, Deploy API Demo #62 and production validation against `efactura-api-d22-7f8281c-62-1`. Production has zero Party rows, so no synthetic business fixture was created; successful projection behavior remains covered by accepted controller and provider-real PostgreSQL/MySQL QA. Wave 2 is now HTTP-complete at `26 / 26`.
 
 Wave 7 retains one explicit prerequisite: resolve the `API-MON-001` / `API-180` contract collision through a separate governed contract decision before implementing either route.
