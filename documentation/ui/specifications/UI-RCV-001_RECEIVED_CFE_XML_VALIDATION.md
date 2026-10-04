@@ -1,6 +1,6 @@
 # UI-RCV-001 — CFE recibidos / Validación XML
 
-Status: `DRAFT / NOT_VISUALLY_APPROVED / NOT_IMPLEMENTED`
+Status: `VISUALLY_APPROVED / IMPLEMENTED_VISUAL_PREVIEW / API_PENDING`
 
 Upstream interface: `WEB-016`; candidate route: `/cfe-recibidos`; navigation group: Fiscal.
 
@@ -19,7 +19,7 @@ The disabled `CFE recibidos` item already occupies its place in Fiscal navigatio
 5. A selected-document detail pane with original artifact metadata, hash availability, signature/schema context and structured findings.
 6. Distinct placement for single import, batch import and validate-without-import; all disabled in preview with an explanation.
 
-The list and detail must remain readable without requiring a page-wide horizontal pan. This layout is a proposal, not an approved visual baseline.
+The list and detail must remain readable without requiring a page-wide horizontal pan. The visual proposal was approved by the user on 2026-09-30; generated copy remains subordinate to this specification.
 
 ## 3. Data and authority
 
@@ -56,6 +56,6 @@ Desktop: list and selected detail side by side where space permits. Tablet: stac
 
 ## 7. Dependencies and evidence
 
-The view may relate to `UI-SUPPLIER-001`, `UI-PROCUREMENT-001` and `UI-FIS-001` only when accepted cross-view identifiers and server linkage exist. Contract mapping: `API-RCV-001..006`, `API-XML-001`; Wave 5 marks all seven `MISSING_HTTP`. The current frontend has no `UI-RCV-001` route, adapter or capability. The candidate route remains disabled.
+The view may relate to `UI-SUPPLIER-001`, `UI-PROCUREMENT-001` and `UI-FIS-001` only when accepted cross-view identifiers and server linkage exist. Contract mapping: `API-RCV-001..006`, `API-XML-001`; Wave 5 marks all seven `MISSING_HTTP`. The frontend has a visual-preview route and capability with `operations: []`, but no HTTP adapter.
 
-Visual baseline: `NONE`. Approved version/date/artifact: `NONE`. Implementation commit/PR and runtime capture: `NONE`. The next visual proposal requires explicit approval before an executable preview is added.
+Visual baseline: desktop proposal approved on 2026-09-30, artifact SHA-256 `fa87ea7b0bc4d1c780b1ad62fa9702803a7b47c4a2c1eacb82851995bfb02794`. Any suggested validation or import success in generated copy is illustrative only. Implementation PR and deployed runtime acceptance remain separate gates; exact mobile 390×844 visual acceptance is pending.
