@@ -1,0 +1,54 @@
+name: Deploy eFactura PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'src/WebApp/**'
+      - '.github/workflows/deploy-webapp-pr-preview.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: webapp-preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/WebApp
+    steps:
+      - name: Checkout PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run frontend checks
+        run: npm run check
+
+      - name: Build isolated PR preview
+        env:
+          VITE_DATA_MODE: mock
+        run: npm run build -- --base=/_preview/pr-${{ github.event.pull_request.number }}/
+
+      - name: Deploy isolated preview via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.eliasworks.uy
+          username: luis@eliasworks.uy
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          local-dir: src/WebApp/dist/
+          server-dir: public_html/efactura/_preview/pr-${{ github.event.pull_request.number }}/
