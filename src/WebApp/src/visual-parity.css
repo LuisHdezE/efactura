@@ -66,7 +66,7 @@
   color: var(--sidebar-text);
   border-right: 1px solid var(--border);
 }
-.ef-nav-link { min-height: 68px; color: var(--sidebar-muted); border-radius: 8px; font-size: 10px; }
+.ef-nav-link { min-height: 68px; color: var(--sidebar-text); border-radius: 8px; font-size: 10px; }
 .ef-nav-link:hover { background: var(--surface-2); color: var(--text); }
 .ef-nav-link.is-active { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent-strong); box-shadow: inset 4px 0 0 var(--accent); }
 :root[data-theme='dark'] .ef-nav-link:hover { background: rgba(255,255,255,.05); color: #fff; }
