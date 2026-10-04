@@ -41,8 +41,7 @@ jobs:
       - name: Build isolated PR preview
         env:
           VITE_DATA_MODE: mock
-          VITE_APP_BASE: /_preview/pr-${{ github.event.pull_request.number }}/
-        run: npm run build
+        run: npm run build -- --base=/_preview/pr-${{ github.event.pull_request.number }}/
 
       - name: Deploy isolated preview via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
